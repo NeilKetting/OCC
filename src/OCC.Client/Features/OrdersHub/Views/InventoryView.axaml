@@ -1,0 +1,176 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:models="using:OCC.Shared.Models"
+			 xmlns:views="using:OCC.Client.Features.OrdersHub.Views"
+			 xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+			 xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.InventoryView"
+			 x:Name="Root"
+			 x:DataType="vm:InventoryViewModel">
+
+	<UserControl.Resources>
+		<conv:StatusColorConverter x:Key="StatusColorConverter" />
+	</UserControl.Resources>
+
+
+
+	<Grid RowDefinitions="Auto, *, Auto" Margin="0">
+		<!-- Header Bar: Title & Primary Actions -->
+		<Border Grid.Row="0" Classes="TopHeader" Background="{DynamicResource MainPageGradient}" Margin="2">
+			<Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+				<StackPanel Spacing="5">
+					<TextBlock Text="Inventory List" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold"/>
+					<TextBlock Text="Master list of all inventory items. Double-click to edit." Foreground="#94A3B8" FontSize="{StaticResource FontsizeMedium}"/>
+				</StackPanel>
+
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+					<Button Content="Add Item" Classes="Primary" Command="{Binding AddInventoryItemCommand}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconNew}" Width="16" Height="16"/>
+							<TextBlock Text="Add Item" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+					<Button Content="Import CSV" Classes="Secondary" Command="{Binding ImportInventoryCommand}" ToolTip.Tip="Import inventory from CSV file">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconExportData}" Width="16" Height="16"/>
+							<TextBlock Text="Import CSV" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+				</StackPanel>
+
+				<!-- Toolbar Bar: Search & Branch Filter -->
+				<Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,15,0,0">
+					<!-- Search -->
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+						<StackPanel>
+							<TextBlock Text="Search" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<TextBox Width="250" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+									 Watermark="Search Product..." Background="White" BorderBrush="{DynamicResource BorderGray}" VerticalContentAlignment="Center">
+								<TextBox.InnerLeftContent>
+									<PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14" Margin="10,0,0,0" Foreground="{DynamicResource TextTertiarySlate}"/>
+								</TextBox.InnerLeftContent>
+							</TextBox>
+						</StackPanel>
+
+						<StackPanel>
+							<TextBlock Text="Branch" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<ComboBox ItemsSource="{Binding AvailableBranches}"
+									  SelectedItem="{Binding SelectedBranch}"
+									  Width="150"
+									  Background="White" BorderBrush="{DynamicResource BorderGray}"
+									  VerticalAlignment="Center"/>
+						</StackPanel>
+					</StackPanel>
+				</Grid>
+			</Grid>
+		</Border>
+
+		<!-- Grid -->
+		<DataGrid Grid.Row="1" ItemsSource="{Binding InventoryItems}"
+				  AutoGenerateColumns="False"
+				  IsReadOnly="True"
+				  HeadersVisibility="Column"
+				  GridLinesVisibility="Horizontal"
+				  Background="White"
+				  BorderThickness="0"
+				  SelectedItem="{Binding SelectedInventoryItem}">
+
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="DoubleTapped">
+					<InvokeCommandAction Command="{Binding EditInventoryItemCommand}" CommandParameter="{Binding SelectedInventoryItem}"/>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
+
+			<DataGrid.Styles>
+				<Style Selector="DataGridRow" x:DataType="models:InventoryItem">
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="Edit" Command="{Binding $parent[UserControl].((vm:InventoryViewModel)DataContext).EditInventoryItemCommand}" CommandParameter="{Binding .}"/>
+							<MenuItem Header="Delete" Command="{Binding $parent[UserControl].((vm:InventoryViewModel)DataContext).DeleteInventoryItemCommand}" CommandParameter="{Binding .}" Foreground="Red"/>
+						</ContextMenu>
+					</Setter>
+				</Style>
+			</DataGrid.Styles>
+
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="Auto" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryGray}"/>
+				<DataGridTemplateColumn Header="PRODUCT" Width="Auto" MinWidth="250">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding Description}"
+									   TextWrapping="Wrap"
+									   VerticalAlignment="Center"
+									   Margin="12,8"
+									   FontWeight="SemiBold"
+									   Foreground="{DynamicResource TextPrimaryDark}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTextColumn Header="CATEGORY" Binding="{Binding Category}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				<DataGridTextColumn Header="LOCATION" Binding="{Binding Location}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				
+				<DataGridTextColumn Header="JHB STOCK" Binding="{Binding JhbQuantity}" Width="Auto" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTextColumn Header="CPT STOCK" Binding="{Binding CptQuantity}" Width="Auto" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+
+				<DataGridTextColumn Header="UNIT" Binding="{Binding UnitOfMeasure}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+
+				<DataGridTemplateColumn Header="STATUS" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Border CornerRadius="4" Padding="8,2" VerticalAlignment="Center" HorizontalAlignment="Left"
+									Background="{Binding InventoryStatus, Converter={StaticResource StatusColorConverter}, ConverterParameter=Background}">
+								<TextBlock Text="{Binding InventoryStatus}"
+										   FontSize="11" FontWeight="SemiBold"
+										   Foreground="{Binding InventoryStatus, Converter={StaticResource StatusColorConverter}, ConverterParameter=Foreground}"/>
+							</Border>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Actions -->
+				<DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Button Classes="IconButton" Margin="0,0,20,0">
+								<Button.Flyout>
+									<MenuFlyout Placement="BottomEdgeAlignedRight">
+										<MenuItem Header="Edit" Command="{Binding $parent[UserControl].((vm:InventoryViewModel)DataContext).EditInventoryItemCommand}" CommandParameter="{Binding .}"/>
+										<MenuItem Header="Delete" Command="{Binding $parent[UserControl].((vm:InventoryViewModel)DataContext).DeleteInventoryItemCommand}" CommandParameter="{Binding .}" Foreground="Red"/>
+									</MenuFlyout>
+								</Button.Flyout>
+								<PathIcon Data="{StaticResource IconMoreHorizontal}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+							</Button>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+
+		<!-- Loading -->
+		<StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+			<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			<TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Empty State -->
+		<StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+					IsVisible="{Binding !InventoryItems.Count}">
+			<TextBlock Text="No items found." IsVisible="{Binding !IsBusy}" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Popup Overlay -->
+		<Grid Grid.Row="0" Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding IsDetailVisible, FallbackValue=false}" ZIndex="100">
+			<Border Background="Transparent" CornerRadius="8" Padding="40"
+					HorizontalAlignment="Center" VerticalAlignment="Center">
+				<views:ItemDetailView DataContext="{Binding DetailViewModel}"/>
+			</Border>
+		</Grid>
+	</Grid>
+</UserControl>

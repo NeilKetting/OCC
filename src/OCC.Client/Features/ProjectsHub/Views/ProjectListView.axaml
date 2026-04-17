@@ -1,0 +1,177 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels;assembly=OCC.Client"
+			 xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+			 xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:proj="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectListView"
+			 x:DataType="vm:ProjectListViewModel">
+
+	<Design.DataContext>
+		<vm:ProjectListViewModel/>
+	</Design.DataContext>
+
+	<Interaction.Behaviors>
+		<EventTriggerBehavior EventName="Loaded">
+			<InvokeCommandAction Command="{Binding LoadProjectsCommand}"/>
+		</EventTriggerBehavior>
+	</Interaction.Behaviors>
+
+	<Grid Background="White" RowDefinitions="Auto, *">
+		<!-- Header Bar: Title & Actions -->
+		<Border Grid.Row="0" Margin="0,0,0,1" Classes="TopHeader" Background="{DynamicResource MainPageGradient}">
+			<Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+				<StackPanel Spacing="5">
+					<TextBlock Text="Projects List" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold" />
+					<TextBlock Text="Create projects, view graphs, assign users are teams" Foreground="#94A3B8" FontSize="{StaticResource FontSizeNormal}" />
+				</StackPanel>
+
+				<Button Grid.Column="1" Command="{Binding NewProjectCommand}" Classes="Primary" Padding="15,8" VerticalAlignment="Center">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconAddUser}" Width="16" Height="16"/>
+						<TextBlock Text="New Project" FontWeight="SemiBold"/>
+					</StackPanel>
+				</Button>
+
+				<!-- Toolbar Bar: Search & Filters -->
+				<Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,15,0,0">
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+						<StackPanel>
+							<TextBlock Text="Search" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<TextBox Width="250" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+									 Watermark="Search projects..." Background="White" BorderBrush="{DynamicResource BorderGray}" VerticalContentAlignment="Center">
+								<TextBox.InnerLeftContent>
+									<PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14" Margin="10,0,0,0" Foreground="{DynamicResource TextTertiarySlate}"/>
+								</TextBox.InnerLeftContent>
+							</TextBox>
+						</StackPanel>
+
+						<StackPanel>
+							<TextBlock Text="Project Status" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<ComboBox Width="150" Background="White" BorderBrush="{DynamicResource BorderGray}"
+									  VerticalAlignment="Center">
+								<ComboBoxItem>All Projects</ComboBoxItem>
+								<ComboBoxItem>Active</ComboBoxItem>
+								<ComboBoxItem>Completed</ComboBoxItem>
+								<ComboBoxItem>On Hold</ComboBoxItem>
+							</ComboBox>
+						</StackPanel>
+					</StackPanel>
+				</Grid>
+
+			</Grid>
+		</Border>
+
+		<!-- Projects Grid -->
+		<DataGrid Grid.Row="1" ItemsSource="{Binding Projects}"
+				  x:Name="Grid"
+				  SelectedItem="{Binding SelectedProject}"
+				  AutoGenerateColumns="False"
+				  IsReadOnly="True"
+				  GridLinesVisibility="Horizontal"
+				  HorizontalGridLinesBrush="{DynamicResource BorderGray}"
+				  BorderThickness="0"
+				  RowHeight="60"
+				  Margin="0"
+				  DoubleTapped="DataGrid_DoubleTapped">
+
+			<DataGrid.Columns>
+				<!-- Name (Fills remaining space) -->
+				<DataGridTemplateColumn Header="NAME" Width="*" MinWidth="250">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="20,0" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Progress -->
+				<DataGridTemplateColumn Header="PROGRESS" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Center" Margin="20,0" Width="150"> 
+								<ProgressBar Value="{Binding Progress}" Maximum="100" Height="20" Background="#F1F5F9" Foreground="#CBD5E1" CornerRadius="2"/>
+								<ProgressBar Value="{Binding Progress}" Maximum="100" Height="20" Background="Transparent" Foreground="#94A3B8" CornerRadius="2" IsVisible="{Binding Progress, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+								<TextBlock Text="{Binding Progress, StringFormat='{}{0}%'}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center" Margin="5,0"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Project Manager -->
+				<DataGridTemplateColumn Header="SITE MANAGER" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Border Width="30" Height="30" CornerRadius="15" Background="#CBD5E1" HorizontalAlignment="Left" Margin="20,0">
+								<TextBlock Text="{Binding ProjectManagerInitials}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontSize="11" FontWeight="Bold"/>
+							</Border>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Status -->
+				<DataGridTemplateColumn Header="STATUS" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="20,0" Foreground="{DynamicResource TextPrimaryDark}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Latest Finish -->
+				<DataGridTemplateColumn Header="LATEST FINISH" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding LatestFinishDisplay}" VerticalAlignment="Center" Margin="20,0" Foreground="{DynamicResource TextSecondaryGray}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Report Action -->
+				<DataGridTemplateColumn Header="REPORT" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Button Command="{Binding $parent[DataGrid].((vm:ProjectListViewModel)DataContext).RequestReportCommand}" 
+									CommandParameter="{Binding}"
+									Classes="IconButton" 
+									ToolTip.Tip="View Project Cost Report"
+									HorizontalAlignment="Center"
+									Margin="10,0">
+								<PathIcon Data="{StaticResource IconReport}" Width="16" Height="16" Foreground="{DynamicResource PrimaryTeal}"/>
+							</Button>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+
+		<!-- Loading -->
+		<StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+			<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			<TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Empty State -->
+		<StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+					IsVisible="{Binding !Projects.Count}">
+			<TextBlock Text="No projects found." IsVisible="{Binding !IsBusy}" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Create Project Overlay Layer -->
+		<Grid Grid.RowSpan="2" IsVisible="{Binding IsCreateProjectVisible}"
+			  Background="#40000000">
+			<Border Width="{Binding CreateProjectVM.ModalWidth}"
+					MaxHeight="900"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"
+					BoxShadow="0 8 30 0 #40000000">
+				<proj:CreateProjectView DataContext="{Binding CreateProjectVM}"/>
+			</Border>
+		</Grid>
+	</Grid>
+</UserControl>

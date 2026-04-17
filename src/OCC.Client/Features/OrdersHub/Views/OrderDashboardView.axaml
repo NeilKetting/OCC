@@ -1,0 +1,205 @@
+
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+             xmlns:conv="using:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.OrderDashboardView"
+             Name="Root"
+			 x:DataType="vm:OrderDashboardViewModel">
+
+    <UserControl.Resources>
+        <conv:OrderStatusToColorConverter x:Key="OrderStatusToColorConverter"/>
+        <conv:DueDateToDisplayConverter x:Key="DueDateToDisplayConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="PathIcon.Ring">
+            <Setter Property="RenderTransform">
+                <RotateTransform />
+            </Setter>
+            <Style.Animations>
+                <Animation Duration="0:0:20" IterationCount="Infinite"> 
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="0.5%">
+                        <Setter Property="RotateTransform.Angle" Value="15"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="1%">
+                        <Setter Property="RotateTransform.Angle" Value="-15"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="1.5%">
+                        <Setter Property="RotateTransform.Angle" Value="15"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="2%">
+                        <Setter Property="RotateTransform.Angle" Value="-15"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="2.5%">
+                        <Setter Property="RotateTransform.Angle" Value="0"/>
+                    </KeyFrame>
+                    <!-- Pause for the rest (2.5% to 100%) -->
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+
+	<ScrollViewer>
+		<StackPanel Spacing="20" Margin="2">
+			<Border Grid.Row="1" Classes="TopHeader" Background="{DynamicResource MainPageGradient}">
+				<Grid ColumnDefinitions="*, Auto" Margin="0">
+					<StackPanel Grid.Column="0" Spacing="5">
+						<TextBlock Text="Procurement Overview" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold" />
+						<TextBlock Text="Track purchases, deliveries, and site inventory." Foreground="#94A3B8" FontSize="{StaticResource FontSizeMedium}" />
+					</StackPanel>
+					<PathIcon Grid.Column="1" Data="{StaticResource IconCart}" Width="48" Height="48" Foreground="#000000" Margin="20,0"/>
+				</Grid>
+			</Border>
+			<!-- Stats Grid -->
+			<Grid ColumnDefinitions="*, 20, *, 20, *" Margin="10,0">
+				<!-- Stat 1 -->
+				<Border Grid.Column="0" Classes="CardMedium">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="DoubleTapped">
+                            <InvokeCommandAction Command="{Binding NavigateToOrderListCommand}"/>
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+					<StackPanel Spacing="8">
+							<TextBlock Text="ORDERS THIS MONTH" Classes="Label" />
+						<TextBlock Text="{Binding OrdersThisMonth}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}" />
+						<TextBlock Text="{Binding MonthGrowthText}" FontSize="12" Foreground="{Binding MonthGrowthColor}" />
+					</StackPanel>
+				</Border>
+
+				<!-- Stat 2 -->
+				<Border Grid.Column="2" Classes="CardMedium">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="DoubleTapped">
+                            <InvokeCommandAction Command="{Binding NavigateToReceivingCommand}"/>
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+					<StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*, Auto">
+							<TextBlock Text="PENDING DELIVERIES" Classes="Label" />
+                            <Button Grid.Column="1" Command="{Binding NavigateToReceivingCommand}" Classes="Secondary" Padding="5,2" HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <PathIcon Data="{StaticResource IconCart}" Width="10" Height="10"/>
+                                    <TextBlock Text="Receive" FontSize="10"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+						<TextBlock Text="{Binding PendingDeliveries}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}" />
+						<TextBlock Text="{Binding PendingDeliveryText}" FontSize="12" Foreground="{Binding PendingDeliveryColor}" />
+					</StackPanel>
+				</Border>
+
+				<!-- Stat 3 -->
+				<Border Grid.Column="4" Classes="CardMedium" Background="#20EF4444">
+					<StackPanel Spacing="10">
+						<Grid ColumnDefinitions="*, Auto">
+							<TextBlock Text="LOW STOCK ALERTS" Classes="Label" Foreground="#EF4444" />
+							<PathIcon Classes="Ring" Data="{StaticResource IconAlert}" Width="16" HorizontalAlignment="Right" Foreground="#EF4444" RenderTransformOrigin="50%,0%" />
+						</Grid>
+						<TextBlock Text="{Binding LowStockItems.Count}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold" Foreground="#EF4444" />
+						<TextBlock Text="Requires Action" FontSize="12" Foreground="#EF4444" />
+					</StackPanel>
+				</Border>
+			</Grid>
+
+			<!-- Main Content Grid -->
+			<Grid ColumnDefinitions="2*, 30, *" Margin="15,0">
+
+				<!-- Recent Orders List -->
+				<StackPanel Grid.Column="0" Spacing="15">
+					<TextBlock Text="Recent Orders" FontSize="18" FontWeight="SemiBold" />
+					<ItemsControl ItemsSource="{Binding RecentOrders}">
+                        <ItemsControl.Styles>
+                            <Style Selector="ItemsControl > ContentPresenter">
+                                <Setter Property="Margin" Value="0,0,0,15"/>
+                            </Style>
+                        </ItemsControl.Styles>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>														
+								<Border Padding="15" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                                    <Interaction.Behaviors>
+                                        <EventTriggerBehavior EventName="DoubleTapped">
+                                            <InvokeCommandAction Command="{Binding #Root.((vm:OrderDashboardViewModel)DataContext).OpenOrderCommand}" CommandParameter="{Binding .}"/>
+                                        </EventTriggerBehavior>
+                                    </Interaction.Behaviors>
+									<Grid ColumnDefinitions="Auto, *, Auto, Auto">
+										<!-- Icon -->
+										<Border Grid.Column="0" Width="42" Height="42" CornerRadius="12" Background="#F1F5F9" Margin="0,0,15,0" BorderBrush="#E2E8F0" BorderThickness="1">
+											<PathIcon Data="{StaticResource IconCart}" Width="18" Foreground="#64748B" />
+										</Border>
+
+										<!-- Info -->
+										<StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+											<TextBlock Text="{Binding SupplierName}" FontWeight="Bold" FontSize="14" Foreground="#1E293B" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+											    <TextBlock Text="{Binding OrderNumber}" FontSize="12" Foreground="#64748B" />
+                                                <TextBlock Text="|" Foreground="#E2E8F0"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <PathIcon Data="{StaticResource IconCalendar}" Width="10" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding ExpectedDeliveryDate, Converter={StaticResource DueDateToDisplayConverter}}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </StackPanel>
+										</StackPanel>
+
+										<!-- Destination -->
+										<Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center" Margin="0,0,15,0">
+											<TextBlock Text="{Binding DestinationDisplay}" FontSize="11" FontWeight="Medium" Foreground="#475569" />
+										</Border>
+
+										<!-- Status -->
+										<Border Grid.Column="3" 
+                                                Background="{Binding Status, Converter={StaticResource OrderStatusToColorConverter}, ConverterParameter=Background}" 
+                                                CornerRadius="6" Padding="10,4" VerticalAlignment="Center"
+                                                BorderThickness="1"
+                                                BorderBrush="{Binding Status, Converter={StaticResource OrderStatusToColorConverter}}">
+											<TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" 
+                                                       Foreground="{Binding Status, Converter={StaticResource OrderStatusToColorConverter}}" />
+										</Border>
+									</Grid>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</StackPanel>
+
+				<!-- Low Stock Sidebar -->
+				<StackPanel Grid.Column="2" Spacing="15">
+					<Grid ColumnDefinitions="*, Auto">
+						<TextBlock Text="Low Stock" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+						<Button Grid.Column="1" Command="{Binding RestockNowCommand}" Classes="Cancel">
+							<StackPanel Orientation="Horizontal" Spacing="5">
+								<PathIcon Data="{StaticResource IconCart}" Width="12"/>
+								<TextBlock Text="Re-stock Now" Foreground="White"/>
+							</StackPanel>
+						</Button>
+					</Grid>
+					<ItemsControl ItemsSource="{Binding LowStockItems}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<Border Margin="0,0,0,10" Padding="15" BorderBrush="Gray" BorderThickness="0,0,0,0">
+									<StackPanel Spacing="5">
+										<StackPanel Spacing="5">
+											<TextBlock Text="{Binding Item.Description}" FontWeight="Bold" />
+											<TextBlock Text="{Binding TargetBranch}" FontSize="11" Foreground="{DynamicResource ThemeForegroundLow}" Margin="0"/>
+										</StackPanel>
+										<StackPanel Grid.Row="1" Spacing="5">
+											<ProgressBar Margin="0" Height="4" Maximum="{Binding TargetReorderPoint}" Value="{Binding QuantityOnHandForBranch}" Foreground="#EF4444" Background="#20EF4444" />
+											<TextBlock Text="{Binding QuantityOnHandForBranch, StringFormat='{}On Hand: {0}'}" FontSize="10" Foreground="#EF4444" Margin="0" />
+										</StackPanel>
+									</StackPanel>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</StackPanel>
+
+			</Grid>
+		</StackPanel>
+	</ScrollViewer>
+</UserControl>

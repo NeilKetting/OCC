@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OCC.Client.Features.WagesHub.ViewModels" xmlns:wagesVm="using:OCC.Client.Features.WagesHub.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:Class="OCC.Client.Features.WagesHub.Views.AddLoanDialog"
+        x:DataType="vm:AddLoanDialogViewModel"
+        Title="Add Employee Loan"
+        Width="400" Height="450"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        SystemDecorations="BorderOnly"
+        Background="Transparent"
+        TransparencyLevelHint="Mica"
+        ExtendClientAreaToDecorationsHint="True">
+
+    <Border Background="White" CornerRadius="12" Padding="20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <Grid RowDefinitions="Auto, *, Auto">
+            <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+                <TextBlock Text="Add New Loan" Classes="h2" HorizontalAlignment="Center"/>
+                <Button Grid.Column="1" Command="{Binding CancelCommand}" Classes="IconButtonClose" ToolTip.Tip="Close">
+                    <PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+                </Button>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" Padding="0,0,10,0">
+                <StackPanel Spacing="15">
+                    <!-- Employee -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Employee" Classes="label"/>
+                        <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+    
+                    <!-- Amount -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Principal Amount (R)" Classes="label"/>
+                        <NumericUpDown Value="{Binding PrincipalAmount}" FormatString="C" Minimum="0" Increment="100"/>
+                    </StackPanel>
+    
+                    <!-- Installment -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Monthly Installment (R)" Classes="label"/>
+                        <NumericUpDown Value="{Binding MonthlyInstallment}" FormatString="C" Minimum="0" Increment="50"/>
+                    </StackPanel>
+    
+                    <!-- Interest Rate -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Interest Rate (%)" Classes="label"/>
+                        <NumericUpDown Value="{Binding InterestRate}" FormatString="0.00" Minimum="0" Maximum="100" Increment="0.25"/>
+                        <TextBlock Text="Overrides company default." Classes="Caption" FontSize="10" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </StackPanel>
+    
+                    <!-- Date -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Start Date" Classes="label"/>
+                        <CalendarDatePicker SelectedDate="{Binding StartDate}" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <!-- Summary / Calculation Results -->
+                    <Border Background="{DynamicResource SurfaceLightGray}" CornerRadius="4" Padding="10" Margin="0,10,0,0">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Repayment Summary" FontWeight="SemiBold" FontSize="12"/>
+                            
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Calculated Duration:" Classes="Caption"/>
+                                <TextBlock Grid.Column="1" Text="{Binding RepaymentDurationText}" FontWeight="Bold"/>
+                            </Grid>
+
+                             <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="Total Repayable:" Classes="Caption"/>
+                                <TextBlock Grid.Column="1" Text="{Binding TotalRepayableAmount, StringFormat='{}{0:C}'}" FontWeight="Bold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Buttons -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Margin="0,20,0,0">
+                <Button Command="{Binding PrintCommand}" Classes="Ghost" ToolTip.Tip="Print Schedule">
+                     <PathIcon Data="{StaticResource IconPrint}" Width="16" Height="16"/>
+                </Button>
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding CancelCommand}" Content="Cancel" />
+                    <Button Command="{Binding SaveCommand}" Content="Save" Classes="Primary"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

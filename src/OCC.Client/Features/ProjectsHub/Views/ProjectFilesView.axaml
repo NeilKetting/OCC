@@ -1,0 +1,139 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectFilesView"
+             x:DataType="vm:ProjectFilesViewModel">
+    <UserControl.Resources>
+        <conv:IntToBoolConverter x:Key="IntToBoolConverter"/>
+    </UserControl.Resources>
+    
+    <Grid Background="White">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="{Binding ShowUploadForm, Converter={StaticResource IntToBoolConverter}, ConverterParameter=350}"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Main Content -->
+        <Grid Grid.Column="0" RowDefinitions="Auto, *">
+            <!-- Header/Toolbar -->
+            <Border Grid.Row="0" Padding="20" Background="{DynamicResource MainPageGradient}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="PROJECT DOCUMENTS" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                        <TextBlock Text="Manage and access all files related to this project" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </StackPanel>
+                    
+                    <Button Grid.Column="1" Classes="Primary" Command="{Binding ToggleUploadFormCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon Data="{StaticResource IconPlus}" Width="14" Height="14"/>
+                            <TextBlock Text="ADD FILE"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- File List -->
+            <Grid Grid.Row="1">
+                <!-- Loading State -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15" IsVisible="{Binding IsBusy}">
+                    <ProgressBar IsIndeterminate="True" Width="150" Foreground="{DynamicResource Orange}"/>
+                    <TextBlock Text="Loading files..." Foreground="{DynamicResource TextSecondaryGray}"/>
+                </StackPanel>
+
+                <!-- Empty State -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" 
+                            IsVisible="{Binding !Files.Count, FallbackValue=False}">
+                    <PathIcon Data="{StaticResource IconFile}" Width="48" Height="48" Foreground="{DynamicResource TextTertiarySlate}"/>
+                    <TextBlock Text="No files found" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                    <TextBlock Text="Upload project plans, contracts, or site photos to get started." Foreground="{DynamicResource TextSecondaryGray}"/>
+                </StackPanel>
+
+                <!-- Files WrapPanel -->
+                <ScrollViewer IsVisible="{Binding Files.Count}">
+                    <ItemsControl ItemsSource="{Binding Files}" Margin="20">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Classes="Card" Width="220" Margin="0,0,15,15" Padding="15">
+                                    <StackPanel Spacing="12">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <Border CornerRadius="6" Background="{DynamicResource PrimaryTealLight}" Width="40" Height="40">
+                                                <PathIcon Data="{StaticResource IconFile}" Foreground="{DynamicResource PrimaryTeal}" Width="20" Height="20"/>
+                                            </Border>
+                                            
+                                            <Button Grid.Column="1" Classes="Ghost" Padding="5" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).DeleteFileCommand}" CommandParameter="{Binding}">
+                                                <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14" Foreground="#EF4444"/>
+                                            </Button>
+                                        </Grid>
+                                        
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding FileSize}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                        </StackPanel>
+
+                                        <Border Height="1" Background="{DynamicResource BorderGray}"/>
+
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="{Binding UploadedAt, StringFormat='dd MMM yyyy'}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" Classes="Ghost" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).DownloadFileCommand}" CommandParameter="{Binding}">
+                                                <TextBlock Text="Open" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBlue}"/>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- Upload Side Panel -->
+        <Border Grid.Column="1" Background="White" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1,0,0,0"
+                IsVisible="{Binding ShowUploadForm}">
+            <Grid RowDefinitions="Auto, *">
+                <Border Grid.Row="0" Padding="20" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource BorderGray}">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Upload File" FontSize="18" FontWeight="SemiBold"/>
+                        <Button Grid.Column="1" Classes="Ghost" Command="{Binding ToggleUploadFormCommand}">
+                            <PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" Padding="20">
+                    <StackPanel Spacing="20">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="File Name" Classes="LabelSmall"/>
+                            <TextBox Text="{Binding NewFileTitle}" Watermark="Enter file name..."/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Source File" Classes="LabelSmall"/>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBox Text="{Binding SelectedFilePath}" IsReadOnly="True" Watermark="Browse for file..."/>
+                                <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Command="{Binding PickFileCommand}"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <Button Classes="Primary" HorizontalAlignment="Stretch" Margin="0,10,0,0" 
+                                Command="{Binding UploadCommand}" IsEnabled="{Binding !IsBusy}">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconUpload}" Width="14" Height="14"/>
+                                <TextBlock Text="UPLOAD FILE"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

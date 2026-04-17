@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.AuthHub.ViewModels;assembly=OCC.Client"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.AuthHub.Views.RegisterView"
+			 x:DataType="vm:RegisterViewModel">
+
+	<Grid>
+		<!-- Background -->
+		<Panel>
+			<!-- Background Image -->
+			<Grid ColumnDefinitions = "*,*,*">
+				<Rectangle Grid.Column="0" Fill="{DynamicResource LoginBackgroundDark}" />
+				<Image Grid.Column="1" Source="/Assets/Images/occ_bgi.jpg"
+					   Stretch="UniformToFill" />
+				<Rectangle Grid.Column="2" Fill="{DynamicResource AccentOrange}" />
+				<!-- Dark Overlay -->
+				<Rectangle Grid.Column="1" Fill="{DynamicResource LoginBackgroundDark}" Opacity="0.75" />
+				<!-- logo -->
+				<Image Source="avares://OCC.Client/Assets/Images/occ_logo2.png" 
+					   Width="300" 
+					   Stretch="Uniform"
+					   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+			</Grid>
+		</Panel>
+
+		<!-- Content -->
+		<ScrollViewer>
+			<Border Padding="20" VerticalAlignment="Center">
+				<Grid>
+					<StackPanel Spacing="40">
+
+						<!-- Registration Card -->
+						<Border Classes="Card" Width="400">
+							<StackPanel Spacing="15">
+								<TextBlock Text="Register your account"
+										   HorizontalAlignment="Center"
+										   FontSize="20"
+										   FontWeight="SemiBold"
+										   Foreground="{DynamicResource LoginTextDark}"/>
+								<TextBox Text="{Binding FirstName}"
+										 Watermark="First Name*"
+										 Classes="FormInput"/>
+
+								<TextBox Text="{Binding LastName}"
+										 Watermark="Last Name*"
+										 Classes="FormInput"/>
+
+								<TextBox Text="{Binding CompanyName}"
+										 Watermark="Company Name*"
+										 Classes="FormInput"/>
+
+								<TextBox Text="{Binding Email}"
+										 Watermark="Email address*"
+										 Classes="FormInput"/>
+
+								<TextBox Text="{Binding Password}"
+										 Watermark="Password*"
+										 PasswordChar="*"
+										 Classes="FormInput"/>
+
+								<TextBox Text="{Binding Phone}"
+										 Watermark="Phone"
+										 Classes="FormInput">
+								</TextBox>
+
+								<ComboBox ItemsSource="{Binding AvailableRoles}"
+										  SelectedItem="{Binding UserRole}"
+										  PlaceholderText="Select Role*"
+										  Classes="FormInput">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding, Converter={x:Static conv:FriendlyEnumConverter.Instance}}" VerticalAlignment="Center" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+
+								<TextBlock Text="{Binding ErrorMessage}"
+										   Foreground="Red"
+										   FontSize="12"
+										   TextWrapping="Wrap"
+										   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+								<Button Command="{Binding RegisterCommand}"
+										Content="Register"
+										Classes="Primary Large" />
+
+								<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+									<TextBlock Text="Already have an account?" Foreground="{DynamicResource LoginTextLight}" FontSize="11" VerticalAlignment="Center"/>
+									<Button Content="Login"
+											x:CompileBindings="False"
+											Command="{Binding $parent[Window].DataContext.NavigateToLoginCommand}"
+											Classes="Link"
+											FontSize="11" />
+								</StackPanel>
+
+								<TextBlock TextWrapping="Wrap" TextAlignment="Left" FontSize="11" Foreground="{DynamicResource LoginTextLight}" Margin="0,10,0,0">
+									We take security and privacy seriously <Span Foreground="{DynamicResource PrimaryTeal}" TextDecorations="Underline"> terms of use</Span> and
+									<Span Foreground="{DynamicResource PrimaryTeal}" TextDecorations="Underline"> privacy policy</Span>.
+								</TextBlock>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</Grid>
+			</Border>
+		</ScrollViewer>
+	</Grid>
+</UserControl>
+
+

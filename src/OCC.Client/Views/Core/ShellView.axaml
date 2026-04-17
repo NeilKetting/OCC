@@ -1,0 +1,376 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.ViewModels.Core;assembly=OCC.Client"
+			 xmlns:vmShared="clr-namespace:OCC.Client.ViewModels.Shared;assembly=OCC.Client"
+			 xmlns:viewsShared="using:OCC.Client.Views.Shared"
+			 xmlns:viewWidgets="clr-namespace:OCC.Client.Features.TaskHub.Views.Widgets;assembly=OCC.Client"
+			 xmlns:core="clr-namespace:OCC.Client.Views.Core"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Views.Core.ShellView"
+			 x:DataType="vm:ShellViewModel">
+
+	<Design.DataContext>
+		<vm:ShellViewModel/>
+	</Design.DataContext>
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- Top Menu Bar -->
+		<Menu Grid.Row="0" Background="{DynamicResource SurfaceLightGray}"
+			  BorderBrush="{DynamicResource BorderGray}"
+			  BorderThickness="0">
+			<MenuItem Header="_File">
+				<MenuItem Header="_Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconLogout}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+			<MenuItem Header="_Edit">
+				<MenuItem Header="Cut" InputGesture="Ctrl+X"/>
+				<MenuItem Header="Copy" InputGesture="Ctrl+C"/>
+				<MenuItem Header="Paste" InputGesture="Ctrl+V"/>
+			</MenuItem>
+			<MenuItem Header="H_ubs">
+				<MenuItem Header="General">
+					<MenuItem Header="Home" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="Home">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconHome}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Projects" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="Projects">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconPortfolio}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Customers" Command="{Binding SideMenuViewModel.CustomersCommand}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconAddUser}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Suppliers" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="Suppliers">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconDelivery}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+				<MenuItem Header="HR &amp; Staff">
+					<MenuItem Header="Employees" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="StaffManagement">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconTeam}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Time &amp; Attendance" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="Time">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconTime}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+				<MenuItem Header="Management">
+					<MenuItem Header="Users &amp; Teams" Command="{Binding SideMenuViewModel.UsersTeamsCommand}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconUserManagement}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Company Settings" Command="{Binding SideMenuViewModel.CompanySettingsCommand}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconGear}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+				<MenuItem Header="Developer">
+					<MenuItem Header="Audit Log" Command="{Binding SideMenuViewModel.AuditLogCommand}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconList}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Bug Reports" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="BugList">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconBug}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+			</MenuItem>
+			<MenuItem Header="_Window">
+				<MenuItem Header="Close All" Command="{Binding CloseAllWorkspacesCommand}"/>
+				<MenuItem Header="Close Other" Command="{Binding CloseOtherWorkspacesCommand}"/>
+			</MenuItem>
+			<MenuItem Header="_Help">
+				<MenuItem Header="Release Notes" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="ReleaseNotes">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconInformation}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="_About" Command="{Binding AboutCommand}">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconInformation}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Support Center" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="SupportCenter">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconHelp}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Reported Bugs" Command="{Binding SideMenuViewModel.NavigateCommand}" CommandParameter="BugList">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconList}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="_Send Logs" Command="{Binding UploadLogsCommand}">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconUpload}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="_Report Bug" Command="{Binding ReportBugCommand}">
+					<MenuItem.Icon>
+						<PathIcon Data="{StaticResource IconBug}" Width="16" Height="16"/>
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+		</Menu>
+
+		<!-- Main Content Area (Sidebar + Workspace) -->
+		<Grid Grid.Row="1" ColumnDefinitions="Auto, *">
+			<!-- Sidebar: Spans full height of this row -->
+			<core:SideMenuView Grid.Column="0" DataContext="{Binding SideMenuViewModel}"/>
+
+			<!-- Main Content Area: Content + Footer -->
+			<Grid Grid.Column="1" RowDefinitions="50, *, Auto">
+
+				<!-- Workspace Bar -->
+				<Border Grid.Row="0"
+						Background="{DynamicResource TopMenuGradient}"
+						BorderBrush="{DynamicResource PrimaryTeal}"
+						BorderThickness="0,0,0,3"
+						Padding="0,0"
+						Margin="0">
+					<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+						<ItemsControl ItemsSource="{Binding Workspaces}">
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel Orientation="Horizontal"
+												VerticalAlignment="Bottom"/>
+
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Grid>
+										<Button Classes="MenuTabButton"
+												Classes.Active="{Binding IsActive}"
+												Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SetActiveWorkspaceCommand}"
+												CommandParameter="{Binding}">
+											<StackPanel Orientation="Horizontal" Spacing="8">
+												<!-- Handle raw StreamGeometry or String resource logic if needed, but for now assuming it binds directly if it's geometry -->
+												<!-- The ShellViewModel assigns Application.Current.FindResource result which is StreamGeometry -->
+												<PathIcon Data="{Binding IconData}" Classes="IconStyle" Width="14" Height="14"/>
+												<TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+											</StackPanel>
+										</Button>
+
+										<!-- Close Button (Hover only? Or always visible for now) -->
+										<Button Classes="IconButtonClose"
+												Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseWorkspaceCommand}"
+												CommandParameter="{Binding}"
+												HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,3,3,0"
+												Width="16" Height="16" Padding="2"
+												IsVisible="{Binding IsActive}"> <!-- Only show close on active tab to reduce clutter? Or all? Let's show on Active for cleaner UI -->
+												<PathIcon Data="{StaticResource IconClose}" Width="9" Height="9"/>
+										</Button>
+									</Grid>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</Border>
+
+				<!-- Page Content -->
+				<ContentControl Grid.Row="1" Content="{Binding CurrentWorkspace.ViewModel}" />
+
+				<!-- Notification Overlay -->
+				<Grid Grid.Row="1" IsVisible="{Binding IsNotificationOpen}" ZIndex="100">
+					<!-- Click-away background -->
+					<Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+							Background="#66000000"
+							Command="{Binding CloseNotificationsCommand}">
+						<Button.Styles>
+							<Style Selector="Button:pointerover /template/ ContentPresenter">
+								<Setter Property="Background" Value="#66000000"/>
+							</Style>
+							<Style Selector="Button:pressed /template/ ContentPresenter">
+								<Setter Property="Background" Value="#66000000"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+
+					<!-- Popup Content -->
+					<ContentControl Content="{Binding NotificationVM}"
+									HorizontalAlignment="Left" VerticalAlignment="Top"
+									Margin="0"
+									Width="400" Height="500"/>
+				</Grid>
+
+				<!-- Profile Overlay -->
+				<Grid Grid.Row="1" IsVisible="{Binding IsProfileOpen}" ZIndex="150" Background="#66000000">
+					<Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+							Background="Transparent"
+							Command="{Binding CloseProfileCommand}">
+						<Button.Styles>
+							<Style Selector="Button:pointerover /template/ ContentPresenter">
+								<Setter Property="Background" Value="Transparent"/>
+							</Style>
+							<Style Selector="Button:pressed /template/ ContentPresenter">
+								<Setter Property="Background" Value="Transparent"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+
+					<ContentControl Content="{Binding CurrentProfile}" HorizontalAlignment="Center" VerticalAlignment="Center">
+						<ContentControl.DataTemplates>
+							<DataTemplate DataType="{x:Type vmShared:ProfileViewModel}">
+								<viewsShared:ProfileView/>
+							</DataTemplate>
+						</ContentControl.DataTemplates>
+					</ContentControl>
+				</Grid>
+
+				<!-- Global Task Detail Overlay -->
+				<Grid Grid.Row="1" IsVisible="{Binding IsTaskDetailVisible}" ZIndex="300" 
+					  Background="#40000000" Name="OverlayGrid" PointerPressed="OnOverlayPointerPressed">
+					<viewWidgets:TaskDetailView x:Name="TaskDetailView" DataContext="{Binding CurrentTaskDetail}"
+												Width="1000"
+												HorizontalAlignment="Right"/>
+				</Grid>
+
+				<!-- Bottom Status Bar -->
+				<Border Grid.Row="2" Background="{DynamicResource SurfaceWhite}" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,1,0,0" Padding="10,5">
+					<Grid>
+						<!-- Left: Status Area -->
+						<StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="15" Margin="5,0,0,0">
+							<!-- User Activity -->
+							<StackPanel Orientation="Horizontal" Spacing="5">
+								<PathIcon Data="{StaticResource IconClock}" Width="14" Height="14" Foreground="{DynamicResource TextSecondaryGray}"/>
+								<TextBlock Text="{Binding UserActivityStatus}" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+							</StackPanel>
+
+							<Rectangle Width="1" Height="12" Fill="{DynamicResource BorderGray}" VerticalAlignment="Center"/>
+
+							<!-- DB Status -->
+							<StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+								<PathIcon Data="{StaticResource IconDatabase}" Width="14" Height="14" Classes.Connected="{Binding IsDbConnected}">
+									<PathIcon.Styles>
+										<Style Selector="PathIcon">
+											<Setter Property="Foreground" Value="{DynamicResource ErrorRed}"/>
+										</Style>
+										<Style Selector="PathIcon.Connected">
+											<Setter Property="Foreground" Value="#10B981"/>
+										</Style>
+									</PathIcon.Styles>
+								</PathIcon>
+								<TextBlock Text="{Binding DbStatusText}" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+							</StackPanel>
+
+                            <Rectangle Width="1" Height="12" Fill="{DynamicResource BorderGray}" VerticalAlignment="Center" IsVisible="{Binding IsLogUploading}"/>
+
+                            <!-- Upload Status -->
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" IsVisible="{Binding IsLogUploading}">
+                                <PathIcon Data="{StaticResource IconUpload}" Width="14" Height="14" Foreground="#3B82F6"/>
+                                <TextBlock Text="{Binding LogUploadStatus}" VerticalAlignment="Center" FontSize="12" Foreground="#3B82F6"/>
+                            </StackPanel>
+						</StackPanel>
+
+						<!-- Right: Online Users -->
+						<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+							<!-- Bug Report Button -->
+							<Button Background="Transparent" BorderThickness="0" Padding="12,8" Command="{Binding ReportBugCommand}" ToolTip.Tip="Report a Bug" Cursor="Hand" Focusable="False">
+								<Button.Styles>
+									<Style Selector="Button:pointerover /template/ ContentPresenter">
+										<Setter Property="Background" Value="#15000000"/>
+									</Style>
+								</Button.Styles>
+								<StackPanel Orientation="Horizontal" Spacing="5">
+									<PathIcon Data="{StaticResource IconBug}" Width="14" Height="14" Foreground="{DynamicResource AccentOrange}"/>
+									<TextBlock Text="Report Bug" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+								</StackPanel>
+							</Button>
+							<Rectangle Width="1" Height="16" Fill="{DynamicResource BorderGray}"/>
+
+							<Button Background="Transparent" BorderThickness="0" Padding="8,5" Cursor="Hand">
+								<StackPanel Orientation="Horizontal" Spacing="5">
+									<PathIcon Data="{StaticResource IconUserOnline}" Width="14" Height="14" Foreground="{DynamicResource PrimaryTeal}"/>
+									<TextBlock Text="Online:" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+									<TextBlock Text="{Binding OnlineCount}" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+								</StackPanel>
+
+								<Button.Flyout>
+									<Flyout Placement="TopEdgeAlignedRight" ShowMode="TransientWithDismissOnPointerMoveAway">
+										<StackPanel Spacing="5" MinWidth="150">
+											<TextBlock Text="Active Users" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}" Margin="0,0,0,5"/>
+											<ItemsControl ItemsSource="{Binding ConnectedUsers}">
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<Border Padding="5,2" Background="#F5F5F5" CornerRadius="4" Margin="0,2">
+															<Grid ColumnDefinitions="*, Auto">
+																<StackPanel Orientation="Horizontal" Spacing="5">
+																	<Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" VerticalAlignment="Center"/> <!-- Status Dot -->
+																	<TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center"/>
+																</StackPanel>
+																<TextBlock Grid.Column="1" Text="{Binding TimeOnline}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+															</Grid>
+														</Border>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+											<TextBlock Text="No users connected" IsVisible="{Binding !OnlineCount}" FontStyle="Italic" Foreground="{DynamicResource TextSecondaryGray}"/>
+										</StackPanel>
+									</Flyout>
+								</Button.Flyout>
+							</Button>
+						</StackPanel>
+					</Grid>
+				</Border>
+			</Grid>
+			<!-- Toast Notifications Overlay (Bottom Right) -->
+			<ItemsControl Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+						  Margin="0,0,20,50" ItemsSource="{Binding Toasts}" ZIndex="200">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<StackPanel Spacing="10"/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Border Background="White" CornerRadius="8" Padding="15,10"
+								BoxShadow="0 4 15 0 #20000000" Width="300"
+								Opacity="{Binding Opacity}"
+								BorderThickness="4,0,0,0"
+								Classes.Info="{Binding IsInfo}"
+								Classes.Success="{Binding IsSuccess}"
+								Classes.Warning="{Binding IsWarning}"
+								Classes.Error="{Binding IsError}">
+							<Border.Styles>
+								<Style Selector="Border.Info"> <Setter Property="BorderBrush" Value="#3B82F6"/> </Style>
+								<Style Selector="Border.Success"> <Setter Property="BorderBrush" Value="#10B981"/> </Style>
+								<Style Selector="Border.Warning"> <Setter Property="BorderBrush" Value="#F59E0B"/> </Style>
+								<Style Selector="Border.Error"> <Setter Property="BorderBrush" Value="#EF4444"/> </Style>
+							</Border.Styles>
+							<Grid ColumnDefinitions="Auto, *">
+								<PathIcon Grid.Column="0" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center">
+									<PathIcon.Styles>
+										<Style Selector="PathIcon"> <Setter Property="Data" Value="{StaticResource IconInfo}"/> <Setter Property="Foreground" Value="#3B82F6"/> </Style>
+									</PathIcon.Styles>
+								</PathIcon>
+								<StackPanel Grid.Column="1" Spacing="2">
+									<TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13"/>
+									<TextBlock Text="{Binding Message}" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" TextWrapping="Wrap"/>
+								</StackPanel>
+							</Grid>
+						</Border>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</Grid>
+	</Grid>
+</UserControl>

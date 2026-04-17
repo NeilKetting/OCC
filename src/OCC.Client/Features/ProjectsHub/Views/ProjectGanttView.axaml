@@ -1,0 +1,224 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+             xmlns:local="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectGanttView"
+             x:DataType="vm:ProjectGanttViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.summary">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Menu Bar -->
+        <local:GanttMenuBarView Grid.Row="0"/>
+
+        <!-- Main Content Layout -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Date Header -->
+                <RowDefinition Height="*"/>    <!-- Content -->
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" MinWidth="200"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*" MinWidth="150"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Row 0: Headers -->
+            <!-- Spacer for Task List Header -->
+            <Border Grid.Row="0" Grid.Column="0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,1,1" Background="{DynamicResource SurfaceBackground}" Height="30">
+                <TextBlock Text="Task Name" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0"/>
+            </Border>
+            
+            <!-- Date Headers ScrollViewer (Syncs Horizontal only) -->
+            <ScrollViewer Grid.Row="0" Grid.Column="2" Name="HeaderScrollViewer" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding DateHeaders}" Width="3000" Height="30" Background="{DynamicResource SurfaceBackground}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.Styles>
+                        <Style Selector="ContentPresenter">
+                            <Setter Property="Canvas.Left" Value="{Binding Left, DataType=vm:GanttDateHeader}"/>
+                            <Setter Property="Canvas.Top" Value="0"/>
+                        </Style>
+                    </ItemsControl.Styles>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="{Binding Width}" Height="30" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,1">
+                                    <TextBlock Text="{Binding Text}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Row 1: Content -->
+                     <!-- Task List (Left) -->
+                     <ScrollViewer Grid.Row="1" Grid.Column="0" Name="TaskScrollViewer" HorizontalScrollBarVisibility="Auto">
+                         <ItemsControl ItemsSource="{Binding GanttTasks}">
+                             <ItemsControl.Styles>
+                                <Style Selector="ContentPresenter" x:DataType="vm:GanttTaskWrapper">
+                                    <Setter Property="Canvas.Left" Value="0"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding RowTop}"/>
+                                </Style>
+                             </ItemsControl.Styles>
+                             <ItemsControl.ItemsPanel>
+                                 <ItemsPanelTemplate>
+                                     <Canvas Height="{Binding $parent[UserControl].DataContext.CanvasHeight}"/>
+                                 </ItemsPanelTemplate>
+                             </ItemsControl.ItemsPanel>
+                             <ItemsControl.ItemTemplate>
+                                 <DataTemplate>
+                                     <Border Height="{Binding RowHeight}" Width="{Binding $parent[ScrollViewer].Bounds.Width}" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                                         <StackPanel Orientation="Horizontal" Margin="{Binding IndentMargin}">
+                                             <!-- Expander Button -->
+                                             <Button Classes="IconButton" 
+                                                     Command="{Binding ToggleCommand}" 
+                                                     Width="20" Height="20" 
+                                                     Margin="0,0,5,0"
+                                                     IsVisible="{Binding HasChildren}">
+                                                  <Panel>
+                                                      <PathIcon Data="{StaticResource IconChevronDown}" Width="10" Height="10" 
+                                                                IsVisible="{Binding Task.IsExpanded}"/>
+                                                      <PathIcon Data="{StaticResource IconChevronRight}" Width="10" Height="10" 
+                                                                IsVisible="{Binding !Task.IsExpanded}"/>
+                                                  </Panel>
+                                             </Button>
+                                             <!-- Spacer if no children -->
+                                             <Panel Width="25" IsVisible="{Binding !HasChildren}"/>
+                                             
+                                             <TextBlock Text="{Binding Task.Name}" 
+                                                        VerticalAlignment="Center"
+                                                        Classes.summary="{Binding IsSummary}"/>
+                                         </StackPanel>
+                                     </Border>
+                                 </DataTemplate>
+                             </ItemsControl.ItemTemplate>
+                         </ItemsControl>
+                     </ScrollViewer>
+                     
+                     <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" Background="#DDDDDD" ResizeDirection="Columns"/>
+
+                     <!-- Gantt Chart (Right) -->
+                     <ScrollViewer Grid.Row="1" Grid.Column="2" Name="GanttScrollViewer" HorizontalScrollBarVisibility="Auto">
+                         <Grid>
+                                <!-- Layer 2: Vertical Grid Columns (Zebra Stripes) -->
+                                <ItemsControl ItemsSource="{Binding DateHeaders}">
+                                     <ItemsControl.Styles>
+                                        <Style Selector="ContentPresenter" x:DataType="vm:GanttDateHeader">
+                                            <Setter Property="Canvas.Left" Value="{Binding ColumnLeft}" />
+                                            <Setter Property="Canvas.Top" Value="0"/>
+                                        </Style>
+                                    </ItemsControl.Styles>
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                      <Canvas Width="{Binding $parent[UserControl].DataContext.CanvasWidth}" Height="{Binding $parent[UserControl].DataContext.CanvasHeight}" />
+                                    </ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:GanttDateHeader">
+                                      <!-- Vertical Column: Border on right, Background if Alternate -->
+                                      <Border Width="{Binding Width}" 
+                                              Height="{Binding $parent[UserControl].DataContext.CanvasHeight}" 
+                                              BorderBrush="#EEEEEE" 
+                                              BorderThickness="0,0,1,0"
+                                              Classes.alternate="{Binding IsAlternate}">
+                                          
+                                          <Border.Styles>
+                                              <Style Selector="Border.alternate">
+                                                  <Setter Property="Background" Value="#F5F5F5"/> 
+                                              </Style>
+                                              <!-- Default Background is Transparent (implicit) -->
+                                          </Border.Styles>
+                                      </Border>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                
+                                <!-- Layer 3: Dependencies with Arrowheads -->
+                                <ItemsControl ItemsSource="{Binding Dependencies}">
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                      <Canvas Width="{Binding $parent[UserControl].DataContext.CanvasWidth}" Height="{Binding $parent[UserControl].DataContext.CanvasHeight}" />
+                                    </ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:GanttDependencyLine">
+                                        <Canvas>
+                                            <!-- Connector Line -->
+                                              <Path Data="{Binding PathGeometry}" 
+                                                    Stroke="#999999" 
+                                                    StrokeThickness="2" />
+                                            <!-- Arrowhead -->
+                                              <Path Data="{Binding ArrowGeometry}" 
+                                                    Fill="#999999" 
+                                                    StrokeThickness="0" />
+                                        </Canvas>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Layer 4: Tasks -->
+                                <ItemsControl ItemsSource="{Binding GanttTasks}" Name="GanttItemsControl">
+                                    <ItemsControl.Styles>
+                                        <Style Selector="ContentPresenter" x:DataType="vm:GanttTaskWrapper">
+                                            <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                            <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                                        </Style>
+                                        <!-- Summary Task Style -->
+                                        <Style Selector="ContentPresenter Border.summary">
+                                             <Setter Property="Background" Value="#0097A7"/> 
+                                             <Setter Property="Height" Value="14"/>
+                                             <Setter Property="CornerRadius" Value="0"/>
+                                             <Setter Property="Margin" Value="0,3,0,0"/>
+                                        </Style>
+                                        <Style Selector="ContentPresenter Border.leaf">
+                                             <Setter Property="Background" Value="#4DD0E1"/> 
+                                             <Setter Property="Height" Value="16"/>
+                                             <Setter Property="CornerRadius" Value="2"/>
+                                             <Setter Property="Margin" Value="0,2,0,0"/> 
+                                        </Style>
+                                    </ItemsControl.Styles>
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                      <Canvas Width="{Binding $parent[UserControl].DataContext.CanvasWidth}" Height="{Binding $parent[UserControl].DataContext.CanvasHeight}" />
+                                    </ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:GanttTaskWrapper">
+                                      <!-- Use StackPanel to force text next to bar -->
+                                      <StackPanel Orientation="Horizontal" Height="{Binding Height}">
+                                          
+                                        <!-- Bar with explicit Width -->
+                                        <Border Width="{Binding Width}" 
+                                                Classes.summary="{Binding IsSummary}" 
+                                                Classes.leaf="{Binding !IsSummary}"/>
+                                        
+                                        <!-- Text immediately follows bar -->
+                                        <TextBlock Text="{Binding LabelText}" 
+                                                   Foreground="Black"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center"
+                                                   Padding="5,0,0,0"
+                                                   Classes.summary="{Binding IsSummary}" />
+                                      </StackPanel>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                         </Grid>
+                     </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>
+
+
+

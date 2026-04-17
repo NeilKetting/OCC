@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 xmlns:models="using:OCC.Shared.Models"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.LeaveApplicationView"
+			 x:DataType="vm:LeaveApplicationViewModel">
+
+	<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+		<Grid RowDefinitions="Auto, *">
+			<!-- Header -->
+			<Border Grid.Row="0" Background="{DynamicResource MainPageGradient}" Classes="TopHeader" Margin="2">
+				<StackPanel Spacing="5">
+				<TextBlock Text="Leave Application" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold"/>
+						<TextBlock Text="Apply for leave, subject to aproval" Foreground="#94A3B8" FontSize="{StaticResource FontsizeMedium}"/>
+					</StackPanel>
+			</Border>
+
+			<StackPanel Grid.Row="1" Spacing="20" Margin="20" MaxWidth="600" HorizontalAlignment="Left">
+
+				<!-- Employee Selection -->
+				<StackPanel Spacing="5">
+					<TextBlock Text="Employee" FontWeight="Medium"/>
+
+					<ComboBox ItemsSource="{Binding Employees}"
+							  SelectedItem="{Binding SelectedEmployee}"
+							  HorizontalAlignment="Stretch"
+							  PlaceholderText="Search and Select Employee..."
+							  IsTextSearchEnabled="True">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding DisplayName}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</StackPanel>
+
+				<!-- Dates -->
+				<Grid ColumnDefinitions="*, 10, *">
+					<StackPanel Grid.Column="0" Spacing="5">
+						<TextBlock Text="Start Date" FontWeight="Medium"/>
+						<Grid ColumnDefinitions="*, Auto">
+							<TextBox Grid.Column="0" Text="{Binding StartDate, StringFormat='dd MMM yyyy'}" IsReadOnly="True" Classes="FormInput"/>
+							<Button Grid.Column="1" Classes="IconButton" Margin="5,0,0,0" ToolTip.Tip="Select Date">
+								<PathIcon Data="{StaticResource IconCalendar}" Width="16" Height="16"/>
+								<Button.Flyout>
+									<Flyout Placement="Bottom">
+										<Calendar SelectedDate="{Binding StartDate}" SelectionMode="SingleDate"/>
+									</Flyout>
+								</Button.Flyout>
+							</Button>
+						</Grid>
+					</StackPanel>
+
+					<StackPanel Grid.Column="2" Spacing="5">
+						<TextBlock Text="End Date" FontWeight="Medium"/>
+						<Grid ColumnDefinitions="*, Auto">
+							<TextBox Grid.Column="0" Text="{Binding EndDate, StringFormat='dd MMM yyyy'}" IsReadOnly="True" Classes="FormInput"/>
+							<Button Grid.Column="1" Classes="IconButton" Margin="5,0,0,0" ToolTip.Tip="Select Date">
+								<PathIcon Data="{StaticResource IconCalendar}" Width="16" Height="16"/>
+								<Button.Flyout>
+									<Flyout Placement="Bottom">
+										<Calendar SelectedDate="{Binding EndDate}" SelectionMode="SingleDate"/>
+									</Flyout>
+								</Button.Flyout>
+							</Button>
+						</Grid>
+					</StackPanel>
+				</Grid>
+
+				<!-- Leave Type -->
+				<StackPanel Spacing="5">
+					<TextBlock Text="Leave Type" FontWeight="Medium"/>
+					<ComboBox ItemsSource="{Binding LeaveTypes}"
+							  SelectedItem="{Binding SelectedLeaveType}"
+							  HorizontalAlignment="Stretch">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding Converter={x:Static conv:FriendlyEnumConverter.Instance}}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</StackPanel>
+
+				<!-- Evaluation -->
+				<Border Background="#F9FAFB" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" CornerRadius="4" Padding="15">
+					<StackPanel Spacing="10">
+						<StackPanel Orientation="Horizontal" Spacing="5">
+							<TextBlock Text="Total Business Days:" FontWeight="SemiBold"/>
+							<TextBlock Text="{Binding CalculatedDays}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+						</StackPanel>
+
+						<!-- Warning -->
+						<Border IsVisible="{Binding HasBalanceWarning}" Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="4" Padding="10">
+							<StackPanel Orientation="Horizontal" Spacing="10">
+								<PathIcon Data="{StaticResource IconAlert}" Foreground="#DC2626"/>
+								<TextBlock Text="{Binding BalanceWarning}" Foreground="#B91C1C" TextWrapping="Wrap"/>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</Border>
+
+				<!-- Reason -->
+				<StackPanel Spacing="5">
+					<TextBlock Text="Reason" FontWeight="Medium"/>
+					<TextBox Text="{Binding Reason}"  Height="80" AcceptsReturn="True" Watermark="Please provide a reason for this leave request..."/>
+				</StackPanel>
+
+				<!-- Submit -->
+				<Button Command="{Binding SubmitCommand}"
+						Content="Submit Application"
+						Theme="{StaticResource PrimaryButton}"
+						HorizontalAlignment="Right"
+						IsEnabled="{Binding !IsSubmitting}"/>
+
+			</StackPanel>
+		</Grid>
+	</ScrollViewer>
+</UserControl>

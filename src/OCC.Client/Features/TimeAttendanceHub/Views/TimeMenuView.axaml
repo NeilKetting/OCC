@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.TimeMenuView"
+			 x:DataType="vm:TimeMenuViewModel">
+
+	<Border Classes="TopBar">
+		<Grid ColumnDefinitions="*,Auto, *, Auto">
+
+			<!-- Menu Buttons Area -->
+			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+				<StackPanel.Resources>
+					<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+				</StackPanel.Resources>
+
+				<!-- Live -->
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Live" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Live'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconLiveView}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="LIVE" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+                
+                <!-- Clock System Group -->
+                <Button Classes="MenuTabButton" Classes.Active="{Binding IsClockSystemActive}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconClock}" Classes="IconStyle" Width="16" Height="16"/>
+                        <TextBlock Text="ATTENDANCE" VerticalAlignment="Center"/>
+                        <PathIcon Data="{StaticResource IconChevronDown}" Classes="IconStyle" Width="10" Height="10" Margin="4,0,0,0"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuItem Header="Clock In / Out" Command="{Binding SetActiveTabCommand}" CommandParameter="Timesheet">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconDailyRollCall}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Manual Entry" Command="{Binding SetActiveTabCommand}" CommandParameter="Manual">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconPlus}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Live V2 (TEST)" Command="{Binding SetActiveTabCommand}" CommandParameter="Live V2">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource clock_regular}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Timesheet V2 (TEST)" Command="{Binding SetActiveTabCommand}" CommandParameter="Timesheet V2">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource calculator_regular}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Clock History" Command="{Binding SetActiveTabCommand}" CommandParameter="History">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconHistory}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+
+
+                <!-- Leave Group -->
+                <Button Classes="MenuTabButton" Classes.Active="{Binding IsLeaveActive}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconCalendar}" Classes="IconStyle" Width="16" Height="16"/>
+                        <TextBlock Text="LEAVE" VerticalAlignment="Center"/>
+                        <PathIcon Data="{StaticResource IconChevronDown}" Classes="IconStyle" Width="10" Height="10" Margin="4,0,0,0"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuItem Header="Leave Application" Command="{Binding SetActiveTabCommand}" CommandParameter="Leave Application">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconCalendar}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Leave Approvals" Command="{Binding SetActiveTabCommand}" CommandParameter="LeaveApprovals" IsVisible="{Binding CanApproveLeave}">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconLeaveApproved}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!-- Overtime Group -->
+                <Button Classes="MenuTabButton" Classes.Active="{Binding IsOvertimeActive}" IsVisible="{Binding CanRequestOvertime}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconClock2}" Classes="IconStyle" Width="16" Height="16"/>
+                        <TextBlock Text="OVERTIME" VerticalAlignment="Center"/>
+                        <PathIcon Data="{StaticResource IconChevronDown}" Classes="IconStyle" Width="10" Height="10" Margin="4,0,0,0"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuItem Header="Overtime Requests" Command="{Binding SetActiveTabCommand}" CommandParameter="Overtime">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconClock2}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Overtime Approvals" Command="{Binding SetActiveTabCommand}" CommandParameter="OvertimeApproval" IsVisible="{Binding CanApproveOvertime}">
+                                <MenuItem.Icon>
+                                    <PathIcon Data="{StaticResource IconOvertimeApproved}" Classes="IconStyle" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

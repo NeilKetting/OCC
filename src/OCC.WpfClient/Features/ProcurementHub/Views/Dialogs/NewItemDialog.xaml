@@ -1,0 +1,120 @@
+<UserControl x:Class="OCC.WpfClient.Features.ProcurementHub.Views.Dialogs.NewItemDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:NewItemViewModel}">
+    
+    <Grid Background="#7F000000">
+        <Border Style="{StaticResource DetailViewModalBorder}" 
+                VerticalAlignment="Center" HorizontalAlignment="Center" 
+                Width="700" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Header -->
+                    <RowDefinition Height="*"/>    <!-- Content -->
+                    <RowDefinition Height="Auto"/> <!-- Footer -->
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Style="{StaticResource DetailViewHeader}">
+                    <TextBlock Text="New Item" Style="{StaticResource SectionHeaderText}"/>
+                </Border>
+
+                <!-- Content -->
+                <Grid Grid.Row="1" Margin="25">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <!-- Type Section -->
+                        <GroupBox Header="TYPE" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,15">
+                            <StackPanel Margin="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox ItemsSource="{Binding ItemTypes}" 
+                                              SelectedItem="{Binding Type}"
+                                              Style="{StaticResource ModernComboBox}"
+                                              Width="200" HorizontalAlignment="Left" Grid.Column="0"/>
+                                    <TextBlock Grid.Column="1" Margin="15,0,0,0" 
+                                               Text="Use for services you charge for or purchase, like specialised labour, consulting hours, or professional fees."
+                                               Foreground="{StaticResource TextSub}" TextWrapping="Wrap" FontSize="11" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <Grid Margin="0,10,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,15,0">
+                                <TextBlock Text="Item Name/Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Sku}" Style="{StaticResource ModernInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <CheckBox Content="Subitem of" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,5"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}" IsEnabled="False"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Description & Rate -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,15,0">
+                                <TextBlock Text="Description" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Description}" Style="{StaticResource ModernInput}" Height="80" 
+                                         AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="10"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Rate" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Rate}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="0.00"/>
+                                
+                                <TextBlock Text="Sales VAT Code" Style="{StaticResource FormLabelText}" Margin="0,10,0,5"/>
+                                <ComboBox SelectedIndex="0" Style="{StaticResource ModernComboBox}">
+                                    <ComboBoxItem Content="S (Standard 15%)"/>
+                                    <ComboBoxItem Content="Z (Zero Rated)"/>
+                                    <ComboBoxItem Content="E (Exempt)"/>
+                                </ComboBox>
+                                
+                                <TextBlock Text="Account" Style="{StaticResource FormLabelText}" Margin="0,10,0,5"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}" SelectedIndex="0">
+                                    <ComboBoxItem Content="Sales"/>
+                                    <ComboBoxItem Content="Income"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Right Column Actions -->
+                    <StackPanel Grid.Column="1" Margin="20,0,0,0">
+                        <Button Content="OK" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,0,10"/>
+                        <Button Content="Cancel" Command="{Binding CancelCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,0,10"/>
+                        
+                        <Separator Background="{StaticResource GlassBorder}" Margin="0,5,0,15"/>
+                        
+                        <Button Content="Notes" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
+                        <Button Content="Custom Fields" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
+                        <Button Content="Spelling" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Footer -->
+                <Border Grid.Row="2" Style="{StaticResource DetailViewFooter}">
+                    <CheckBox Content="Item is inactive" Style="{StaticResource ModernCheckBox}" HorizontalAlignment="Right"/>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

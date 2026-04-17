@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Dashboard"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+			 x:Class="OCC.Client.Features.HomeHub.Views.MySummary.Widgets.TasksWidgetView"
+			 x:DataType="vm:TasksWidgetViewModel">
+
+	<Border Classes="WidgetCard" Padding="0">
+		<Grid RowDefinitions="Auto, *">
+			<!-- Content -->
+			<Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="30" Margin="20">
+				<!-- Tasks Column -->
+				<StackPanel Grid.Column="0" Spacing="20">
+					<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,5">
+						<TextBlock Text="TASKS" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+						<Border Background="{DynamicResource PrimaryTeal}" CornerRadius="10" Padding="6,1">
+							<TextBlock Text="{Binding TodayTaskCount}" FontSize="10" Foreground="White" FontWeight="Bold"/>
+						</Border>
+					</StackPanel>
+
+					<!-- Today's Tasks -->
+					<StackPanel Spacing="10">
+						<TextBlock Text="Due Today" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"
+								   IsVisible="{Binding !!TodayTasks.Count}"/>
+						<ItemsControl ItemsSource="{Binding TodayTasks}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Padding="12,10"
+											Background="{DynamicResource SurfaceLightGray}"
+											CornerRadius="8"
+											Margin="0,0,0,8"
+											BorderBrush="{DynamicResource PrimaryTeal}"
+											BorderThickness="2,0,0,0"
+											DoubleTapped="OnTaskDoubleTapping" Tag="{Binding}">
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Open" Click="OnOpenClick"/>
+												<MenuItem Header="Complete" Click="OnCompleteClick"/>
+												<Separator/>
+												<MenuItem Header="Delete" Click="OnDeleteClick" Foreground="Red"/>
+											</ContextMenu>
+										</Border.ContextMenu>
+										<Grid ColumnDefinitions="*, Auto">
+											<StackPanel>
+												<TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextPrimaryDark}"/>
+												<TextBlock Text="{Binding Status}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+											</StackPanel>
+											<Border Grid.Column="1" Width="24" Height="24" CornerRadius="12" Background="{DynamicResource PrimaryTeal}" Opacity="0.1">
+												<TextBlock Text="{Binding AssigneeInitials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+											</Border>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+						<TextBlock Text="No tasks due today" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" IsVisible="{Binding !TodayTasks.Count}" FontStyle="Italic"/>
+					</StackPanel>
+
+					<!-- Upcoming Tasks -->
+					<StackPanel Spacing="10">
+						<TextBlock Text="Upcoming this week" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryGray}"
+								   Margin="0,5,0,0" IsVisible="{Binding !!UpcomingTasks.Count}"/>
+						<ItemsControl ItemsSource="{Binding UpcomingTasks}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Padding="12,10" Background="Transparent" BorderBrush="{DynamicResource BorderLightGray}" BorderThickness="1" CornerRadius="8" Margin="0,0,0,8"
+											DoubleTapped="OnTaskDoubleTapping" Tag="{Binding}">
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Open" Click="OnOpenClick"/>
+												<MenuItem Header="Complete" Click="OnCompleteClick"/>
+												<Separator/>
+												<MenuItem Header="Delete" Click="OnDeleteClick" Foreground="Red"/>
+											</ContextMenu>
+										</Border.ContextMenu>
+										<Grid ColumnDefinitions="*, Auto">
+											<StackPanel>
+												<TextBlock Text="{Binding Title}" FontSize="13" Foreground="{DynamicResource TextPrimaryDark}"/>
+												<TextBlock Text="{Binding DueDate, StringFormat='{}{0:ddd, dd MMM}'}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+											</StackPanel>
+											<TextBlock Grid.Column="1" Text="{Binding AssigneeInitials}" FontSize="10" Opacity="0.5" VerticalAlignment="Center"/>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</StackPanel>
+				</StackPanel>
+
+				<!-- To-Dos Column -->
+				<StackPanel Grid.Column="1" Spacing="20">
+					<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,5">
+						<TextBlock Text="PERSONAL TO-DOS" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+						<Border Background="{DynamicResource AccentOrange}" CornerRadius="10" Padding="6,1">
+							<TextBlock Text="{Binding TodayToDoCount}" FontSize="10" Foreground="White" FontWeight="Bold"/>
+						</Border>
+					</StackPanel>
+
+					<!-- Today's To-Dos -->
+					<StackPanel Spacing="10">
+						<TextBlock Text="To-Do Today" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentOrange}"
+								   IsVisible="{Binding !!TodayToDos.Count}"/>
+						<ItemsControl ItemsSource="{Binding TodayToDos}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Padding="12,10" Background="{DynamicResource SurfaceLightGray}"
+											CornerRadius="8" Margin="0,0,0,8"
+											BorderBrush="{DynamicResource Orange}"
+											BorderThickness="2,0,0,0"
+											DoubleTapped="OnTaskDoubleTapping" Tag="{Binding}">
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Open" Click="OnOpenClick"/>
+												<MenuItem Header="Complete" Click="OnCompleteClick"/>
+												<Separator/>
+												<MenuItem Header="Delete" Click="OnDeleteClick" Foreground="Red"/>
+											</ContextMenu>
+										</Border.ContextMenu>
+										<StackPanel>
+											<TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextPrimaryDark}"/>
+											<TextBlock Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" TextTrimming="CharacterEllipsis" IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+						<TextBlock Text="No to-do's today" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" IsVisible="{Binding !TodayToDos.Count}" FontStyle="Italic"/>
+					</StackPanel>
+
+					<!-- Upcoming To-Dos -->
+					<StackPanel Spacing="10">
+						<TextBlock Text="Upcoming this week" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryGray}"
+								   Margin="0,5,0,0" IsVisible="{Binding !!UpcomingToDos.Count}"/>
+						<ItemsControl ItemsSource="{Binding UpcomingToDos}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Padding="12,10" Background="Transparent" BorderBrush="{DynamicResource BorderLightGray}" BorderThickness="1" CornerRadius="8" Margin="0,0,0,8"
+											DoubleTapped="OnTaskDoubleTapping" Tag="{Binding}">
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Open" Click="OnOpenClick"/>
+												<MenuItem Header="Complete" Click="OnCompleteClick"/>
+												<Separator/>
+												<MenuItem Header="Delete" Click="OnDeleteClick" Foreground="Red"/>
+											</ContextMenu>
+										</Border.ContextMenu>
+										<StackPanel>
+											<TextBlock Text="{Binding Title}" FontSize="13" Foreground="{DynamicResource TextPrimaryDark}"/>
+											<TextBlock Text="{Binding DueDate, StringFormat='{}{0:ddd, dd MMM}'}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</StackPanel>
+				</StackPanel>
+			</Grid>
+		</Grid>
+	</Border>
+</UserControl>

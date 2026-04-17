@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.ViewModels.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Views.Core.AccessDeniedView"
+             x:DataType="vm:AccessDeniedViewModel">
+    
+    <Grid Background="#F8FAFC">
+        <Border Background="White" 
+                CornerRadius="12" 
+                Padding="40" 
+                MaxWidth="600" 
+                VerticalAlignment="Center" 
+                HorizontalAlignment="Center"
+                BoxShadow="0 10 30 0 #20000000">
+            <StackPanel Spacing="30" HorizontalAlignment="Center">
+                
+                <!-- Icon and Title -->
+                <StackPanel Spacing="15" HorizontalAlignment="Center">
+                    <Border Width="80" Height="80" CornerRadius="40" Background="#FEE2E2">
+                        <PathIcon Data="{StaticResource IconXCircle}" 
+                                  Width="40" Height="40" 
+                                  Foreground="#EF4444" 
+                                  VerticalAlignment="Center" 
+                                  HorizontalAlignment="Center"/>
+                    </Border>
+                    
+                    <TextBlock Text="{Binding Title}" 
+                               FontSize="28" 
+                               FontWeight="Bold" 
+                               HorizontalAlignment="Center"
+                               Foreground="#1E293B"/>
+                </StackPanel>
+
+                <!-- Message -->
+                <TextBlock Text="{Binding Message}" 
+                           FontSize="16" 
+                           Foreground="#64748B" 
+                           TextWrapping="Wrap" 
+                           TextAlignment="Center"
+                           LineHeight="24"/>
+
+                <!-- Action -->
+                <Button Content="Go Back" 
+                        Command="{Binding CloseCommand}"
+                        Classes="Primary"
+                        Width="200"
+                        HorizontalAlignment="Center"
+                        Margin="0,10,0,0"/>
+
+                <TextBlock Text="Orange Circle Construction ERP" 
+                           FontSize="12" 
+                           Foreground="#94A3B8" 
+                           HorizontalAlignment="Center"
+                           Margin="0,20,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

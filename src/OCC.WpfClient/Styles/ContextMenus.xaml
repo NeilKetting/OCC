@@ -1,0 +1,57 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Clean Dark Theme MenuItem Template -->
+    <Style x:Key="ModernMenuItem" TargetType="MenuItem">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Height" Value="45"/>
+        <Setter Property="Padding" Value="15,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid x:Name="MenuItemGrid" Background="Transparent" SnapsToDevicePixels="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Hover background -->
+                        <Border x:Name="HighlightBorder" Grid.ColumnSpan="2" Background="Transparent" />
+
+                        <!-- Separator line (Tag="HasSeparator") -->
+                        <Border x:Name="ItemSeparator" Grid.ColumnSpan="2" BorderBrush="#3b4a54" BorderThickness="0,1,0,0" VerticalAlignment="Top" Visibility="Collapsed" Margin="0,0"/>
+
+                        <!-- Icon -->
+                        <ContentPresenter Grid.Column="0" ContentSource="Icon" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,0,0,0"/>
+
+                        <!-- Text -->
+                        <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" Margin="10,0,25,0"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="HighlightBorder" Property="Background" Value="#2a3942" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="HasSeparator">
+                            <Setter TargetName="ItemSeparator" Property="Visibility" Value="Visible" />
+                            <Setter Property="Height" Value="46"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ModernContextMenu" TargetType="ContextMenu">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="#232d36" CornerRadius="12" Padding="0,5" BorderBrush="#3b4a54" BorderThickness="1">
+                        <ItemsPresenter SnapsToDevicePixels="True"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ModernMenuItem}"/>
+    </Style>
+
+</ResourceDictionary>

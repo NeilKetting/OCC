@@ -1,0 +1,332 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.BugHub.ViewModels;assembly=OCC.Client"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.BugHub.Views.BugListView"
+             x:DataType="vm:BugListViewModel">
+
+    <Grid ColumnDefinitions="350, *">
+        <!-- LEFT PANEL: BUG LIST -->
+        <Border Grid.Column="0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,1,0" Background="#F8FAFC">
+            <Grid RowDefinitions="Auto, *">
+                <!-- List Header / Filter -->
+                <Border Padding="20,15" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto, Auto">
+                            <TextBlock Text="Bug Reports" Classes="H1" FontSize="20"/>
+                            <Button Grid.Column="1" Command="{Binding LoadBugsCommand}" Classes="IconButton" VerticalAlignment="Center" ToolTip.Tip="Refresh List">
+                                <PathIcon Data="{StaticResource IconHistory}" Width="14" Height="14" Foreground="{DynamicResource TextTertiarySlate}"/>
+                            </Button>
+                            <CheckBox Grid.Column="2" IsChecked="{Binding IncludeArchived}" VerticalAlignment="Center" Margin="10,0,0,0"
+                                      IsVisible="{Binding IsDev}" ToolTip.Tip="Include Resolved/Closed">
+                                <TextBlock Text="Archived" FontSize="11"/>
+                            </CheckBox>
+                        </Grid>
+                        
+                        <!-- Filters -->
+                        <TextBox Text="{Binding SearchText}" Watermark="Search issues..." Classes="FormInput"/>
+                        <Grid ColumnDefinitions="*, *">
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding StatusFilters}" SelectedItem="{Binding StatusFilter}" 
+                                      HorizontalAlignment="Stretch" Margin="0,0,4,0"/>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SortOption}"
+                                      HorizontalAlignment="Stretch" Margin="4,0,0,0" PlaceholderText="Sort By" />
+                        </Grid>
+
+                        <TextBlock Text="{Binding Bugs.Count, StringFormat='{}{0} Issues Found'}" Classes="LabelXSM" Opacity="0.6"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Grouped List -->
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding GroupedBugs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <!-- Group Header -->
+                                    <Border Background="#EDF2F7" Padding="15,4" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1">
+                                        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="11" Foreground="#4A5568" LetterSpacing="1"/>
+                                    </Border>
+                                    
+                                    <!-- Items in Group -->
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Background="Transparent" Padding="0" BorderThickness="0" 
+                                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                                        Command="{Binding $parent[UserControl].((vm:BugListViewModel)DataContext).SelectBugCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu x:DataType="vm:BugListViewModel" DataContext="{Binding $parent[UserControl].DataContext}">
+                                                            <MenuItem Header="Move to In Progress" Command="{Binding MoveToInProgressCommand}" IsVisible="{Binding IsDev}">
+                                                                <MenuItem.Icon>
+                                                                    <PathIcon Data="{StaticResource IconPlay}" Width="12" Height="12"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                            <MenuItem Header="Move to Planning" Command="{Binding MoveToPlanningCommand}" IsVisible="{Binding IsDev}">
+                                                                <MenuItem.Icon>
+                                                                    <PathIcon Data="{StaticResource IconCalendar}" Width="12" Height="12"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                            <MenuItem Header="Feature Update" Command="{Binding MoveToFeatureUpdateCommand}" IsVisible="{Binding IsDev}">
+                                                                <MenuItem.Icon>
+                                                                    <PathIcon Data="{StaticResource IconPlus}" Width="12" Height="12"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                            <Separator IsVisible="{Binding IsDev}"/>
+                                                            <MenuItem Header="Request Info" Command="{Binding RequestInfoCommand}" IsVisible="{Binding IsDev}"/>
+                                                            <MenuItem Header="Mark Fixed" Command="{Binding MarkFixedCommand}" IsVisible="{Binding IsDev}"/>
+                                                            <MenuItem Header="Close Bug" Command="{Binding CloseBugCommand}" IsVisible="{Binding IsDev}"/>
+                                                            <Separator IsVisible="{Binding IsDev}"/>
+                                                            <MenuItem Header="Delete Bug" Command="{Binding DeleteBugCommand}" IsVisible="{Binding IsDev}" Foreground="{DynamicResource Danger}">
+                                                                <MenuItem.Icon>
+                                                                    <PathIcon Data="{StaticResource IconTrash}" Width="12" Height="12" Foreground="{DynamicResource Danger}"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                    
+                                                    <Border Padding="15,12" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1">
+                                                        <Grid>
+                                                            <!-- Selection Indicator -->
+                                                            <Border Width="4" HorizontalAlignment="Left" Margin="-15,-12,0,-12"
+                                                                    Background="{DynamicResource PrimaryTeal}">
+                                                                <Border.IsVisible>
+                                                                    <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                                                        <Binding Path="$parent[UserControl].((vm:BugListViewModel)DataContext).SelectedBug.Id"/>
+                                                                        <Binding Path="Id"/>
+                                                                    </MultiBinding>
+                                                                </Border.IsVisible>
+                                                            </Border>
+                                                            
+                                                            <StackPanel Spacing="8">
+                                                                <Grid ColumnDefinitions="*, Auto, Auto">
+                                                                    <TextBlock Text="{Binding ReporterName}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                                                    <Border Grid.Column="1" HorizontalAlignment="Right" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                                                            Background="{Binding Converter={StaticResource BugStatusBadgeConverter}, ConverterParameter='Background'}"
+                                                                            VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding Converter={StaticResource BugStatusBadgeConverter}, ConverterParameter='Text'}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding ReportedDate, StringFormat='{}{0:MMM dd}'}" 
+                                                                               Classes="LabelXSM" VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                                <TextBlock Text="{Binding ViewName}" Classes="LabelXSM" Foreground="{DynamicResource PrimaryTeal}"/>
+                                                                <TextBlock Text="{Binding Description}" MaxLines="2" TextTrimming="CharacterEllipsis" 
+                                                                           FontSize="12" Foreground="{DynamicResource TextSecondaryDark}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Loading Overlay -->
+                <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" VerticalAlignment="Top" Height="2"
+                             Foreground="{DynamicResource Orange}"/>
+            </Grid>
+        </Border>
+
+        <!-- RIGHT PANEL: DETAILS & COMMENTS -->
+        <Grid Grid.Column="1" RowDefinitions="Auto, *, Auto" Background="{DynamicResource SurfaceWhite}">
+            <!-- Empty State -->
+            <StackPanel Grid.Row="0" Grid.RowSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        IsVisible="{Binding SelectedBug, Converter={x:Static ObjectConverters.IsNull}}" Spacing="10">
+                <PathIcon Data="{StaticResource IconBug}" Width="48" Height="48" Opacity="0.2"/>
+                <TextBlock Text="Select a bug report to view details" Opacity="0.5" Classes="LabelSmall"/>
+            </StackPanel>
+
+            <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding SelectedBug, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  RowDefinitions="Auto, *, Auto">
+                
+                <!-- Detail Header -->
+                <Border Grid.Row="0" Padding="25,20" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{Binding SelectedBug.ViewName, StringFormat='Issue in {0}'}" Classes="H1" FontSize="22"/>
+                            <StackPanel Orientation="Horizontal" Spacing="15">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <PathIcon Data="{StaticResource IconProfile}" Width="12" Height="12" Foreground="{DynamicResource TextTertiarySlate}"/>
+                                    <TextBlock Text="{Binding SelectedBug.ReporterName}" Classes="LabelSmall"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <PathIcon Data="{StaticResource IconTime}" Width="12" Height="12" Foreground="{DynamicResource TextTertiarySlate}"/>
+                                    <TextBlock Text="{Binding SelectedBug.ReportedDate, StringFormat='{}{0:MMM dd, yyyy HH:mm}'}" Classes="LabelSmall"/>
+                                </StackPanel>
+                                <Border VerticalAlignment="Center" CornerRadius="4" Padding="8,2" 
+                                        Background="{Binding SelectedBug.Type, Converter={StaticResource TypeToColorConverter}, FallbackValue='#64748B'}">
+                                    <TextBlock Text="{Binding SelectedBug.Type}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Border Grid.Column="1" VerticalAlignment="Top" CornerRadius="4" Padding="10,4" 
+                                Background="{Binding SelectedBug.Status, Converter={StaticResource StatusToColorConverter}}">
+                            <TextBlock Text="{Binding SelectedBug.Status}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Scrollable Content -->
+                <ScrollViewer Grid.Row="1">
+                    <Border Padding="25">
+                        <StackPanel Spacing="30">
+                            <!-- Description Section -->
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="DESCRIPTION" Classes="LabelXSM" LetterSpacing="1"/>
+                                <TextBlock Text="{Binding SelectedBug.Description}" TextWrapping="Wrap" FontSize="15" LineHeight="22"/>
+                            </StackPanel>
+
+                            <!-- Screenshot Section -->
+                            <StackPanel Spacing="10" IsVisible="{Binding SelectedBugScreenshot, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <TextBlock Text="ATTACHED SCREENSHOT (Click to enlarge)" Classes="LabelXSM" LetterSpacing="1"/>
+                                <Button Command="{Binding ToggleImageZoomCommand}" Background="Transparent" Padding="0" BorderThickness="0">
+                                    <Border CornerRadius="8" ClipToBounds="True" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1"
+                                            HorizontalAlignment="Left" MaxWidth="600">
+                                        <Image Source="{Binding SelectedBugScreenshot}" Stretch="Uniform"/>
+                                    </Border>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Comments Section -->
+                            <StackPanel Spacing="20">
+                                <TextBlock Text="THREADED COMMUNICATION" Classes="LabelXSM" LetterSpacing="1"/>
+                                
+                                <ItemsControl ItemsSource="{Binding SelectedBug.Comments}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,15">
+                                                <Grid ColumnDefinitions="40, *, Auto">
+                                                    <!-- Avatar -->
+                                                    <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource AppBackgroundSlate}" 
+                                                            VerticalAlignment="Top" Margin="0,2,0,0">
+                                                        <TextBlock Text="{Binding Initials}" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                                                   FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                    </Border>
+
+                                                    <!-- Content -->
+                                                    <StackPanel Grid.Column="1" Spacing="5">
+                                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                                            <TextBlock Text="{Binding AuthorName}" FontWeight="SemiBold" FontSize="13"/>
+                                                            <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:MMM dd, HH:mm}'}" FontSize="11" Foreground="{DynamicResource TextTertiarySlate}"/>
+                                                            <Border IsVisible="{Binding IsDevComment}" CornerRadius="2" Padding="4,0" Background="#EEF2FF" VerticalAlignment="Center">
+                                                                <TextBlock Text="DEV" FontSize="9" FontWeight="Bold" Foreground="#4F46E5"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <Border Background="#F1F5F9" CornerRadius="0,8,8,8" Padding="12,8">
+                                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="13"/>
+                                                        </Border>
+                                                    </StackPanel>
+
+                                                    <!-- Dev Action: Delete Comment -->
+                                                    <Button Grid.Column="2" VerticalAlignment="Top" Margin="5,0,0,0"
+                                                            Classes="IconButton"
+                                                            Command="{Binding $parent[UserControl].((vm:BugListViewModel)DataContext).DeleteCommentCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            IsVisible="{Binding $parent[UserControl].((vm:BugListViewModel)DataContext).IsDev}"
+                                                            ToolTip.Tip="Delete Comment">
+                                                        <PathIcon Data="{StaticResource IconTrash}" Width="12" Height="12" Foreground="{DynamicResource Danger}"/>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="No comments yet." IsVisible="{Binding !SelectedBug.Comments.Count}" 
+                                           Opacity="0.5" FontSize="13" FontStyle="Italic"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+
+                <!-- Reply / Action Bar -->
+                <Border Grid.Row="2" Padding="25,15" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,1,0,0" Background="#FAFAFA"
+                        IsVisible="{Binding IsDev}">
+                    <StackPanel Spacing="15">
+                        <TextBox Text="{Binding NewCommentText}" Watermark="Write a reply..." AcceptsReturn="True" Height="80"
+                                 Classes="FormInput"/>
+                        
+                        <Grid ColumnDefinitions="*, Auto">
+                            <!-- Dev Actions -->
+                            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsDev}">
+                                <Button Command="{Binding RequestInfoCommand}" Classes="Secondary" Padding="15,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Data="{StaticResource IconInfo}" Width="14" Height="14"/>
+                                        <TextBlock Text="Request Info" FontSize="12"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding MarkFixedCommand}" Classes="Standout" Padding="15,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Data="{StaticResource IconCheck}" Width="14" Height="14"/>
+                                        <TextBlock Text="Mark Fixed" FontSize="12"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding CloseBugCommand}" Classes="Ghost" Padding="15,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Data="{StaticResource IconX}" Width="14" Height="14"/>
+                                        <TextBlock Text="Close Bug" FontSize="12"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding DeleteBugCommand}" Classes="Danger" Padding="15,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <PathIcon Data="{StaticResource IconTrash}" Width="14" Height="14"/>
+                                        <TextBlock Text="Delete" FontSize="12"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Client/Reporter Actions -->
+                            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsDev}">
+                                <!-- ONLY Show if I am the Reporter -->
+                                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsReporter}">
+                                    <Button Command="{Binding MarkResolvedCommand}" Classes="Success" Padding="15,6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <PathIcon Data="{StaticResource IconCheck}" Width="14" Height="14"/>
+                                            <TextBlock Text="Mark Resolved" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                     <Button Command="{Binding MarkNotResolvedCommand}" Classes="Danger" Padding="15,6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <PathIcon Data="{StaticResource IconX}" Width="14" Height="14"/>
+                                            <TextBlock Text="Still Broken" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Send Button -->
+                            <Button Grid.Column="1" Command="{Binding SendCommentCommand}" Classes="Primary" Padding="25,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <PathIcon Data="{StaticResource IconChat}" Width="14" Height="14" Foreground="White"/>
+                                    <TextBlock Text="Reply" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- IMAGE ZOOM OVERLAY -->
+        <Grid Grid.ColumnSpan="2" Background="#CC000000" IsVisible="{Binding IsImageZoomed}">
+            <Button Command="{Binding ToggleImageZoomCommand}" Background="Transparent" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid>
+                    <Image Source="{Binding SelectedBugScreenshot}" Stretch="Uniform" Margin="40"/>
+                    <Border VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20"
+                            Background="White" CornerRadius="20" Width="40" Height="40">
+                         <PathIcon Data="{StaticResource IconX}" Width="20" Height="20" Foreground="Black"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

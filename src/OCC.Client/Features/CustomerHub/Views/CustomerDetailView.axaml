@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.CustomerHub.ViewModels"
+			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Features.CustomerHub.Views.CustomerDetailView"
+			 x:DataType="vm:CustomerDetailViewModel"
+			 Focusable="True">
+
+	<Design.DataContext>
+		<vm:CustomerDetailViewModel/>
+	</Design.DataContext>
+
+	<Border Background="{DynamicResource SurfaceWhite}"
+			CornerRadius="8"
+			VerticalAlignment="Center"
+			HorizontalAlignment="Center"
+			MaxWidth="850"
+			Width="850"
+			MaxHeight="850"
+			BoxShadow="0 8 30 0 #50000000">
+		<Grid RowDefinitions="Auto, *, Auto">
+			<!-- Header -->
+			<Border Grid.Row="0"
+					Background="White"
+					BorderThickness="0,0,0,2"
+					BorderBrush="{DynamicResource PrimaryTeal}"
+					Padding="10,0">
+				<Grid ColumnDefinitions="*, Auto" Margin="15,20">
+					<StackPanel Spacing="5">
+						<TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+						<TextBlock Text="Manage customer information." FontSize="14" Foreground="{DynamicResource TextSecondaryGray}"/>
+					</StackPanel>
+					<Button Grid.Column="1" Classes="IconButtonClose" Command="{Binding CancelCommand}" VerticalAlignment="Top">
+						<PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+					</Button>
+				</Grid>
+			</Border>
+
+			<!-- Content -->
+			<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+				<StackPanel Spacing="15" Margin="30,20">
+					<!-- Name -->
+					<StackPanel>
+						<TextBlock Text="Customer Name" Classes="FormLabel"/>
+						<TextBox Text="{Binding Name}" Classes="FormInput" Watermark="e.g. Acme Corp" ToolTip.Tip="Primary display name"/>
+					</StackPanel>
+
+					<!-- Header -->
+					<StackPanel>
+						<TextBlock Text="Header (Optional)" Classes="FormLabel"/>
+						<TextBox Text="{Binding Header}" Classes="FormInput" Watermark="e.g. Grouping Header" ToolTip.Tip="Optional grouping or project header"/>
+					</StackPanel>
+
+					<!-- Email -->
+					<StackPanel>
+						<TextBlock Text="Email Address" Classes="FormLabel"/>
+						<TextBox Text="{Binding Email}" Classes="FormInput" Watermark="contact@domain.com"/>
+					</StackPanel>
+
+					<!-- Phone -->
+					<StackPanel>
+						<TextBlock Text="Phone Number" Classes="FormLabel"/>
+						<TextBox Text="{Binding Phone}" Classes="FormInput" Watermark="+27 ..."/>
+					</StackPanel>
+
+					<!-- Address -->
+					<StackPanel>
+						<TextBlock Text="Address" Classes="FormLabel"/>
+						<TextBox Text="{Binding Address}" Classes="FormInput" MinHeight="80" AcceptsReturn="True" TextWrapping="Wrap" Watermark="Billing Address"/>
+					</StackPanel>
+
+					<Separator Background="{DynamicResource SurfaceBorder}" Margin="0,10"/>
+
+					<!-- Contact Persons -->
+					<StackPanel Spacing="10">
+						<StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+							<PathIcon Data="{StaticResource IconUser}" Width="16" Height="16" Foreground="{DynamicResource PrimaryTeal}"/>
+							<TextBlock Text="Detailed Contacts" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+						</StackPanel>
+						<TextBlock Text="Add multiple contact people (e.g. different departments)." FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+
+						<ScrollViewer MaxHeight="300">
+							<ItemsControl ItemsSource="{Binding Contacts}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Background="White" BorderBrush="{DynamicResource ThemeBorderLow}" BorderThickness="1" CornerRadius="4" Padding="15" Margin="0,0,0,10">
+											<Grid ColumnDefinitions="*, 10, *, 10, Auto" RowDefinitions="Auto, 10, Auto">
+												
+												<!-- Row 1: Name & Department -->
+												<StackPanel Grid.Row="0" Grid.Column="0">
+													<TextBlock Text="Name" Classes="LabelXSM" Margin="0,0,0,2"/>
+													<TextBox Text="{Binding Name}" Classes="FormInput" Watermark="Contact Name"/>
+												</StackPanel>
+												<StackPanel Grid.Row="0" Grid.Column="2">
+													<TextBlock Text="Department" Classes="LabelXSM" Margin="0,0,0,2"/>
+													<TextBox Text="{Binding Department}" Classes="FormInput" Watermark="Department / Role"/>
+												</StackPanel>
+
+												<!-- Row 2: Email & Phone -->
+												<StackPanel Grid.Row="2" Grid.Column="0">
+													<TextBlock Text="Email" Classes="LabelXSM" Margin="0,0,0,2"/>
+													<TextBox Text="{Binding Email}" Classes="FormInput" Watermark="Email Address"/>
+												</StackPanel>
+												<StackPanel Grid.Row="2" Grid.Column="2">
+													<TextBlock Text="Phone" Classes="LabelXSM" Margin="0,0,0,2"/>
+													<TextBox Text="{Binding Phone}" Classes="FormInput" Watermark="Direct Line / Mobile"/>
+												</StackPanel>
+
+												<!-- Delete Button (Spans rows or centered) -->
+												<Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="4" Classes="IconOnly" VerticalAlignment="Top" Margin="0,5,0,0"
+														Command="{Binding $parent[UserControl].((vm:CustomerDetailViewModel)DataContext).RemoveContactCommand}" 
+														CommandParameter="{Binding}"
+														ToolTip.Tip="Remove Contact">
+													<PathIcon Data="{StaticResource IconDelete}" Height="16" Width="16" Foreground="Red"/>
+												</Button>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</ScrollViewer>
+
+						<Button Content="Add New Contact" Command="{Binding AddContactCommand}" Classes="Secondary" HorizontalAlignment="Stretch"/>
+					</StackPanel>
+				</StackPanel>
+			</ScrollViewer>
+
+			<!-- Footer -->
+			<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="20,15">
+				<Button Content="Cancel" Command="{Binding CancelCommand}" Classes="Cancel"/>
+				<Button Content="{Binding SaveButtonText}" Command="{Binding SaveCommand}" Classes="Primary"/>
+			</StackPanel>
+
+			<!-- Loading Overlay -->
+			<StackPanel Grid.RowSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+				<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

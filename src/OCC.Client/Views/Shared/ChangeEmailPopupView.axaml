@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.ViewModels.Shared"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="250"
+             x:Class="OCC.Client.Views.Shared.ChangeEmailPopupView"
+             x:DataType="vm:ChangeEmailPopupViewModel">
+
+    <Border Background="{DynamicResource SurfaceWhite}" CornerRadius="8" BoxShadow="0 10 30 0 #40000000" Width="500">
+        <Grid RowDefinitions="Auto, Auto, Auto">
+            
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="24,20" ColumnDefinitions="*, Auto">
+                <TextBlock Text="Change email address" 
+                           FontSize="18" 
+                           FontWeight="SemiBold" 
+                           Foreground="{DynamicResource TextPrimaryDark}"
+                           VerticalAlignment="Center"/>
+                <Button Grid.Column="1" 
+                        Command="{Binding CancelCommand}" 
+                        Classes="Close"
+                        Cursor="Hand">
+                    <PathIcon Data="{StaticResource IconClose}" Width="12" Height="12"/>
+                </Button>
+            </Grid>
+
+            <!-- Content -->
+            <StackPanel Grid.Row="1" Margin="24,0,24,30">
+                <TextBlock Text="This user will need to respond to an email from us to confirm their new email address is correct. If you proceed, the user may be logged out of their account."
+                           TextWrapping="Wrap" 
+                           Foreground="{DynamicResource TextSecondaryDark}" 
+                           FontSize="14" 
+                           LineHeight="20"
+                           Margin="0,0,0,24"/>
+                
+                <TextBlock Text="NEW EMAIL ADDRESS" 
+                           FontSize="11" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextTertiarySlate}" 
+                           Margin="0,0,0,8"/>
+                           
+                <TextBox Text="{Binding NewEmail}" 
+                         Classes="FormInput"
+                         Watermark="origize63@gmail.com" />
+            </StackPanel>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" 
+                    Background="#FAFAFA" 
+                    BorderBrush="{DynamicResource BorderGray}" 
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,8,8"
+                    Padding="24,16">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                    <Button Command="{Binding CancelCommand}" 
+                            Background="Transparent" 
+                            Foreground="{DynamicResource TextSecondaryGray}" 
+                            FontWeight="SemiBold" 
+                            BorderThickness="0"
+                            Padding="16,10"
+                            Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+                            <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Command="{Binding ChangeEmailCommand}" 
+                            Background="#C0E800" 
+                            Foreground="{DynamicResource TextPrimaryDark}" 
+                            FontWeight="Bold" 
+                            Padding="24,10"
+                            CornerRadius="4"
+                            BorderThickness="0"
+                            Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon Data="{StaticResource IconMail}" Width="16" Height="16"/>
+                            <TextBlock Text="Change Email" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

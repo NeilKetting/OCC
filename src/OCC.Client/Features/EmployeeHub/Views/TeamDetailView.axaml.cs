@@ -1,0 +1,3 @@
+using OCC.Client.Features.EmployeeHub.ViewModels;
+using OCC.Client.Features.TimeAttendanceHub.ViewModels;
+using Avalonia.Controls; using Avalonia.Markup.Xaml;  namespace OCC.Client.Features.EmployeeHub.Views {     public partial class TeamDetailView : UserControl     {         public TeamDetailView()         {             InitializeComponent();         }          public void FocusInput()         {              var input = this.FindControl<TextBox>("NameInput");              input?.Focus();         }            private void InitializeComponent()         {             AvaloniaXamlLoader.Load(this);         }     } }

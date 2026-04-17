@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectVariationOrderListView"
+             x:DataType="vm:ProjectVariationOrderListViewModel">
+
+    <UserControl.Resources>
+        <conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header / Actions -->
+        <Border Grid.Row="0" Margin="10" Padding="15" Background="White" CornerRadius="8" BoxShadow="0 1 3 0 #15000000">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconSheet}" Width="24" Height="24" Foreground="{DynamicResource PrimaryTeal}"/>
+                    <TextBlock Text="Project Variation Orders" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" Classes="Primary" IsVisible="{Binding ActiveSubTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Create', Converter={x:Static BoolConverters.Not}}"
+                        Command="{Binding PrepareCreateCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconAdd}" Width="16" Height="16"/>
+                        <TextBlock Text="NEW VARIATION"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Panel Grid.Row="1" Margin="10">
+                <!-- List View -->
+                <Grid IsVisible="{Binding ActiveSubTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='List'}">
+                    <Border Background="White" CornerRadius="8" BoxShadow="0 1 3 0 #15000000">
+                        <Grid RowDefinitions="Auto, *">
+                            <Border Grid.Row="0" Padding="15" Background="{DynamicResource BackgroundLightGray}">
+                                <Grid ColumnDefinitions="*, 200, 200, 100">
+                                    <TextBlock Text="Description" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Approved By" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="2" Text="Status" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="3" Text="Invoiced" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <ScrollViewer Grid.Row="1">
+                                <ItemsControl ItemsSource="{Binding VariationOrders}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{DynamicResource BorderLightGray}" BorderThickness="0,0,0,1" Padding="15">
+                                                <Grid ColumnDefinitions="*, 200, 200, 100">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Description}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding AdditionalComments}" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Date, StringFormat=\{0:dd MMM yyyy\}}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                    </StackPanel>
+
+                                                    <TextBlock Grid.Column="1" Text="{Binding ApprovedBy}" VerticalAlignment="Center"/>
+                                                    
+                                                    <Border Grid.Column="2" Background="{DynamicResource BackgroundLightGray}" CornerRadius="12" Padding="10,4" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Status}" FontSize="12"/>
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                                        <CheckBox IsChecked="{Binding IsInvoiced}" 
+                                                                  Command="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).ToggleInvoicedCommand}"
+                                                                  CommandParameter="{Binding}"/>
+
+                                                        <Button Classes="IconButton" ToolTip.Tip="Edit Variation"
+                                                                Command="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).PrepareEditCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <PathIcon Data="{StaticResource IconEdit}" Width="14" Height="14"/>
+                                                        </Button>
+
+                                                        <Button Classes="IconButton Error" ToolTip.Tip="Delete Variation"
+                                                                Command="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).DeleteVariationCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <PathIcon Data="{StaticResource IconDelete}" Width="14" Height="14"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <!-- Empty State -->
+                            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10"
+                                        IsVisible="{Binding !VariationOrders.Count}">
+                                <PathIcon Data="{StaticResource IconInbox}" Width="48" Height="48" Opacity="0.5"/>
+                                <TextBlock Text="No variation orders found." Foreground="{DynamicResource TextSecondaryGray}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Create View -->
+                <Grid IsVisible="{Binding ActiveSubTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Create'}" HorizontalAlignment="Center">
+                    <Border Background="White" CornerRadius="8" BoxShadow="0 1 3 0 #15000000" VerticalAlignment="Top" Width="500">
+                        <StackPanel Spacing="15" DataContext="{Binding NewOrder}">
+                            <Border Padding="20">
+                                <StackPanel Spacing="15">
+                            <TextBlock Text="Create Variation Order" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"
+                                        IsVisible="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).IsEditing, Converter={x:Static BoolConverters.Not}}"/>
+                            <TextBlock Text="Edit Variation Order" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"
+                                        IsVisible="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).IsEditing}"/>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Description" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding Description}" Watermark="Main scope change description..."
+                                         TextWrapping="Wrap" AcceptsReturn="True" Height="80"/>
+                                <ItemsControl ItemsSource="{Binding (DataValidationErrors.Errors)}" Foreground="Red" FontSize="11"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Approved By" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding ApprovedBy}" Watermark="Person who authorized this..."/>
+                                <ItemsControl ItemsSource="{Binding (DataValidationErrors.Errors)}" Foreground="Red" FontSize="11"/>
+                            </StackPanel>
+
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Additional Comments" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding AdditionalComments}" Watermark="Context, reasons, or specific details..." 
+                                         TextWrapping="Wrap" AcceptsReturn="True" Height="100"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,10,0,0">
+                                <Button Content="Cancel" Command="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).CancelCreateCommand}"/>
+                                <Button Content="Update Order" Classes="Primary" IsVisible="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).IsEditing}"
+                                        Command="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).SaveOrderCommand}"/>
+                                <Button Content="Create Order" Classes="Primary" IsVisible="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).IsEditing, Converter={x:Static BoolConverters.Not}}"
+                                        Command="{Binding $parent[UserControl].((vm:ProjectVariationOrderListViewModel)DataContext).SaveOrderCommand}"/>
+                            </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Panel>
+
+        <!-- Loading Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="2" Background="#80FFFFFF" IsVisible="{Binding IsLoading}">
+            <ProgressBar IsIndeterminate="True" HorizontalAlignment="Center" VerticalAlignment="Center" Width="200"/>
+        </Border>
+    </Grid>
+</UserControl>
+
+
+

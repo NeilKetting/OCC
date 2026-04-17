@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.CustomerHub.ViewModels"
+			 xmlns:views="clr-namespace:OCC.Client.Features.CustomerHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.CustomerHub.Views.CustomerManagementView"
+			 x:DataType="vm:CustomerManagementViewModel">
+
+	<Grid>
+		<!-- Main Content -->
+		<views:CustomerListView/>
+
+		<!-- Add/Edit Employee Popup Overlay -->
+		<Grid Grid.Row="0" Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding IsAddCustomerPopupVisible}">
+			<Border Background="Transparent" CornerRadius="8" Padding="0"
+					HorizontalAlignment="Center" VerticalAlignment="Center">
+				<views:CustomerDetailView DataContext="{Binding CustomerDetailPopup}"/>
+			</Border>
+		</Grid>
+	</Grid>
+</UserControl>

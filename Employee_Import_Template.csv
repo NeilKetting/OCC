@@ -1,0 +1,3 @@
+Employee Number,First Name,Last Name,Phone Number,Email Address,ID Type,ID Number,Permit Number,Tax Number,Employment Date,Employment Type,Contract Duration,Role,Rate Type,Rate Amount,Branch,Shift Start Time,Shift End Time,Bank Name,Account Type,Account Number,Branch Code,Annual Leave Balance,Sick Leave Balance,Leave Cycle Start Date
+EMP001,John,Doe,0821234567,john.doe@example.com,RSAId,8001015000080,,1234567890,2023-01-15,Permanent,,GeneralWorker,Hourly,45.50,Johannesburg,07:00,16:45,FNB,Savings,62123456789,250655,0,30,2024-01-01
+EMP002,Jane,Smith,0719876543,jane.smith@example.com,RSAId,9005125000081,,9876543210,2022-06-01,Permanent,,Foreman,MonthlySalary,25000,Cape Town,07:30,17:00,Standard Bank,Current,123456789,051001,15,30,2022-06-01

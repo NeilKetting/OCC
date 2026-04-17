@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.MySummary"
+             xmlns:widgets="clr-namespace:OCC.Client.Features.HomeHub.Views.MySummary.Widgets"
+             xmlns:local="clr-namespace:OCC.Client.Features.HomeHub.Views.MySummary"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.HomeHub.Views.MySummary.MySummaryPageView"
+             x:DataType="vm:MySummaryPageViewModel">
+
+    <ScrollViewer Padding="20">
+        <StackPanel Spacing="20">
+            <!-- Greeting or Top Section could go here if not in HomeView -->
+            
+            <!-- Summary Row -->
+            <Grid HorizontalAlignment="Center">
+                <local:MySummaryView DataContext="{Binding Summary}" Width="850"/>
+            </Grid>
+
+            <!-- Tasks & To-Dos List Widget -->
+            <widgets:TasksWidgetView DataContext="{Binding TasksWidget}" Margin="0,30,0,10"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+        xmlns:ext="clr-namespace:OCC.Shared.Interfaces;assembly=OCC.Shared"
+        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+        xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.EditProjectView"
+             x:DataType="vm:EditProjectViewModel">
+
+    <Border Background="White" CornerRadius="8" BoxShadow="0 8 30 0 #40000000" Margin="20">
+        <Grid RowDefinitions="Auto, *, Auto" Margin="30">
+            <!-- Header -->
+            <Grid ColumnDefinitions="*, Auto" Grid.Row="0" Margin="0,0,0,25">
+                <StackPanel>
+                    <TextBlock Text="{Binding Project.Name}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                    <TextBlock Text="Edit Project" FontSize="13" Foreground="{DynamicResource TextSecondaryGray}"/>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding CancelCommand}" Classes="Close">
+                    <PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+                </Button>
+            </Grid>
+
+            <!-- Form -->
+            <ScrollViewer Grid.Row="1" Padding="0,0,15,0">
+                <StackPanel Spacing="18">
+                    <!-- Error Message -->
+                    <Border IsVisible="{Binding IsErrorVisible}" 
+                            Background="#FEF2F2" 
+                            BorderBrush="#FCA5A5" 
+                            BorderThickness="1" 
+                            CornerRadius="6" 
+                            Padding="12,10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource IconInfo}" Width="16" Height="16" Foreground="#EF4444"/>
+                            <TextBlock Text="{Binding ValidationMessage}" Foreground="#B91C1C" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Basic Info -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="PROJECT NAME" Classes="LabelSmall"/>
+                        <TextBox Text="{Binding Project.Name}" Classes="FormInput"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="DESCRIPTION" Classes="LabelSmall"/>
+                        <TextBox Text="{Binding Project.Description}" Height="60" AcceptsReturn="True" TextWrapping="Wrap" Classes="FormInput"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*, *">
+                        <StackPanel Spacing="5" Margin="0,0,10,0">
+                            <TextBlock Text="CUSTOMER" Classes="LabelSmall"/>
+                            <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding Customer}" Classes="FormInput" PlaceholderText="Select..." HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="5" Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="STATUS" Classes="LabelSmall"/>
+                            <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Project.Status}" HorizontalAlignment="Stretch" Classes="FormInput"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*, *">
+                         <StackPanel Spacing="5" Margin="0,0,10,0">
+                            <TextBlock Text="PRIORITY" Classes="LabelSmall"/>
+                            <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Project.Priority}" HorizontalAlignment="Stretch" Classes="FormInput"/>
+                        </StackPanel>
+                        <StackPanel Spacing="5" Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="TARGET DATE" Classes="LabelSmall"/>
+                            <CalendarDatePicker SelectedDate="{Binding Project.EndDate}" 
+                                                CustomDateFormatString="dd MMMM yyyy"
+                                                HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*, *">
+                         <StackPanel Spacing="5" Margin="0,0,10,0">
+                            <TextBlock Text="PROJECT MANAGER" Classes="LabelSmall"/>
+                            <ComboBox ItemsSource="{Binding ProjectManagers}" SelectedItem="{Binding Project.ProjectManager}" HorizontalAlignment="Stretch" Classes="FormInput"/>
+                        </StackPanel>
+                        <StackPanel Spacing="5" Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="SITE MANAGER" Classes="LabelSmall"/>
+                            <ComboBox ItemsSource="{Binding SiteManagers}" SelectedItem="{Binding SiteManager}" HorizontalAlignment="Stretch" Classes="FormInput">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Site Address -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,5" Margin="0,10,0,0">
+                        <TextBlock Text="SITE ADDRESS" Classes="LabelSmall" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </Border>
+
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="5">
+                        <TextBlock Text="STREET LINE 1" Classes="LabelSmall"/>
+                        <AutoCompleteBox x:Name="AddressSearch"
+                                         Text="{Binding Project.StreetLine1, Mode=TwoWay}"
+                                         ItemsSource="{Binding AddressSuggestions}"
+                                         SelectedItem="{Binding SelectedAddressSuggestion}"
+                                         ValueMemberBinding="{Binding Description}"
+                                         FilterMode="None"
+                                         Watermark="Search for address..."
+                                         Classes="FormInput">
+                            <AutoCompleteBox.ItemTemplate>
+                                <DataTemplate x:DataType="ext:AddressSuggestion">
+                                    <TextBlock Text="{Binding Description}" />
+                                </DataTemplate>
+                            </AutoCompleteBox.ItemTemplate>
+                        </AutoCompleteBox>
+                    </StackPanel>
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="STREET LINE 2" Classes="LabelSmall"/>
+                            <TextBox Text="{Binding Project.StreetLine2}" Classes="FormInput"/>
+                        </StackPanel>
+                        <Grid ColumnDefinitions="*, *">
+                            <StackPanel Spacing="5" Margin="0,0,10,0">
+                                <TextBlock Text="CITY" Classes="LabelSmall"/>
+                                <TextBox Text="{Binding Project.City}" Classes="FormInput"/>
+                            </StackPanel>
+                            <StackPanel Spacing="5" Grid.Column="1" Margin="10,0,0,0">
+                                <TextBlock Text="STATE / PROVINCE" Classes="LabelSmall"/>
+                                <TextBox Text="{Binding Project.StateOrProvince}" Classes="FormInput"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="*, *">
+                            <StackPanel Spacing="5" Margin="0,0,10,0">
+                                <TextBlock Text="POSTAL CODE" Classes="LabelSmall"/>
+                                <TextBox Text="{Binding Project.PostalCode}" Classes="FormInput"/>
+                            </StackPanel>
+                            <StackPanel Spacing="5" Grid.Column="1" Margin="10,0,0,0">
+                                <TextBlock Text="COUNTRY" Classes="LabelSmall"/>
+                                <TextBox Text="{Binding Project.Country}" Classes="FormInput"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Actions -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,20,0,0">
+                <Button Content="Cancel" Command="{Binding CancelCommand}" Classes="Ghost"/>
+                <Button Content="Save Changes" Command="{Binding SaveProjectCommand}" Background="{DynamicResource PrimaryTeal}" Foreground="White" Padding="25,10" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
+
+
+

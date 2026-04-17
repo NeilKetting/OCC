@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml" />
+        <ResourceDictionary Source="Typography.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Premium Validation Error Template (Can be used as an alternative) -->
+    <ControlTemplate x:Key="ModernErrorTemplate">
+        <StackPanel>
+            <AdornedElementPlaceholder x:Name="placeholder" />
+            <Border Background="{StaticResource ErrorRed}" 
+                    CornerRadius="0,0,4,4" 
+                    Margin="0,-2,0,0" 
+                    Padding="5,2"
+                    HorizontalAlignment="Right">
+                <TextBlock Text="{Binding [0].ErrorContent}" 
+                           Foreground="White" 
+                           FontSize="{StaticResource FontSizeSmall}" 
+                           FontWeight="Bold"/>
+            </Border>
+        </StackPanel>
+    </ControlTemplate>
+
+    <!-- 
+        Note: Specific Input validation (TextBox, PasswordBox) is now handled 
+        directly in Styles/Inputs.xaml to ensure the border itself changes color 
+        without the 'double border' effect.
+    -->
+
+</ResourceDictionary>

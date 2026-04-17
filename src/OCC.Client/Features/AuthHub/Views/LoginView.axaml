@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.AuthHub.ViewModels;assembly=OCC.Client"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.AuthHub.Views.LoginView"
+			 x:DataType="vm:LoginViewModel">
+
+	<Design.DataContext>
+		<vm:LoginViewModel/>
+	</Design.DataContext>
+
+	<UserControl.Styles>
+		<Style Selector="ScrollViewer.AnimateIn">
+			<Style.Animations>
+				<Animation Duration="0:0:2.0" Easing="CircularEaseOut" FillMode="Forward">
+				<KeyFrame KeyTime="0:0:0">
+					<Setter Property="Opacity" Value="0"/>
+				</KeyFrame>
+					<KeyFrame KeyTime="0:0:2.0">
+						<Setter Property="Opacity" Value="1"/>
+					</KeyFrame>
+				</Animation>
+			</Style.Animations>
+		</Style>
+		<Style Selector="Path.Spinner.IsSpinning">
+			<Style.Animations>
+				<Animation Duration="0:0:1" IterationCount="Infinite">
+					<KeyFrame KeyTime="0:0:0">
+						<Setter Property="RotateTransform.Angle" Value="0" />
+					</KeyFrame>
+					<KeyFrame KeyTime="0:0:1">
+						<Setter Property="RotateTransform.Angle" Value="360" />
+					</KeyFrame>
+				</Animation>
+			</Style.Animations>
+		</Style>
+	</UserControl.Styles>
+
+	<Grid>
+		<!-- Background -->
+		<Panel>
+			<!-- Background Image -->
+			<Grid ColumnDefinitions = "*,*,*">
+				<Rectangle Grid.Column="0" Fill="{DynamicResource LoginBackgroundDark}" />
+				<Image Grid.Column="1" Source="/Assets/Images/occ_bgi.jpg"
+					   RenderOptions.BitmapInterpolationMode="HighQuality" Stretch="UniformToFill" />
+				<!-- Dark Overlay -->
+				<Rectangle Grid.Column="1" Fill="{DynamicResource LoginBackgroundDark}" Opacity="0.40" />
+
+				<Rectangle Grid.Column="2" Fill="{DynamicResource AccentOrange}" />
+				<!-- logo -->
+                <Image Source="avares://OCC.Client/Assets/Images/occ_logo2.png" 
+					   Width="300" 
+					   Stretch="Uniform"
+					   RenderOptions.BitmapInterpolationMode="HighQuality"/>				
+			</Grid>
+		</Panel>
+
+
+		<!-- Content -->
+		<ScrollViewer Classes="AnimateIn">
+			<Border Padding="20" VerticalAlignment="Center"
+					BorderThickness="2">
+				<Grid>
+					<StackPanel Spacing="40">
+						<!-- Login Card -->
+						<Border Classes="Card" Width="400" VerticalAlignment="Center" Margin="15"
+			  BorderBrush="{DynamicResource BorderGray}" BorderThickness="5"
+								BoxShadow="0 0 20 8 #000000">
+							<StackPanel Spacing="25">
+								<TextBlock Text="Log in to your account below"
+										   HorizontalAlignment="Center"
+										   FontSize="20"
+										   FontWeight="SemiBold"
+										   Foreground="{DynamicResource LoginTextDark}"/>
+
+								<StackPanel Spacing="10">
+									<TextBox x:Name="EmailInput"
+											 Text="{Binding Email}"
+											 VerticalContentAlignment="Center"
+											 Watermark="Email address"/>
+
+									<TextBox x:Name="PasswordInput"
+											 Text="{Binding Password}"
+											 Watermark="Password"
+											 VerticalContentAlignment="Center"
+											 PasswordChar="*"/>
+
+									<TextBlock Text="{Binding ErrorMessage}"
+											   Foreground="Red"
+											   FontSize="12"
+											   TextWrapping="Wrap"
+											   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                                    <ComboBox ItemsSource="{Binding Environments}"
+                                              SelectedItem="{Binding SelectedEnvironment}"
+                                              IsVisible="{Binding IsDevUser}"
+                                              HorizontalAlignment="Center"
+                                              Width="200"
+                                              Margin="0,10,0,0"/>
+								</StackPanel>
+
+								<Button Command="{Binding LoginCommand}"
+										IsDefault="True"
+										Classes="Primary"
+										HorizontalContentAlignment="Stretch">
+									<Panel>
+										<TextBlock Text="Continue" IsVisible="{Binding !IsBusy}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+										<Path Classes="Spinner"
+											  Classes.IsSpinning="{Binding IsBusy}"
+											  IsVisible="{Binding IsBusy}"
+											  Width="20" Height="20"
+											  Data="M 12,2 A 10,10 0 1,1 2,12"
+											  Stretch="Uniform"
+											  Stroke="{DynamicResource PrimaryTeal}"
+											  StrokeThickness="2"
+											  Fill="Transparent"
+											  RenderTransformOrigin="50%,50%"
+											  HorizontalAlignment="Center" VerticalAlignment="Center">
+											<Path.RenderTransform>
+												<RotateTransform />
+											</Path.RenderTransform>
+										</Path>
+									</Panel>
+								</Button>
+
+								<!-- Divider -->
+								<Grid ColumnDefinitions="*,Auto,*">
+									<Separator Grid.Column="0" Background="{DynamicResource BorderGray}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+									<TextBlock Grid.Column="1" Text="OR" Foreground="{DynamicResource TextTertiarySlate}" FontSize="12" VerticalAlignment="Center"/>
+									<Separator Grid.Column="2" Background="{DynamicResource BorderGray}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+								</Grid>
+
+								<!-- Social Logins -->
+								<StackPanel Spacing="12">
+									<Button Classes="Social">
+										<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+											<Path Fill="#4285F4" Data="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+											<TextBlock Text="Continue with Google" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+										</StackPanel>
+									</Button>
+
+									<Button Classes="Social">
+										<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+											<Grid Width="16" Height="16" ColumnDefinitions="*,*" RowDefinitions="*,*">
+												<Border Grid.Row="0" Grid.Column="0" Background="#f25022" Margin="1"/>
+												<Border Grid.Row="0" Grid.Column="1" Background="#7fbb00" Margin="1"/>
+												<Border Grid.Row="1" Grid.Column="0" Background="#00a4ef" Margin="1"/>
+												<Border Grid.Row="1" Grid.Column="1" Background="#ffb900" Margin="1"/>
+											</Grid>
+											<TextBlock Text="Continue with Microsoft" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+										</StackPanel>
+									</Button>
+
+									<Button Classes="Social">
+										<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+											<Path Fill="Black" Data="M12.152 6.896c-.548 0-1.711-.516-2.861-.516-2.048 0-3.99 1.446-5.021 3.23-2.088 3.596-.534 8.936 1.482 11.84 1.01 1.446 2.188 3.033 3.743 3.033 1.482 0 2.048-.916 3.868-.916 1.801 0 2.306.916 3.868.916 1.621 0 2.633-1.42 3.623-2.86 1.127-1.625 1.579-3.213 1.603-3.28-.036-.013-3.08-1.185-3.111-4.706-.025-2.924 2.422-4.321 2.536-4.39-1.378-2.008-3.483-2.235-4.23-2.28-1.897-.154-3.5 1.183-3.5 1.183zM15.584 4.153c.834-1.02 1.396-2.44 1.243-3.853-1.196.049-2.64.802-3.497 1.801-.767.876-1.44 2.345-1.261 3.714 1.336.104 2.68-.642 3.515-1.662z" />
+											<TextBlock Text="Sign in with Apple" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5" Margin="0,10,0,0">
+									<TextBlock Text="Don't have an account?" Foreground="{DynamicResource LoginTextLight}" FontSize="13" VerticalAlignment="Center"/>
+									<Button Content="Register"
+											x:CompileBindings="False"
+											Command="{Binding $parent[Window].DataContext.NavigateToRegisterCommand}"
+											Classes="Link" />
+								</StackPanel>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</Grid>
+			</Border>
+		</ScrollViewer>
+	</Grid>
+</UserControl>
+
+

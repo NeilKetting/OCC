@@ -1,0 +1,140 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectDashboardView"
+             x:DataType="vm:ProjectDashboardViewModel">
+
+    <Grid Background="{DynamicResource AppBackgroundSlate}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="30,30,30,80" Spacing="30">
+                
+                <!-- 1. Top Section: Health, Location, Progress & ETA Cards -->
+                <Grid ColumnDefinitions="*, 30, *, 30, *, 30, *">
+                    <!-- Project Health -->
+                    <Border Grid.Column="0" Classes="CardMedium">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="PROJECT HEALTH" Classes="LabelSmall"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Ellipse Width="16" Height="16" Fill="{Binding ProjectHealthColor}"/>
+                                <TextBlock Text="{Binding ProjectHealth}" FontSize="24" FontWeight="Bold"/>
+                            </StackPanel>
+                            <TextBlock Text="Based on overdue tasks and progress" Classes="Caption" Foreground="{DynamicResource TextSecondaryGray}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Site Location / Address -->
+                    <Border Grid.Column="2" Classes="CardMedium">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="SITE LOCATION" Classes="LabelSmall"/>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding StreetLine1}" FontWeight="SemiBold" FontSize="16"/>
+                                <TextBlock Text="{Binding CityStatePostal}" FontSize="13" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Progress Gauge -->
+                    <Border Grid.Column="4" Classes="CardMedium">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="OVERALL PROGRESS" Classes="LabelSmall"/>
+                                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Bottom">
+                                    <TextBlock Text="{Binding OverallProgress, StringFormat='{}{0:N1}'}" FontSize="36" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+                                    <TextBlock Text="%" FontSize="18" Foreground="{DynamicResource TextTertiarySlate}" Margin="0,0,0,6"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Grid Grid.Column="1" Width="100" Height="100">
+                                <lvc:PieChart Series="{Binding ProgressGaugeSeries}" />
+                                <TextBlock Text="{Binding OverallProgress, StringFormat='{}{0:0}%'}" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                           FontSize="14" FontWeight="Bold"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- ETA Card -->
+                    <Border Grid.Column="6" Classes="CardMedium" Background="{DynamicResource WeatheredCementGradient}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="PREDICTED COMPLETION (ETA)" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryDark}"/>
+                            <TextBlock Text="{Binding EtaDateString}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource Orange}"/>
+                            <Border Background="#40FFFFFF" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding EtaStatus}" FontSize="12" FontWeight="SemiBold"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- 2. Task Breakdown Row -->
+                <Grid ColumnDefinitions="*, 30, *, 30, *, 30, *">
+                    <Border Grid.Column="0" Classes="CardMedium" Padding="20">
+                        <StackPanel HorizontalAlignment="Center">
+                             <TextBlock Text="TOTAL" Classes="LabelSmall" HorizontalAlignment="Center"/>
+                             <TextBlock Text="{Binding TotalTasks}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Classes="CardMedium" Padding="20">
+                        <StackPanel HorizontalAlignment="Center">
+                             <TextBlock Text="COMPLETED" Classes="LabelSmall" HorizontalAlignment="Center"/>
+                             <TextBlock Text="{Binding CompletedTasks}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource StatusGreen}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="4" Classes="CardMedium" Padding="20">
+                        <StackPanel HorizontalAlignment="Center">
+                             <TextBlock Text="IN PROGRESS" Classes="LabelSmall" HorizontalAlignment="Center"/>
+                             <TextBlock Text="{Binding InProgressTasks}" FontSize="28" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="6" Classes="CardMedium" Padding="0">
+                        <Button Command="{Binding ViewOverdueTasksCommand}" Cursor="Hand"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Padding="20" Background="Transparent" BorderThickness="0" CornerRadius="8">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                    <Setter Property="Background" Value="#FEE2E2"/> <!-- Light red hover -->
+                                </Style>
+                            </Button.Styles>
+                            <StackPanel HorizontalAlignment="Center">
+                                 <TextBlock Text="OVERDUE" Classes="LabelSmall" HorizontalAlignment="Center" Foreground="{DynamicResource ErrorRed}"/>
+                                 <TextBlock Text="{Binding OverdueTasks}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource ErrorRed}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </Grid>
+
+                <!-- 3. Visual Analytics Row -->
+                <Grid ColumnDefinitions="*, 30, *">
+                    <!-- Status Distribution -->
+                    <Border Grid.Column="0" Classes="Card" Height="400">
+                        <Grid RowDefinitions="Auto, *">
+                            <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,20">
+                                <TextBlock Text="Task Status Distribution" Classes="H2" FontWeight="Bold"/>
+                                <TextBlock Text="Breakdown of all project tasks by their current status" Classes="Caption" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            </StackPanel>
+                            <lvc:PieChart Grid.Row="1" Series="{Binding StatusSeries}" LegendPosition="Right" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Schedule Health -->
+                    <Border Grid.Column="2" Classes="Card" Height="400">
+                        <Grid RowDefinitions="Auto, *">
+                            <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,20">
+                                <TextBlock Text="Schedule Adherence" Classes="H2" FontWeight="Bold"/>
+                                <TextBlock Text="How many tasks are running behind vs on schedule" Classes="Caption" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            </StackPanel>
+                            <lvc:PieChart Grid.Row="1" Series="{Binding ScheduleSeries}" LegendPosition="Right" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
+
+
+

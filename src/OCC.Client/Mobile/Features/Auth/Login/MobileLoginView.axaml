@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Features.Auth.Login"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="OCC.Client.Mobile.Features.Auth.Login.MobileLoginView"
+             x:DataType="vm:MobileLoginViewModel">
+    <Grid>
+        <!-- Desktop-Aligned Background Gradient -->
+        <Border>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Offset="0" Color="{DynamicResource LoginBackgroundDarkColor}" />
+                    <GradientStop Offset="1" Color="{DynamicResource OrangeColor}" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel Spacing="30" Margin="40" VerticalAlignment="Top">
+                
+                <!-- Logo / Header -->
+                <StackPanel Spacing="10" HorizontalAlignment="Center" MaxWidth="400">
+                    <Border Width="215" Height="120" CornerRadius="16" Background="{DynamicResource SurfaceWhite}" BoxShadow="0 8 20 0 #40000000">
+                        <Image Source="avares://OCC.Client/Assets/Images/occ_logo.png" 
+                               Width="200"
+                               RenderOptions.BitmapInterpolationMode="HighQuality"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="OCC - ERP" FontSize="32" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Orange Circle Construction" FontSize="16" Foreground="#B0FFFFFF" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Login Card (Desktop style) -->
+                <Border Background="{DynamicResource SurfaceWhite}" CornerRadius="16" Padding="25" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" BoxShadow="0 10 30 0 #40000000" HorizontalAlignment="Center" MaxWidth="500" Width="400">
+                    <StackPanel Spacing="20">
+                        <TextBlock Text="Login" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+                        
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Email Address" Classes="FormLabel" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            <TextBox Text="{Binding Email}" Watermark="Enter your email" Classes="FormInput" Height="45"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Password" Classes="FormLabel" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            <TextBox Text="{Binding Password}" Watermark="Enter your password" PasswordChar="*" Classes="FormInput" Height="45"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="#F87171" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center" IsVisible="{Binding ErrorMessage, Converter={StaticResource NullToBoolConverter}}"/>
+
+                        <Button Command="{Binding LoginCommand}" Classes="Primary" Height="50" Content="Login" Margin="0,10,0,0">
+                            <Button.Styles>
+                                <Style Selector="Button.Primary">
+                                    <Setter Property="Background" Value="{DynamicResource PrimaryTeal}"/>
+                                    <Setter Property="CornerRadius" Value="8"/>
+                                </Style>
+                            </Button.Styles>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Extra Links -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+                    <TextBlock Text="Don't have an account?" Foreground="#B0FFFFFF" FontSize="13"/>
+                    <Button Content="Contact Admin" Classes="Ghost" Foreground="White" FontSize="13" Padding="0"/>
+                </StackPanel>
+
+                <!-- Environment & Connection Selector (For Dev) -->
+                <StackPanel IsVisible="{Binding IsDevUser}" Spacing="10" Margin="0,20,0,0">
+                    <TextBlock Text="Development Settings" Foreground="#80FFFFFF" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    
+                    <ComboBox ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}" HorizontalAlignment="Center" Width="200" Background="#20FFFFFF" Foreground="White" BorderThickness="0">
+                         <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Foreground="Black"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <StackPanel Spacing="5" Margin="20,0">
+                        <TextBlock Text="Manual Base URL (Optional)" Foreground="#60FFFFFF" FontSize="10" HorizontalAlignment="Center"/>
+                        <TextBox Text="{Binding CustomLocalUrl}" Watermark="http://192.168.x.x:5237" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Height="35" FontSize="12"/>
+                        <TextBlock Text="{Binding ApiBaseUrl, StringFormat='Active: {0}'}" Foreground="#40FFFFFF" FontSize="9" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Busy Overlay -->
+        <Border IsVisible="{Binding IsBusy}" Background="#A0000000" CornerRadius="0">
+            <StackPanel VerticalAlignment="Center" Spacing="15">
+                <ProgressBar IsIndeterminate="True" Width="100" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

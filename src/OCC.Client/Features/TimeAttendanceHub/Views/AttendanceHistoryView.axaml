@@ -1,0 +1,243 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 xmlns:views="clr-namespace:OCC.Client.Features.TimeAttendanceHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.AttendanceHistoryView"
+			 x:DataType="vm:AttendanceHistoryViewModel"
+			 x:Name="Root">
+
+	<Design.DataContext>
+		<vm:AttendanceHistoryViewModel/>
+	</Design.DataContext>
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- Header Bar: Title & Actions -->
+		<Border Grid.Row="0" Padding="10" Background="{DynamicResource MainPageGradient}">
+			<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
+				<Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto, Auto"  Margin="0,0,0,30">
+					<TextBlock Text="Attendance History" FontSize="24" FontWeight="SemiBold"
+							   VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryDark}"/>
+
+					<!-- Actions -->
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+						<Button Command="{Binding BulkEditCommand}" CommandParameter="{Binding #RecordsGrid.SelectedItems}" Classes="Primary" ToolTip.Tip="Bulk Edit Selected">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<PathIcon Data="{StaticResource IconBulkEdit}" Width="16" Height="16"/>
+								<TextBlock Text="Bulk Edit" VerticalAlignment="Center"/>
+							</StackPanel>
+						</Button>
+
+						<Button Command="{Binding PrintReportCommand}" Classes="Primary" ToolTip.Tip="Print Report">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<PathIcon Data="{StaticResource IconPrint}" Width="16" Height="16"/>
+								<TextBlock Text="Full Report" VerticalAlignment="Center"/>
+							</StackPanel>
+						</Button>
+						<Button Command="{Binding PrintStaffReportCommand}" Classes="Primary" ToolTip.Tip="Individual Staff Report">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<PathIcon Data="{StaticResource IconCheck}" Width="16" Height="16"/>
+								<TextBlock Text="Staff Report" VerticalAlignment="Center"/>
+							</StackPanel>
+						</Button>
+						<Button Command="{Binding ExportCsvCommand}" Classes="Secondary" ToolTip.Tip="Export CSV" Padding="10,8">
+							<PathIcon Data="{StaticResource IconDownload}" Width="16" Height="16"/>
+						</Button>
+						<Button Command="{Binding RefreshCommand}" Classes="Secondary" ToolTip.Tip="Refresh" Padding="10,8">
+							<PathIcon Data="{StaticResource IconHistory}" Width="16" Height="16"/>
+						</Button>
+					</StackPanel>
+
+					<!-- Toolbar Bar: Filters & Summary Stats -->
+					<Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto"  Margin="0,15,0,0">
+						<!-- Filters -->
+						<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+							<StackPanel Spacing="2">
+								<TextBlock Text="Search" Classes="LabelSmall" FontSize="10" Foreground="{DynamicResource TextTertiarySlate}"/>
+								<TextBox Text="{Binding SearchText}" Watermark="Name..." Width="200" Classes="FormInput">
+									<TextBox.InnerRightContent>
+										<PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14" Margin="0,0,8,0" Foreground="{DynamicResource TextTertiarySlate}"/>
+									</TextBox.InnerRightContent>
+								</TextBox>
+							</StackPanel>
+
+							<StackPanel Spacing="2">
+								<TextBlock Text="Period" Classes="LabelSmall" FontSize="10" Foreground="{DynamicResource TextTertiarySlate}"/>
+								<ComboBox ItemsSource="{Binding RangeOptions}" SelectedItem="{Binding SelectedRange}"
+										  Width="120" Classes="FormInput" PlaceholderText="Range" FontSize="{DynamicResource FontSizeXS}"/>
+							</StackPanel>
+
+							<StackPanel Spacing="2">
+								<TextBlock Text="Branch" Classes="LabelSmall" FontSize="10" Foreground="{DynamicResource TextTertiarySlate}"/>
+								<ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}"
+										  Width="140" Classes="FormInput" PlaceholderText="Branch" FontSize="{DynamicResource FontSizeXS}"/>
+							</StackPanel>
+
+							<StackPanel Spacing="2">
+								<TextBlock Text="Wage Type" Classes="LabelSmall" FontSize="10" Foreground="{DynamicResource TextTertiarySlate}"/>
+								<ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}"
+										  Width="100" Classes="FormInput" PlaceholderText="Pay Type"  FontSize="{DynamicResource FontSizeXS}"/>
+							</StackPanel>
+						</StackPanel>
+
+					</Grid>
+					<!-- Summary Cards -->
+					<StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
+						<Border Classes="Card" Padding="0" Width="100" Background="#FFEBEE" BorderBrush="#EF9A9A">
+							<Button Command="{Binding FilterByStatusCommand}" CommandParameter="Absent" Background="Transparent" BorderThickness="0" Padding="8,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+								<StackPanel>
+									<TextBlock Text="Absences" Classes="LabelText" HorizontalAlignment="Center" FontSize="10" Foreground="#C62828"/>
+									<TextBlock Text="{Binding TotalAbsences}" FontSize="14" FontWeight="Bold" Foreground="#B71C1C" HorizontalAlignment="Center"/>
+								</StackPanel>
+							</Button>
+						</Border>
+						<Border Classes="Card" Padding="0" Width="100" Background="#FFF3E0" BorderBrush="#FFCC80">
+							<Button Command="{Binding FilterByStatusCommand}" CommandParameter="Late" Background="Transparent" BorderThickness="0" Padding="8,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+								<StackPanel>
+									<TextBlock Text="Lates" Classes="LabelText" HorizontalAlignment="Center" FontSize="10" Foreground="#E65100"/>
+									<TextBlock Text="{Binding TotalLates}" FontSize="14" FontWeight="Bold" Foreground="#BF360C" HorizontalAlignment="Center"/>
+								</StackPanel>
+							</Button>
+						</Border>
+						<Border Classes="Card" Padding="8,3" Width="100">
+							<StackPanel>
+								<TextBlock Text="Hours" Classes="LabelText" HorizontalAlignment="Center" FontSize="10"/>
+								<TextBlock Text="{Binding TotalHours, StringFormat='{}{0:F2}'}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource PrimaryBlue}" HorizontalAlignment="Center"/>
+							</StackPanel>
+						</Border>
+						<Border Classes="Card" Padding="8,3" Width="120" Background="#E8F5E9" BorderBrush="#81C784"
+								IsVisible="{Binding IsWageVisible}">
+							<StackPanel>
+								<TextBlock Text="Est. Wages" Classes="LabelText" HorizontalAlignment="Center" FontSize="10" Foreground="#388E3C"/>
+								<TextBlock Text="{Binding TotalWages, StringFormat='{}{0:C}'}" FontSize="14" FontWeight="Bold" Foreground="#2E7D32" HorizontalAlignment="Center"/>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+
+					<!-- Custom Dates -->
+					<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsCustomDateEnabled}" Margin="0,10,0,0">
+						<StackPanel Spacing="2">
+							<TextBlock Text="From" Classes="LabelSmall" FontSize="10" Foreground="{DynamicResource TextTertiarySlate}" Margin="8,0,0,0"/>
+							<CalendarDatePicker SelectedDate="{Binding StartDate}" Width="150"/>
+						</StackPanel>
+						<StackPanel Spacing="2">
+							<TextBlock Text="To" Classes="LabelSmall" FontSize="10" Foreground="{DynamicResource TextTertiarySlate}" Margin="8,0,0,0"/>
+							<CalendarDatePicker SelectedDate="{Binding EndDate}" Width="150"/>
+						</StackPanel>
+					</StackPanel>
+				</Grid>
+			</ScrollViewer>
+
+		</Border>
+
+
+
+		<!-- DataGrid -->
+		<DataGrid Grid.Row="1" ItemsSource="{Binding Records}" AutoGenerateColumns="False"
+				  SelectedItem="{Binding SelectedRecord}"
+				  DoubleTapped="DataGrid_DoubleTapped"
+				  IsReadOnly="True" GridLinesVisibility="Horizontal"
+				  x:Name="RecordsGrid"
+				  SelectionMode="Extended"
+				  BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderGray}"
+				  Background="White" RowBackground="White">
+			<DataGrid.Styles>
+				<Style Selector="DataGridRow">
+					<Setter Property="ContextMenu">
+						<ContextMenu x:DataType="vm:HistoryRecordViewModel">
+							<MenuItem Header="Edit Time"
+									  Command="{Binding #Root.DataContext.SmartEditCommand}"
+									  CommandParameter="{Binding #RecordsGrid.SelectedItems}">
+								<MenuItem.Icon>
+									<PathIcon Data="{StaticResource IconEdit}" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="Delete Record"
+									  Command="{Binding #Root.DataContext.DeleteRecordCommand}"
+									  CommandParameter="{Binding}"
+									  Foreground="Red">
+								<MenuItem.Icon>
+									<PathIcon Data="{StaticResource IconDelete}" Foreground="Red"/>
+								</MenuItem.Icon>
+							</MenuItem>
+						</ContextMenu>
+					</Setter>
+				</Style>
+			</DataGrid.Styles>
+			<DataGrid.Columns>
+				<DataGridTemplateColumn Width="40">
+					<DataGridTemplateColumn.Header>
+						<CheckBox IsChecked="{Binding #Root.DataContext.IsAllSelected}"/>
+					</DataGridTemplateColumn.Header>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='{}{0:dd MMM yyyy}'}" Width="Auto"/>
+				<DataGridTextColumn Header="Employee" Binding="{Binding EmployeeName}" Width="Auto" MinWidth="250"/>
+				<DataGridTextColumn Header="Branch" Binding="{Binding Branch}" Width="Auto"/>
+				<DataGridTextColumn Header="Pay Type" Binding="{Binding PayType}" Width="Auto"/>
+				<DataGridTemplateColumn Header="Status" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Margin="10,0">
+								<TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
+								<PathIcon Data="{StaticResource IconWarning}" Width="14" Height="14" Foreground="DarkOrange"
+										  IsVisible="{Binding HasMissingSickNote}"
+										  ToolTip.Tip="Missing Medical Certificate (Wage Deducted)"/>
+							</StackPanel>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTextColumn Header="In" Binding="{Binding InTime}" Width="Auto"/>
+				<DataGridTextColumn Header="Out" Binding="{Binding OutTime}" Width="Auto"/>
+				<DataGridTextColumn Header="Hours" Binding="{Binding HoursWorkedDisplay}" Width="Auto"/>
+				<!-- Wage Column Hidden via Binding -->
+				<DataGridTextColumn Header="Wage (Est.)" Binding="{Binding WageDisplay}" Width="Auto"
+									Foreground="#2E7D32" FontWeight="Bold"
+									IsVisible="{Binding #Root.DataContext.IsWageVisible}"/>
+			</DataGrid.Columns>
+		</DataGrid>
+
+		<!-- Loading -->
+		<StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+			<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			<TextBlock Text="Loading Attendance Records..." HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Empty State -->
+		<StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+					IsVisible="{Binding !Records.Count}">
+			<PathIcon Data="{StaticResource IconHistory}" Width="48" Height="48" Foreground="{DynamicResource TextTertiarySlate}"
+					  IsVisible="{Binding !IsBusy}"/>
+			<TextBlock Text="No records found for this period." Margin="0,10,0,0" Foreground="{DynamicResource TextTertiarySlate}"
+					   IsVisible="{Binding !IsBusy}"/>
+		</StackPanel>
+
+		<!-- Report Popup Overlay -->
+		<Grid Grid.Row="0" Grid.RowSpan="2" Background="#80000000" IsVisible="{Binding IsEmployeeReportPopupVisible}">
+			<Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+				<!-- Main Report View -->
+				<views:EmployeeReportView DataContext="{Binding EmployeeReportPopup}"
+										  MaxWidth="1100" MaxHeight="850"
+										  HorizontalAlignment="Center" VerticalAlignment="Center"
+										  Background="White"
+										  CornerRadius="8"/>
+
+				<!-- Close Button -->
+				<Button Classes="Close"
+						Command="{Binding CloseReportCommand}"
+						HorizontalAlignment="Right" VerticalAlignment="Top"
+						Margin="5">
+					<PathIcon Data="{StaticResource IconClose}" />
+				</Button>
+			</Grid>
+		</Grid>
+	</Grid>
+</UserControl>

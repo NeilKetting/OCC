@@ -1,0 +1,1038 @@
+<UserControl x:Class="OCC.WpfClient.Features.ChatHub.Views.ChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.ChatHub.ViewModels"
+             xmlns:converters="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1024"
+             Background="#0f172a"> <!-- Dark slate blue (Tailwind slate-900) -->
+
+    <UserControl.Resources>
+        <converters:UserInitialsConverter x:Key="UserInitialsConverter"/>
+        <converters:CollectionContainsConverter x:Key="CollectionContainsConverter"/>
+        <converters:UserColorConverter x:Key="UserColorConverter"/>
+        
+        <!-- Clean Dark Theme MenuItem Template -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Grid x:Name="MenuItemGrid" Background="Transparent" SnapsToDevicePixels="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Hover background -->
+                            <Border x:Name="HighlightBorder" Grid.ColumnSpan="2" Background="Transparent" />
+                            
+                            <!-- Separator line (Tag="HasSeparator") -->
+                            <Border x:Name="ItemSeparator" Grid.ColumnSpan="2" BorderBrush="#3b4a54" BorderThickness="0,1,0,0" VerticalAlignment="Top" Visibility="Collapsed" Margin="0,0"/>
+
+                            <!-- Icon area background (optional if we want a different color for the icon column, but user wants to remove it) -->
+                            <!-- We don't add anything here to keep it unified dark -->
+
+                            <!-- Icon -->
+                            <ContentPresenter Grid.Column="0" ContentSource="Icon" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                            
+                            <!-- Text -->
+                            <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" Margin="5,0,25,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="HighlightBorder" Property="Background" Value="#182229" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="HasSeparator">
+                                <Setter TargetName="ItemSeparator" Property="Visibility" Value="Visible" />
+                                <Setter Property="Height" Value="46"/> <!-- Adjust height to include separator padding -->
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ContextMenu">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="#232d36" CornerRadius="12" Padding="0,5" BorderBrush="#3b4a54" BorderThickness="1">
+                            <ItemsPresenter SnapsToDevicePixels="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Rounded hover effect for Group Details items -->
+        <Style x:Key="GroupDetailItemButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="15,12">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#2a3942"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Left Sidebar (Chat List) -->
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="2"/> <!-- Splitter -->
+            <!-- Main Chat Area -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Sidebar: Chat Sessions -->
+        <Border Grid.Column="0" Background="#1e293b" BorderBrush="#334155" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Grid.Row="0" Background="#0f172a" Padding="15,20">
+                    <Grid>
+                        <TextBlock Text="Chats" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                        <Button x:Name="MenuButton" Click="MenuButton_Click" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Padding="5">
+                            <Path Data="{StaticResource IconEllipseVertical}" Fill="#94a3b8" Width="20" Height="20" Stretch="Uniform"/>
+                            
+                            <Button.ContextMenu>
+                                <ContextMenu Background="Transparent" BorderThickness="0" Padding="10">
+                                    <!-- Using global MenuItem style -->
+                                    
+                                    <MenuItem Header="New group" FontSize="15" Command="{Binding ShowAddGroupMembersCommand}">
+                                        <MenuItem.Icon>
+                                            <Path Data="{StaticResource IconNewGroup}" Fill="#8696a0" Width="18" Height="18" Stretch="Uniform"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Header="Starred messages" FontSize="15">
+                                        <MenuItem.Icon>
+                                            <Path Data="{StaticResource IconStar}" Fill="#8696a0" Width="18" Height="18" Stretch="Uniform"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Header="Select chats" FontSize="15">
+                                        <MenuItem.Icon>
+                                            <Path Data="{StaticResource IconSelectChats}" Fill="#8696a0" Width="18" Height="18" Stretch="Uniform"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Header="Mark all as read" FontSize="15">
+                                        <MenuItem.Icon>
+                                            <Path Data="{StaticResource IconMarkAllAsRead}" Fill="#8696a0" Width="18" Height="18" Stretch="Uniform"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Header="App lock" FontSize="15" Tag="HasSeparator">
+                                        <MenuItem.Icon>
+                                            <Path Data="{StaticResource IconLock}" Fill="#8696a0" Width="18" Height="18" Stretch="Uniform"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem Header="Log out" FontSize="15" Command="{Binding DataContext.LogoutCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                        <MenuItem.Icon>
+                                            <Path Data="{StaticResource IconLogout}" Fill="#8696a0" Width="18" Height="18" Stretch="Uniform"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="5">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#334155"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Search -->
+                <Border Grid.Row="1" Background="#1e293b" Padding="10">
+                    <Border Background="#0f172a" CornerRadius="16" Padding="10,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Path Data="{StaticResource IconSearch}" Fill="#64748b" Width="14" Height="14" Stretch="Uniform" Margin="0,0,10,0"/>
+                            <TextBlock Text="Search or start new chat" Foreground="#64748b" Grid.Column="1" VerticalAlignment="Center" Visibility="{Binding SearchQuery, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
+                            <TextBox x:Name="SearchBox" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White"/>
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <!-- Filters -->
+                <Border Grid.Row="2" Background="#1e293b" Padding="10,0,10,10">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Resources>
+                            <!-- Filter Pill Style -->
+                            <Style TargetType="RadioButton">
+                                <Setter Property="GroupName" Value="ChatFilters"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="RadioButton">
+                                            <Border x:Name="Border" Background="#2b3b4d" CornerRadius="15" Padding="12,6" Margin="0,0,8,0">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="#174f38"/>
+                                                    <Setter Property="Foreground" Value="#10b981"/> <!-- Emerald Text -->
+                                                </Trigger>
+                                                <Trigger Property="IsChecked" Value="False">
+                                                    <Setter Property="Foreground" Value="#94a3b8"/> <!-- Slate text -->
+                                                </Trigger>
+                                                <MultiTrigger>
+                                                    <MultiTrigger.Conditions>
+                                                        <Condition Property="IsMouseOver" Value="True"/>
+                                                        <Condition Property="IsChecked" Value="False"/>
+                                                    </MultiTrigger.Conditions>
+                                                    <Setter TargetName="Border" Property="Background" Value="#334155"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </MultiTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </StackPanel.Resources>
+
+                        <RadioButton Content="All" IsChecked="{Binding IsAllFilterSelected}" Command="{Binding SetFilterCommand}" CommandParameter="All" FontSize="13" FontWeight="SemiBold"/>
+                        <RadioButton Content="Unread" IsChecked="{Binding IsUnreadFilterSelected}" Command="{Binding SetFilterCommand}" CommandParameter="Unread" FontSize="13" FontWeight="SemiBold"/>
+                        <RadioButton Content="Favourites" IsChecked="{Binding IsFavouritesFilterSelected}" Command="{Binding SetFilterCommand}" CommandParameter="Favourites" FontSize="13" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- List of Chats and Search Results -->
+                <ScrollViewer Grid.Row="3" Background="Transparent" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Section Header: Chats -->
+                        <TextBlock Text="CHATS" Foreground="#64748b" FontSize="11" FontWeight="Bold" Margin="15,10,15,5"
+                                   Visibility="{Binding SearchQuery, Converter={StaticResource VisibilityConverter}}"/>
+                        
+                        <!-- List of Chats -->
+                        <ListView x:Name="ChatsListView" Background="Transparent" BorderThickness="0" 
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                  ItemsSource="{Binding SessionsView}" SelectedItem="{Binding SelectedSession}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="10" Margin="0,2">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <Grid Grid.Column="0" Width="40" Height="40" HorizontalAlignment="Left">
+                                                <Ellipse Fill="{Binding BadgeColor}" />
+                                                <TextBlock Text="{Binding Initials}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                
+                                                <!-- Profile Picture Support -->
+                                                <Ellipse Visibility="{Binding ProfilePictureUrl, Converter={StaticResource VisibilityConverter}}">
+                                                    <Ellipse.Fill>
+                                                        <ImageBrush ImageSource="{Binding ProfilePictureUrl}" Stretch="UniformToFill"/>
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+                                            </Grid>
+                                            
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
+                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding LastMessagePreview}" Foreground="#94a3b8" FontSize="13" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <Grid Grid.Column="2" VerticalAlignment="Stretch" Margin="0,2,0,0">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Grid.Row="0" Text="{Binding LastMessageTime, StringFormat='HH:mm'}" Foreground="#64748b" FontSize="11" HorizontalAlignment="Right"/>
+                                                
+                                                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,5,0,0">
+                                                    
+                                                    <!-- Favourite Toggle -->
+                                                    <Button Command="{Binding DataContext.ToggleFavouriteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,5,0" Width="16" Height="16">
+                                                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text" Value="&#xE734;" /> <!-- Outline Star -->
+                                                                    <Setter Property="Foreground" Value="#64748b" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsFavourite}" Value="True">
+                                                                            <Setter Property="Text" Value="&#xE735;" /> <!-- Solid Star -->
+                                                                            <Setter Property="Foreground" Value="#eab308" /> <!-- Yellow -->
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <!-- Simple button style strip -->
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <ContentPresenter/>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+    
+                                                    <!-- Unread Bubble -->
+                                                    <Border Background="#10b981" CornerRadius="10" MinWidth="20" Height="20" Padding="5,0"
+                                                            Visibility="{Binding UnreadCount, Converter={StaticResource VisibilityConverter}}">
+                                                        <TextBlock Text="{Binding UnreadCount}" Foreground="#0f172a" FontSize="11" FontWeight="Bold" 
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding UnreadCount}" Value="0">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu>
+                                                <!-- Global MenuItem style applies automatically -->
+                                                <MenuItem Header="Archive chat" 
+                                                          Command="{Binding DataContext.ArchiveSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconArchive}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <MenuItem Header="Mute notifications" 
+                                                          Command="{Binding DataContext.MuteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconMute}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <MenuItem Header="Pin chat" 
+                                                          Command="{Binding DataContext.PinSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconPin}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <MenuItem Header="Mark as read" 
+                                                          Command="{Binding DataContext.MarkAsReadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconMarkAllAsRead}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <MenuItem Header="Add to favourites" 
+                                                          Command="{Binding DataContext.ToggleFavouriteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconStar}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <MenuItem Header="Add to list" 
+                                                          Command="{Binding DataContext.AddToListCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconAddToList}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <Separator Background="#3b4a54" Margin="0,5"/>
+
+                                                <MenuItem Header="Clear chat" 
+                                                          Command="{Binding DataContext.ClearSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <MenuItem Header="Delete Chat" 
+                                                          Command="{Binding DataContext.DeleteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}"
+                                                          Visibility="{Binding IsGroupChat, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                
+                                                <MenuItem Header="Delete Group" 
+                                                          Command="{Binding DataContext.DeleteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}"
+                                                          Visibility="{Binding IsGroupChat, Converter={StaticResource VisibilityConverter}}"
+                                                          IsEnabled="{Binding IsCurrentUserAdmin}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+        
+                                                <MenuItem Header="Exit Group" 
+                                                          Command="{Binding DataContext.ExitGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}"
+                                                          Visibility="{Binding IsGroupChat, Converter={StaticResource VisibilityConverter}}">
+                                                    <MenuItem.Icon>
+                                                        <Path Data="{StaticResource IconExitChat}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListViewItem">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="8" Cursor="Hand">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#334155"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#0f172a"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                        </ListView>
+                        
+                        <!-- Section Header: People -->
+                        <TextBlock Text="PEOPLE" Foreground="#64748b" FontSize="11" FontWeight="Bold" Margin="15,20,15,5"
+                                   Visibility="{Binding UserSearchResults, Converter={StaticResource VisibilityConverter}}"/>
+
+                        <!-- User Search Results -->
+                        <ListView ItemsSource="{Binding UserSearchResults}" Background="Transparent" BorderThickness="0" 
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                             <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="10" Margin="0,2">
+                                        <Button Command="{Binding DataContext.StartNewChatFromSearchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <ContentPresenter/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <Ellipse Grid.Column="0" Width="40" Height="40" Fill="#00a884" HorizontalAlignment="Left" />
+                                                <TextBlock Grid.Column="0" Text="{Binding FirstName[0]}" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+                                                        <Run Text="{Binding FirstName}"/> <Run Text="{Binding LastName}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding Email}" Foreground="#94a3b8" FontSize="13" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Button>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListViewItem">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="8" Cursor="Hand">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#334155"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                        </ListView>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- New Chat Overlay -->
+        <!-- Visibility toggled via BooleanToVisibilityConverter which is globally registered in App or native -->
+        <Border Grid.Column="0" Background="#111b21" Visibility="{Binding IsNewChatVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Grid.Row="0" Background="#202c33" Padding="20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Command="{Binding HideNewChatCommand}" Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" VerticalAlignment="Center">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="BtnBorder" Background="Transparent" CornerRadius="20" Width="36" Height="36">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="BtnBorder" Property="Background" Value="#3b4a54"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Fill="White" Stretch="Uniform" Width="16" Height="16"/>
+                        </Button>
+                        <TextBlock Grid.Column="1" Text="New chat" Foreground="White" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" Margin="15,0,0,0"
+                                   Visibility="{Binding IsSelectionMode, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
+                        <TextBlock Grid.Column="1" Text="Add group members" Foreground="White" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" Margin="15,0,0,0"
+                                   Visibility="{Binding IsSelectionMode, Converter={StaticResource VisibilityConverter}}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Selected Members Chips -->
+                <Border Grid.Row="1" Background="#111b21" Visibility="{Binding SelectedContacts.Count, Converter={StaticResource VisibilityConverter}}" Padding="20,10,20,10" BorderBrush="#202c33" BorderThickness="0,0,0,1">
+                    <ItemsControl ItemsSource="{Binding SelectedContacts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#202c33" CornerRadius="20" Padding="5,5,10,5" Margin="0,0,8,8" BorderBrush="#3b4a54" BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- Avatar in chip -->
+                                        <Grid Width="30" Height="30">
+                                            <Ellipse Fill="{Binding UserId, Converter={StaticResource UserColorConverter}}"/>
+                                            <TextBlock Text="{Binding Converter={StaticResource UserInitialsConverter}}" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        
+                                        <TextBlock Text="{Binding FirstName}" Foreground="White" FontSize="14" Margin="10,0,10,0" VerticalAlignment="Center"/>
+                                        
+                                        <!-- Remove Button -->
+                                        <Button Command="{Binding DataContext.RemoveContactCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="2" Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="BtnBorder" Background="#3b4a54" CornerRadius="10" Width="20" Height="20">
+                                                        <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" 
+                                                              Fill="White" Stretch="Uniform" Width="10" Height="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="BtnBorder" Property="Background" Value="#ef4444"/> <!-- Red -->
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <!-- Search and List Content (Visible in Selection/New Chat) -->
+                <Grid Grid.Row="2" Visibility="{Binding IsGroupDetailsVisible, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Search -->
+                    <Border Grid.Row="0" Background="#111b21" Padding="25,15">
+                        <Grid>
+                            <TextBox x:Name="NewChatSearchBox" Text="{Binding SearchContactsText, UpdateSourceTrigger=PropertyChanged}" 
+                                     Background="Transparent" BorderBrush="#3b4a54" BorderThickness="0,0,0,1" 
+                                     Foreground="White" CaretBrush="White" FontSize="16" Padding="0,8" VerticalContentAlignment="Center" />
+                                     
+                            <!-- Reliable Placeholder -->
+                            <TextBlock Text="Search contacts to add..." Foreground="#8696a0" FontSize="16" Opacity="0.5" 
+                                       VerticalAlignment="Center" Margin="2,0,0,0" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=NewChatSearchBox}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Text, ElementName=NewChatSearchBox}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsFocused, ElementName=NewChatSearchBox}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+
+                    <!-- Contacts List -->
+                    <ListView Grid.Row="1" Background="Transparent" BorderThickness="0" ItemsSource="{Binding ContactsView}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" Foreground="#00a884" FontSize="14" FontWeight="Bold" Margin="25,20,0,10"/>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="25,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+
+                                            <Grid Grid.Column="0" Width="48" Height="48" HorizontalAlignment="Center" IsHitTestVisible="False">
+                                                <Ellipse Fill="{Binding UserId, Converter={StaticResource UserColorConverter}}" />
+                                                <TextBlock Text="{Binding Converter={StaticResource UserInitialsConverter}}" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                
+                                                <!-- Selection Indicator (Checkmark) -->
+                                                <Border x:Name="SelectionOverlay" Background="#00a884" Width="22" Height="22" CornerRadius="11" 
+                                                        HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-4,-4"
+                                                        BorderBrush="#111b21" BorderThickness="2"
+                                                        Visibility="Collapsed">
+                                                    <Path Data="{StaticResource IconCheck}" Fill="White" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="5,0" IsHitTestVisible="False">
+                                                <TextBlock Foreground="White" FontSize="17" TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding FirstName}"/> <Run Text="{Binding LastName}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="Hey there! I am using OCC-ERP Chat." Foreground="#8696a0" FontSize="14" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Toggle Selection Button (Overlayed to catch all clicks) -->
+                                            <Button Grid.ColumnSpan="3" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch" Panel.ZIndex="1">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Command" Value="{Binding DataContext.StartNewChatCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.IsSelectionMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                <Setter Property="Command" Value="{Binding DataContext.ToggleContactSelectionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                                <Button.CommandParameter>
+                                                    <Binding />
+                                                </Button.CommandParameter>
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="Transparent" SnapsToDevicePixels="True">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Value="True">
+                                        <DataTrigger.Binding>
+                                            <MultiBinding Converter="{StaticResource CollectionContainsConverter}">
+                                                <Binding Path="DataContext.SelectedContacts" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                <Binding />
+                                            </MultiBinding>
+                                        </DataTrigger.Binding>
+                                        <Setter TargetName="SelectionOverlay" Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListViewItem">
+                                            <Border Background="{TemplateBinding Background}">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#202c33"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+
+                    <!-- Next Button -->
+                    <Button Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,40"
+                            Command="{Binding GoToGroupDetailsCommand}"
+                            Visibility="{Binding SelectedContacts.Count, Converter={StaticResource VisibilityConverter}}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Circle" Background="#00a884" Width="56" Height="56" CornerRadius="28">
+                                    <Path Data="M12,4L10.59,5.41L16.17,11H4V13H16.17L10.59,18.59L12,20L20,12L12,4Z" Fill="White" Stretch="Uniform" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Circle" Property="Background" Value="#06cf9c"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+
+                <!-- New Group Details Screen -->
+                <Grid Grid.Row="0" Grid.RowSpan="3" Background="#111b21" Visibility="{Binding IsGroupDetailsVisible, Converter={StaticResource VisibilityConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#202c33" Padding="20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Command="{Binding BackToGroupMembersCommand}" Background="Transparent" BorderThickness="0" Padding="8" Cursor="Hand" VerticalAlignment="Center">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="BtnBorder" Background="Transparent" CornerRadius="20" Width="36" Height="36">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="BtnBorder" Property="Background" Value="#3b4a54"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="White" Stretch="Uniform" Width="20" Height="20"/>
+                            </Button>
+                            <TextBlock Grid.Column="1" Text="New group" Foreground="White" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" Margin="15,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Body -->
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel Margin="30,20">
+                            <!-- Add Group Icon -->
+                            <Button HorizontalAlignment="Center" Margin="0,30" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Grid>
+                                            <Ellipse x:Name="Circle" Fill="#202c33" Width="160" Height="160" Stroke="#202c33" StrokeThickness="1"/>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Path Data="M19,19H5V5H19M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z" Fill="#8696a0" Width="40" Height="40" Stretch="Uniform"/>
+                                                <TextBlock Text="ADD GROUP ICON" Foreground="#8696a0" FontSize="10" FontWeight="SemiBold" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Circle" Property="Fill" Value="#2a3942"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Group Subject -->
+                            <Grid Margin="0,20">
+                                <TextBox x:Name="GroupSubjectBox" Text="{Binding GroupSubject, UpdateSourceTrigger=PropertyChanged}" 
+                                         Background="Transparent" BorderBrush="#00a884" BorderThickness="0,0,0,2" 
+                                         Foreground="White" FontSize="16" Padding="5,10,35,10" VerticalContentAlignment="Center" />
+                                
+                                <!-- Reliable Placeholder -->
+                                <TextBlock Text="Enter group name..." Foreground="#8197a1" FontSize="16" Opacity="0.7" 
+                                           VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=GroupSubjectBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Text, ElementName=GroupSubjectBox}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                
+                                <TextBlock Text="😊" FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="Hand" Opacity="0.7" Margin="0,0,5,0"/>
+                            </Grid>
+
+                            <Border BorderBrush="#202c33" BorderThickness="0,0,0,1" Margin="0,20"/>
+
+                            <!-- Menu Items -->
+                            <Button Style="{StaticResource GroupDetailItemButtonStyle}">
+                                <Grid>
+                                    <StackPanel>
+                                        <TextBlock Text="Disappearing messages" Foreground="White" FontSize="16"/>
+                                        <TextBlock Text="Off" Foreground="#8696a0" FontSize="14" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <Path Data="M8.59,16.59L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.59Z" Fill="#8696a0" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Stretch="Uniform"/>
+                                </Grid>
+                            </Button>
+
+                            <Button Style="{StaticResource GroupDetailItemButtonStyle}">
+                                <Grid>
+                                    <TextBlock Text="Group permissions" Foreground="White" FontSize="16"/>
+                                    <Path Data="M8.59,16.59L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.59Z" Fill="#8696a0" HorizontalAlignment="Right" VerticalAlignment="Center" Width="20" Height="20" Stretch="Uniform"/>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Final Create Button -->
+                    <Button Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,30,40"
+                            Command="{Binding CreateGroupCommand}" CommandParameter="{Binding GroupSubject}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Circle" Background="#00a884" Width="56" Height="56" CornerRadius="28">
+                                    <Path Data="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" Fill="White" Stretch="Uniform" Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Circle" Property="Background" Value="#06cf9c"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="#334155"/>
+
+        <!-- Main Chat Area -->
+        <Grid Grid.Column="2" Background="#0f172a"> <!-- OCC-ERP-style dark background -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Active Chat Header -->
+            <Border Grid.Row="0" Background="#1e293b" BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="15"
+                    Visibility="{Binding SelectedSession, Converter={StaticResource VisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Width="40" Height="40">
+                        <Ellipse Fill="{Binding SelectedSession.BadgeColor}" />
+                        <TextBlock Text="{Binding SelectedSession.Initials}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        
+                        <Ellipse Visibility="{Binding SelectedSession.ProfilePictureUrl, Converter={StaticResource VisibilityConverter}}">
+                            <Ellipse.Fill>
+                                <ImageBrush ImageSource="{Binding SelectedSession.ProfilePictureUrl}" Stretch="UniformToFill"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                    </Grid>
+                    
+                    <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding SelectedSession.Name}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                            <Border Background="#334155" CornerRadius="4" Padding="6,2" Margin="10,0,0,0"
+                                    Visibility="{Binding SelectedSession.IsGroupChat, Converter={StaticResource VisibilityConverter}}">
+                                <TextBlock Text="Admin" Foreground="#10b981" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding SelectedSession.Users.Count, StringFormat='{}{0} participants'}" Foreground="#10b981" FontSize="12" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            
+            <TextBlock Grid.Row="0" Grid.RowSpan="3" Text="Select a chat to start messaging" Foreground="#64748b" FontSize="16" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       Visibility="{Binding SelectedSession, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
+
+            <!-- Message Area -->
+            <ScrollViewer x:Name="MessagesScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" 
+                          Visibility="{Binding SelectedSession, Converter={StaticResource VisibilityConverter}}">
+                <ItemsControl Margin="20" ItemsSource="{Binding SelectedSession.Messages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Layout logic for IsMine -->
+                            <Grid Margin="0,10">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMine}" Value="True">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                
+                                <Border CornerRadius="8" Padding="12,8" MaxWidth="500">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#334155"/> <!-- Received Message Color -->
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMine}" Value="True">
+                                                    <Setter Property="Background" Value="#059669"/> <!-- Sent Message Color -->
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SenderName}" Foreground="#10b981" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"
+                                                   Visibility="{Binding IsMine, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
+                                        
+                                        <!-- Attachment Preview (simplified) -->
+                                        <Border CornerRadius="6" Background="#1e293b" Padding="10" Margin="0,0,0,5"
+                                                Visibility="{Binding HasAttachment, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path Data="{StaticResource IconFile}" Fill="#94a3b8" Width="24" Height="24" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Dto.Attachments[0].FileName, FallbackValue='Attachment'}" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding Content}" Foreground="White" FontSize="14" TextWrapping="Wrap" LineHeight="20"/>
+                                        <TextBlock Text="{Binding DisplayTime}" Foreground="#cbd5e1" FontSize="10" HorizontalAlignment="Right" Margin="0,5,0,0" Opacity="0.8"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Input Area -->
+            <Border Grid.Row="2" Background="#1e293b" Padding="15"
+                    Visibility="{Binding SelectedSession, Converter={StaticResource VisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Attachment -->
+                    <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Padding="10">
+                        <Path Data="{StaticResource IconFile}" Fill="#64748b" Width="20" Height="20" Stretch="Uniform"/>
+                    </Button>
+                    
+                    <Border Grid.Column="2" Background="#334155" CornerRadius="20" Margin="10,0">
+                        <Grid>
+                            <TextBlock Text="Type a message" Foreground="#94a3b8" Margin="15,0,0,0" VerticalAlignment="Center"
+                                       Visibility="{Binding ElementName=MessageTextBox, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBox x:Name="MessageTextBox" Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="White" Padding="15,10" CaretBrush="White" VerticalContentAlignment="Center">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Send Button -->
+                    <Button Grid.Column="3" Background="#10b981" BorderThickness="0" Width="40" Height="40" x:Name="SendButton"
+                            Command="{Binding SendMessageCommand}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="20">
+                                    <Path Data="{StaticResource IconCheck}" Fill="White" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+

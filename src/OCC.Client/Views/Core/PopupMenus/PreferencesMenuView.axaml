@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:core="clr-namespace:OCC.Client.ViewModels.Core;assembly=OCC.Client"
+             mc:Ignorable="d"
+             x:Class="OCC.Client.Views.Core.PopupMenus.PreferencesMenuView"
+             x:DataType="core:SideMenuViewModel">
+
+    <Border Background="White" 
+            BorderBrush="{DynamicResource BorderGray}" 
+            BorderThickness="1" 
+            CornerRadius="8" 
+            Padding="0,5"
+            Margin="15"
+            Width="240"
+            BoxShadow="0 2 15 5 #292828">
+        <StackPanel Background="Transparent" Margin="5,5">
+            <!-- Personal Preferences Group -->
+            <TextBlock Text="PERSONAL PREFERENCES" Classes="LabelSmall" Margin="20,10"/>
+            <!-- Separator -->
+            <Border BorderBrush="{DynamicResource AccentOrange}" BorderThickness="1" Margin="10"/>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding ToggleThemeCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconDarkModel}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="{Binding ThemeToggleText}" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding MyProfileCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                     <PathIcon Data="{StaticResource IconProfile}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="My Profile" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding LogoutCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconLogout}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="Logout" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Border>
+</UserControl>

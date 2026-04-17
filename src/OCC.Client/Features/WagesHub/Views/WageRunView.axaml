@@ -1,0 +1,419 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.WagesHub.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+			 x:Class="OCC.Client.Features.WagesHub.Views.WageRunView"
+			 x:DataType="vm:WageRunViewModel">
+
+	<Grid RowDefinitions="Auto, *, Auto" Margin="2">
+
+		<!-- Header / Controls -->
+		<Border Grid.Row="0" Background="{DynamicResource MainPageGradient}" Padding="10">
+			<Grid ColumnDefinitions="175, 175, 175, 175, *, Auto" RowDefinitions="Auto, 15, Auto, 15, Auto">
+				<!-- Title -->
+				<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="6" Text="New Wage Run" Classes="h2" FontWeight="Bold"/>
+
+				<!-- Row 2: Basic Setup -->
+				<StackPanel Grid.Row="2" Grid.Column="0" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Start Date (Monday)" Classes="label"/>
+					<CalendarDatePicker SelectedDate="{Binding StartDate}" Width="165"/>
+				</StackPanel>
+
+				<StackPanel Grid.Row="2" Grid.Column="1" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="End Date (Fortnight)" Classes="label"/>
+					<CalendarDatePicker SelectedDate="{Binding EndDate}" Width="165" IsEnabled="False" Opacity="0.7"/>
+				</StackPanel>
+
+				<StackPanel Grid.Row="2" Grid.Column="2" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Pay Type" Classes="label"/>
+					<ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}" Width="165" FontSize="10"/>
+				</StackPanel>
+
+				<StackPanel Grid.Row="2" Grid.Column="3" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Branch" Classes="label"/>
+					<ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}" Width="165" FontSize="10"/>
+				</StackPanel>
+
+				<!-- Info Note (Stretches) -->
+				<StackPanel Grid.Row="2" Grid.Column="4" VerticalAlignment="Center" Margin="10,0,15,0">
+					<TextBlock Text="Note: Run covers 2 weeks (Week 1 = Actuals, Week 2 = Adv. Thu/Fri)." 
+							   FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" FontStyle="Italic" TextWrapping="Wrap"/>
+					<TextBlock Text="Differences adjusted in next run." 
+							   FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" FontStyle="Italic" TextWrapping="Wrap"/>
+				</StackPanel>
+
+				<!-- Action Buttons -->
+				<StackPanel Grid.Row="2" Grid.Column="5" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
+					<Button Command="{Binding GenerateDraftCommand}" IsEnabled="{Binding !IsBusy}" Classes="Primary" IsVisible="{Binding !IsGenerated}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconSummary}" Foreground="White"/>
+							<TextBlock Text="Generate Draft"/>
+						</StackPanel>
+					</Button>
+					<Button Command="{Binding GenerateDraftCommand}" IsEnabled="{Binding !IsBusy}" Classes="Reset" IsVisible="{Binding IsGenerated}" ToolTip.Tip="Regenerate draft to pull in new employee changes">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconRefresh}" />
+							<TextBlock Text="Refresh Draft"/>
+						</StackPanel>
+					</Button>
+				</StackPanel>
+
+				<!-- Row 4: Params & Notes -->
+				<StackPanel Grid.Row="4" Grid.Column="0" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Total Gas Charge (R)" Classes="label"/>
+					<NumericUpDown Value="{Binding TotalGasCharge}" FormatString="C2" Width="165" Minimum="0"/>
+				</StackPanel>
+				<StackPanel Grid.Row="4" Grid.Column="1" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Default Sup. Fee" Classes="label"/>
+					<NumericUpDown Value="{Binding DefaultSupervisorFee}" FormatString="C2" Width="165" Minimum="0"/>
+				</StackPanel>
+				<StackPanel Grid.Row="4" Grid.Column="2" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Washing" Classes="label" ToolTip.Tip="Flat washing fee deducted from all employees in company housing"/>
+					<NumericUpDown Value="{Binding CompanyHousingWashingFee}" FormatString="C2" Width="165" Minimum="0"/>
+				</StackPanel>
+				<StackPanel Grid.Row="4" Grid.Column="3" Spacing="5" Margin="0,0,10,0">
+					<TextBlock Text="Notes" Classes="label"/>
+					<TextBox Watermark="Run Notes (Optional)" Text="{Binding Notes}" Width="165" FontSize="11"/>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+			<LayoutTransformControl HorizontalAlignment="Left" VerticalAlignment="Top">
+				<LayoutTransformControl.LayoutTransform>
+					<ScaleTransform ScaleX="{Binding GridZoom}" ScaleY="{Binding GridZoom}"/>
+				</LayoutTransformControl.LayoutTransform>
+				<DataGrid ItemsSource="{Binding Lines}" IsReadOnly="False"
+						  CanUserSortColumns="True" GridLinesVisibility="Horizontal"
+						  BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+						  Background="{DynamicResource SurfaceBackground}"
+						  MinHeight="400">
+					<DataGrid.Styles>
+						<Style Selector="DataGridCell">
+							<Setter Property="VerticalContentAlignment" Value="Center"/>
+						</Style>
+						<Style Selector="DataGridCell TextBlock">
+							<Setter Property="VerticalAlignment" Value="Center"/>
+						</Style>
+						<!-- Style for TextBoxes in cells to look clean -->
+						<Style Selector="DataGrid TextBox">
+							<Setter Property="Background" Value="Transparent"/>
+							<Setter Property="BorderThickness" Value="0"/>
+							<Setter Property="Padding" Value="0"/>
+							<Setter Property="VerticalAlignment" Value="Center"/>
+							<Setter Property="HorizontalContentAlignment" Value="Center"/>
+						</Style>
+					</DataGrid.Styles>
+					<DataGrid.Columns>
+						<!-- 1. # -->
+						<DataGridTextColumn Header="#" Binding="{Binding Index}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.HeaderTemplate>
+								<DataTemplate><TextBlock Text="#" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/></DataTemplate>
+							</DataGridTextColumn.HeaderTemplate>
+						</DataGridTextColumn>
+
+						<!-- 2. BAS -->
+						<DataGridTextColumn Header="BAS" Binding="{Binding EmployeeNumber}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.HeaderTemplate>
+								<DataTemplate><TextBlock Text="BAS" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/></DataTemplate>
+							</DataGridTextColumn.HeaderTemplate>
+						</DataGridTextColumn>
+
+						<!-- 3. NAME -->
+						<DataGridTextColumn Binding="{Binding EmployeeName}" MinWidth="200" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<StackPanel HorizontalAlignment="Center" Margin="0,4">
+									<TextBlock Text="OCC PERMANENT PG.1" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/>
+									<TextBlock Text="NAME" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/>
+								</StackPanel>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 4. RATE P/HR -->
+						<DataGridTextColumn Binding="{Binding RatePHrDisplay, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="RATE&#x0a;P/HR" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 5. HRS -->
+						<DataGridTemplateColumn Width="Auto" MinWidth="70">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="HRS" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding NormalHours, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 6. STD O/T RATE -->
+						<DataGridTextColumn Binding="{Binding StdOtRate, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="STD O/T&#x0a;RATE" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 7. SAT O/T RATE -->
+						<DataGridTextColumn Binding="{Binding SatOtRate, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="SAT O/T&#x0a;RATE" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 8. SUN-P'HOL RATE -->
+						<DataGridTextColumn Binding="{Binding SunPHolRate, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="SUN-P'HOL&#x0a;RATE" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 12. $TD O/T -->
+						<DataGridTemplateColumn Width="Auto" MinWidth="75">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="STD&#x0a;O/T" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding Overtime15Hours, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 13. SAT O/T -->
+						<DataGridTextColumn Binding="{Binding SatOt, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="SAT&#x0a;O/T" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 14. SUN O/T -->
+						<DataGridTemplateColumn Width="Auto" MinWidth="75">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="SUN&#x0a;O/T" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding Overtime20Hours, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 15. LOANS -->
+						<DataGridTemplateColumn Width="Auto" MinWidth="75">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="LOANS" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding DeductionLoan, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 16. WASHING -->
+						<DataGridTemplateColumn Header="WASHING" Width="Auto">
+							<DataGridTemplateColumn.HeaderTemplate>
+								<DataTemplate><TextBlock Text="WASHING" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/></DataTemplate>
+							</DataGridTemplateColumn.HeaderTemplate>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding DeductionWashing, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 17. GAS -->
+						<DataGridTemplateColumn Header="GAS" Width="Auto">
+							<DataGridTemplateColumn.HeaderTemplate>
+								<DataTemplate><TextBlock Text="GAS" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/></DataTemplate>
+							</DataGridTemplateColumn.HeaderTemplate>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding DeductionGas, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 18. OTHER -->
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="OTHER&#x0a;DEDUCTION" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding DeductionOther, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- PPE Deduction Column -->
+						<DataGridTemplateColumn Header="PPE" Width="Auto">
+							<DataGridTemplateColumn.HeaderTemplate>
+								<DataTemplate><TextBlock Text="PPE&#x0a;DEDUCTION" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/></DataTemplate>
+							</DataGridTemplateColumn.HeaderTemplate>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding DeductionPPE, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						
+						<!-- SUPERVISOR FEE (OTHER) -->
+						<DataGridTemplateColumn Header="OTHER" Width="Auto">
+							<DataGridTemplateColumn.HeaderTemplate>
+								<DataTemplate><TextBlock Text="OTHER" FontWeight="Bold" FontSize="9" HorizontalAlignment="Center"/></DataTemplate>
+							</DataGridTemplateColumn.HeaderTemplate>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding IncentiveSupervisor, Mode=TwoWay, StringFormat={}{0:F2}}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- 19. TOTAL NETT -->
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="TOTAL&#x0a;NETT" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding NetPay, StringFormat={}{0:F2}}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- COMPUTED BLUE AREA -->
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="TOTAL&#x0a;REM" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding TotalRem, StringFormat={}{0:F2}}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="RATE&#x0a;P/DAY" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding RatePDayDisplay, StringFormat={}{0:F2}}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="DAYS&#x0a;WEEK 1" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding DaysWeek1Display}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="DAYS&#x0a;WEEK 2" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding DaysWeek2Display}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="TOTAL&#x0a;DAYS" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding TotalDaysDisplay}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="HRS&#x0a;P/DAY" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding HrsPDayDisplay, StringFormat={}{0:F2}}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+			</LayoutTransformControl>
+		</ScrollViewer>
+
+		<!-- Footer -->
+		<Border Grid.Row="2" Background="{DynamicResource SurfaceBackground}" CornerRadius="8" Padding="15" Margin="0,15,0,0" IsVisible="{Binding IsGenerated}">
+			<Grid ColumnDefinitions="*, Auto, Auto">
+				<StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+					<TextBlock Text="Grand Total Wage:" FontSize="18"/>
+					<TextBlock Text="{Binding GrandTotalWage, StringFormat={}{0:C}}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}"/>
+				</StackPanel>
+
+				<!-- Zoom Slider -->
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="0,0,25,0">
+					<TextBlock Text="Zoom:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+					<Slider Value="{Binding GridZoom}" Minimum="0.5" Maximum="1.5" Width="100" VerticalAlignment="Center"/>
+				</StackPanel>
+
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+					<Button Command="{Binding PrintPdfCommand}" Classes="Secondary" IsEnabled="{Binding IsGenerated}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconPrint}" Foreground="{DynamicResource TextPrimary}"/>
+							<TextBlock Text="Print PDF"/>
+						</StackPanel>
+					</Button>
+
+					<Button Command="{Binding SaveDraftCommand}" Classes="Secondary" IsEnabled="{Binding !IsBusy}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconEdit}" Foreground="{DynamicResource TextPrimary}"/>
+							<TextBlock Text="Save Changes"/>
+						</StackPanel>
+					</Button>
+					
+					<Button Command="{Binding FinalizeRunCommand}" Classes="Primary" IsEnabled="{Binding !IsBusy}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconCheck}" Foreground="White"/>
+							<TextBlock Text="Finalize &amp; Save Run"/>
+						</StackPanel>
+					</Button>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+
+
+					<!-- Saving -->
+			<StackPanel Grid.RowSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+				<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			</StackPanel>
+
+	</Grid>
+</UserControl>

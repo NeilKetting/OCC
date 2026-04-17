@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Features.ProjectsHub.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="50"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.GanttMenuBarView"
+             x:DataType="vm:ProjectGanttViewModel">
+
+    <Border Background="{DynamicResource SurfaceBackground}" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Padding="10,5">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+            
+            <!-- Left Controls: Filter / View Options -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                <Button Classes="SubtleButton" Padding="8,5">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <PathIcon Data="{StaticResource IconFilter}" Width="14" Height="14"/>
+                        <TextBlock Text="Filter" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="SubtleButton" Padding="8,5">
+                     <StackPanel Orientation="Horizontal" Spacing="5">
+                        <PathIcon Data="{StaticResource IconEye}" Width="14" Height="14"/>
+                        <TextBlock Text="View" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Right Controls: Zoom and Date Navigation -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                <Button Content="Today" Classes="OutlineButton" Padding="10,5"/>
+                
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Zoom:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <Slider Value="{Binding ZoomLevel}" Minimum="0.4" Maximum="3.0" Width="100" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
+
+
+

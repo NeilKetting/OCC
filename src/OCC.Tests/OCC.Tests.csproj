@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OCC.Shared\OCC.Shared.csproj" />
+    <ProjectReference Include="..\OCC.WpfClient\OCC.WpfClient.csproj" />
+    <ProjectReference Include="..\OCC.API\OCC.API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ViewModels\**" />
+    <Compile Remove="Services\**" />
+    <Compile Remove="UseCases\**" />
+    <Compile Remove="Features\HseqHub\**" />
+    <Compile Remove="Client\**" />
+    <Compile Remove="Infrastructure\DependencyInjectionTests.cs" />
+  </ItemGroup>
+
+</Project>

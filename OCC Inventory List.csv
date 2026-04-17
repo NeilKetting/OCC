@@ -1,0 +1,698 @@
+Product/Service Name,Quantity on hand,Item type,Category,SKU,Purchase cost includes tax,Sales price/rate includes tax,Price,Cost,Income Account,Expense Account,Stock asset account,Sales Description,Purchase Description,Reorder Point
+24MM Masking tape,0,Service,,,No,No,0,0,Services,Purchases,,24mm Masking Tape,,0
+25MPa-PUMP/MIX,0,Non-Stock,,,No,No,,,Services,Purchases,,25MPa Concrete -Foundation (pump mix),25MPa Concrete -Foundation (pump mix),0
+48mm Masking Tape,0,Service,,,No,No,0,0,Services,Purchases,,48mm Masking Tape,,0
+ABR-YELL-P80,0,Non-Stock,,,No,No,787.5,787.5,Purchases,Purchases,,"Yellow (P80) Abrasive Roll
+115 x 50m","Yellow (P80) Abrasive Roll
+115 x 50m",0
+ADH-001,0,Non-Stock,,,No,No,57.37,57.37,Purchases,Purchases,,"Tile Africa Ceramic tile adhesive
+(20kg)","Tile Africa Ceramic tile adhesive
+(20kg)",0
+ADH-002,0,Non-Stock,,,No,No,555.8,555.8,Purchases,Purchases,,"TAL-Flex ready mix adhesive
+(5kg)","TAL-Flex ready mix adhesive
+(5kg)",0
+ADH-003,0,Non-Stock,,,No,No,120.24,120.24,Purchases,Purchases,,"TAL-Bond liquid 
+(5L)","TAL-Bond liquid 
+(5L)",0
+ADH-W.GLUE-20L,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Standard Wood Glue
+20L","Standard Wood Glue
+20L",0
+ALU-ANGLE-001,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Angle
+12 x 12 x 2 (6m)","Aluminium Angle
+12 x 12 x 2 (6m)",0
+ALU-ANGLE-002,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Aluminium Angle
+19 x 19 x 1.6 (6m)","Aluminium Angle
+19 x 19 x 1.6 (6m)",0
+ALU-ANGLE-003,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Angle
+25.4 x 25.4 x 1.52 (6m)","Aluminium Angle
+25.4 x 25.4 x 1.52 (6m)",0
+ALU-ANGLE-004,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Angle
+40 x 40 x 2 (6m)","Aluminium Angle
+40 x 40 x 2 (6m)",0
+ALU-ANGLE-005,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Aluminium U-Channel
+47.05 x 19.06 x 1.52","Aluminium U-Channel
+47.05 x 19.06 x 1.52",0
+ALU-ANGLE-006,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Angle
+50 x 50 x 2 (6m)","Aluminium Angle
+50 x 50 x 2 (6m)",0
+ARMOX-500T,0,Non-Stock,,4331,No,No,44387.88,44387.88,Purchases,Purchases,,"ARMOX 500-T 
+2400 x 6000 x 6.5mm","ARMOX 500-T 
+2400 x 6000 x 6.5mm",0
+BASIN-S/S-KNEE,0,Non-Stock,,,No,No,,,Services,Purchases,,"S/S Knee operated wash hand basin supplied with push plate and single sink mount swivel tap
+400 x 300 x 200mm High","S/S Knee operated wash hand basin supplied with push plate and single sink mount swivel tap
+400 x 300 x 200mm High",0
+BASIN-S/S-WH,0,Non-Stock,,,No,No,,,Services,Purchases,,"S/S Wash hand basin
+400 x 500mm","S/S Wash hand basin
+400 x 500mm",0
+BRICKS-CL/STOCK,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Clay stock bricks p/ea,Clay stock bricks p/ea,0
+BRICKS-RT/D-CANT,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,Roan Travertine Double Cant brick,Roan Travertine Double Cant brick,0
+BRICKS-RT/FB,0,Non-Stock,,20RBTRDMB,No,No,9.87,9.87,Purchases,Purchases,,"Roan Travertine face brick
+FBX Blending on site essential","Roan Travertine face brick
+FBX Blending on site essential",0
+BRICKS-RT/PH,0,Non-Stock,,20RBTRDPH,No,No,15.47,15.47,Purchases,Purchases,,Roan Travertine plinth header,Roan Travertine plinth header,0
+BRICKS-RT/S-CANT,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,Roan Travertine Single Cant brick,Roan Travertine Single Cant brick,0
+"BUILD-B/FORCE-4,5",0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Brickforce 4,5 inch","Brickforce 4,5 inch",0
+BUILD-B/FORCE-9,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Brickforce 9 inch,Brickforce 9 inch,0
+BUILD-B/SAND,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Building sand p/cubic M,Building sand p/cubic M,0
+BUILD-CEMENT/32.5,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Cement 32.5N p/50kg,Cement 32.5N p/50kg,0
+BUILD-CONCR/MIX,0,Non-Stock,,,No,No,,,Cost of sales,Purchases,,"Concrete Mix
+p/m³","Concrete Mix
+p/m³",0
+BUILD-CONC/SPACERS,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Concrete spacers,Concrete spacers,0
+BUILD-P/SAND,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Plaster Sand p/cubic M,Plaster Sand p/cubic M,0
+BUILD-R/SAND,0,Non-Stock,,,No,No,,,Purchases,Purchases,,River Sand p/m³,River Sand p/m³,0
+BUILD-W/TIES,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Wall ties,Wall ties,0
+CDS-CEILING/T-002,0,Non-Stock,,,No,No,41.46,41.46,Purchases,Purchases,,"White Vinyl ceiling tiles 
+1200 x 600 x 9mm","White Vinyl ceiling tiles 
+1200 x 600 x 9mm",0
+CDS-CEILING/T-003,0,Non-Stock,,,No,No,68,68,Purchases,Purchases,,"Black Vinyl Ceiling Tile
+1200 x 600 x 9mm (with foil)","Black Vinyl Ceiling Tile
+1200 x 600 x 9mm (with foil)",0
+CDS-RHINO-001,0,Non-Stock,,,No,No,355,355,Cost of sales,Purchases,,Rhinolite -40Kg,Rhinolite -40Kg,0
+CDS-SHADOW/L-001,0,Non-Stock,,,No,No,48.23,48.23,Purchases,Purchases,,"White Shadowline 
+3.6m","White Shadowline 
+3.6m",0
+CDS-TEES-001,0,Non-Stock,,,No,No,14.69,14.69,Purchases,Purchases,,"White Cross tees
+1.2m","White Cross tees
+1.2m",0
+CDS-TEES-002,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"White Main tees
+1.2m","White Main tees
+1.2m",0
+DEL.INSTR-001,0,Non-Stock,,,No,No,,,Uncategorised Income,Uncategorised Expense,,,,0
+DELIVERY,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Delivery / Transport,Delivery / Transport,0
+D.FRAME-1000MM,0,Non-Stock,,,No,No,1373,1373,Purchases,Purchases,,"Meranti Door Frame (100x70)
+2032 x 1000mm","Meranti Door Frame (100x70)
+2032 x 1000mm",0
+D.FRAME-760MM,0,Non-Stock,,,No,No,1373,1373,Purchases,Purchases,,"Meranti Door Frame (100x70)
+2032 x 760mm","Meranti Door Frame (100x70)
+2032 x 760mm",0
+D.FRAME-813MM,0,Non-Stock,,,No,No,1373,1373,Purchases,Purchases,,"Meranti Door Frame (100x70)
+2032 x 813mm","Meranti Door Frame (100x70)
+2032 x 813mm",0
+D.FRAME-900MM,0,Non-Stock,,,No,No,1373,1373,Purchases,Purchases,,"Meranti Door Frame (100x70)
+2032 x 900mm","Meranti Door Frame (100x70)
+2032 x 900mm",0
+D.FRAME-CUSTOM,0,Non-Stock,,,No,No,1373,1373,Purchases,Purchases,,"Meranti Door Frame (100x70)
+2032 x","Meranti Door Frame (100x70)
+2032 x",0
+DOOR.AN.BANDIT-813MM,0,Non-Stock,,,No,No,21829,21829,Purchases,Purchases,,"Anti Bandit Door Item 8 (D1) 
+2032 x 813mm 
+Overall Size: 890W x 202H","Anti Bandit Door Item 8 (D1) 
+2032 x 813mm 
+Overall Size: 890W x 202H",0
+DOOR.CHOP.RSD-1.64x3.6M,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Chain operated roller shutter door
+1640mm x 3600mm
+* DG Chain sets big gear - Chain sets comp
+* Chain & big gear wheels c/w 6 met chain
+* Including Delivery & Installation","Chain operated roller shutter door
+1640mm x 3600mm
+* DG Chain sets big gear - Chain sets comp
+* Chain & big gear wheels c/w 6 met chain
+* Including Delivery & Installation",0
+DOOR.CHOP.RSD-2.1x1.5M,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Chain operated roller shutter door
+2.100 x 1.500mm
+* Rails fixed against walls
+* Chain on LH Side
+* Mounted inside the building","Chain operated roller shutter door
+2.100 x 1.500mm
+* Rails fixed against walls
+* Chain on LH Side
+* Mounted inside the building",0
+DOOR.CHOP.RSD-2.3x1.5M,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Chain operated roller shutter door
+2.300 x 1.500m
+* Rails fixed against Brick walls
+* Chain on RH Side","Chain operated roller shutter door
+2.300 x 1.500m
+* Rails fixed against Brick walls
+* Chain on RH Side",0
+DOOR.CHOP.RSD-2.4x1.3M,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Chain operated roller shutter door
+2.400x 1.300m
+* Rails fixed against walls
+* Including delivery and installation
+* Chain on","Chain operated roller shutter door
+2.400x 1.300m
+* Rails fixed against walls
+* Including delivery and installation
+* Chain on",0
+DOOR.MER.FBB-900MM,0,Non-Stock,,,No,No,2507,2507,Purchases,Purchases,,"FLB Meranti Door
+2032 x 900mm","FLB Meranti Door
+2032 x 900mm",0
+DOOR.MER.FLB-1000MM,0,Non-Stock,,,No,No,2758,2758,Purchases,Purchases,,"FLB Meranti Door
+2032 x 1000mm","FLB Meranti Door
+2032 x 1000mm",0
+DOOR.MER.FLB-760MM,0,Non-Stock,,,No,No,2507,2507,Purchases,Purchases,,"FLB Meranti Door
+2032 x 760mm","FLB Meranti Door
+2032 x 760mm",0
+DOOR.MER.FLB-813MM,0,Non-Stock,,,No,No,2507,2507,Purchases,Purchases,,"FLB Meranti Door
+2032 x 813mm","FLB Meranti Door
+2032 x 813mm",0
+DOOR.MER.FLB-CUSTOM,0,Non-Stock,,,No,No,2507,2507,Purchases,Purchases,,"FLB Meranti Door
+2032 x","FLB Meranti Door
+2032 x",0
+DOORS-CHOPRSD-1.6X3.6M,0,Non-Stock,,,No,No,11631.92,11631.92,Purchases,Purchases,,"Chain operated RSD
+1.640 x 3.600
+DG Chain sets big gear
+*Chain sets comp-chain & big gear wheels c/w 6 met chain","Chain operated RSD
+1.640 x 3.600
+DG Chain sets big gear
+*Chain sets comp-chain & big gear wheels c/w 6 met chain",0
+DOORS-CHOPRSD-2.1X1.5M,0,Non-Stock,,,No,No,7485,7485,Purchases,Purchases,,"Chain operated RSD
+2.100 x 1.500
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :","Chain operated RSD
+2.100 x 1.500
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :",0
+DOORS-CHOPRSD-2.3X1.5M,0,Non-Stock,,,No,No,9137.65,9137.65,Purchases,Purchases,,"Chain operated RSD
+2.300 x 1.500
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :","Chain operated RSD
+2.300 x 1.500
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :",0
+DOORS-CHOPRSD-2.4X1.3M,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Chain operated RSD
+2.400 x 1.300
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :","Chain operated RSD
+2.400 x 1.300
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :",0
+DOORS-CHOPRSD-2.4X1.5,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Chain operated RSD
+2.400 x 1.500
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :","Chain operated RSD
+2.400 x 1.500
+*Rails fixed against walls
+*Mounted on building wall
+*Chain side :",0
+DOOR.SOL-1000MM,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Solid Masonite Door
+2032 x 1000mm","Solid Masonite Door
+2032 x 1000mm",0
+DOOR.SOL-760MM,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Solid Masonite Door
+2032 x 760mm","Solid Masonite Door
+2032 x 760mm",0
+DOOR.SOL-813MM,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Solid Masonite Door
+2032 x 813mm","Solid Masonite Door
+2032 x 813mm",0
+DOOR.SOL-900MM,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Solid Masonite Door
+2032 x 900mm","Solid Masonite Door
+2032 x 900mm",0
+DOOR.SOL-CUSTOM,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Solid Masonite Door
+2032 x","Solid Masonite Door
+2032 x",0
+DOOR.SSOL-1000MM,0,Non-Stock,,,No,No,543,543,Purchases,Purchases,,"Semi Solid Masonite Door
+2032 x 1000mm","Semi Solid Masonite Door
+2032 x 1000mm",0
+DOOR.SSOL-760MM,0,Non-Stock,,,No,No,380,380,Purchases,Purchases,,"Semi Solid Masonite Door
+2032 x 760mm","Semi Solid Masonite Door
+2032 x 760mm",0
+DOOR.SSOL-813MM,0,Non-Stock,,,No,No,380,380,Purchases,Purchases,,"Semi Solid Masonite Door
+2032 x 813mm","Semi Solid Masonite Door
+2032 x 813mm",0
+DOOR.SSOL-900MM,0,Non-Stock,,,No,No,543,543,Purchases,Purchases,,"Semi Solid Masonite Door
+2032 x 900mm","Semi Solid Masonite Door
+2032 x 900mm",0
+DOOR.SSOL-CUSTOM,0,Non-Stock,,,No,No,543,543,Purchases,Purchases,,"Semi Solid Masonite Door
+2032 x","Semi Solid Masonite Door
+2032 x",0
+DRAWER -CT20-B,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Bulk Cash / Goods Transfer Drawer
+Stainless Steel
+CT20B","Bulk Cash / Goods Transfer Drawer
+Stainless Steel
+CT20B",0
+DRAWER -CT250-B,0,Non-Stock,,,No,No,3293.98,3293.98,Purchases,Purchases,,"Bulk Cash / Goods Transfer Drawer
+Stainless Steel
+CT250B","Bulk Cash / Goods Transfer Drawer
+Stainless Steel
+CT250B",0
+DUL-GRIM.GREY-5L,0,Non-Stock,,00NN 20/000,No,No,,,Purchases,Purchases,,"Dulux Acr. PVA
+Grimmy's Grey -5L","Dulux Acr. PVA
+Grimmy's Grey -5L",0
+DUL-PLATEU.GREY-5L,0,Non-Stock,,40YY 20/081,No,No,,,Purchases,Purchases,,"Dulux Acr. PVA
+Plateu Grey -5L","Dulux Acr. PVA
+Plateu Grey -5L",0
+DUL-TOASTY.GREY-5L,0,Non-Stock,,30YY 51/098,No,No,,,Purchases,Purchases,,"Dulux Acr. PVA
+Toasty Grey -5L","Dulux Acr. PVA
+Toasty Grey -5L",0
+GROUT-001,0,Non-Stock,,,No,No,212.06,212.06,Purchases,Purchases,,"Dove Grey tile grout
+(20kg)","Dove Grey tile grout
+(20kg)",0
+GROUT-002,0,Non-Stock,,,No,No,43,43,Purchases,Purchases,,"Jet Black tile grout
+(5kg)","Jet Black tile grout
+(5kg)",0
+HILTI-TE300/AVR-CHISEL,0,Non-Stock,,,No,No,1442.95,1442.95,Purchases,Purchases,,HILTI TE300 AVR Jack hammer chisel,HILTI TE300 AVR Jack hammer chisel,0
+HILTI-TE300/AVR-MOIL,0,Non-Stock,,,No,No,1365.01,1365.01,Purchases,Purchases,,HILTI TE300 AVR Jack hammer moil,HILTI TE300 AVR Jack hammer moil,0
+IRONM-BHINGE-001,0,Non-Stock,,,No,No,255,255,Purchases,Purchases,,"JH-BB-STD-2-SS Butt Hinges
+100 x 75 (Pair)","JH-BB-STD-2-SS Butt Hinges
+100 x 75 (Pair)",0
+IRONM-CYL/EP-001,0,Non-Stock,,,No,No,,110,Services,Purchases,,2X18SC Euro profile Dbl cylinder,2X18SC Euro profile Dbl cylinder,0
+IRONM-CYL/OP-002,0,Non-Stock,,,No,No,,490.95,Services,Purchases,,2X6-SC Oval profile Dbl cylinder,2X6-SC Oval profile Dbl cylinder,0
+IRONM-DCLOSER-001,0,Non-Stock,,,No,No,655,655,Purchases,Purchases,,QS680 Door Closer,QS680 Door Closer,0
+IRONM-D/H-001,0,Non-Stock,,,No,No,1107,1107,Purchases,Purchases,,CB612-13SC Protea handle with Oval profile cylinder cut out (pair),CB612-13SC Protea handle with Oval profile cylinder cut out (pair),0
+IRONM-DS-001,0,Non-Stock,,,No,No,58.21,58.21,Purchases,Purchases,,CZ8731CS Door Stop,CZ8731CS Door Stop,0
+IRONM-D/STOP-001,0,Non-Stock,,,No,No,,58.21,Services,Purchases,,CZ8731CS Union door stop,CZ8731CS Union door stop,0
+IRONM-FRANKE-001,0,Non-Stock,,,No,No,6850,6850,Purchases,Purchases,,FRANKE 2500002 Airtronic Electronic Jetstream Hand Dryer,FRANKE 2500002 Airtronic Electronic Jetstream Hand Dryer,0
+IRONM-FRANKE-002,0,Non-Stock,,,No,No,3166,3166,Purchases,Purchases,,FRANKE 2520029 Oval-A Wall mounted wash hand basin,FRANKE 2520029 Oval-A Wall mounted wash hand basin,0
+IRONM-GRAB/R-001,0,Non-Stock,,,No,No,553.5,553.5,Purchases,Purchases,,Dogleg Stainless Steel Grab Rail,Dogleg Stainless Steel Grab Rail,0
+IRONM-GRAB/R-002,0,Non-Stock,,,No,No,553.5,553.5,Purchases,Purchases,,Cistern Stainless Steel Grabrail,Cistern Stainless Steel Grabrail,0
+IRONM-INDBOLT-001,0,Non-Stock,,,No,No,168.35,168.35,Purchases,Purchases,,CZ80941 SCR Union Indicator Bolt,CZ80941 SCR Union Indicator Bolt,0
+IRONM-KPLATE-001,0,Non-Stock,,,No,No,99.1,99.1,Purchases,Purchases,,813 x 150 x 1.2mm Brushed Stainless Steel Kickplate Gr.304,813 x 150 x 1.2mm Brushed Stainless Steel Kickplate Gr.304,0
+IRONM-KPLATE-002,0,Non-Stock,,,No,No,77.1,77.1,Purchases,Purchases,,900 x 150 x 1.2mm Brushed Stainless Steel Kickplate Gr.304,900 x 150 x 1.2mm Brushed Stainless Steel Kickplate Gr.304,0
+IRONM-L/H-001,0,Non-Stock,,,No,No,,633.47,Services,Purchases,,AL6D66-05 Lever handle on 152 x 152 Aluminium backing plate c/w Euro profile cylinder cut out (pair),AL6D66-05 Lever handle on 152 x 152 Aluminium backing plate c/w Euro profile cylinder cut out (pair),0
+IRONM-L/H-002,0,Non-Stock,,,No,No,756.25,756.25,Purchases,Purchases,,AL6D66-13 Lever Handle on 152 x 152 plate c/w Oval Cylinder piercing (PAIR),AL6D66-13 Lever Handle on 152 x 152 plate c/w Oval Cylinder piercing (PAIR),0
+IRONM-L/H-003,0,Non-Stock,,,No,No,1050,1050,Purchases,Purchases,,CB612-13SC Protea Handle with Oval cylinder cut out  (Pair),CB612-13SC Protea Handle with Oval cylinder cut out  (Pair),0
+IRONM-LOCK-001,0,Non-Stock,,,No,No,,215.11,Services,Purchases,,L21315-76 Euro profile deadlock,L21315-76 Euro profile deadlock,0
+IRONM-LOCK-002,0,Non-Stock,,,No,No,,219.92,Services,Purchases,,223155-76 Euro profile latch lock,223155-76 Euro profile latch lock,0
+IRONM-LOCK-003,0,Non-Stock,,,No,No,,,Purchases,Purchases,,2241-78SS Oval profile latch lock,2241-78SS Oval profile latch lock,0
+IRONM-LOCK-004,0,Non-Stock,,,No,No,596.51,596.51,Purchases,Purchases,,2141-78SS Oval Profile Deadlock,2141-78SS Oval Profile Deadlock,0
+IRONM-MFSCR-001,0,Non-Stock,,,No,No,7.28,7.28,Purchases,Purchases,,RH7024 M+F Screws,RH7024 M+F Screws,0
+IRONM-P/H-001,0,Non-Stock,,,No,No,,405.3,Services,Purchases,,AL5D66-05 Pull handle on 152x152 Aluminium backing plate c/w Euro profile cylinder cut out (pair),AL5D66-05 Pull handle on 152x152 Aluminium backing plate c/w Euro profile cylinder cut out (pair),0
+IRONM-P/H-002,0,Non-Stock,,,No,No,339.38,339.38,Purchases,Purchases,,AL5D66-13 Pull Handle on 152 x 152  Plate c/w Oval Profile Cylinder Cut Out (PAIR),AL5D66-13 Pull Handle on 152 x 152  Plate c/w Oval Profile Cylinder Cut Out (PAIR),0
+IRONM-P/H-003,0,Non-Stock,,,No,No,215.18,215.18,Purchases,Purchases,,AL5D66-06 Pull Handle on BLANK 152 x 152 Aluminium Backing Plate (PAIR),AL5D66-06 Pull Handle on BLANK 152 x 152 Aluminium Backing Plate (PAIR),0
+IRONM-P/H-004,0,Non-Stock,,,No,No,402.22,402.22,Purchases,Purchases,,AL5515-300 FL AS Dove Pull Handle,AL5515-300 FL AS Dove Pull Handle,0
+IRONM-P/PLATE-001,0,Non-Stock,,,No,No,71.4,71.4,Purchases,Purchases,,AL5066-06AS UNION NAA pushplate 152 x 152 x 3mm BLANK,AL5066-06AS UNION NAA pushplate 152 x 152 x 3mm BLANK,0
+IRONM-PPL/LOCK-001,0,Non-Stock,,,No,No,650,650,Purchases,Purchases,,37651 Helping Hand Paraplegic Lockset Complete,37651 Helping Hand Paraplegic Lockset Complete,0
+IRONM-SOAP-002,0,Non-Stock,,,No,No,271.43,271.43,Purchases,Purchases,,1L White Vertical Soap Dispenser,1L White Vertical Soap Dispenser,0
+IRONM-SOAP/D-001,0,Non-Stock,,,No,No,500,500,Purchases,Purchases,,1L United Vertical Stainless Steel Soap Dispenser,1L United Vertical Stainless Steel Soap Dispenser,0
+IRONM-T/BAR-001,0,Non-Stock,,,No,No,1450,1450,Services,Purchases,,QS300/1 : Touch Bar Exit Device,QS300/1 : Touch Bar Exit Device,0
+IRONM-T/BAR-002,0,Non-Stock,,,No,No,805,805,Purchases,Purchases,,QS330 : Outside Access Device,QS330 : Outside Access Device,0
+IRONM-T/ROLL-002,0,Non-Stock,,,No,No,343.85,343.85,Purchases,Purchases,,TR2 (White) Toilet Roll Holder,TR2 (White) Toilet Roll Holder,0
+IRONM-T/ROLL-002.1,0,Non-Stock,,,No,No,,0,Purchases,Purchases,,TS2 (S/S) Toilet Roll Holder,TS2 (S/S) Toilet Roll Holder,0
+IRONM-V/GRILLE-001,0,Non-Stock,,,No,No,225,225,Purchases,Purchases,,"TRA-200 Ventilation Grille
+210 X 210","TRA-200 Ventilation Grille
+210 X 210",0
+IRONM-V/GRILLE-002,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Ventilation Grille
+350 x 400","Ventilation Grille
+Ventilation Grille
+350 x 400",0
+JC-Foreman Rate,0,Service,,,No,No,0,0,Services,,,Foreman Labour Rate,,0
+JC-Plumber,0,Service,,,No,No,0,0,Services,,,Plamber Labour Rate,,0
+JC-Skilled,0,Service,,,No,No,0,0,Services,,,Skilled Labour Rate,,0
+JC-Toll Fees,0,Service,,,No,No,0,0,Services,,,Toll Fees,,0
+JC-Travelling,0,Service,,,No,No,11.67,0,Services,,,Travelling,,0
+JC-Unskilled,0,Service,,,No,No,0,0,Services,,,Unskilled Labour Rate,,0
+JOLUKA-80%-BLUE,0,Non-Stock,,,No,No,1798,1798,Purchases,Purchases,,"Shade netting 80% -Blue
+50m x 1.8m","Shade netting 80% -Blue
+50m x 1.8m",0
+JOLUKA-80%-FORR/GREEN,0,Non-Stock,,,No,No,1798,1798,Purchases,Purchases,,"Shade netting 80% 
+Forrest Green
+50m x 1.8m","Shade netting 80% 
+Forrest Green
+50m x 1.8m",0
+KB-B/HAT-KHAKI,0,Non-Stock,,H016,No,No,190,190,Purchases,Purchases,,"Bush Hat with Flap & Toggle
+Khaki","Bush Hat with Flap & Toggle
+Khaki",0
+LIQ/RUBBER-GREEN,0,Non-Stock,,,No,No,1050,1050,Purchases,Purchases,,Liquid Rubber Green p/20L,Liquid Rubber Green p/20L,0
+MAINT,0,Service,,,No,No,0,0,Services,,,ENGEN JC No:,,0
+MAN-001,0,Non-Stock,,,No,No,,,Purchases,Purchases,,,,0
+PLAS-ABBEYLANE-5L,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Plascon DBL Velvet Deep Base  (6L2-6)
+Abbeylane -5L","Plascon DBL Velvet Deep Base  (6L2-6)
+Abbeylane -5L",0
+PLAS-AGEAN SPLEND-20L,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Plascon Wall & All 
+Agean Splendour # 40","Plascon Wall & All 
+Agean Splendour # 40",0
+PLAS-ANTHRACITE-5L,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Plascon Double Velvet T/B Trans -RAL7016 
+Anthracite Grey -5L","Plascon Double Velvet T/B Trans -RAL7016 
+Anthracite Grey -5L",0
+PLAS-BLUE/B-RIPPLE-5L,0,Non-Stock,,TWA003010-0005,No,No,,,Purchases,Purchases,,"Plascon Wall & All -B7-D1-1
+Blueberry Ripple -5L","Plascon Wall & All -B7-D1-1
+Blueberry Ripple -5L",0
+PLAS-C.COAL-5L,0,Non-Stock,,TDV003010-0005,No,No,,,Services,Purchases,,"Plascon Double Velvet T/B Trans (PB200 / PC12 / PK110)
+Charcoal -5L","Plascon Double Velvet T/B Trans (PB200 / PC12 / PK110)
+Charcoal -5L",0
+PLAS-D.VELVET.W-20L,0,Non-Stock,,VEL000001-0020,No,No,0,0,Purchases,Purchases,,"Plascon Double Velvet 
+White -20L","Plascon Double Velvet 
+White -20L",0
+PLAS-D.VELVET.W-5L,0,Non-Stock,,VEL000001-0005,No,No,0,0,Purchases,Purchases,,"Plascon Double Velvet 
+White -5L","Plascon Double Velvet 
+White -5L",0
+PLAS-D.VIOLET-5L,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Plascon Sup.Univ. Enamel T/B Trans -F06
+Dark Violet -5L","Plascon Sup.Univ. Enamel T/B Trans -F06
+Dark Violet -5L",0
+PLAS-EC.PRIMER-5L,0,Non-Stock,,SNK000010-0005,No,No,,,Purchases,Purchases,,"Plascon Edgecoate Primer 
+SNK10 -5L","Plascon Edgecoate Primer 
+SNK10 -5L",0
+PLAS-EPI.WASH-10L,0,Non-Stock,,AW000255-5010,No,No,1482.74,1482.74,Purchases,Purchases,,"Plascon epiwash primer
+Yellow-10L","Plascon epiwash primer
+Yellow-10L",0
+PLAS-EPL48-20L,0,Non-Stock,,EPL000048-0020,No,No,0,0,Purchases,Purchases,,"Plascon Sup. Acr. Polvin (EPL-48)
+Black -20L","Plascon Sup. Acr. Polvin (EPL-48)
+Black -20L",0
+PLAS-EPL48-5L,0,Non-Stock,,EPL000048-0005,No,No,0,0,Purchases,Purchases,,"Plascon Sup. Acr. Polvin (EPL-48)
+Black -5L","Plascon Sup. Acr. Polvin (EPL-48)
+Black -5L",0
+PLAS-G/PRIMER*Y-10L,0,Non-Stock,,AW00255-5010,No,No,1631.24,1631.24,Purchases,Purchases,,"Plascon Steeltect 1500 SB Galve Primer
+AW00255-5010 (YELLOW) 10L PACK","Plascon Steeltect 1500 SB Galve Primer
+AW00255-5010 (YELLOW) 10L PACK",0
+PLAS-M.DAWN-5L,0,Non-Stock,,TDV001000-0005,No,No,,,Purchases,Purchases,,"Plascon Double Velvet  (55)
+Misty Dawn -5L","Plascon Double Velvet  (55)
+Misty Dawn -5L",0
+PLAS-MEND.90-5KG,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Plascon Mendall-90
+5Kg","Plascon Mendall-90
+5Kg",0
+PLAS-MICATEX.W.20L,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Plascon Micatex (BBO-300)
+White-20L","Plascon Micatex (BBO-300)
+White-20L",0
+PLAS-MICATEX.W-5L,0,Non-Stock,,BBO000300-0005,No,No,,,Purchases,Purchases,,"Plascon Micatex (BBO300)
+ White -5L","Plascon Micatex (BBO300)
+ White -5L",0
+PLAS-MS.GREY-5L,0,Non-Stock,,TVW003000-0005,No,No,662.23,662.23,Purchases,Purchases,,"Plascon velvaglo WB enamel
+T/B-Trans-G526
+Mineshaft Grey-5L","Plascon velvaglo WB enamel
+T/B-Trans-G526
+Mineshaft Grey-5L",0
+PLAS-NUROOF-W-20L,0,Non-Stock,,,No,No,1328.47,1328.47,Purchases,Purchases,,"Plascon Nuroof 
+White -20L","Plascon Nuroof 
+White -20L",0
+PLAS-NUROOF.WHITE-20L,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Plascon Nuroof 
+White -20L","Plascon Nuroof 
+White -20L",0
+PLAS-P.FILLA.EXT-12KG,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Polycell Exterior Polyfilla
+12Kg","Polycell Exterior Polyfilla
+12Kg",0
+PLAS-P.FILLA.INT-12KG,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Polycell Interior Polyfilla
+12Kg","Polycell Interior Polyfilla
+12Kg",0
+PLAS-PL.THANE-E/BLUE-4L,0,Non-Stock,,,No,No,834.32,834.32,Purchases,Purchases,,Plascon PLASCOTHANE Polyurethane tint to -REF 160 Engen Blue,Plascon PLASCOTHANE Polyurethane tint to -REF 160 Engen Blue,0
+PLAS-PL.THANE-HARDN-715ML,0,Non-Stock,,,No,No,328.7,328.7,Purchases,Purchases,,"Plascon PLASCOTHANE Hardener
+PRH000009-0715","Plascon PLASCOTHANE Hardener
+PRH000009-0715",0
+PLAS-PL.TUFF.GREY-4L,0,Non-Stock,,PEX003500-0004,No,No,882.98,882.98,Purchases,Purchases,,"Plascon plascotuff 3500
+Grey-4L","Plascon plascotuff 3500
+Grey-4L",0
+PLAS-PL.TUFF.HARDNER-1L,0,Non-Stock,,PEH003500-0001,No,No,237.4,237.4,Purchases,Purchases,,"Plascon plascotuff 3500
+Hardner-1L","Plascon plascotuff 3500
+Hardner-1L",0
+PLAS-P.PRIMER.W-20L,0,Non-Stock,,PP00700-0020,No,No,,,Purchases,Purchases,,"Plascon Prof. Gypsum & Plaster Primer (PP700)
+White -20L","Plascon Prof. Gypsum & Plaster Primer (PP700)
+White -20L",0
+PLAS-P.PRIMER.W-5L,0,Non-Stock,,PP000700-0005,No,No,,,Purchases,Purchases,,"Plascon Prof. Gypsum & Plaster Primer (PP700)
+White -5L","Plascon Prof. Gypsum & Plaster Primer (PP700)
+White -5L",0
+PLAS-PU.PRIMER.W-5L,0,Non-Stock,,PU000800-0005,No,No,375.96,375.96,Purchases,Purchases,,"Plascon Prof.General Purpose Undercoat
+White -5L","Plascon Prof.General Purpose Undercoat
+White -5L",0
+PLAS-PW.PRIMER-5L,0,Non-Stock,,UC000002-0005,No,No,608.59,608.59,Purchases,Purchases,,"Plascon wood primer
+Pink-5L","Plascon wood primer
+Pink-5L",0
+PLAS-PW.PRIMER-UC2-5L,0,Non-Stock,,UC2,No,No,,,Purchases,Purchases,,"Plascon Wood Primer 
+Pink-5L","Plascon Wood Primer 
+Pink-5L",0
+PLAS-REF160,0,Non-Stock,,,No,No,1241.85,1241.85,Purchases,Purchases,,Plascon REF-160 Prof. Emulsion Acr. (Engen Blue) 5L,Plascon REF-160 Prof. Emulsion Acr. (Engen Blue) 5L,0
+PLAS-S.GREY-5L,0,Non-Stock,,TCA3000-0005,No,No,,,Purchases,Purchases,,"Plascon Cashmere (RAL-700) 
+Signal Grey -5L","Plascon Cashmere (RAL-700) 
+Signal Grey -5L",0
+PLAS-U.COAT.W-5L,0,Non-Stock,,UC000001-0005,No,No,432.08,432.08,Purchases,Purchases,,"Plascon universal undercoat
+White-5L","Plascon universal undercoat
+White-5L",0
+PLAS-UN.U/COAT-5L,0,Non-Stock,,UC000001-0005,No,No,,,Purchases,Purchases,,"Plascon Universal Undercoat 
+White 5L","Plascon Universal Undercoat 
+White 5L",0
+PLAS-V.SEA-5L,0,Non-Stock,,TCA 3000-00005,No,No,759.73,759.73,Purchases,Purchases,,"Plascon Cashmere (D33-7)
+Vista Sea -5L","Plascon Cashmere (D33-7)
+Vista Sea -5L",0
+PLAS-W.ALL.W-20L,0,Non-Stock,,WAA000001-0020,No,No,1757.63,1757.63,Purchases,Purchases,,"Plascon wall & all 
+White-20L","Plascon wall & all 
+White-20L",0
+PLAS-W.ALL.W-5L,0,Non-Stock,,WAA000001-0005,No,No,,,Purchases,Purchases,,"Plascon wall & all 
+White-5L","Plascon wall & all 
+White-5L",0
+PLAS-WP-COMPUND-W-20L,0,Non-Stock,,PWC520-20L,No,No,1746.92,1746.92,Purchases,Purchases,,"Plascon Waterproofing Compound 
+White -20L","Plascon Waterproofing Compound 
+White -20L",0
+PLAS-W.PROOF.C-20L,0,Non-Stock,,PWC520,No,No,1746.92,1746.92,Purchases,Purchases,,"Plascon Waterproofing Compound 
+White -20L","Plascon Waterproofing Compound 
+White -20L",0
+PLAS-WSP.11-5L,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Plascon Sunproof Varnish Ext. Suede
+Clear -5L","Plascon Sunproof Varnish Ext. Suede
+Clear -5L",0
+QS4451-203mm,0,Service,,,No,No,0,0,Services,Purchases,,Flushbolt,,0
+QUOTE-APPR-001,0,Non-Stock,,,No,No,,,Purchases,Purchases,,We hereby approve quotation Ref No:,We hereby approve quotation Ref No:,0
+S.CRAFT-001,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Engen : Signage
+COMBINATION -Blue
+Blue","Engen : Signage
+COMBINATION -Blue
+Blue",0
+S.CRAFT-002,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Engen : Signage
+MALE PUBLIC BATHROOM 
+Blue","Engen : Signage
+MALE PUBLIC BATHROOM 
+Blue",0
+S.CRAFT-003,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Engen : Signage
+FEMALE PUBLIC BATHROOM 
+Blue","Engen : Signage
+FEMALE PUBLIC BATHROOM 
+Blue",0
+Services,0,Service,,,No,No,,,Services,,,,,0
+SIGN-001,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Signage
+MALE","Aluminium Signage
+MALE",0
+SIGN-002,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Signage 
+FEMALE","Aluminium Signage 
+FEMALE",0
+SIGN-003,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Signage
+PARAPLEGIC","Aluminium Signage
+PARAPLEGIC",0
+SIGN-004,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Signage
+STAFF CHANGEROOM","Aluminium Signage
+STAFF CHANGEROOM",0
+SILICONE-ACR/WHITE,0,Non-Stock,,26.08.24,No,No,48,48,Purchases,Purchases,,White Acrylic Silicone 310ml,White Acrylic Silicone 310ml,0
+SILICONE-BL.ACET-280ML,0,Non-Stock,,,No,No,52,52,Purchases,Purchases,,"Silicone 280ml
+Black Acetate","Silicone 280ml
+Black Acetate",0
+SILICONE-CL.ACET-280ML,0,Non-Stock,,,No,No,52,52,Services,Purchases,,"Silicone 280ml
+Clear Acetate","Silicone 280ml
+Clear Acetate",0
+SILICONE-GR.ACET-280ML,0,Non-Stock,,,No,No,52,52,Purchases,Purchases,,"Silicone 280ml
+Grey Acetate","Silicone 280ml
+Grey Acetate",0
+SILICONE-W.ACET-280ML,0,Non-Stock,,,No,No,52,52,Purchases,Purchases,,"Silicone 280ml
+White Acetate","Silicone 280ml
+White Acetate",0
+SILICONE-W.ACRY-310ML,0,Non-Stock,,,No,No,48,48,Purchases,Purchases,,"Silicone 310ml
+White Acrylic","Silicone 310ml
+White Acrylic",0
+SINK-DBL/BOWL,0,Non-Stock,,,No,No,,7650,Services,Purchases,,"Double bowl S/S prep sink 1.350 x 650 x 915mm
+(500 x 500 x 250)","Double bowl S/S prep sink 1.350 x 650 x 915mm
+(500 x 500 x 250)",0
+SINK-TRIP/BOWL,0,Non-Stock,,,No,No,,,Services,Purchases,,"S/S Trippel bowl pot sink
+1.800 x 600mm","S/S Trippel bowl pot sink
+1.800 x 600mm",0
+SINK-VEG,0,Non-Stock,,,No,No,,,Services,Purchases,,"S/S Single bowl veg prep sink
+760mm","S/S Single bowl veg prep sink
+760mm",0
+SKIPS-2M³/PLACE,0,Non-Stock,,,No,No,,,Services,Services,,2m³ -Placement of skip,2m³ -Placement of skip,0
+SKIPS-6M³/PLACE,0,Non-Stock,,,No,No,1950,1950,Services,Services,,6m³ -Placement of skip,6m³ -Placement of skip,0
+SOIL-POISON-10YR,0,Non-Stock,,,No,No,11.35,11.35,Services,Services,,"Pre-Construction soil poisoning
+p/m²
+10-Yr","Pre-Construction soil poisoning
+p/m²
+10-Yr",0
+Stainless Steel Corner protector 50x50,0,Service,,,No,No,0,0,Services,Purchases,,T0030444 Stainless Steel Retro Corner Protector Natural 50x50mm x3m,,0
+S.TEC-001,0,Non-Stock,,ROCKFON,No,No,213,213,Purchases,Purchases,,"Rockfon Mastic A
+1200 x 600","Rockfon Mastic A
+1200 x 600",0
+S.TEC-002,0,Non-Stock,,CROSSTMA,No,No,38.38,38.38,Purchases,Purchases,,"Cross Tee
+Mastic Grey Econolock
+1.2m","Cross Tee
+Mastic Grey Econolock
+1.2m",0
+S.TEC-003,0,Non-Stock,,MAINTMAST,No,No,110.21,110.21,Purchases,Purchases,,"Main Tee 
+Mastic Grey
+3.6m","Main Tee 
+Mastic Grey
+3.6m",0
+S.TEC-004,0,Non-Stock,,WIRE,No,No,5.25,5.25,Purchases,Purchases,,"Hanger Wire
+2.5 x 3600","Hanger Wire
+2.5 x 3600",0
+S.TEC-005,0,Non-Stock,,HANGER,No,No,197.94,197.94,Purchases,Purchases,,"Tiewire Ceiling Anchor
+6 x 50","Tiewire Ceiling Anchor
+6 x 50",0
+S.TEC-006,0,Non-Stock,,SHADOW,No,No,149.32,143.32,Purchases,Purchases,,"Shadowline Wall Angle
+Mastic Grey
+3.6m","Shadowline Wall Angle
+Mastic Grey
+3.6m",0
+STICP500.N,0,Service,,,No,No,0,0,Services,Purchases,,STICP500.N Stainless Steel Corner protector 50x50x2.5,,0
+SUPL-B/O,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Items on backorder,Items on backorder,0
+SUPL-CREDIT/N,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Credit note,Credit note,0
+SUPL-DEL/NOTE,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Items supplied / delivered,Items supplied / delivered,0
+SUPL-INVOICE,0,Non-Stock,,,No,No,,,Purchases,Purchases,,Items supplied / delivered,Items supplied / delivered,0
+TILES-TA-001,0,Non-Stock,,,No,No,,503.83,Services,Purchases,,"Black (Night Natural) Porcelain floor tile 
+300 x 300  (p/m²)","Black (Night Natural) Porcelain floor tile 
+300 x 300  (p/m²)",0
+TILES-TA-002,0,Non-Stock,,,No,No,,412.59,Services,Purchases,,"Dakota grey (Graphite matt) Porcelain floor tile
+300 x 300 (p/m²)","Dakota grey (Graphite matt) Porcelain floor tile
+300 x 300 (p/m²)",0
+TILES-TA-003,0,Non-Stock,,,No,No,,378.47,Purchases,Purchases,,"Bianco (String) Porcelain floor tile
+300 x 300 (p/m²)","Bianco (String) Porcelain floor tile
+300 x 300 (p/m²)",0
+TILES-TA-004,0,Non-Stock,,,No,No,0,484.47,Services,Purchases,,"Fino preto (Graphite Rocktop) Porclain floor tile
+300 x 300 (p/m²)","Fino preto (Graphite Rocktop) Porclain floor tile
+300 x 300 (p/m²)",0
+TILES-TA-005,0,Non-Stock,,,No,No,0,37.2,Purchases,Purchases,,"KER-515 Graphite polished Listello Porcelain wall tile
+297 x 59 (l/m)","KER-515 Graphite polished Listello Porcelain wall tile
+297 x 59 (l/m)",0
+TILES-TA-006,0,Non-Stock,,,No,No,0,69.56,Purchases,Purchases,,"White Anti-slip Mosaic tile
+300 x 300 (p/m²)","White Anti-slip Mosaic tile
+300 x 300 (p/sheet)",0
+TILES-TA-007,0,Non-Stock,,,No,No,0,230.78,Purchases,Purchases,,"Gloss White Ceramic Wall tile
+200 x 200 (p/m²)","Gloss White Ceramic Wall tile
+200 x 200 (p/m²)",0
+TILES-TA-008,0,Non-Stock,,,No,No,0,230.78,Purchases,Purchases,,"Matt White Ceramic Wall tile
+200 x 200 (p/m²)","Matt White Ceramic Wall tile
+200 x 200 (p/m²)",0
+TILES-TA-009,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Brick tile -Ivory Satin
+222 x 70","Brick tile -Ivory Satin
+222 x 70",0
+TILES-TA-010,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Brick tile -Ivory Satin
+230 x 70","Brick tile -Ivory Satin
+230 x 70",0
+TILES-TA-011,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Brick tile -Redwood
+250 x 115","Brick tile -Redwood
+250 x 115",0
+TILES-TA-012,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Brick tile -Burnt Jasper (center cut)
+230 x 115 x 35","Brick tile -Burnt Jasper (center cut)
+230 x 115 x 35",0
+TILES-TA-013,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Brick tile -Fireside coromaxi 90 Travertine
+222 x 114 x 90","Brick tile -Fireside coromaxi 90 Travertine
+222 x 114 x 90",0
+TILES-TA-014,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Amazon Mahogany Porcelain floor/wall tile
+900 x 50","Amazon Mahogany Porcelain floor/wall tile
+900 x 50",0
+TILES-TA-015,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Amazon Oak Porcelain floor tile
+900 x 150","Amazon Oak Porcelain floor tile
+900 x 150",0
+TILES-TA-016,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Atacama Cinza Ceramic tile
+600 x 600","Atacama Cinza Ceramic tile
+600 x 600",0
+TILES-TA-017,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Avon Brillo (Cream) metro gloss 
+100 x 300","Avon Brillo (Cream) metro gloss 
+100 x 300",0
+TILES-TA-018,0,Non-Stock,,,No,No,427.31,427.31,Purchases,Purchases,,"Coco MT Liso Flat Ivory Matt Ceramic Wall Tile
+100 x 300","Coco MT Liso Flat Ivory Matt Ceramic Wall Tile
+100 x 300",0
+TILES-TA-019,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Imperial Graphite Porcelain floor tile
+300 x 300","Imperial Graphite Porcelain floor tile
+300 x 300",0
+TILES-TA-020,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Interbau (grey/yellow)
+240 x 115","Interbau (grey/yellow)
+240 x 115",0
+TILES-TA-021,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Kilimanjaro Khalagadi Cotta Slip resistant Porcelain floor tile
+350 x 350","Kilimanjaro Khalagadi Cotta Slip resistant Porcelain floor tile
+350 x 350",0
+TILES-TA-022,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Kilimanjaro Khalagadi Cotta Slip resistant Porcelain floor tile
+350 x 350","Kilimanjaro Khalagadi Cotta Slip resistant Porcelain floor tile
+350 x 350",0
+TILES-TA-023,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Manuri Grafiti matt Porcelain floor tile
+600 x 600","Manuri Grafiti matt Porcelain floor tile
+600 x 600",0
+TILES-TA-024,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Matrix light grey matt Porcelain tile (BTN3405)
+300 x 600","Matrix light grey matt Porcelain tile (BTN3405)
+300 x 600",0
+TILES-TA-025,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,Patchwork Europa mosaic tile,Patchwork Europa mosaic tile,0
+TILES-TA-026,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,Sterling light grey Porcelain mosaic tile,Sterling light grey Porcelain mosaic tile,0
+TILES-TA-027,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,KER-515 Graphite polished Porcelain wall tile,KER-515 Graphite polished Porcelain wall tile,0
+TILES-TA-028,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,Mas Galia Wengue matt Porcelain floor tile,Mas Galia Wengue matt Porcelain floor tile,0
+TILES-TA-029,0,Non-Stock,,T0034687,No,No,0,0,Purchases,Purchases,,"Metro White Shiny beveled ceramic wall tile
+200 x 100
+p/m²","Metro White Shiny beveled ceramic wall tile
+200 x 100
+p/m²",0
+TILES-TA-030,0,Non-Stock,,T0027947,No,No,159.38,159.38,Purchases,Purchases,,"Echo Grey Gres Porcelain floor tile 
+600 x 600
+p/m²","Echo Grey Gres Porcelain floor tile 
+600 x 600
+p/m²",0
+TILES-TA-031,0,Non-Stock,,T0033070,No,No,285,285,Purchases,Purchases,,"Brick tile -Redwood
+220 x 70","Brick tile -Redwood
+220 x 70",0
+TILES-TH-001,0,Non-Stock,,10464,No,No,650,650,Purchases,Purchases,,"Terre Cotto Irregolo tiles
+600 x 1200mm
+(1.44sqm/box)","Terre Cotto Irregolo tiles
+600 x 1200mm
+(1.44sqm/box)",0
+TILES-TH-002,0,Non-Stock,,10487,No,No,250,250,Cost of sales,Purchases,,"Metro White Matt Beveled tile
+100 x 300 (pm²)","Metro White Matt Beveled tile
+100 x 300 (pm²)",0
+TILES-TH-003,0,Non-Stock,,10454,No,No,365,365,Services,Purchases,,"Technic Arkansas
+300 x 300
+(1.17sqm/box)","Technic Arkansas
+300 x 300
+(1.17sqm/box)",0
+TILES-TH-004,0,Non-Stock,,10227,No,No,385,385,Purchases,Purchases,,"Technic Nero
+300 x 300
+(1.17sqm/box)","Technic Nero
+300 x 300
+(1.17sqm/box)",0
+TILES-TH-005,0,Non-Stock,,GS-CR112,No,No,150,150,Purchases,Purchases,,"Kitkat Black Matt
+293 X 297","Kitkat Black Matt
+293 X 297",0
+TILES-TH-006,0,Non-Stock,,11321,No,No,299,299,Purchases,Purchases,,"Thar Gris Textured
+300 x 300
+(0.99m/ctn)","Thar Gris Textured
+300 x 300
+(0.99m/ctn)",0
+TILES-TH-007,0,Non-Stock,,,No,No,655,655,Purchases,Purchases,,"Terrazzo tech grigio 
+600x600mm","Terrazzo tech grigio 
+600x600mm",0
+TILES-UT-001,0,Non-Stock,,1GRABOS300,No,No,397.39,397.39,Purchases,Purchases,,"Granito Gres Evo Boston 
+300 x 300 (1.26m² p/bpx)","Granito Gres Evo Boston 
+300 x 300 (1.26m² p/bpx)",0
+TRIM-10MM-001,0,Non-Stock,,,No,No,,,Purchases,Purchases,,10mm Stainless Steel (Genesis) square edge trim,10mm Stainless Steel (Genesis) square edge trim,0
+TRIM-10MM-002,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Straight edge trim
+(10mm)","Aluminium Straight edge trim
+(10mm)",0
+TRIM-10MM-003,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Aluminium Square edge trim
+(10mm)","Aluminium Square edge trim
+(10mm)",0
+TRIM-50MM-001,0,Non-Stock,,,No,No,0,0,Purchases,Purchases,,"Stainless Steel Corner Protector 
+T0019027 Stainless Steel Corner Protector Natural 50x50mmx2.5m B1 SCP500.N",T0019027 Stainless Steel Corner Protector Natural 50x50mmx2.5m B1 SCP500.N,0
+TRIM-8MM-001,0,Non-Stock,,,No,No,40,,Purchases,Purchases,,8mm Aluminium straight edge trim,8mm Aluminium straight edge trim,0
+VERS-BLUE FOR YOU,0,Non-Stock,,,No,No,,2234,Services,Purchases,,"Versus -Blue for you
+Deep Base
+B3-A1-3
+Status Satin
+20L","Versus -Blue for you
+Deep Base
+B3-A1-3
+Status Satin
+20L",0
+VERS -CAPTIVATE,0,Non-Stock,,,No,No,,1711,Services,Purchases,,"Versus -Captivate
+Pastel Base
+B2-A2-3
+Statis Satin
+20L","Versus -Captivate
+Pastel Base
+B2-A2-3
+Statis Satin
+20L",0
+VERS-DE LOVELY,0,Non-Stock,,,No,No,,2234,Services,Purchases,,"Versus -De Lovely 
+Deep Base 
+G1-A1-4
+Status Satin
+20L","Versus -De Lovely 
+Deep Base 
+G1-A1-4
+Status Satin
+20L",0
+VERS-SNOWSHY,0,Non-Stock,,,No,No,,1711,Services,Purchases,,"Versus -Snowshy
+Pastel Base
+B3-A2-2
+Status Satin
+20L","Versus -Snowshy
+Pastel Base
+B3-A2-2
+Status Satin
+20L",0
+WOODC-JARRAH-501124,0,Non-Stock,,,No,No,1648.2,1648.2,Cost of sales,Purchases,,Veneer MDF Jarrah S/F 2.750 x 1.830 x 16mm,Veneer MDF Jarrah S/F 2.750 x 1.830 x 16mm,0
+WOODC-MDF-16,0,Non-Stock,,,No,No,719.25,719.25,Cost of sales,Purchases,,MDF Plain 2.750 x 1.830 x 16mm,MDF Plain 2.750 x 1.830 x 16mm,0
+WOODN-CAFE365-001,0,Non-Stock,,,No,No,,,Purchases,Purchases,,"Café 365 Bakery 
+Quote No:",,0

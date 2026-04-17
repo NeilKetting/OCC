@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.SettingsHub.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.SettingsHub.Views.CompanySettingsView"
+             x:DataType="vm:CompanySettingsViewModel"
+             Background="{DynamicResource BackgroundLightGray}">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.SectionTitle">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryDark}"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryDark}"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+        <Style Selector="TextBlock.Caption">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryGray}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Top Navigation Area -->
+        <Border Grid.Row="0" Background="White" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Padding="20,15">
+            <StackPanel Orientation="Horizontal" Spacing="20">
+                <TextBlock Text="System Settings" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Scrolling Content -->
+        <ScrollViewer Grid.Row="1" Padding="20">
+            <StackPanel Spacing="30" MaxWidth="800" HorizontalAlignment="Left">
+                
+                <!-- Financial Settings -->
+                <Border Classes="Card" Padding="25" IsVisible="{Binding IsAdmin}">
+                    <StackPanel Spacing="20">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource IconBank}" Width="24" Height="24" Foreground="{DynamicResource PrimaryTeal}"/> 
+                            <TextBlock Text="Financial Settings" Classes="SectionTitle" Margin="0"/>
+                        </StackPanel>
+                        
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Global Loan Interest Rate (%)" Classes="Label"/>
+                            <NumericUpDown Value="{Binding CompanyDetails.GlobalLoanInterestRate}" FormatString="0.00" Increment="0.25" Minimum="0" Maximum="100" Width="200" HorizontalAlignment="Left"/>
+                            <TextBlock Text="This rate will be the default for new employee loans, but can be overridden per loan." Classes="Caption"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- System Preferences -->
+                <Border Classes="Card" Padding="25" IsVisible="{Binding IsAdmin}">
+                    <StackPanel Spacing="20">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource IconSettings}" Width="24" Height="24" Foreground="{DynamicResource PrimaryTeal}"/>
+                            <TextBlock Text="System Preferences" Classes="SectionTitle" Margin="0"/>
+                        </StackPanel>
+                        
+                        <!-- Automatic Clock-In Toggle (Coming Soon) -->
+                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+                            <ToggleSwitch Grid.Column="0" Grid.Row="0" 
+                                          IsChecked="{Binding CompanyDetails.AutoClockInEnabled}" 
+                                          OnContent="Enabled" OffContent="Disabled"/>
+                            <StackPanel Grid.Column="1" Grid.Row="0" Margin="15,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Automatic Daily Clock-In" Classes="Label" Margin="0"/>
+                                <TextBlock Text="Automatically clocks in active employees based on their shift start time." Classes="Caption" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Days Selection -->
+                        <StackPanel Spacing="10" Margin="0,10,0,0" IsVisible="{Binding CompanyDetails.AutoClockInEnabled}">
+                            <TextBlock Text="Run on following days:" Classes="Label" FontSize="12"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <CheckBox Content="Mon" IsChecked="{Binding IsMondayEnabled}" Margin="0,0,15,0"/>
+                                <CheckBox Content="Tue" IsChecked="{Binding IsTuesdayEnabled}" Margin="0,0,15,0"/>
+                                <CheckBox Content="Wed" IsChecked="{Binding IsWednesdayEnabled}" Margin="0,0,15,0"/>
+                                <CheckBox Content="Thu" IsChecked="{Binding IsThursdayEnabled}" Margin="0,0,15,0"/>
+                                <CheckBox Content="Fri" IsChecked="{Binding IsFridayEnabled}" Margin="0,0,15,0"/>
+                                <CheckBox Content="Sat" IsChecked="{Binding IsSaturdayEnabled}" Margin="0,0,15,0"/>
+                                <CheckBox Content="Sun" IsChecked="{Binding IsSundayEnabled}" Margin="0,0,15,0"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,20,0,0">
+                    <Button Content="Save Settings" 
+                            Classes="Primary"
+                            Command="{Binding SaveSettingsCommand}"
+                            Width="150" Height="40"
+                            HorizontalContentAlignment="Center"/>
+                </StackPanel>
+                
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Loading Overlay -->
+        <Border Grid.Row="1" Background="#80FFFFFF" IsVisible="{Binding IsBusy}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="15">
+                <PathIcon Data="{StaticResource IconSync}" Width="40" Height="40" Classes="SpinningIcon" Foreground="{DynamicResource PrimaryTeal}"/>
+                <TextBlock Text="Loading..." FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

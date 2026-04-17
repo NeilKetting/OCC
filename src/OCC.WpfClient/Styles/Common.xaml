@@ -1,0 +1,134 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml" />
+        <ResourceDictionary Source="Icons.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+    
+    
+    <!-- Hazard Stripe Brush - Better for continuous borders -->
+    <DrawingBrush x:Key="ChevronPatternBrush" x:Shared="False" TileMode="Tile" Viewport="0,0,20,20" ViewportUnits="Absolute">
+        <DrawingBrush.RelativeTransform>
+            <TranslateTransform x:Name="ChevronTransform" X="0" Y="0" />
+        </DrawingBrush.RelativeTransform>
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <!-- Background Yellow -->
+                <GeometryDrawing Brush="{StaticResource SecondaryGold}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,20,20" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <!-- Diagonal Stipes -->
+                <GeometryDrawing Brush="{StaticResource BackgroundDark}">
+                    <GeometryDrawing.Geometry>
+                        <PathGeometry Figures="M 0,10 L 10,0 L 20,0 L 0,20 Z M 10,20 L 20,10 L 20,20 Z" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+
+    <!-- Border Chevron Style -->
+    <Style x:Key="Border.Chevron" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ChevronPatternBrush}" />
+        <Setter Property="MinHeight" Value="10" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+
+    <!-- Glass Effect Style -->
+    <Style x:Key="GlassCard" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource GlassBackground}" />
+        <Setter Property="BorderBrush" Value="{StaticResource PremiumGlassGlow}" />
+        <Setter Property="BorderThickness" Value="3" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="50" ShadowDepth="0" Color="{StaticResource CardBackgroundColor}" Opacity="0.9" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Standard Loading Overlay -->
+    <Style x:Key="StandardLoadingOverlay" TargetType="ContentControl">
+        <Setter Property="Background" Value="#CC000000" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Grid Background="{TemplateBinding Background}">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <ProgressBar IsIndeterminate="True" 
+                                         Width="180" Height="4" 
+                                         Foreground="{StaticResource AccentBlue}" 
+                                         Background="#20FFFFFF"
+                                         BorderThickness="0"/>
+                            <TextBlock Text="{Binding BusyText}" 
+                                       Foreground="White" 
+                                       Margin="0,15,0,0" 
+                                       HorizontalAlignment="Center"
+                                       FontSize="14"
+                                       Opacity="0.8"
+                                       Visibility="{Binding BusyText, Converter={StaticResource VisibilityConverter}}"/>
+                        </StackPanel>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Content Stats Badge -->
+    <Style x:Key="StatsBadge" TargetType="Border">
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="10,4"/>
+        <Setter Property="Margin" Value="0,0,10,0"/>
+        <Setter Property="Background" Value="#20FFFFFF"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Loading Spinner Animation -->
+    <Storyboard x:Key="BusySpinnerAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                         From="0" To="360" Duration="0:0:1.5" 
+                         RepeatBehavior="Forever" />
+    </Storyboard>
+
+    <!-- Ghost Button (Transparent with low-opacity content) -->
+    <Style x:Key="GhostButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                        <ContentPresenter x:Name="content" 
+                                          HorizontalAlignment="Center" 
+                                          VerticalAlignment="Center" 
+                                          Opacity="0.3"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="content" Property="Opacity" Value="1.0"/>
+                            <Setter TargetName="border" Property="Background" Value="#10FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.2"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
+

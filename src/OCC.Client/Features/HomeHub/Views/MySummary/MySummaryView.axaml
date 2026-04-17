@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Dashboard"
+             xmlns:local="clr-namespace:OCC.Client.Features.HomeHub.Views.MySummary.Widgets"
+             mc:Ignorable="d"
+             x:Class="OCC.Client.Features.HomeHub.Views.MySummary.MySummaryView"
+             x:DataType="vm:SummaryViewModel">
+
+    <Border Classes="WidgetCard">
+        <StackPanel Spacing="20">
+            <TextBlock Text="My Summary" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+            <Border BorderBrush="{DynamicResource PrimaryTeal}" BorderThickness="0,2,0,0"/>
+            
+            <Grid ColumnDefinitions="*, *, *">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="TASKS" Classes="LabelSmall" Margin="0,0,0,10"/>
+                    <local:TaskStatusGraphView/>
+                </StackPanel>                
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="TO-DOS" Classes="LabelSmall" Margin="0,0,0,10"/>
+                    <local:ToDoStatusGraphView/>
+                </StackPanel>                
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="TIME" Classes="LabelSmall" Margin="0,0,0,10"/>
+                    <local:TimeEfficiencyGraphView/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

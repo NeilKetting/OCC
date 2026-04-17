@@ -1,0 +1,315 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+ 			 xmlns:proj="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+ 			 xmlns:shared="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+			 xmlns:vm_tasks="clr-namespace:OCC.Client.Features.TaskHub.ViewModels"
+			 xmlns:task_widgets="clr-namespace:OCC.Client.Features.TaskHub.Views.Widgets"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectDetailView"
+			 x:DataType="vm:ProjectDetailViewModel"
+			 Focusable="True">
+
+	<Design.DataContext>
+		<vm:ProjectDetailViewModel/>
+	</Design.DataContext>
+
+	<UserControl.Resources>
+		<conv:UnassignedToVisibilityConverter x:Key="UnassignedToVisibilityConverter"/>
+	</UserControl.Resources>
+
+	<UserControl.Styles>
+		<!-- Generic DataGrid Styles -->
+		<Style Selector="DataGridColumnHeader">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="{DynamicResource TextSecondaryGray}"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Padding" Value="10,0"/>
+		</Style>
+		<Style Selector="DataGridRow">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="{DynamicResource TextPrimaryDark}"/>
+			<Setter Property="Padding" Value="5,8"/>
+			<Setter Property="ContextMenu">
+				<ContextMenu>
+					<MenuItem Header="Open Task" Command="{Binding $parent[UserControl].((vm:ProjectDetailViewModel)DataContext).OpenTaskCommand}" CommandParameter="{Binding}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconExternalLink}" Width="12" Height="12"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<Separator/>
+					<MenuItem Header="Delete Task" Command="{Binding $parent[UserControl].((vm:ProjectDetailViewModel)DataContext).DeleteTaskCommand}" CommandParameter="{Binding}" Foreground="{DynamicResource Danger}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconTrash}" Width="12" Height="12" Foreground="{DynamicResource Danger}"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</ContextMenu>
+			</Setter>
+		</Style>
+		<Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+			<Setter Property="Fill" Value="{DynamicResource PrimaryTealLight}"/>
+		</Style>
+
+		<!-- Site Manager Button Hover Effects -->
+		<Style Selector="Button.GhostButton PathIcon">
+			<Setter Property="Opacity" Value="0.1"/>
+		</Style>
+		<Style Selector="Button.GhostButton:pointerover PathIcon">
+			<Setter Property="Opacity" Value="1.0"/>
+		</Style>
+	</UserControl.Styles>
+
+	<UserControl.DataTemplates>
+		<!-- Task List View Template -->
+		<DataTemplate DataType="{x:Type vm:ProjectTaskListViewModel}" x:DataType="vm:ProjectTaskListViewModel">
+			<Grid RowDefinitions="Auto, *">
+				<!-- New Task Button (Always Visible) -->
+				<Button Grid.Row="0" Command="{Binding $parent[UserControl].((vm:ProjectDetailViewModel)DataContext).AddNewTaskCommand}" Background="Transparent" Padding="20,12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+					<StackPanel Orientation="Horizontal" Spacing="15">
+						<Border Width="20" Height="20" CornerRadius="10" Background="{DynamicResource TextSecondaryGray}">
+							<PathIcon Data="{StaticResource IconPlus}" Width="10" Height="10" Foreground="White"/>
+						</Border>
+						<TextBlock Text="New Task" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+					</StackPanel>
+				</Button>
+
+				<Grid Grid.Row="1">
+					<!-- Empty State -->
+					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20" IsVisible="{Binding !HasTasks}">
+						<PathIcon Data="{StaticResource IconCheckCircle}" Width="48" Height="48" Foreground="{DynamicResource TextTertiarySlate}"/>
+						<TextBlock Text="No tasks yet" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+						<TextBlock Text="Get started by creating your first task for this project." Foreground="{DynamicResource TextSecondaryGray}"/>
+					</StackPanel>
+
+					<ScrollViewer IsVisible="{Binding HasTasks}">
+						<StackPanel>
+							<!-- Data Grid -->
+							<DataGrid ItemsSource="{Binding Tasks}"
+									  SelectedItem="{Binding SelectedTask}"
+									  SelectionMode="Single"
+									  AutoGenerateColumns="False"
+									  IsReadOnly="True"
+									  GridLinesVisibility="Horizontal"
+									  HorizontalGridLinesBrush="{DynamicResource BorderGray}"
+									  Margin="20"
+									  DoubleTapped="TaskGrid_DoubleTapped">
+								<DataGrid.Columns>
+									<!-- Checkbox Column -->
+									<DataGridTemplateColumn Width="Auto">
+										<DataGridTemplateColumn.Header>
+											<TextBlock Text="DONE" HorizontalAlignment="Left"/>
+										</DataGridTemplateColumn.Header>
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<CheckBox HorizontalAlignment="Center" IsChecked="{Binding IsComplete}"/>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<!-- Task Name -->
+									<DataGridTemplateColumn Header="TASK NAME" Width="*">
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<StackPanel Orientation="Horizontal" Margin="{Binding IndentLevel, Converter={StaticResource IntToIndentationConverter}}">
+													<!-- Expander Button -->
+													<Button Classes="IconButton"
+															Command="{Binding $parent[UserControl].((vm:ProjectDetailViewModel)DataContext).ToggleExpandCommand}"
+															CommandParameter="{Binding}"
+															Width="20" Height="20"
+															Margin="0,0,5,0"
+															IsVisible="{Binding HasChildren}">
+														<Panel>
+															<PathIcon Data="{StaticResource IconChevronDown}" Width="10" Height="10"
+																	  IsVisible="{Binding IsExpanded}"/>
+															<PathIcon Data="{StaticResource IconChevronRight}" Width="10" Height="10"
+																	  IsVisible="{Binding !IsExpanded}"/>
+														</Panel>
+													</Button>
+													<!-- Spacer if no children -->
+													<Panel Width="25" IsVisible="{Binding !HasChildren}"/>
+
+													<TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+												</StackPanel>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<!-- Assigned To -->
+									<DataGridTemplateColumn Width="200">
+										<DataGridTemplateColumn.Header>
+											<TextBlock Text="ASSIGNED TO" HorizontalAlignment="Center"/>
+										</DataGridTemplateColumn.Header>
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<Border Height="28" CornerRadius="14" Padding="8,0" Background="{DynamicResource PrimaryTealLight}" HorizontalAlignment="Center">
+													<TextBlock Text="{Binding AssigneeInitials}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryGray}" />
+												</Border>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<!-- Priority -->
+									<DataGridTemplateColumn Width="120">
+										<DataGridTemplateColumn.Header>
+											<TextBlock Text="PRIORITY" HorizontalAlignment="Left"/>
+										</DataGridTemplateColumn.Header>
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+													<Ellipse Width="8" Height="8" Fill="{Binding Priority, Converter={StaticResource PriorityToColorConverter}}"/>
+													<TextBlock Text="{Binding Priority}" VerticalAlignment="Center"/>
+												</StackPanel>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<!-- Status -->
+									<DataGridTemplateColumn Width="150">
+										<DataGridTemplateColumn.Header>
+											<TextBlock Text="STATUS" HorizontalAlignment="Left"/>
+										</DataGridTemplateColumn.Header>
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding Status}"
+														   FontSize="12"
+														   FontWeight="SemiBold"
+														   HorizontalAlignment="Left"
+														   VerticalAlignment="Center"/>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<!-- Progress -->
+									<DataGridTemplateColumn Width="150">
+										<DataGridTemplateColumn.Header>
+											<TextBlock Text="PROGRESS" HorizontalAlignment="Left"/>
+										</DataGridTemplateColumn.Header>
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<StackPanel Spacing="8" VerticalAlignment="Center">
+													<ProgressBar Value="{Binding PercentComplete}"
+																 Height="8"
+																 VerticalAlignment="Center"
+																 CornerRadius="4"
+																 Background="#E2E8F0"
+																 Foreground="{Binding StatusColor, Converter={StaticResource StatusToBrushConverter}}"
+																 IsHitTestVisible="False"/>
+													<TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}%'}" FontSize="10" Foreground="{DynamicResource TextSecondaryGray}" HorizontalAlignment="Right" Margin="0,-4,0,0"/>
+												</StackPanel>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<!-- Due Date -->
+									<DataGridTemplateColumn Width="150">
+										<DataGridTemplateColumn.Header>
+											<TextBlock Text="DUE DATE" HorizontalAlignment="Left"/>
+										</DataGridTemplateColumn.Header>
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<TextBlock Text="{Binding FinishDate, StringFormat='{}{0:dd MMM, yyyy}'}"
+														   HorizontalAlignment="Right"
+														   VerticalAlignment="Center"/>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+								</DataGrid.Columns>
+							</DataGrid>
+						</StackPanel>
+					</ScrollViewer>
+				</Grid>
+			</Grid>
+		</DataTemplate>
+
+		<!-- Gantt View Template -->
+		<DataTemplate DataType="{x:Type vm:ProjectGanttViewModel}" x:DataType="vm:ProjectGanttViewModel">
+			<proj:ProjectGanttView/>
+		</DataTemplate>
+
+		<!-- Dashboard View Template -->
+		<DataTemplate DataType="{x:Type vm:ProjectDashboardViewModel}" x:DataType="vm:ProjectDashboardViewModel">
+			<proj:ProjectDashboardView/>
+		</DataTemplate>
+
+		<!-- Overdue Tasks View Template -->
+		<DataTemplate DataType="{x:Type vm:ProjectOverdueTasksViewModel}" x:DataType="vm:ProjectOverdueTasksViewModel">
+			<proj:ProjectOverdueTasksView/>
+		</DataTemplate>
+
+		<!-- Variation Order View Template -->
+		<DataTemplate DataType="{x:Type vm:ProjectVariationOrderListViewModel}" x:DataType="vm:ProjectVariationOrderListViewModel">
+			<proj:ProjectVariationOrderListView/>
+		</DataTemplate>
+
+		<DataTemplate DataType="{x:Type vm:ProjectFilesViewModel}" x:DataType="vm:ProjectFilesViewModel">
+			<proj:ProjectFilesView/>
+		</DataTemplate>
+
+		<DataTemplate DataType="{x:Type vm_tasks:TaskDetailViewModel}">
+			<task_widgets:TaskDetailView/>
+		</DataTemplate>
+
+		<!-- Edit Project View Template -->
+		<DataTemplate DataType="{x:Type vm:EditProjectViewModel}">
+			<proj:EditProjectView/>
+		</DataTemplate>
+	</UserControl.DataTemplates>
+
+	<UserControl.KeyBindings>
+		<KeyBinding Gesture="Escape" Command="{Binding CloseTaskDetailCommand}"/>
+	</UserControl.KeyBindings>
+
+	<Grid Background="White" RowDefinitions="Auto, *">
+		<!-- Top Project Navigation Bar -->
+		<shared:ProjectTopBarView DataContext="{Binding TopBar}" Grid.Row="0"/>
+
+		<!-- Main Content Area -->
+		<Grid Grid.Row="1">
+			<TransitioningContentControl Content="{Binding CurrentView}" VerticalAlignment="Stretch">
+				<TransitioningContentControl.PageTransition>
+					<CrossFade Duration="0:00:00.250" />
+				</TransitioningContentControl.PageTransition>
+			</TransitioningContentControl>
+
+			<!-- Task Detail Overlay Layer -->
+			<Grid IsVisible="{Binding IsTaskDetailOpen}"
+				  Background="#40000000"
+				  Name="OverlayGrid"
+				  PointerPressed="OnOverlayPointerPressed">
+
+				<Border Width="950"
+						Background="#F4F6F8"
+						HorizontalAlignment="Right"
+						BoxShadow="0 0 20 0 #20000000">
+					<ContentControl Content="{Binding SelectedTaskDetailVM}"/>
+				</Border>
+			</Grid>
+		</Grid>
+
+		<!-- Saving -->
+		<StackPanel Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+			<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			<TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Edit Project Overlay Layer -->
+		<Grid Grid.RowSpan="2" IsVisible="{Binding IsEditProjectVisible}"
+			  Background="#40000000">
+			<Border Width="1000"
+					MaxHeight="900"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"
+					BoxShadow="0 8 30 0 #40000000">
+				<ContentControl Content="{Binding EditProjectVM}"/>
+			</Border>
+		</Grid>
+
+	</Grid>
+</UserControl>
+
+
+

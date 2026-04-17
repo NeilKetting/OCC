@@ -1,0 +1,185 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ 			 xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+ 			 xmlns:local="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+ 			 xmlns:cust="clr-namespace:OCC.Client.Features.CustomerHub.Views"
+ 			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Features.ProjectsHub.Views.CreateProjectView"
+			 x:DataType="vm:CreateProjectViewModel">
+
+	<UserControl.Styles>
+		<Style Selector="RadioButton">
+			<Setter Property="Foreground" Value="{DynamicResource TextSecondaryGray}"/>
+			<Setter Property="FontSize" Value="13"/>
+			<Setter Property="Padding" Value="8,0,0,0"/>
+			<Setter Property="Margin" Value="0,4"/>
+		</Style>
+	</UserControl.Styles>
+
+	<Grid>
+		<!-- Modal Overlay Background (handled by parent, but we add a shadow wrapper here) -->
+		<Border Background="White" CornerRadius="8" BoxShadow="0 8 30 0 #50000000"
+				Width="{Binding ModalWidth}" MaxHeight="900"
+				VerticalAlignment="Center" HorizontalAlignment="Center">
+
+			<Grid>
+				<Grid Margin="40">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="{Binding IsSettingsVisible, Converter={StaticResource BoolToStarGridLengthConverter}}"/>
+					</Grid.ColumnDefinitions>
+
+					<!-- LEFT COLUMN: Main Creation Form -->
+					<Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" Margin="0,0,10,0">
+
+						<!-- Header -->
+						<Grid ColumnDefinitions="*, Auto" Grid.Row="0" Margin="0,0,0,20">
+							<StackPanel>
+								<TextBlock Text="New Project" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+								<StackPanel Orientation="Horizontal" Margin="0,10,0,0" Spacing="0" Height="36">
+									<Border CornerRadius="6,0,0,6" 
+											BorderBrush="{DynamicResource BorderGray}" 
+											BorderThickness="1"
+											Background="{Binding CreationMode, Converter={StaticResource EqualsConverter}, ConverterParameter={x:Static vm:ProjectCreationMode.Quick}, FallbackValue=Transparent}">
+										<RadioButton GroupName="Mode" 
+													 Content="Quick Job" 
+													 Classes="Segment"
+													 IsChecked="{Binding CreationMode, Converter={StaticResource EqualsConverter}, ConverterParameter={x:Static vm:ProjectCreationMode.Quick}, Mode=TwoWay}"/>
+									</Border>
+									<Border CornerRadius="0,6,6,0" 
+											BorderBrush="{DynamicResource BorderGray}" 
+											BorderThickness="0,1,1,1"
+											Background="{Binding CreationMode, Converter={StaticResource EqualsConverter}, ConverterParameter={x:Static vm:ProjectCreationMode.Comprehensive}, FallbackValue=Transparent}">
+										<RadioButton GroupName="Mode" 
+													 Content="Comprehensive" 
+													 Classes="Segment"
+													 IsChecked="{Binding CreationMode, Converter={StaticResource EqualsConverter}, ConverterParameter={x:Static vm:ProjectCreationMode.Comprehensive}, Mode=TwoWay}"/>
+									</Border>
+								</StackPanel>
+							</StackPanel>
+							<Button Grid.Column="1" Command="{Binding CloseCommand}" Classes="Close">
+								<PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+							</Button>
+						</Grid>
+
+						<!-- Form -->
+						<Grid Grid.Row="1" VerticalAlignment="Top">
+							<StackPanel Spacing="25">
+								<!-- Share Options -->
+								<StackPanel>
+									<StackPanel Spacing="5">
+										<TextBlock Text="PROJECT NAME" Classes="LabelSmall"/>
+										<TextBox x:Name="ProjectNameInput" Text="{Binding Project.Name}" Classes="FormInput" Watermark="e.g. Engen Hazeldean"/>
+										<ItemsControl ItemsSource="{Binding (DataValidationErrors.Errors), ElementName=ProjectNameInput}"
+													  Foreground="#EF4444" FontSize="11" Margin="0,2,0,0"/>
+									</StackPanel>
+
+									<Grid ColumnDefinitions="*, *">
+										<StackPanel Spacing="5" Margin="0,0,5,0">
+											<TextBlock Text="SHORT NAME" Classes="LabelSmall"/>
+											<TextBox Text="{Binding Project.ShortName}" Classes="FormInput" MaxLength="5" Watermark="e.g. EHZ"/>
+										</StackPanel>
+										<StackPanel Spacing="5" Grid.Column="1" Margin="5,0,0,0">
+											<TextBlock Text="TARGET DATE" Classes="LabelSmall"/>
+											<CalendarDatePicker SelectedDate="{Binding Project.EndDate}"
+																CustomDateFormatString="dd MMMM yyyy"
+																HorizontalAlignment="Stretch"/>
+										</StackPanel>
+									</Grid>
+
+									<StackPanel Spacing="5" IsVisible="{Binding IsSettingsVisible}">
+										<TextBlock Text="PROJECT MANAGER" Classes="LabelSmall"/>
+										<ComboBox ItemsSource="{Binding ProjectManagers}" SelectedItem="{Binding Project.ProjectManager}" Classes="FormInput" PlaceholderText="Select Manager" HorizontalAlignment="Stretch"/>
+									</StackPanel>
+
+									<!-- Site Manager -->
+									<StackPanel Spacing="5" IsVisible="{Binding IsSettingsVisible}">
+										<TextBlock Text="SITE MANAGER" Classes="LabelSmall"/>
+										<ComboBox ItemsSource="{Binding SiteManagers}" SelectedItem="{Binding SiteManager}" Classes="FormInput" PlaceholderText="Select Site Manager" HorizontalAlignment="Stretch">
+											<ComboBox.ItemTemplate>
+												<DataTemplate>
+													<TextBlock Text="{Binding DisplayName}"/>
+												</DataTemplate>
+											</ComboBox.ItemTemplate>
+										</ComboBox>
+									</StackPanel>
+
+									<StackPanel IsVisible="{Binding IsSettingsVisible}">
+										<TextBlock Text="SHARE WITH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextTertiarySlate}" Margin="0,10,0,10"/>
+										<RadioButton GroupName="Share" IsChecked="{Binding IsJustMe}" Content="Just Me"/>
+										<RadioButton GroupName="Share" IsChecked="{Binding IsEveryone}" Content="Everyone"/>
+										<RadioButton GroupName="Share" IsChecked="{Binding IsSpecific}" Content="Specific People"/>
+									</StackPanel>
+								</StackPanel>
+
+								<!-- Actions -->
+								<StackPanel Orientation="Vertical" Spacing="15" Margin="0,10,0,0">
+									<Button Content="Import MS Project XML" Click="ImportFile_Click"
+											IsVisible="{Binding IsSettingsVisible}"
+											Background="#F1F5F9" Foreground="#475569"
+											Padding="15,10" CornerRadius="4" FontSize="13" FontWeight="SemiBold"
+											HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+									
+									<Button Content="Create Project" Command="{Binding CreateProjectCommand}"
+											Background="{DynamicResource PrimaryTeal}" Foreground="White"
+											Padding="25,12" CornerRadius="4"
+											HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+								</StackPanel>
+							</StackPanel>
+						</Grid>
+					</Grid>
+
+					<!-- RIGHT COLUMN: Settings Panel -->
+					<Border Grid.Column="1"
+							IsVisible="{Binding IsSettingsVisible}"
+							BorderBrush="{DynamicResource BorderGray}"
+							BorderThickness="1,0,0,0"
+							Padding="30,0,0,0"
+							Width="450">
+						<local:CreateProjectDetailsView />
+					</Border>
+
+				</Grid>
+
+				<!-- IMPORT PROGRESS OVERLAY -->
+				<Grid IsVisible="{Binding IsImporting}" Background="#CCFFFFFF" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
+						<ProgressBar IsIndeterminate="True" Width="200" Height="4"/>
+						<TextBlock Text="{Binding ImportProgressMessage}" Foreground="{DynamicResource TextPrimaryDark}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+					</StackPanel>
+				</Grid>
+
+				<!-- IMPORT COMPLETE OVERLAY -->
+				<Grid IsVisible="{Binding ShowImportComplete}" Background="#CCFFFFFF" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<Border Background="White" CornerRadius="8" BoxShadow="0 4 20 0 #40000000" Padding="30" VerticalAlignment="Center" HorizontalAlignment="Center" Width="350">
+						<StackPanel Spacing="20">
+							<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+								<PathIcon Data="{StaticResource IconCheckCircle}" Width="24" Height="24" Foreground="{DynamicResource StatusGreen}"/>
+								<TextBlock Text="Import Completed" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}" VerticalAlignment="Center"/>
+							</StackPanel>
+
+							<TextBlock Text="The project file has been parsed successfully. Geofencing requires a site address for mobile app tracking."
+									   TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15">
+								<Button Content="Add Site Address" Command="{Binding CancelImportSaveCommand}" Background="{DynamicResource PrimaryTeal}" Foreground="White" FontWeight="Bold"/>
+								<Button Content="Skip (Not Recommended)" Command="{Binding ConfirmImportSaveCommand}" Background="Transparent" Foreground="{DynamicResource TextSecondaryGray}" FontSize="11"/>
+							</StackPanel>
+						</StackPanel>
+					</Border>
+				</Grid>
+
+				<!-- ADD CUSTOMER OVERLAY -->
+				<Grid IsVisible="{Binding IsAddCustomerPopupVisible}" Background="#CCFFFFFF" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<cust:CustomerDetailView DataContext="{Binding CustomerDetailPopup}" />
+				</Grid>
+			</Grid>
+
+		</Border>
+	</Grid>
+</UserControl>
+
+
+

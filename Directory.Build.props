@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!-- Resolve MSB4019 by preventing the SDK from failing on missing iOS workloads 
+         when building projects that don't target iOS/Android explicitly. -->
+    <ImportWorkloads Condition="'$(TargetFramework)' != 'net9.0-android' AND '$(TargetFramework)' != 'net9.0-ios' AND '$(TargetFramework)' != 'net10.0-android' AND '$(TargetFramework)' != 'net10.0-ios'">false</ImportWorkloads>
+
+    <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == ''">C:\Users\Neil\AppData\Local\Android\Sdk</AndroidSdkDirectory>
+    <JavaSdkDirectory Condition="'$(JavaSdkDirectory)' == ''">C:\Program Files\Java\jdk-21</JavaSdkDirectory>
+  </PropertyGroup>
+</Project>

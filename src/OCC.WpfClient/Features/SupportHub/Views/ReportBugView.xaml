@@ -1,0 +1,107 @@
+<UserControl x:Class="OCC.WpfClient.Features.SupportHub.Views.ReportBugView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OCC.WpfClient.Features.SupportHub.Views"
+             xmlns:viewmodels="clr-namespace:OCC.WpfClient.Features.SupportHub.ViewModels"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="500"
+             d:DataContext="{d:DesignInstance Type=viewmodels:ReportBugViewModel}">
+    
+    <UserControl.Resources>
+        <conv:VisibilityConverter x:Key="VisibilityConverter"/>
+        <conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- Modern Premium Modal Container -->
+        <Border Style="{StaticResource DetailViewModalBorder}" MaxWidth="550" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" /> <!-- Header -->
+                    <RowDefinition Height="*" />    <!-- Content -->
+                    <RowDefinition Height="Auto" /> <!-- Footer -->
+                </Grid.RowDefinitions>
+
+                <!-- 1. Header (OCC Orange Premium) -->
+                <Border Grid.Row="0" Background="#EA6A06" CornerRadius="12,12,0,0" Padding="25">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Submit Feedback" FontSize="26" FontWeight="Bold" Foreground="White" FontFamily="{StaticResource MichromaFont}"/>
+                            <TextBlock Text="Help us improve by reporting bugs or sharing suggestions." 
+                                       FontSize="13" Foreground="White" Opacity="0.8" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        
+                        <!-- Bug Icon -->
+                        <Path Data="{StaticResource IconBug}" Fill="White" Width="30" Height="30" 
+                               Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Top" Opacity="0.9"/>
+                    </Grid>
+                </Border>
+
+                <!-- 2. Content (Themed Content Area) -->
+                <ScrollViewer Grid.Row="1" Style="{StaticResource DetailViewContentScroll}">
+                    <StackPanel>
+                        <!-- Detected View -->
+                        <TextBlock Text="Detected View" Foreground="{StaticResource TextSub}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding ViewName, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ModernInput}" Opacity="0.8"/>
+
+                        <!-- Feedback Type -->
+                        <TextBlock Text="Feedback Type" Foreground="{StaticResource TextSub}" FontSize="12" FontWeight="SemiBold" Margin="0,20,0,8"/>
+                        <ComboBox ItemsSource="{Binding AvailableTypes}" SelectedItem="{Binding SelectedType}" Style="{StaticResource ModernComboBox}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!-- Description -->
+                        <TextBlock Text="Description" Foreground="{StaticResource TextSub}" FontSize="12" FontWeight="SemiBold" Margin="0,20,0,8"/>
+                        <TextBox Style="{StaticResource ModernInput}" MinHeight="80" 
+                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Top"
+                                 Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                 ap:WatermarkProperties.Watermark="Please describe what happened..."/>
+
+                        <!-- Screenshot Status -->
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0" Visibility="{Binding HasScreenshot, Converter={StaticResource VisibilityConverter}}">
+                            <Path Data="M1,5 L4,8 L10,1" Stroke="#28A745" StrokeThickness="2" Width="12" Height="10" Stretch="Uniform" Margin="0,0,10,0"/>
+                            <TextBlock Text="Screenshot captured automatically" Foreground="#28A745" FontSize="12" FontWeight="SemiBold"/>
+                            
+                            <Button Content="(View)" Command="{Binding ViewScreenshotCommand}" Style="{StaticResource TextButtonStyle}" 
+                                    Foreground="{StaticResource AccentBlue}" Margin="10,0,0,0" FontSize="11"
+                                    Visibility="{Binding HasScreenshot, Converter={StaticResource VisibilityConverter}}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0" Visibility="{Binding HasScreenshot, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                            <TextBlock Text="⚠ No screenshot captured" Foreground="#EA6A06" FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="2" Style="{StaticResource DetailViewFooter}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Submit Report" Command="{Binding SubmitCommand}" 
+                                Style="{StaticResource PrimaryButton}"
+                                Height="42" Margin="0,0,12,0" />
+                        
+                        <Button Content="Cancel" Command="{Binding CloseHubCommand}" 
+                                Style="{StaticResource CancelButton}"
+                                Height="42" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Busy Overlay -->
+        <Border Background="#CC000000" CornerRadius="12" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="100" Height="3" Background="#20FFFFFF" Foreground="#EA6A06"/>
+                <TextBlock Text="Sending Report..." Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
+

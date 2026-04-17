@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.EmployeeHub.ViewModels"
+			 xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Features.EmployeeHub.Views.TeamDetailView"
+             x:Name="Root"
+			 x:DataType="vm:TeamDetailViewModel"
+             Focusable="True">
+
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+    </UserControl.KeyBindings>
+
+	<Border Background="White" CornerRadius="8" Padding="0" BoxShadow="0 4 10 0 #40000000" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" MaxWidth="900">
+		<Grid RowDefinitions="Auto, Auto, *, Auto">
+
+			<!-- Header -->
+			<Border Grid.Row="0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Padding="20">
+				<StackPanel Orientation="Horizontal" Spacing="10">
+					<PathIcon Data="{StaticResource IconTeam}" Width="20" Height="20" Foreground="{DynamicResource PrimaryBlue}"/>
+					<TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+				</StackPanel>
+			</Border>
+
+			<!-- Inputs Section -->
+			<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+				<Border Padding="20,20,20,10">
+				<StackPanel Spacing="15">
+					<!-- Team Name -->
+					<StackPanel Spacing="5">
+						<TextBlock Text="Team Name" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryGray}"/>
+						<TextBox x:Name="NameInput" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Watermark="Enter team name" Classes="StandardTextBox"/>
+					</StackPanel>
+
+					<!-- Description -->
+					<StackPanel Spacing="5">
+						<TextBlock Text="Description" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryGray}"/>
+						<TextBox Text="{Binding Description}" Watermark="Enter description" Classes="StandardTextBox"/>
+					</StackPanel>
+
+					<!-- Members Section Header & Add Controls -->
+					<StackPanel Spacing="10" Margin="0,15,0,0">
+						<TextBlock Text="Team Members" FontSize="16" FontWeight="SemiBold"/>
+
+						<StackPanel Orientation="Horizontal">
+							<ComboBox PlaceholderText="Select employee to add..."
+									  ItemsSource="{Binding AvailableEmployees}"
+									  SelectedItem="{Binding SelectedEmployeeToAdd}"
+									  HorizontalAlignment="Left" Width="400" Margin="0,0,10,0"
+									  IsTextSearchEnabled="True">
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:DataType="models:Employee">
+										<StackPanel Orientation="Horizontal" Spacing="5">
+											<TextBlock Text="{Binding FirstName}" FontWeight="SemiBold"/>
+											<TextBlock Text="{Binding LastName}"/>
+											<TextBlock Text="-" Foreground="Gray"/>
+											<TextBlock Text="{Binding Role}" FontStyle="Italic" Foreground="Gray"/>
+										</StackPanel>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+
+							<Button Grid.Column="1" Command="{Binding AddMemberCommand}" Classes="Primary" IsEnabled="{Binding SelectedEmployeeToAdd, Converter={x:Static ObjectConverters.IsNotNull}}">
+								<StackPanel Orientation="Horizontal" Spacing="5">
+									<PathIcon Data="{StaticResource IconAddUser}" Width="20" Height="20" Classes="Primary" Foreground="{DynamicResource PrimaryBlue}"/>
+									<TextBlock Text="Add Member"/>
+								</StackPanel>
+							</Button>
+						</StackPanel>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+			</ScrollViewer>
+
+			<!-- Member List (DataGrid) - Occupies Row 2 (Remaining Space) -->
+			<DataGrid Grid.Row="2" ItemsSource="{Binding Members}" Margin="20,0,20,0"
+					  AutoGenerateColumns="False" IsReadOnly="True" 
+					  BorderThickness="1" BorderBrush="#E0E0E0"
+					  GridLinesVisibility="Horizontal">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="*"/>
+					<DataGridTextColumn Header="ROLE" Binding="{Binding Role}" Width="Auto"/>
+					<DataGridTemplateColumn Width="Auto">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Button Classes="IconButton" 
+										Command="{Binding #Root.DataContext.RemoveMemberCommand}" 
+										CommandParameter="{Binding .}" 
+										Foreground="Red" ToolTip.Tip="Remove Member">
+									<PathIcon Data="{StaticResource IconUserRemove}" Width="16" Height="16"/>
+								</Button>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</DataGrid>
+
+			<!-- Footer Buttons -->
+			<StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" Margin="20,20">
+				<Button Content="Save Changes" Command="{Binding SaveCommand}" Classes="Primary"/>
+				<Button Content="Cancel" Command="{Binding CancelCommand}" Classes="Cancel"/>
+			</StackPanel>
+
+            <!-- Loading -->
+            <StackPanel Grid.RowSpan="4" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+                <ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+                <TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+            </StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

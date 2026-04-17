@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Features.TimeAttendanceHub.Views.TimeLiveV2View"
+             x:DataType="viewModels:TimeLiveV2ViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
+                CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                BoxShadow="0 2 4 0 #1A000000">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                <Border Background="{DynamicResource AccentTealBrush}" Width="40" Height="40" CornerRadius="8">
+                    <PathIcon Data="{StaticResource clock_regular}" Foreground="White" Width="20" Height="20"/>
+                </Border>
+                <StackPanel>
+                    <TextBlock Text="Live Board V2 (Physical)" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Real-time physical clocking events (Immutable)" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+                
+                <Button Classes="Reset" Margin="16,0,0,0"
+                        Command="{Binding LoadDataAsync}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconRefresh}" Width="16" Height="16"/>
+                        <TextBlock Text="Refresh"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Classes="Reset" Margin="8,0,0,0"
+                        Command="{Binding RepairSyncV2Command}"
+                        ToolTip.Tip="Repair stale V2 presence status based on source of truth">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconSync}" Width="16" Height="16"/>
+                        <TextBlock Text="Repair V2 Sync"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Events List -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" 
+                CornerRadius="8" Padding="16" BoxShadow="0 2 4 0 #1A000000">
+            <Grid>
+                <ProgressBar IsIndeterminate="True" 
+                             IsVisible="{Binding IsLoading}" 
+                             VerticalAlignment="Top" 
+                             Margin="0,-16,0,0"
+                             Foreground="{DynamicResource AccentTealBrush}"/>
+                             
+                <ListBox ItemsSource="{Binding RecentEvents}"
+                         Background="Transparent"
+                         BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource BackgroundHoverBrush}" 
+                                    CornerRadius="6" Padding="12" Margin="0,4">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                        <!-- Colored Dot Indicator based on Event Type -->
+                                        <Ellipse Width="10" Height="10" 
+                                                 Fill="{Binding EventType, Converter={StaticResource EventTypeToColorConverter}}" 
+                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding EmployeeName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Column="1" 
+                                            Background="{DynamicResource SurfaceBackgroundBrush}" 
+                                            CornerRadius="4" Padding="6,2" Margin="16,0">
+                                        <TextBlock Text="{Binding EventType}" 
+                                                   Foreground="{Binding EventType, Converter={StaticResource EventTypeToColorConverter}}"
+                                                   FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <TextBlock Grid.Column="2" Text="{Binding Timestamp, StringFormat=\{0:HH:mm\}}" 
+                                               Foreground="{DynamicResource TextSecondaryBrush}" 
+                                               Margin="16,0" VerticalAlignment="Center"/>
+
+                                    <TextBlock Grid.Column="3" Text="{Binding Source}" 
+                                               Foreground="{DynamicResource TextMutedBrush}" FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

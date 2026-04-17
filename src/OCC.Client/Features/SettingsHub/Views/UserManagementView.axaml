@@ -1,0 +1,170 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Features.SettingsHub.ViewModels"
+             xmlns:models="using:OCC.Shared.Models"
+             xmlns:views="using:OCC.Client.Features.SettingsHub.Views"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.SettingsHub.Views.UserManagementView"
+             x:DataType="vm:UserManagementViewModel">
+
+    <UserControl.Resources>
+        <conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+    </UserControl.Resources>
+
+    <Design.DataContext>
+        <vm:UserManagementViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto, Auto, *">
+        <!-- Top Bar Styles-->
+        <Border Grid.Row="0" Classes="Topbar">
+            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Grid.ColumnSpan="2" HorizontalAlignment="Center">
+                    <Button Classes="MenuTabButton" Command="{Binding SetFilterCommand}" CommandParameter="All"
+                            Classes.Active="{Binding ActiveFilter, Converter={StaticResource StringEqualityConverter}, ConverterParameter='All'}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                             <PathIcon Data="{StaticResource IconUser}" Width="16" Height="16"/>
+                             <TextBlock Text="ALL USERS"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="MenuTabButton" Command="{Binding SetFilterCommand}" CommandParameter="Pending"
+                            Classes.Active="{Binding ActiveFilter, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Pending'}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon Data="{StaticResource IconAlert}" Width="16" Height="16"/>
+                            <TextBlock Text="PENDING APPROVAL"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Classes="MenuTabButton" Command="{Binding SetFilterCommand}" CommandParameter="Admins"
+                            Classes.Active="{Binding ActiveFilter, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Admins'}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon Data="{StaticResource IconSettings}" Width="16" Height="16"/>
+                            <TextBlock Text="ADMINISTRATORS"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Stats Header -->
+        <Border Grid.Row="1" Classes="TopHeader">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <StackPanel Classes="Stat">
+                        <TextBlock Text="TOTAL USERS" Classes="StatLabel"/>
+                        <TextBlock Text="{Binding TotalUsers}" Classes="StatValue"/>
+                    </StackPanel>
+                    <StackPanel Classes="Stat">
+                        <TextBlock Text="PENDING APPROVAL" Classes="StatLabel"/>
+                        <TextBlock Text="{Binding PendingApprovalCount}" Classes="StatValue" Foreground="Orange"/>
+                    </StackPanel>
+                    <StackPanel Classes="Stat">
+                        <TextBlock Text="ADMINS" Classes="StatLabel"/>
+                        <TextBlock Text="{Binding AdminCount}" Classes="StatValue"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+                    <Button Command="{Binding AddUserCommand}" Classes="Primary">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                             <PathIcon Data="{StaticResource IconAddUser}" Width="16" Height="16"/>
+                             <TextBlock Text="Add User"/>
+                        </StackPanel>
+                    </Button>
+
+                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <TextBox Width="200" Watermark="Search users..." Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Classes="FormInput"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- User Grid -->
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Users}"
+                  SelectedItem="{Binding SelectedUser}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  Background="White"
+                  DoubleTapped="DataGrid_DoubleTapped">
+            
+            <DataGrid.Styles>
+                 <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+                     <Setter Property="Fill" Value="{DynamicResource HomeMenuGradient}"/>
+                 </Style>
+                 <Style Selector="DataGridRow" x:DataType="models:User">
+                     <Setter Property="ContextMenu">
+                         <ContextMenu>
+                            <MenuItem Header="Edit" Command="{Binding $parent[UserControl].((vm:UserManagementViewModel)DataContext).EditUserCommand}" CommandParameter="{Binding .}"/>
+                            <MenuItem Header="Approve" Command="{Binding $parent[UserControl].((vm:UserManagementViewModel)DataContext).ApproveUserCommand}" CommandParameter="{Binding .}" IsVisible="{Binding !IsApproved}"/>
+                            <MenuItem Header="Delete" Command="{Binding $parent[UserControl].((vm:UserManagementViewModel)DataContext).DeleteUserCommand}" CommandParameter="{Binding .}" Foreground="Red"/>
+                         </ContextMenu>
+                     </Setter>
+                 </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="NAME" Binding="{Binding DisplayName, Converter={x:Static conv:StringToTitleCaseConverter.Instance}, Mode=OneWay}" Width="*"/>
+                <DataGridTextColumn Header="EMAIL" Binding="{Binding Email, Converter={x:Static conv:StringToLowerCaseConverter.Instance}, Mode=OneWay}" Width="1.5*"/>
+                <DataGridTextColumn Header="ROLE" Binding="{Binding UserRole}" Width="*"/>
+                
+                <DataGridTemplateColumn Header="STATUS" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding IsApproved, Converter={x:Static conv:BoolToStatusColorConverter.Instance}}"
+                                    CornerRadius="4" Padding="8,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding IsApproved, Converter={x:Static conv:BoolToStatusTextConverter.Instance}}" 
+                                           Foreground="White" FontSize="10" FontWeight="SemiBold"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Classes="IconButton" Margin="0,0,20,0">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                        <MenuItem Header="Edit" Command="{Binding $parent[UserControl].((vm:UserManagementViewModel)DataContext).EditUserCommand}" CommandParameter="{Binding .}"/>
+                                        <MenuItem Header="Approve" Command="{Binding $parent[UserControl].((vm:UserManagementViewModel)DataContext).ApproveUserCommand}" CommandParameter="{Binding .}" IsVisible="{Binding !IsApproved}"/>
+                                        <MenuItem Header="Delete" Command="{Binding $parent[UserControl].((vm:UserManagementViewModel)DataContext).DeleteUserCommand}" CommandParameter="{Binding .}" Foreground="Red"/>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                                <PathIcon Data="{StaticResource IconMoreHorizontal}" Width="16" Height="16"/>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Loading -->
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+            <ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+            <TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+        </StackPanel>
+
+        <!-- Empty State -->
+         <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                     IsVisible="{Binding !Users.Count}">
+             <TextBlock Text="No users found." IsVisible="{Binding !IsBusy}" Classes="LabelSmall"/>
+         </StackPanel>
+
+        <!-- Popup Overlay -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding IsUserPopupVisible}">
+            <Grid Background="#50000000">
+                <views:UserDetailView x:Name="UserDetailView" DataContext="{Binding UserPopup}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

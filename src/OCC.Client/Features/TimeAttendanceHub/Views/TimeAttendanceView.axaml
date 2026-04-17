@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 xmlns:viewTime="clr-namespace:OCC.Client.Features.TimeAttendanceHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.TimeAttendanceView"
+			 x:DataType="vm:TimeAttendanceViewModel">
+
+	<Design.DataContext>
+		<vm:TimeAttendanceViewModel/>
+	</Design.DataContext>
+
+	<UserControl.DataTemplates>
+		<DataTemplate DataType="{x:Type vm:TimeLiveViewModel}">
+			<viewTime:TimeLiveView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:DailyTimesheetViewModel}">
+			<viewTime:DailyTimesheetView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:TimeLiveV2ViewModel}">
+			<viewTime:TimeLiveV2View/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:DailyTimesheetV2ViewModel}">
+			<viewTime:DailyTimesheetV2View/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:AttendanceHistoryViewModel}">
+			<viewTime:AttendanceHistoryView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:LeaveApplicationViewModel}">
+			<viewTime:LeaveApplicationView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:OvertimeApprovalViewModel}">
+			<viewTime:OvertimeApprovalView/>
+		</DataTemplate>
+	</UserControl.DataTemplates>
+
+	<Grid RowDefinitions="Auto, Auto, *" Background="{DynamicResource AppBackgroundSlate}">
+		<!-- Top Bar -->
+		<viewTime:TimeMenuView Grid.Row="0" DataContext="{Binding TimeMenu}"/>	
+
+		<!-- Content Area -->
+		<TransitioningContentControl Grid.Row="2" Content="{Binding CurrentView}">
+			<TransitioningContentControl.PageTransition>
+				<CrossFade Duration="0:00:00.500" />
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
+	</Grid>
+</UserControl>

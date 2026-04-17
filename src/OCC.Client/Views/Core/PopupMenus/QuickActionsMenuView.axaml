@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:vm="clr-namespace:OCC.Client.ViewModels.Shared"
+             xmlns:core="clr-namespace:OCC.Client.ViewModels.Core;assembly=OCC.Client"
+			 x:Class="OCC.Client.Views.Core.PopupMenus.QuickActionsMenuView"
+			 x:DataType="core:SideMenuViewModel">
+
+	<Border Background="White" 
+            BorderBrush="{DynamicResource BorderGray}" 
+            BorderThickness="1" 
+            CornerRadius="8" 
+            Padding="0,5"
+            Margin="15"
+            Width="180"
+            BoxShadow="0 2 15 5 #292828">
+        <StackPanel>
+            <TextBlock Text="ACTIONS" Classes="LabelSmall" Margin="20,10"/>
+            <!-- Separator -->
+            <Border BorderBrush="{DynamicResource AccentOrange}" BorderThickness="1" Margin="10"/>
+
+            <Button Classes="PopupMenuButton" Command="{Binding NewTaskCommand}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Task" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                    <Border Grid.Column="1" Classes="ActionHotkey">
+                        <TextBlock Text="t" Classes="HotkeyText"/>
+                    </Border>
+                </Grid>
+            </Button>
+            <Separator Classes="MenuSeparator" Margin="15,0"/>
+
+            <Button Classes="PopupMenuButton" Command="{Binding NewMeetingCommand}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Meeting" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                    <Border Grid.Column="1" Classes="ActionHotkey">
+                        <TextBlock Text="m" Classes="HotkeyText"/>
+                    </Border>
+                </Grid>
+            </Button>
+            <Separator Classes="MenuSeparator" Margin="15,0"/>
+
+            <Button Classes="PopupMenuButton" Command="{Binding NewProjectCommand}" IsVisible="{Binding CanCreateProject}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Project" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                    <Border Grid.Column="1" Classes="ActionHotkey">
+                        <TextBlock Text="p" Classes="HotkeyText"/>
+                    </Border>
+                </Grid>
+            </Button>
+            <Separator Classes="MenuSeparator" Margin="15,0" IsVisible="{Binding CanCreateProject}"/>
+
+            <Button Classes="PopupMenuButton" Command="{Binding InviteUserCommand}" IsVisible="{Binding CanManageUsers}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Invite" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                    <Border Grid.Column="1" Classes="ActionHotkey">
+                        <TextBlock Text="i" Classes="HotkeyText"/>
+                    </Border>
+                </Grid>
+            </Button>
+        </StackPanel>
+    </Border>
+</UserControl>

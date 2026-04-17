@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.WagesHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.WagesHub.Views.LoansManagementView"
+			 x:DataType="vm:LoansManagementViewModel">
+
+	<UserControl.Resources>
+		<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+	</UserControl.Resources>
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- Top Bar -->
+		<Border Grid.Row="0" Background="{DynamicResource MainPageGradient}" Padding="10">
+			<Grid ColumnDefinitions="Auto, *, Auto">
+				<StackPanel Grid.Column="0">
+					<TextBlock Text="Loans Hub" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
+					<TextBlock Text="Manage staff loans."
+							   Foreground="#64748B"
+							   FontSize="{StaticResource FontsizeMedium}" />
+				</StackPanel>
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+					<Button Classes="Primary" Command="{Binding AddLoanCommand}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconAdd}" />
+							<TextBlock Text="NEW LOAN"/>
+						</StackPanel>
+					</Button>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<!-- Main Content (DataGrid) -->
+		<DataGrid Grid.Row="1" ItemsSource="{Binding Loans}" SelectedItem="{Binding SelectedLoan}"
+				  AutoGenerateColumns="False" IsReadOnly="True"
+				  Classes="AppGrid" Margin="20">
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" MinWidth="250" Width="Auto"/>
+				<DataGridTextColumn Header="Principal" Binding="{Binding PrincipalAmount, StringFormat=\{0:C\}}" Width="Auto"/>
+				<DataGridTextColumn Header="Installment" Binding="{Binding MonthlyInstallment, StringFormat=\{0:C\}}" Width="Auto"/>
+				<DataGridTextColumn Header="Balance" Binding="{Binding OutstandingBalance, StringFormat=\{0:C\}}" Width="Auto"/>
+				<DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat=\{0:dd MMM yyyy\}}" Width="Auto"/>
+				<DataGridTemplateColumn Header="Status" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Border CornerRadius="4" Padding="8,4"
+									Background="{Binding IsActive, Converter={StaticResource BoolToStatusColorConverter}}"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding IsActive, Converter={StaticResource BoolToStatusTextConverter}, ConverterParameter='Active|Paid'}"
+										   Foreground="White" FontWeight="SemiBold"/>
+							</Border>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTemplateColumn Header="Actions" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Button Classes="IconOnly" Command="{Binding $parent[UserControl].DataContext.TerminateLoanCommand}" CommandParameter="{Binding}" ToolTip.Tip="Terminate / Mark as Paid">
+								<PathIcon Data="{StaticResource IconBank}" Foreground="Green"/>
+							</Button>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+
+		<!-- Loading Overlay -->
+		<Grid Grid.Row="1" Background="#80FFFFFF" IsVisible="{Binding IsLoading}">
+			<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+		</Grid>
+	</Grid>
+</UserControl>

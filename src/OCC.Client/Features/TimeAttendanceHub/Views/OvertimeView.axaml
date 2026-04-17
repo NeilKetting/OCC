@@ -1,0 +1,145 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.OvertimeView"
+			 x:DataType="vm:OvertimeViewModel">
+
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- Header -->
+		<Border Grid.Row="0" Margin="0,0,0,10" Classes="TopHeader" Background="{DynamicResource MainPageGradient}">
+			<Grid ColumnDefinitions="*, Auto">
+				<StackPanel>
+					<TextBlock Text="Request Overtime" Classes="H1" VerticalAlignment="Center"/>
+					<TextBlock Text="Request overtime for specific employee or team." Foreground="#94A3B8" FontSize="{StaticResource FontsizeMedium}"/>
+				</StackPanel>
+				<Button Grid.Column="1" Command="{Binding LoadDataCommand}" Classes="Secondary" Content="Refresh"/>
+			</Grid>
+		</Border>
+
+		<Grid Grid.Row="1" ColumnDefinitions="*, 30, *">
+			<!-- Form -->
+			<ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+				<StackPanel Spacing="20" Margin="20,20,20,50">
+
+					<!-- Employee -->
+					<!-- Is Team Request Toggle -->
+					<CheckBox Content="Request for Entire Team" IsChecked="{Binding IsTeamRequest}"/>
+
+					<!-- Employee (Visible if NOT Team) -->
+					<StackPanel Spacing="5" IsVisible="{Binding !IsTeamRequest}">
+						<TextBlock Text="Employee" FontWeight="Medium"/>
+						<ComboBox ItemsSource="{Binding Employees}"
+								  SelectedItem="{Binding SelectedEmployee}"
+								  HorizontalAlignment="Stretch"
+								  PlaceholderText="Select Employee">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding DisplayName}"/>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
+
+					<!-- Team (Visible if Team) -->
+					<StackPanel Spacing="5" IsVisible="{Binding IsTeamRequest}">
+						<TextBlock Text="Team" FontWeight="Medium"/>
+						<ComboBox ItemsSource="{Binding Teams}"
+								  SelectedItem="{Binding SelectedTeam}"
+								  HorizontalAlignment="Stretch"
+								  PlaceholderText="Select Team">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding Name}"/>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
+
+					<!-- Date -->
+					<StackPanel Spacing="5">
+						<TextBlock Text="Date" FontWeight="Medium"/>
+						<Grid ColumnDefinitions="*, Auto">
+							<TextBox Grid.Column="0" Text="{Binding Date, StringFormat='dd MMM yyyy'}" IsReadOnly="True" Classes="FormInput"/>
+							<Button Grid.Column="1" Classes="IconButton" Margin="5,0,0,0" ToolTip.Tip="Select Date">
+								<PathIcon Data="{StaticResource IconCalendar}" Width="16" Height="16"/>
+								<Button.Flyout>
+									<Flyout Placement="Bottom">
+										<Calendar SelectedDate="{Binding Date}" SelectionMode="SingleDate"/>
+									</Flyout>
+								</Button.Flyout>
+							</Button>
+						</Grid>
+					</StackPanel>
+
+					<!-- Time Range -->
+					<Grid ColumnDefinitions="*, 10, *">
+						<StackPanel Grid.Column="0" Spacing="5">
+							<TextBlock Text="Start Time" FontWeight="Medium"/>
+							<Grid ColumnDefinitions="*, Auto">
+								<TextBox Grid.Column="0" Text="{Binding StartTime, StringFormat='hh:mm tt'}" IsReadOnly="True" Classes="FormInput"/>
+								<Button Grid.Column="1" Classes="IconButton" Margin="5,0,0,0" ToolTip.Tip="Select Start Time">
+									<PathIcon Data="{StaticResource IconClock}" Width="16" Height="16"/>
+									<Button.Flyout>
+										<Flyout Placement="Bottom">
+											<TimePicker SelectedTime="{Binding StartTime}" MinuteIncrement="15" ClockIdentifier="24HourClock"/>
+										</Flyout>
+									</Button.Flyout>
+								</Button>
+							</Grid>
+						</StackPanel>
+
+						<StackPanel Grid.Column="2" Spacing="5">
+							<TextBlock Text="End Time" FontWeight="Medium"/>
+							<Grid ColumnDefinitions="*, Auto">
+								<TextBox Grid.Column="0" Text="{Binding EndTime, StringFormat='hh:mm tt'}" IsReadOnly="True" Classes="FormInput"/>
+								<Button Grid.Column="1" Classes="IconButton" Margin="5,0,0,0" ToolTip.Tip="Select End Time">
+									<PathIcon Data="{StaticResource IconClock}" Width="16" Height="16"/>
+									<Button.Flyout>
+										<Flyout Placement="Bottom">
+											<TimePicker SelectedTime="{Binding EndTime}" MinuteIncrement="15" ClockIdentifier="24HourClock"/>
+										</Flyout>
+									</Button.Flyout>
+								</Button>
+							</Grid>
+						</StackPanel>
+					</Grid>
+
+					<!-- Reason -->
+					<StackPanel Spacing="5">
+						<TextBlock Text="Reason" FontWeight="Medium"/>
+						<TextBox Text="{Binding Reason}" Height="80" AcceptsReturn="True" Watermark="Why is overtime required?"/>
+					</StackPanel>
+
+					<!-- Submit -->
+					<Button Command="{Binding SubmitCommand}"
+							Content="Submit Request"
+							Theme="{StaticResource PrimaryButton}"
+							HorizontalAlignment="Right"
+							IsEnabled="{Binding !IsSubmitting}"/>
+				</StackPanel>
+			</ScrollViewer>
+
+			<!-- Vertical Separator -->
+			<Border Grid.Column="1" Background="{DynamicResource BorderGray}" Width="1" VerticalAlignment="Stretch" Margin="0,20"/>
+
+			<!-- History List -->
+			<Grid Grid.Column="2" RowDefinitions="Auto, *" Margin="20">
+				<TextBlock Grid.Row="0" Text="My Overtime Requests" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+				<DataGrid Grid.Row="1" ItemsSource="{Binding MyRequests}" IsReadOnly="True" GridLinesVisibility="Horizontal">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='d'}" Width="100"/>
+						<DataGridTextColumn Header="Hours" Binding="{Binding DurationHours, StringFormat='N1'}" Width="90"/>
+						<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+						<DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/>
+					</DataGrid.Columns>
+				</DataGrid>
+			</Grid>
+		</Grid>
+	</Grid>
+
+</UserControl>

@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HseqHub.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Features.HseqHub.Views.HealthSafetyDashboardView"
+             x:DataType="vm:HealthSafetyDashboardViewModel">
+    
+    <Grid Background="{DynamicResource AppBackgroundSlate}">
+        <ScrollViewer Padding="24">
+            <StackPanel Spacing="24">
+                
+                <!-- 1. Header -->
+                <StackPanel Spacing="4">
+                    <TextBlock Text="HSEQ Dashboard" Classes="H1"/>
+                    <TextBlock Text="Health, Safety, Environment &amp; Quality Overview" Classes="TextSecondary"/>
+                </StackPanel>
+
+                <!-- 2. KPI Cards -->
+                <Grid ColumnDefinitions="*, 24, *, 24, *">
+                    <!-- Safe Hours -->
+                    <Border Grid.Column="0" Classes="Card">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="{StaticResource IconClock}" Width="16" Height="16" Foreground="{DynamicResource SuccessGreen}"/>
+                                <TextBlock Text="Safe Hours" Classes="H3" Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding TotalSafeHours, StringFormat=\{0:N2\}}" Classes="H1" Foreground="{DynamicResource SuccessGreen}"/>
+                            <TextBlock Text="Hours without LTI" Classes="Caption"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Total Incidents -->
+                    <Border Grid.Column="2" Classes="Card">
+                        <StackPanel Spacing="8">
+                             <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="{StaticResource IconAlert}" Width="16" Height="16" Foreground="{DynamicResource AlertOrange}"/>
+                                <TextBlock Text="Total Incidents" Classes="H3" Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding TotalIncidents}" Classes="H1" Foreground="{DynamicResource TextPrimary}"/>
+                            <TextBlock Text="Reported this year" Classes="Caption"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- 3. Charts Row 1 -->
+                <Grid ColumnDefinitions="2*, 24, *">
+                    
+                    <!-- Audit Scores -->
+                    <Border Grid.Column="0" Classes="Card" Height="350">
+                        <Grid RowDefinitions="Auto, *">
+                             <TextBlock Grid.Row="0" Text="Audit Score Trends" Classes="H3" Margin="0,0,0,16"/>
+                             <lvc:CartesianChart Grid.Row="1" 
+                                                Series="{Binding AuditScoreSeries}" 
+                                                XAxes="{Binding AuditXAxes}"
+                                                YAxes="{Binding AuditYAxes}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Incident Breakdown -->
+                    <Border Grid.Column="2" Classes="Card" Height="350">
+                        <Grid RowDefinitions="Auto, *">
+                             <TextBlock Grid.Row="0" Text="Incident Types" Classes="H3" Margin="0,0,0,16"/>
+                             <lvc:CartesianChart Grid.Row="1" 
+                                                Series="{Binding IncidentSeries}" 
+                                                XAxes="{Binding IncidentXAxes}"
+                                                YAxes="{Binding IncidentYAxes}"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+        
+        <Interaction.Behaviors>
+            <EventTriggerBehavior EventName="AttachedToVisualTree">
+                <InvokeCommandAction Command="{Binding LoadDashboardDataCommand}"/>
+            </EventTriggerBehavior>
+        </Interaction.Behaviors>
+    </Grid>
+</UserControl>

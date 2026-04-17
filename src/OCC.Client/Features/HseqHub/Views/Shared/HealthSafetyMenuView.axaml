@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HseqHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="900"
+             x:Class="OCC.Client.Features.HseqHub.Views.Shared.HealthSafetyMenuView"
+             x:DataType="vm:HealthSafetyMenuViewModel">
+
+	<Border Classes="TopBar" Background="{DynamicResource TopMenuGradient}">
+		<Grid ColumnDefinitions="*,Auto, *, Auto">
+
+			<!-- Menu Buttons Area -->
+			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">				
+				<StackPanel.Resources>
+					<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+				</StackPanel.Resources>
+				
+                <Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Dashboard" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Dashboard'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconDashboard}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="OP DASHBOARD" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Performance Monitoring" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Performance Monitoring'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconLiveView}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="PERFORMANCE" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+                <Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Training" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Training'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconManageEmployees}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="TRAINING &amp; MEDICALS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Incidents" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Incidents'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconAlert}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="INCIDENTS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+				
+                <Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Audits" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Audits'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconAudit}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="AUDITS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+                <Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Documents" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Documents'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconAttach}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="DOCUMENTS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Features.RollCall"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="OCC.Client.Mobile.Features.RollCall.MobileRollCallView"
+             x:DataType="vm:MobileRollCallViewModel">
+    <Grid RowDefinitions="Auto, *">
+        <Border Grid.Row="0" Padding="20" Background="{DynamicResource PrimaryTeal}">
+            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+        </Border>
+        
+        <StackPanel Grid.Row="1" Spacing="20" VerticalAlignment="Center">
+            <PathIcon Data="{StaticResource IconTeam}" Width="60" Height="60" Foreground="{DynamicResource PrimaryTeal}"/>
+            <TextBlock Text="Roll call feature coming soon." HorizontalAlignment="Center" FontSize="18"/>
+            <TextBlock Text="Site managers will be able to take attendance of their team here." 
+                       HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryGray}"/>
+            <Button Content="Start Roll Call" HorizontalAlignment="Stretch" Classes="Primary"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

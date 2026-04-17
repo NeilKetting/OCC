@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels"
+			 xmlns:vmMySummary="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.MySummary"
+			 xmlns:vmTasks="clr-namespace:OCC.Client.Features.TaskHub.ViewModels;assembly=OCC.Client"
+			 xmlns:vmCal="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Calendar"
+			 xmlns:viewMySummary="clr-namespace:OCC.Client.Features.HomeHub.Views.MySummary"
+			 xmlns:viewList="clr-namespace:OCC.Client.Features.TaskHub.Views;assembly=OCC.Client"
+			 xmlns:viewCal="clr-namespace:OCC.Client.Features.HomeHub.Views.Calendar"
+			 xmlns:viewWidgets="clr-namespace:OCC.Client.Features.TaskHub.Views.Widgets;assembly=OCC.Client"
+			 xmlns:homeShared="clr-namespace:OCC.Client.Features.HomeHub.Views.Shared"
+			 xmlns:homeProjects="clr-namespace:OCC.Client.Features.ProjectsHub.Views;assembly=OCC.Client"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+			 x:Class="OCC.Client.Features.HomeHub.Views.HomeView"
+			 x:DataType="vm:HomeViewModel">
+
+	<Design.DataContext>
+		<vm:HomeViewModel/>
+	</Design.DataContext>
+
+	<UserControl.DataTemplates>
+		<DataTemplate DataType="{x:Type vmMySummary:MySummaryPageViewModel}">
+			<viewMySummary:MySummaryPageView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vmTasks:TaskListViewModel}">
+			<viewList:TaskListView/>
+		</DataTemplate>
+	</UserControl.DataTemplates>
+
+	<Grid>
+		<!-- Main Layout -->
+		<Grid RowDefinitions="40, Auto, *">
+			
+			<!-- Top Bar -->
+			<homeShared:HomeMenuView Grid.Row="0" DataContext="{Binding HomeMenu}" Margin="-1,0,0,0"/>
+
+			<!-- Greeting Area -->
+			<Border Grid.Row="1" Classes="TopHeader" Background="{DynamicResource MainPageGradient}" Margin="2">
+				<Grid ColumnDefinitions="*, Auto">
+					<StackPanel Spacing="5" Margin="0" Grid.Column="0">
+						<TextBlock Text="{Binding Greeting, FallbackValue='Good day, User'}"
+								   FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+						<TextBlock Text="{Binding CurrentDate, FallbackValue='1st Jan 2026'}"
+								   Foreground="{DynamicResource TextPrimaryDark}" FontSize="14"/>
+					</StackPanel>
+				</Grid>
+			</Border>
+
+			<!-- Content Area -->
+			<TransitioningContentControl Grid.Row="2" Content="{Binding CurrentView}">
+				<TransitioningContentControl.PageTransition>
+					<CrossFade Duration="0:00:00.500" />
+				</TransitioningContentControl.PageTransition>
+			</TransitioningContentControl>
+		</Grid>
+
+		<!-- Overlay Layers -->
+
+		<!-- Task Detail Overlay -->
+		<Grid
+		IsVisible="{Binding IsTaskDetailVisible}"
+		Background="#40000000"
+		ClipToBounds="False"
+		Name="OverlayGrid"
+		PointerPressed="OnOverlayPointerPressed">
+			<viewWidgets:TaskDetailView x:Name="TaskDetailView" DataContext="{Binding CurrentTaskDetail}"
+										Width="1000"
+										HorizontalAlignment="Right"/>
+		</Grid>
+
+		<!-- Create Project Overlay -->
+		<Grid
+		IsVisible="{Binding IsCreateProjectVisible}"
+		Background="#40000000">
+			<homeProjects:CreateProjectView DataContext="{Binding CreateProjectVM}"
+											HorizontalAlignment="Center"
+											VerticalAlignment="Center"/>
+		</Grid>
+
+	</Grid>
+</UserControl>

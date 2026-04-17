@@ -1,0 +1,165 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.ViewModels.Shared"
+			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Views.Shared.ProfileView"
+			 x:DataType="vm:ProfileViewModel">
+
+	<!-- Styles for Input Fields -->
+	<UserControl.Styles>
+		<Style Selector="TextBlock.FieldLabel">
+			<Setter Property="Foreground" Value="#64748B"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="Margin" Value="0,10,0,5"/>
+		</Style>
+		
+		<Style Selector="TextBox.ProfileInput">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderBrush" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="10,6"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="MinHeight" Value="36"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="TextBox.ProfileInput:pointerover /template/ Border#PART_BorderElement">
+			<Setter Property="Background" Value="#F8FAFC"/>
+			<Setter Property="BorderBrush" Value="#E2E8F0"/>
+		</Style>
+		<Style Selector="TextBox.ProfileInput:focus /template/ Border#PART_BorderElement">
+			<Setter Property="Background" Value="#FFFFFF"/>
+			<Setter Property="BorderBrush" Value="#E2E8F0"/>
+		</Style>
+		
+		<Style Selector="Button.LinkButton">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="#00BFA5"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="FontSize" Value="13"/>
+			<Setter Property="HorizontalAlignment" Value="Left"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.LinkButton:pointerover /template/ ContentPresenter">
+			<Setter Property="Foreground" Value="#009688"/>
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+
+	</UserControl.Styles>
+
+	<Border Background="#F1F5F9" CornerRadius="8" BoxShadow="0 10 30 0 #40000000" VerticalAlignment="Center" HorizontalAlignment="Center" Width="450">
+		<Grid RowDefinitions="Auto, Auto">
+
+			<ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="600">
+				<StackPanel Margin="20,20,20,20">
+					
+					<!-- Header / Profile Picture -->
+					<Grid ColumnDefinitions="Auto, *" Margin="0,0,0,20">
+						<!-- Avatar Area -->
+						<Grid Width="100" Height="100">
+							<Ellipse Fill="#00897B" IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNull}}"/>
+							<TextBlock Text="{Binding Initials}" FontSize="40" Foreground="#FFFFFF" Opacity="0.5"
+									   HorizontalAlignment="Center" VerticalAlignment="Center"
+									   IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNull}}"/>
+							
+							<!-- Image Display -->
+							<Ellipse Width="100" Height="100" IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNotNull}}">
+								<Ellipse.Fill>
+									<ImageBrush Source="{Binding ProfilePictureBitmap}" Stretch="UniformToFill"/>
+								</Ellipse.Fill>
+							</Ellipse>
+							
+							<!-- Edit Overlay Button -->
+							<Button Background="#40000000" CornerRadius="50" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+									Click="OnUploadPhotoClick" Cursor="Hand" ToolTip.Tip="Upload Profile Picture">
+								<TextBlock Text="EDIT" FontSize="12" Foreground="White" FontWeight="Bold"
+										   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+								<Button.Styles>
+									<Style Selector="Button:pointerover /template/ ContentPresenter">
+										<Setter Property="Background" Value="#60000000"/>
+									</Style>
+								</Button.Styles>
+							</Button>
+						</Grid>
+
+						<!-- Basic User Info -->
+						<StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
+							<TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="Bold" Foreground="#1E293B"/>
+							<TextBlock Text="{Binding Email}" FontSize="13" Foreground="#64748B" Margin="0,2,0,8"/>
+							
+							<!-- Actions -->
+							<Button Command="{Binding ToggleChangePasswordCommand}" Content="Change password" Classes="LinkButton"/>
+						</StackPanel>
+					</Grid>
+
+					<!-- Divider -->
+					<Border Height="1" Background="#E2E8F0" Margin="0,10,0,20"/>
+
+					<!-- Editable Details -->
+					<StackPanel Spacing="10">
+						<StackPanel>
+							<TextBlock Text="Location" Classes="FieldLabel"/>
+							<TextBox Classes="ProfileInput" Text="{Binding Location}" Watermark="City, Country"/>
+						</StackPanel>
+
+						<StackPanel>
+							<TextBlock Text="Phone" Classes="FieldLabel"/>
+							<TextBox Classes="ProfileInput" Text="{Binding Phone}" Watermark="Phone Number"/>
+						</StackPanel>
+						
+						<StackPanel>
+							<TextBlock Text="User Role" Classes="FieldLabel"/>
+							<!-- Read-only Role Display -->
+							<Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,8">
+								<TextBlock Text="{Binding SelectedRole}" Foreground="#64748B" FontSize="14"/>
+							</Border>
+						</StackPanel>
+					</StackPanel>
+
+					<!-- Change Password Section -->
+					<Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Margin="0,20,0,0" Padding="15"
+							IsVisible="{Binding IsChangingPassword}">
+						<StackPanel Spacing="10">
+							<TextBlock Text="Change Password" FontWeight="Bold" Foreground="#1E293B"/>
+							
+							<StackPanel>
+								<TextBlock Text="Current Password" Classes="FieldLabel" Margin="0,0,0,2"/>
+								<TextBox Classes="ProfileInput" Text="{Binding OldPassword}" PasswordChar="•" Watermark="Current"/>
+							</StackPanel>
+							
+							<StackPanel>
+								<TextBlock Text="New Password" Classes="FieldLabel" Margin="0,0,0,2"/>
+								<TextBox Classes="ProfileInput" Text="{Binding NewPassword}" PasswordChar="•" Watermark="New"/>
+							</StackPanel>
+							
+							<StackPanel>
+								<TextBlock Text="Confirm Password" Classes="FieldLabel" Margin="0,0,0,2"/>
+								<TextBox Classes="ProfileInput" Text="{Binding ConfirmPassword}" PasswordChar="•" Watermark="Confirm"/>
+							</StackPanel>
+							
+							<Grid ColumnDefinitions="*, *" Margin="0,10,0,0">
+								<Button Content="Cancel" Command="{Binding ToggleChangePasswordCommand}" 
+										Background="Transparent" Foreground="#64748B" Margin="0,0,5,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+								<Button Content="Update Password" Command="{Binding ChangePasswordCommand}" 
+										Background="#00BFA5" Foreground="White" Margin="5,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+							</Grid>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</ScrollViewer>
+
+			<!-- Footer -->
+			<Grid Grid.Row="1" Background="Transparent" Margin="20,10,20,20">
+				<Button Command="{Binding SaveCommand}" Content="Save &amp; Close"
+						Background="#C0E800" Foreground="#1E293B" FontWeight="Bold"
+						Padding="30,12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="6"/>
+			</Grid>
+		
+		</Grid>
+	</Border>
+</UserControl>

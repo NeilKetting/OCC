@@ -1,0 +1,176 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Features.Dashboard"
+             xmlns:dto="using:OCC.Shared.DTOs"
+             xmlns:models="using:OCC.Shared.Models"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="OCC.Client.Mobile.Features.Dashboard.SiteManagerDashboardView"
+             x:DataType="vm:SiteManagerDashboardViewModel">
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header Section -->
+        <Border Grid.Row="0" Padding="25" Background="{DynamicResource PrimaryTeal}">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Dashboard" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Manage your active sites and progress" Foreground="#B0FFFFFF" FontSize="14"/>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding RefreshCommand}" Classes="IconButton" VerticalAlignment="Center">
+                    <PathIcon Data="{StaticResource IconRefresh}" Width="24" Height="24" Foreground="White"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20" Margin="20">
+                    
+                    <!-- Empty State -->
+                    <Border IsVisible="{Binding !HasProjects}" Background="{DynamicResource SurfaceLightGray}" CornerRadius="12" Padding="40,60" Margin="0,40">
+                        <StackPanel Spacing="15" HorizontalAlignment="Center">
+                             <PathIcon Data="{StaticResource IconPortfolio}" Width="60" Height="60" Foreground="{DynamicResource BorderGray}"/>
+                             <TextBlock Text="No Assigned Projects" Foreground="{DynamicResource TextSecondaryGray}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                             <TextBlock Text="You are currently not assigned as a Site Manager to any active projects." 
+                                         Foreground="{DynamicResource TextSecondaryGray}" TextWrapping="Wrap" TextAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Projects List -->
+                    <ItemsControl ItemsSource="{Binding Projects}" IsVisible="{Binding HasProjects}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:DashboardProjectViewModel">
+                                <!-- Desktop-Aligned Project Card -->
+                                <Border Background="{DynamicResource SurfaceWhite}" CornerRadius="8" Padding="20" Margin="0,0,0,20" BoxShadow="0 2 4 2 #20000000" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1">
+                                    <StackPanel Spacing="12">
+                                        <!-- Title & Status -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="{Binding Project.Name}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                                            <Border Grid.Column="1" Background="{DynamicResource PrimaryTealLight}" CornerRadius="4" Padding="10,4">
+                                                <TextBlock Text="{Binding Project.Status}" Foreground="{DynamicResource PrimaryTeal}" FontSize="11" FontWeight="Bold"/>
+                                            </Border>
+                                        </Grid>
+ 
+                                        <!-- Progress Bar -->
+                                        <StackPanel Spacing="6">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock Text="Current Completion" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Project.Progress, StringFormat={}{0}%}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+                                            </Grid>
+                                            <ProgressBar Value="{Binding Project.Progress}" Height="8" CornerRadius="4" Background="{DynamicResource SurfaceLightGray}" Foreground="{DynamicResource PrimaryTeal}"/>
+                                        </StackPanel>
+ 
+                                        <!-- Tasks Due Today Section -->
+                                        <Border IsVisible="{Binding HasDailyTasks}" Margin="0,15,0,0" Padding="0,15,0,0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,1,0,0">
+                                            <StackPanel Spacing="10">
+                                                <TextBlock Text="Tasks Due Today" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                <ItemsControl ItemsSource="{Binding DailyTasks}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="vm:DashboardTaskViewModel">
+                                                            <Border Background="{DynamicResource SurfaceLightGray}" CornerRadius="8" Margin="0,0,0,10" Padding="12">
+                                                                <StackPanel Spacing="10">
+                                                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                                                        <!-- Status Toggle Checkbox-style -->
+                                                                        <Button Command="{Binding ToggleStatusCommand}" Background="Transparent" Padding="0" VerticalAlignment="Center">
+                                                                            <Panel>
+                                                                                <Ellipse Width="24" Height="24" Stroke="{DynamicResource PrimaryTeal}" StrokeThickness="2" Fill="Transparent"/>
+                                                                                <PathIcon Data="{StaticResource IconCheck}" Width="14" Height="14" Foreground="{DynamicResource PrimaryTeal}" 
+                                                                                          IsVisible="{Binding Task.IsComplete}"/>
+                                                                            </Panel>
+                                                                        </Button>
+                                                                        
+                                                                        <!-- Task Info -->
+                                                                        <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                                                            <TextBlock Text="{Binding Task.Name}" Classes.completed="{Binding Task.IsComplete}" FontWeight="SemiBold" FontSize="14">
+                                                                                <TextBlock.Styles>
+                                                                                    <Style Selector="TextBlock">
+                                                                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryDark}"/>
+                                                                                    </Style>
+                                                                                    <Style Selector="TextBlock.completed">
+                                                                                        <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryGray}"/>
+                                                                                    </Style>
+                                                                                </TextBlock.Styles>
+                                                                            </TextBlock>
+                                                                            <TextBlock Text="{Binding Task.Priority}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ActionBlue}"/>
+                                                                        </StackPanel>
+
+                                                                        <!-- Quick Actions -->
+                                                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5">
+                                                                            <Button Command="{Binding ToggleExpandCommand}" ToolTip.Tip="Comments" Padding="8" Background="Transparent">
+                                                                                <PathIcon Data="{StaticResource IconChat}" Width="18" Height="18" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                                            </Button>
+                                                                            <Button Command="{Binding AttachPhotoCommand}" ToolTip.Tip="Attach Photo" Padding="8" Background="Transparent">
+                                                                                <PathIcon Data="{StaticResource IconAttach}" Width="18" Height="18" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                                            </Button>
+                                                                        </StackPanel>
+                                                                    </Grid>
+
+                                                                    <!-- Interaction Tray (Comments & Input) -->
+                                                                    <StackPanel IsVisible="{Binding IsExpanded}" Spacing="12" Margin="36,5,0,0">
+                                                                        <Border Height="1" Background="{DynamicResource BorderGray}" Opacity="0.5"/>
+                                                                        
+                                                                        <!-- Comments Thread -->
+                                                                        <ItemsControl ItemsSource="{Binding Task.Comments}">
+                                                                            <ItemsControl.ItemTemplate>
+                                                                                <DataTemplate DataType="models:TaskComment">
+                                                                                    <Border Background="#10000000" CornerRadius="4" Padding="8" Margin="0,0,0,6">
+                                                                                        <StackPanel Spacing="2">
+                                                                                            <Grid ColumnDefinitions="*, Auto">
+                                                                                                <TextBlock Text="{Binding AuthorName}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+                                                                                                <TextBlock Grid.Column="1" Text="{Binding CreatedAt, StringFormat={}{0:HH:mm}}" FontSize="9" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                                                            </Grid>
+                                                                                            <TextBlock Text="{Binding Content}" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryDark}"/>
+                                                                                        </StackPanel>
+                                                                                    </Border>
+                                                                                </DataTemplate>
+                                                                            </ItemsControl.ItemTemplate>
+                                                                        </ItemsControl>
+
+                                                                        <!-- Inline Add Comment -->
+                                                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                                                            <TextBox Text="{Binding NewCommentText}" Watermark="Add a comment..." AcceptsReturn="True" MaxHeight="100" />
+                                                                            <Button Grid.Column="1" Command="{Binding AddCommentCommand}" Classes="Primary" VerticalAlignment="Bottom" Padding="12,6">
+                                                                                <PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16" Foreground="White"/>
+                                                                            </Button>
+                                                                        </Grid>
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Stats Wrapper -->
+                                        <Border Height="1" Background="{DynamicResource BorderGray}" Opacity="0.5" Margin="0,5"/>
+                                        <Grid ColumnDefinitions="*, *, *">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="Tasks" FontSize="10" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                <TextBlock Text="{Binding Project.TaskCount}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock Text="Manager" FontSize="10" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                <TextBlock Text="{Binding Project.ProjectManager}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextPrimaryDark}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="2">
+                                                <TextBlock Text="Deadline" FontSize="10" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                <TextBlock Text="{Binding Project.LatestFinish, StringFormat={}{0:MMM dd}}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </StackPanel>
+            </ScrollViewer>
+
+        <!-- Busy Overlay -->
+        <Border Grid.Row="1" IsVisible="{Binding IsBusy}" Background="#40FFFFFF">
+            <ProgressBar IsIndeterminate="True" Width="100" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+    </Grid>
+</UserControl>

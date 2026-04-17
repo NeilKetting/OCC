@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+        x:Class="OCC.Client.Views.Confirmation.SessionTimeoutDialog"
+        Title="Session Timeout"
+        Width="400" SizeToContent="Height" WindowStartupLocation="CenterScreen"
+        CanResize="False" SystemDecorations="BorderOnly"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Topmost="True">
+
+    <Border Background="White" CornerRadius="12" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" Padding="30" BoxShadow="0 4 15 0 #20000000">
+        <StackPanel Spacing="20" HorizontalAlignment="Center">
+            
+            <PathIcon Data="{StaticResource IconClock}" Width="48" Height="48" Foreground="{DynamicResource WarningOrange}" HorizontalAlignment="Center"/>
+            
+            <TextBlock Text="Are you still there?" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center"/>
+            
+            <TextBlock Text="For security, you will be logged out in:" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center"/>
+            
+            <TextBlock Name="CountdownText" Text="60 seconds" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}" HorizontalAlignment="Center"/>
+
+            <ProgressBar Name="TimeoutProgress" Minimum="0" Maximum="60" Value="60" Height="6" Width="300" Foreground="{DynamicResource WarningOrange}" Background="#F3F4F6"/>
+
+            <Button Content="Yes, I'm here" Click="OnContinueClick" Classes="PrimaryButton" HorizontalAlignment="Center" Width="200" Margin="0,10,0,0"/>
+        </StackPanel>
+    </Border>
+</Window>

@@ -1,0 +1,180 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:conv="using:OCC.Client.Converters"
+			 xmlns:models="using:OCC.Shared.Models"
+			 xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+			 xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.OrderListView"
+			 x:DataType="vm:OrderListViewModel">
+
+	<UserControl.Resources>
+		<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+		<conv:EnumToIntConverter x:Key="EnumToIntConverter"/>
+		<conv:OrderStatusToColorConverter x:Key="OrderStatusToColorConverter"/>
+		<conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter"/>
+	</UserControl.Resources>
+
+	<Grid RowDefinitions="Auto, Auto, *" Margin="2">
+		<!-- Header Bar: Title & Primary Actions -->
+		<Border Grid.Row="0" Classes="TopHeader" Background="{DynamicResource MainPageGradient}" Margin="0,0,0,1">
+			<Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+				<!-- Title -->
+				<StackPanel Spacing="5">
+					<TextBlock Text="Order List" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold"/>
+					<TextBlock Text="Master list of all Orders. Double-click to edit." Foreground="#94A3B8" FontSize="{StaticResource FontsizeMedium}"/>
+				</StackPanel>
+
+				<!-- Actions -->
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+					<Button Classes="Primary" Content="Export Data" Padding="15,8" IsEnabled="False" IsVisible="{Binding CanImportExport}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconExportData}" Width="16" Height="16"/>
+							<TextBlock Text="Export Data" VerticalAlignment="Center" FontWeight="SemiBold"/>
+						</StackPanel>
+					</Button>
+				</StackPanel>
+
+				<!-- Toolbar Bar: Search & Filters -->
+				<Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,15,0,0">
+					<!-- Search & Filters -->
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+						<StackPanel>
+							<TextBlock Text="Search" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<TextBox Width="200" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+									 Watermark="Search Order #" Background="White" BorderBrush="{DynamicResource BorderGray}" VerticalContentAlignment="Center">
+								<TextBox.InnerLeftContent>
+									<PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14" Margin="10,0,0,0" Foreground="{DynamicResource TextTertiarySlate}"/>
+								</TextBox.InnerLeftContent>
+							</TextBox>
+						</StackPanel>
+
+						<StackPanel>
+							<TextBlock Text="Branch" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<ComboBox ItemsSource="{Binding BranchFilters}"
+									  SelectedItem="{Binding SelectedBranchFilter}"
+									  Width="130" Classes="FormInput"/>
+						</StackPanel>
+
+						<StackPanel>
+							<TextBlock Text="Period" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<ComboBox ItemsSource="{Binding TimeFilters}"
+									  SelectedIndex="{Binding TimeFilter, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}"
+									  Width="140" Classes="FormInput"/>
+						</StackPanel>
+					</StackPanel>
+
+					<!-- Value Card -->
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="20" VerticalAlignment="Center">
+						<Border Classes="Card" Padding="15,5" MinWidth="140" Background="#E8F5E9" BorderBrush="#81C784" CornerRadius="6">
+							<StackPanel>
+								<TextBlock Text="Total Value" Classes="LabelText" HorizontalAlignment="Center" Foreground="#388E3C" FontSize="11"/>
+								<TextBlock Text="{Binding FilteredTotal, StringFormat='{}{0:C}'}" FontSize="16" FontWeight="Bold" Foreground="#2E7D32" HorizontalAlignment="Center"/>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</Grid>
+
+
+			</Grid>
+		</Border>
+
+		<!-- Toolbar Bar: Search & Filters -->
+		<Border Grid.Row="1" Classes="TopHeader" Background="{DynamicResource WeatheredCementGradient}" Margin="0,0,0,10" Padding="10,5">
+		</Border>
+
+		<!-- Grid -->
+		<DataGrid x:Name="OrdersGrid" Grid.Row="2" ItemsSource="{Binding Orders}"
+				  AutoGenerateColumns="False"
+				  IsReadOnly="True"
+				  HeadersVisibility="Column"
+				  GridLinesVisibility="Horizontal"
+				  Background="White"
+				  BorderThickness="0"
+				  SelectedItem="{Binding SelectedOrder}">
+
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="DoubleTapped">
+					<InvokeCommandAction Command="{Binding ViewOrderCommand}" CommandParameter="{Binding SelectedOrder}"/>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
+
+			<DataGrid.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="View/Edit Order" Command="{Binding ViewOrderCommand}" CommandParameter="{Binding SelectedOrder}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconView}" Width="16" Height="16"/>
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Receive Stock" Command="{Binding RequestReceiveOrderCommand}" CommandParameter="{Binding SelectedOrder}">
+						<MenuItem.Icon>
+							<PathIcon Data="{StaticResource IconCart}" Width="16" Height="16" Foreground="{DynamicResource PrimaryTeal}"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</ContextMenu>
+			</DataGrid.ContextMenu>
+
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="ORDER #" Binding="{Binding OrderNumber}" Width="Auto" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				<DataGridTextColumn Header="TYPE" Binding="{Binding OrderType, Converter={StaticResource FriendlyEnumConverter}, Mode=OneWay}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				<DataGridTextColumn Header="SUPPLIER" Binding="{Binding SupplierName}" MinWidth="250" Width="Auto" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTextColumn Header="DATE" Binding="{Binding OrderDate, StringFormat='{}{0:dd MMM yyyy}'}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				<DataGridTextColumn Header="ETA" Binding="{Binding ExpectedDeliveryDate, StringFormat='{}{0:dd MMM yyyy}'}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				<DataGridTextColumn Header="DESTINATION" Binding="{Binding DestinationDisplay}" Width="Auto" Foreground="{DynamicResource TextSecondaryDark}"/>
+				<DataGridTextColumn Header="TOTAL" Binding="{Binding TotalAmount, StringFormat='{}{0:C}'}" Width="Auto" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTemplateColumn Header="STATUS" Width="Auto" MinWidth="150">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Border CornerRadius="4" Padding="8,2" HorizontalAlignment="Left" VerticalAlignment="Center"
+									Background="{Binding Status, Converter={StaticResource OrderStatusToColorConverter}, ConverterParameter=Background}"
+									BorderBrush="{Binding Status, Converter={StaticResource OrderStatusToColorConverter}}"
+									BorderThickness="1">
+									<TextBlock Text="{Binding Status, Converter={StaticResource FriendlyEnumConverter}, Mode=OneWay}" 
+											   Foreground="{Binding Status, Converter={StaticResource OrderStatusToColorConverter}}" 
+											   FontSize="11" FontWeight="SemiBold"/>
+							</Border>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<!-- Actions -->
+				<DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<StackPanel Orientation="Horizontal" Spacing="15">
+								<Button Classes="IconButton" Command="{Binding $parent[UserControl].((vm:OrderListViewModel)DataContext).ViewOrderCommand}" CommandParameter="{Binding .}" ToolTip.Tip="Edit/View">
+									<PathIcon Data="{StaticResource IconView}" Width="16" Height="16"/>
+								</Button>
+								<Button Classes="IconButton" Command="{Binding $parent[UserControl].((vm:OrderListViewModel)DataContext).RequestReceiveOrderCommand}" CommandParameter="{Binding .}" ToolTip.Tip="Receive Items">
+									<PathIcon Data="{StaticResource IconCart}" Width="16" Height="16" Foreground="{DynamicResource PrimaryTeal}"/>
+								</Button>
+							</StackPanel>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+
+		<!-- Loading Overlay -->
+		<Grid Grid.Row="2" IsVisible="{Binding IsBusy}" IsHitTestVisible="False">
+			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+				<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+				<TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+			</StackPanel>
+		</Grid>
+		
+		<!-- Empty State -->
+		<Grid Grid.Row="2" IsVisible="{Binding IsEmpty}" IsHitTestVisible="False">
+			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+				<TextBlock Text="No orders found." IsVisible="{Binding !IsBusy}" Classes="LabelSmall"/>
+			</StackPanel>
+		</Grid>
+	</Grid>
+</UserControl>

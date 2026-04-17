@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+        x:Class="OCC.Client.Features.TimeAttendanceHub.Views.LeaveEarlyReasonDialog"
+        Title="Leave Early Reason"
+        Width="400" SizeToContent="Height" WindowStartupLocation="CenterOwner"
+        CanResize="False" SystemDecorations="BorderOnly"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+    <Border Background="White" CornerRadius="8" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" Padding="20">
+        <StackPanel Spacing="15">
+            <TextBlock Text="Leaving Early" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+            
+            <TextBlock Text="This employee is clocking out before business hours end. Please provide a reason." 
+                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Reason" FontWeight="Medium"/>
+                <ComboBox x:Name="ReasonComboBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+                    <ComboBoxItem>Sick</ComboBoxItem>
+                    <ComboBoxItem>Family Responsibility</ComboBoxItem>
+                    <ComboBoxItem>Transport Issue</ComboBoxItem>
+                    <ComboBoxItem>Authorized Early Leave</ComboBoxItem>
+                    <ComboBoxItem>Other</ComboBoxItem>
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Spacing="5" x:Name="NotePanel" IsVisible="{Binding #ReasonComboBox.SelectedIndex, Converter={x:Static ObjectConverters.IsNotNull}}">
+                 <!-- Simple visibility toggle could be done via converter or code behind, keeping simple for now -->
+                <TextBlock Text="Note (Optional)" FontWeight="Medium"/>
+                <TextBox x:Name="NoteTextBox" Height="80" AcceptsReturn="True" TextWrapping="Wrap" Watermark="Add details..."/>
+            </StackPanel>
+
+            <StackPanel Spacing="5" x:Name="AttachmentPanel" IsVisible="False">
+                <TextBlock Text="Medical Certificate (Optional)" FontWeight="Medium"/>
+                <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
+                    <TextBlock x:Name="FilePathText" Text="No file selected..." VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextTertiarySlate}" Margin="0,0,10,0"/>
+                    <Button Grid.Column="1" Content="Browse" Click="OnBrowseClick" Classes="SecondaryButton" Padding="15,6"/>
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Cancel" Click="OnCancelClick" Classes="SecondaryButton"/>
+                <Button Content="Confirm" Click="OnConfirmClick" Classes="PrimaryButton"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

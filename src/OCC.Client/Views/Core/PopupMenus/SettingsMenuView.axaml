@@ -1,0 +1,70 @@
+
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:core="clr-namespace:OCC.Client.ViewModels.Core;assembly=OCC.Client"
+             mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="600"
+             x:Class="OCC.Client.Views.Core.PopupMenus.SettingsMenuView"
+             x:DataType="core:SideMenuViewModel">
+
+    <Border Background="White" 
+            BorderBrush="{DynamicResource BorderGray}" 
+            BorderThickness="1" 
+            CornerRadius="8" 
+            Padding="0,5"
+            Margin="15"
+            Width="240"
+            BoxShadow="0 2 15 5 #292828">
+        <StackPanel Background="Transparent" Margin="5,5">
+            <!-- Company Settings Group -->
+            <TextBlock Text="SETTINGS" Classes="LabelSmall" Margin="20"/>
+            <!-- Separator -->
+            <Border BorderBrush="{DynamicResource AccentOrange}" BorderThickness="1" Margin="10"/>
+
+            <!-- Buttons -->
+            <Button Classes="PopupMenuButton" Command="{Binding CompanyProfileCommand}" IsVisible="{Binding CanAccessCompanyProfile}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconCompanyProfile}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="Company Profile" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding CompanySettingsCommand}" IsVisible="{Binding CanAccessCompanySettings}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconSettings}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="System Settings" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding UsersTeamsCommand}" IsVisible="{Binding CanManageUsers}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconUserManagement}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="User Management" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding UserPreferencesCommand}" IsVisible="{Binding CanAccessUserPreferences}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconSettings}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="User Preferences" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding AlertsCommand}" IsVisible="{Binding CanAccessAlerts}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconAlert}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="Alerts" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+            <Button Classes="PopupMenuButton" Command="{Binding AuditLogCommand}" Height="50" IsVisible="{Binding CanAccessAuditLog}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                     <PathIcon Data="{StaticResource IconAudit}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                     <TextBlock Text="Audit Log" VerticalAlignment="Center" FontSize="14"/>
+                </StackPanel>
+            </Button>
+            
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.WagesHub.ViewModels"
+			 xmlns:view="clr-namespace:OCC.Client.Features.WagesHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+			 x:Class="OCC.Client.Features.WagesHub.Views.WagesView"
+			 x:DataType="vm:WagesViewModel">
+
+	<UserControl.DataTemplates>
+		<DataTemplate DataType="{x:Type vm:WageRunViewModel}">
+			<view:WageRunView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vm:LoansManagementViewModel}">
+			<view:LoansManagementView/>
+		</DataTemplate>
+	</UserControl.DataTemplates>
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- Top Bar -->
+		<view:WagesMenuView Grid.Row="0" DataContext="{Binding WagesMenu}"/>	
+
+		<!-- Content Area -->
+		<TransitioningContentControl Grid.Row="1" Content="{Binding CurrentView}">
+			<TransitioningContentControl.PageTransition>
+				<CrossFade Duration="0:00:00.500" />
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
+	</Grid>
+</UserControl>

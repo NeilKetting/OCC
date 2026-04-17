@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Features.SettingsHub.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Features.SettingsHub.Views.UserPreferencesView"
+             x:DataType="vm:UserPreferencesViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.Header">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,20"/>
+        </Style>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryGray}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="Height" Value="35"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#F8FAFC">
+        <Border Background="White" Margin="40" CornerRadius="8" BoxShadow="0 4 10 0 #10000000" Padding="30">
+            <Grid RowDefinitions="Auto, *">
+                <StackPanel Grid.Row="0">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel>
+                            <TextBlock Text="User Preferences" Classes="Header"/>
+                            <TextBlock Text="Manage your local application settings." Foreground="{DynamicResource TextSecondaryGray}" Margin="0,-15,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding BackCommand}" Classes="IconButtonClose" VerticalAlignment="Top" ToolTip.Tip="Close">
+                            <PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+                        </Button>
+                    </Grid>
+                    <Separator Background="{DynamicResource ThemeBorderLow}" Margin="0,20,0,20"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Spacing="20">
+                    <!-- Session Timeout -->
+                    <Grid ColumnDefinitions="200, Auto" RowDefinitions="Auto, Auto">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Auto-Logout Timer" Classes="Label"/>
+                            <TextBlock Text="Automatically lock session after inactivity." FontSize="12" Foreground="#94A3B8" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                            <ComboBox ItemsSource="{Binding TimeoutOptions}" SelectedItem="{Binding SelectedTimeout}"/>
+                            <TextBlock Text="minutes" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Save Button (Optional if we want explicit save, but viewmodel has it) -->
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,40,0,0">
+                         <Button Command="{Binding SaveCommand}" Content="Save Changes" Classes="Primary"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

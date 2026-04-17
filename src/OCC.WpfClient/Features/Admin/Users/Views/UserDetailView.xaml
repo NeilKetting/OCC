@@ -1,0 +1,217 @@
+<UserControl x:Class="OCC.WpfClient.Features.Admin.Users.Views.UserDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.Admin.Users.ViewModels"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1100"
+             d:DataContext="{d:DesignInstance Type=vm:UserDetailViewModel}">
+
+    <UserControl.Resources>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- Modal Backdrop -->
+        <Button Background="#99000000" Command="{Binding CancelCommand}" BorderThickness="0">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" IsHitTestVisible="True"/>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Detail Modal -->
+            <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource DetailViewModalBorder}" Margin="0,20">
+                <Grid>
+                    <!-- Background Decoration -->
+                    <Path Data="{StaticResource IconPersonal}" Fill="White" Opacity="0.02" 
+                          Stretch="Uniform" Margin="40" HorizontalAlignment="Right" 
+                          VerticalAlignment="Bottom" Width="300" Height="300"/>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Header -->
+                            <RowDefinition Height="*"/>    <!-- Content -->
+                            <RowDefinition Height="Auto"/> <!-- Footer -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0" Style="{StaticResource DetailViewHeader}">
+                            <Grid>
+                                <StackPanel>
+                                    <TextBlock Text="Edit User Profile" FontSize="32" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="Modify user information, status and permissions." FontSize="14" 
+                                               Foreground="{StaticResource TextSub}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <Button HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                        Style="{StaticResource WindowCloseButton}" Command="{Binding CancelCommand}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Content -->
+                        <ScrollViewer Grid.Row="1" Style="{StaticResource DetailViewContentScroll}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Col 1: Personal Details -->
+                                <StackPanel Grid.Column="0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                        <Path Data="{StaticResource IconPersonal}" Style="{StaticResource SectionIcon}"/>
+                                        <TextBlock Text="Personal Details" Style="{StaticResource SectionHeaderText}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="First Name" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding FirstName}" Style="{StaticResource ModernInput}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="Last Name" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding LastName}" Style="{StaticResource ModernInput}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding Email}" Style="{StaticResource ModernInput}" 
+                                                 TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding Phone}" Style="{StaticResource ModernInput}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="Location / Branch" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding Location}" Style="{StaticResource ModernInput}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Col 2: Account Security -->
+                                <StackPanel Grid.Column="2">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                        <Path Data="{StaticResource IconLock}" Style="{StaticResource SectionIcon}"/>
+                                        <TextBlock Text="Account Security" Style="{StaticResource SectionHeaderText}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="Functional Role" Style="{StaticResource FormLabelText}"/>
+                                        <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRole}" Style="{StaticResource ModernComboBox}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,15">
+                                        <TextBlock Text="Set Password" Style="{StaticResource FormLabelText}"/>
+                                        <PasswordBox Style="{StaticResource ModernPasswordInput}" 
+                                                     infra:PasswordHelper.Attach="True"
+                                                     infra:PasswordHelper.Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Text="Provide a password for new users or to change existing." 
+                                                   Style="{StaticResource FormLabelText}" FontStyle="Italic" Opacity="0.7" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Col 3: Status & Access -->
+                                <StackPanel Grid.Column="4">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                        <Path Data="{StaticResource IconPermissions}" Style="{StaticResource SectionIcon}"/>
+                                        <TextBlock Text="Status &amp; Access" Style="{StaticResource SectionHeaderText}"/>
+                                    </StackPanel>
+
+                                    <CheckBox IsChecked="{Binding IsApproved}" Style="{StaticResource ModernToggleSwitch}" Margin="0,0,0,20">
+                                        <StackPanel>
+                                            <TextBlock Text="Account Approved" Foreground="White" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Enable login access for this user." FontSize="11" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </CheckBox>
+
+                                    <CheckBox IsChecked="{Binding IsEmailVerified}" Style="{StaticResource ModernToggleSwitch}" Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <TextBlock Text="Email Verified" Foreground="White" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Mark email as verified and confirmed." FontSize="11" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </CheckBox>
+
+                                    <Border BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Margin="0,15,0,15" Padding="0,15,0,0"
+                                            Visibility="{Binding ShowModuleAccess, Converter={StaticResource VisibilityConverter}}">
+                                        <StackPanel>
+                                            <!-- Main Operational Hubs -->
+                                            <TextBlock Text="OPERATIONAL HUBS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,12"/>
+                                            <CheckBox IsChecked="{Binding HasChatAccess}" Content="Chat Feature" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasEmployeeManagementAccess}" Content="Employee Management" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasCustomerAccess}" Content="Customer Hub" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasProjectsAccess}" Content="Project Portfolio" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasHealthSafetyAccess}" Content="Health &amp; Safety" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,15" Foreground="White"/>
+
+                                            <!-- Project Specific Actions (Only if Project Portfolio is enabled or for Project roles) -->
+                                            <TextBlock Text="PROJECT ACTIONS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,12"/>
+                                            <CheckBox IsChecked="{Binding HasProjectCreationAccess}" Content="Allow Project Creation" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasProjectDeletionAccess}" Content="Allow Project Deletion" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,15" Foreground="White"/>
+
+                                            <!-- Procurement & Supply Chain -->
+                                            <TextBlock Text="PROCUREMENT &amp; SUPPLY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,12"/>
+                                            <CheckBox IsChecked="{Binding HasProcurementAccess}" Content="Procurement Dashboard" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasInventoryAccess}" Content="Inventory Management" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasPurchaseOrderAccess}" Content="Purchase Orders" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasSuppliersAccess}" Content="Suppliers List" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,15" Foreground="White"/>
+
+                                            <!-- Administrative & Settings -->
+                                            <TextBlock Text="SYSTEM &amp; ADMINISTRATION" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,12"/>
+                                            <CheckBox IsChecked="{Binding HasUserManagementAccess}" Content="User Management" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasCompanyProfileAccess}" Content="Company Profile" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasSettingsAccess}" Content="System Settings" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,8" Foreground="White"/>
+                                            <CheckBox IsChecked="{Binding HasAuditLogAccess}" Content="Audit Logs" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,5" Foreground="White"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <!-- Footer -->
+                        <Border Grid.Row="2" Style="{StaticResource DetailViewFooter}">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Width="110" Height="40" Margin="0,0,15,0"/>
+                                <Button Content="Save Profile" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}" Width="150" Height="40"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Busy Overlay -->
+        <Border Background="#CC000000" CornerRadius="12" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource AccentBlue}" Background="#20FFFFFF"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
+

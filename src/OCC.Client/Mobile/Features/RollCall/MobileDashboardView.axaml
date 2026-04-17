@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Features.RollCall"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="OCC.Client.Mobile.Features.RollCall.MobileDashboardView"
+             x:DataType="vm:MobileDashboardViewModel">
+    <ScrollViewer>
+        <StackPanel Spacing="20">
+            <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+            
+            <Border Background="{DynamicResource SurfaceLightGray}" CornerRadius="12" Padding="20" BoxShadow="0 4 15 0 #20000000">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Daily Tasks" FontSize="18" FontWeight="SemiBold"/>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Tasks for today" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{DynamicResource PrimaryTeal}" CornerRadius="15" Width="30" Height="30">
+                            <TextBlock Text="{Binding TodayTasksCount}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#FFF1F2" CornerRadius="12" Padding="20" BorderBrush="#FECACA" BorderThickness="1">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Overdue" FontSize="18" FontWeight="SemiBold" Foreground="#DC2626"/>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Text="Tasks needing attention" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="#DC2626" CornerRadius="15" Width="30" Height="30">
+                            <TextBlock Text="{Binding OverdueTasksCount}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- Placeholder for more dashboard content -->
+            <TextBlock Text="Recent Activity" FontSize="18" FontWeight="SemiBold" Margin="0,10,0,0"/>
+            <ItemsControl ItemsSource="{Binding}" IsVisible="False"> <!-- Future activity list -->
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                <TextBlock Text="No recent activity to show." FontStyle="Italic" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="No recent activity to show." FontStyle="Italic" Foreground="{DynamicResource TextSecondaryGray}" IsVisible="True"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

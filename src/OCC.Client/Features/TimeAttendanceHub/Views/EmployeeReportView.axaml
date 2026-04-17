@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+             xmlns:timeVm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="OCC.Client.Features.TimeAttendanceHub.Views.EmployeeReportView"
+             x:DataType="vm:EmployeeReportViewModel"
+             x:Name="Root">
+
+    <UserControl.Resources>
+        <conv:StatusToColorConverter x:Key="StatusToColorConverter"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto, Auto, *">
+        <!-- Header -->
+        <Border Grid.Row="0" Classes="Card" Margin="0,0,0,15" Padding="10">
+            <Grid ColumnDefinitions="*, Auto, 50">
+                <StackPanel Spacing="5">
+                    <TextBlock Text="{Binding Employee.DisplayName}" Classes="H1" />
+                    <TextBlock Text="{Binding Employee.EmployeeNumber, StringFormat='Employee #{0}'}" Classes="Body" Foreground="{DynamicResource TextSecondaryGray}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="From" Classes="LabelSmall"/>
+                        <CalendarDatePicker SelectedDate="{Binding StartDate}" Width="150"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="To" Classes="LabelSmall"/>
+                        <CalendarDatePicker SelectedDate="{Binding EndDate}" Width="150"/>
+                    </StackPanel>                   
+                     <Button Classes="Primary" Command="{Binding GenerateReportCommand}" VerticalAlignment="Bottom" Margin="0" Padding="5">
+                        <StackPanel Orientation="Vertical" Spacing="5">
+                            <PathIcon Data="{StaticResource IconPrint}" /> <!-- Check if IconPdf exists, using IconExport as fallback if not -->
+                            <TextBlock Text="Print Report"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Stats Cards -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" Margin="0,0,0,15">
+            <Border Grid.Column="0" Classes="Card" Margin="10,0,10,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="TOTAL HOURS" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="{Binding TotalHours, StringFormat='{}{0:F2}'}" Classes="H2" Margin="0,5,0,0"/>
+                    <TextBlock Text="{Binding TotalNormalPay, StringFormat='{}{0:C}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Border>
+            
+            <Border Grid.Column="1" Classes="Card" Margin="0,0,10,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="OVERTIME" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="{Binding TotalOvertime, StringFormat='{}{0:F2}'}" Classes="H2" Margin="0,5,0,5"/>
+                     <StackPanel Orientation="Horizontal" Spacing="8">
+                         <Border Background="#FFF7ED" CornerRadius="4" Padding="4,2">
+                            <TextBlock Text="{Binding TotalOvertime15, StringFormat='1.5x: {0:F1}'}" FontSize="10" Foreground="#C2410C"/>
+                         </Border>
+                         <Border Background="#FFF7ED" CornerRadius="4" Padding="4,2">
+                            <TextBlock Text="{Binding TotalOvertime20, StringFormat='2.0x: {0:F1}'}" FontSize="10" Foreground="#C2410C"/>
+                         </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            
+            <Border Grid.Column="2" Classes="Card" Margin="0,0,10,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="LATES" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="{Binding TotalLates}" Classes="H2" Margin="0,5,0,0" Foreground="{DynamicResource Orange}"/>
+                </StackPanel>
+            </Border>
+            
+            <Border Grid.Column="3" Classes="Card" Margin="0,0,10,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="ABSENCES" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="{Binding TotalAbsences}" Classes="H2" Margin="0,5,0,0" Foreground="Red"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="4" Classes="Card" Margin="0,0,10,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="GROSS PAY" Classes="LabelSmall" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    <TextBlock Text="{Binding TotalPay, StringFormat='{}{0:C}'}" Classes="H2" Margin="0,5,0,0" Foreground="{DynamicResource OCCBlue}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Data Grid -->
+        <Border Grid.Row="2" Classes="Card" Padding="0">
+            <DataGrid ItemsSource="{Binding Records}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      BorderThickness="0">
+                
+                <DataGrid.Styles>
+                   <Style Selector="DataGridRow" x:DataType="timeVm:HistoryRecordViewModel">
+                        <Setter Property="Background" Value="{Binding Status, Converter={StaticResource StatusToColorConverter}}"/>
+                        <Setter Property="ContextMenu">
+                            <ContextMenu>
+                                <MenuItem Header="Edit Time"
+                                          Command="{Binding #Root.DataContext.SmartEditCommand}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <PathIcon Data="{StaticResource IconEdit}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Upload Medical Record"
+                                          Command="{Binding #Root.DataContext.UploadSickNoteCommand}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <PathIcon Data="{StaticResource IconAttachment}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="View Medical Certificate"
+                                          Command="{Binding #Root.DataContext.ViewSickNoteCommand}"
+                                          CommandParameter="{Binding}"
+                                          IsVisible="{Binding HasSickNote}">
+                                    <MenuItem.Icon>
+                                        <PathIcon Data="{StaticResource IconDocument}" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="Delete Record"
+                                          Command="{Binding #Root.DataContext.DeleteRecordCommand}"
+                                          CommandParameter="{Binding}"
+                                          Foreground="Red">
+                                    <MenuItem.Icon>
+                                        <PathIcon Data="{StaticResource IconDelete}" Foreground="Red"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Setter>
+                   </Style>
+                </DataGrid.Styles>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat='{}{0:ddd, dd MMM yyyy}'}" Width="*"/>
+                    <DataGridTextColumn Header="IN" Binding="{Binding InTime}" Width="Auto"/>
+                    <DataGridTextColumn Header="OUT" Binding="{Binding OutTime}" Width="Auto"/>
+                    <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="Auto"/>
+                    <DataGridTextColumn Header="NOTE" Binding="{Binding Note}" Width="*" />
+                    <DataGridTextColumn Header="HOURS" Binding="{Binding HoursWorkedDisplay}" Width="Auto"/>
+                    <DataGridTextColumn Header="WAGE" Binding="{Binding WageDisplay}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Loading Overlay -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" Background="#80FFFFFF" IsVisible="{Binding IsLoading}">
+            <ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+        </Grid>
+    </Grid>
+</UserControl>

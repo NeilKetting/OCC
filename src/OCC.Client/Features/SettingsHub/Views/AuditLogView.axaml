@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.SettingsHub.ViewModels"
+			 xmlns:converters="using:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.SettingsHub.Views.AuditLogView"
+			 x:DataType="vm:AuditLogViewModel">
+
+	<UserControl.Resources>
+		<converters:AuditValueConverter x:Key="AuditValueConverter"/>
+	</UserControl.Resources>
+
+	<Grid RowDefinitions="Auto, Auto, *">
+		<Border Grid.Row="0" Classes="TopHeader">
+			<Grid ColumnDefinitions="Auto, *, Auto">
+				<TextBlock Grid.Column="0" Text="Audit Logs" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,20,0"/>
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+					<ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" PlaceholderText="Filter by User" Width="200" DisplayMemberBinding="{Binding DisplayName}"/>
+
+					<!-- Filters -->
+					<Button Content="Daily" Command="{Binding ApplyFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Daily}" Classes="ghost"/>
+					<Button Content="Weekly" Command="{Binding ApplyFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Weekly}" Classes="ghost"/>
+					<Button Content="Monthly" Command="{Binding ApplyFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Monthly}" Classes="ghost"/>
+					<Button Content="All" Command="{Binding ApplyFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.All}" Classes="ghost"/>
+				</StackPanel>
+			</Grid>
+	</Border>
+
+		<!-- DataGrid -->
+		<DataGrid Grid.Row="2" ItemsSource="{Binding Logs}" IsReadOnly="True" GridLinesVisibility="Horizontal"
+				  HeadersVisibility="Column" Background="Transparent" RowBackground="Transparent">
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="Auto" MinWidth="140" />
+				<DataGridTextColumn Header="User" Binding="{Binding UserName}" Width="Auto" MinWidth="120" />
+				<DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="Auto" MinWidth="80" />
+				<DataGridTextColumn Header="Table" Binding="{Binding TableName}" Width="Auto" MinWidth="100" />
+				<DataGridTextColumn Header="Record" Binding="{Binding EntityName}" Width="Auto" MinWidth="150" FontWeight="SemiBold"/>
+				<DataGridTemplateColumn Header="Changes" Width="*">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding NewValues, Converter={StaticResource AuditValueConverter}}"
+									   TextWrapping="Wrap"
+									   VerticalAlignment="Top"
+									   Margin="5"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+</UserControl>

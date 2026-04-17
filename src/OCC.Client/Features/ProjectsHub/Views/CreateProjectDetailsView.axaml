@@ -1,0 +1,151 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+			 xmlns:ext="clr-namespace:OCC.Shared.Interfaces;assembly=OCC.Shared"
+			 xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+			 xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.ProjectsHub.Views.CreateProjectDetailsView"
+			 x:DataType="vm:CreateProjectViewModel">
+
+	<Grid RowDefinitions="Auto, *">
+
+		<ScrollViewer Grid.Row="1" Padding="0,0,10,0">
+			<StackPanel Spacing="18">
+				<!-- Validation Message -->
+				<Border IsVisible="{Binding IsAddressMissing}" 
+						Background="#FEF2F2" 
+						BorderBrush="#FCA5A5" 
+						BorderThickness="1" 
+						CornerRadius="6" 
+						Padding="12,10"
+						Margin="0,0,0,5">
+					<Grid ColumnDefinitions="Auto, *">
+						<PathIcon Grid.Column="0" Data="{StaticResource IconInfo}" Width="16" Height="16" Foreground="#EF4444" Margin="0,0,10,0" VerticalAlignment="Top"  />
+						<TextBlock Grid.Column="1" Text="{Binding ValidationMessage}" 
+								   Foreground="#B91C1C" 
+								   FontSize="13" 
+								   FontWeight="SemiBold"
+								   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"/>
+					</Grid>
+				</Border>
+
+				<!-- Identity Section -->
+				<StackPanel Spacing="15">
+					
+
+					<!-- Customer -->
+					<StackPanel Spacing="5">
+						<TextBlock Text="CUSTOMER" Classes="LabelSmall"/>
+						<Grid ColumnDefinitions="*, Auto">
+							<ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding Customer}" Classes="FormInput" PlaceholderText="Select..." HorizontalAlignment="Stretch">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Name}"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+							<Button Grid.Column="1" Command="{Binding AddCustomerCommand}" Classes="IconButton" Margin="5,0,0,0">
+								<PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+							</Button>
+						</Grid>
+					</StackPanel>
+				</StackPanel>
+
+				<Separator Background="{DynamicResource BorderGray}" Height="1" Margin="0,5"/>
+
+				<StackPanel Spacing="5">
+					<TextBlock Text="DESCRIPTION" Classes="LabelSmall"/>
+					<TextBox Text="{Binding Project.Description}" Height="60" AcceptsReturn="True" TextWrapping="Wrap" Classes="FormInput"/>
+				</StackPanel>
+
+				<!-- Site Address -->
+				<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,5">
+					<Grid ColumnDefinitions="*, Auto">
+						<TextBlock Text="SITE ADDRESS" Classes="LabelSmall" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryGray}"/>
+						
+						<!-- Geofencing Badge -->
+						<Border Grid.Column="1" 
+								IsVisible="{Binding Project.Latitude, Converter={x:Static ObjectConverters.IsNotNull}}"
+								Background="#ECFDF5" 
+								BorderBrush="#047857" 
+								BorderThickness="1" 
+								CornerRadius="12" 
+								Padding="8,2"
+								ToolTip.Tip="GPS Coordinates acquired. Geofencing will be active for the mobile app.">
+							<StackPanel Orientation="Horizontal" Spacing="4">
+								<PathIcon Data="{StaticResource IconCheckCircle}" Width="10" Height="10" Foreground="#059669"/>
+								<TextBlock Text="Geofencing Active" FontSize="10" FontWeight="Bold" Foreground="#059669" VerticalAlignment="Center"/>
+							</StackPanel>
+						</Border>
+					</Grid>
+				</Border>
+
+				<StackPanel Spacing="12">
+					<StackPanel Spacing="5">
+						<TextBlock Text="STREET LINE 1" Classes="LabelSmall"/>
+						<AutoCompleteBox x:Name="AddressSearch"
+										 Text="{Binding Project.StreetLine1, Mode=TwoWay}"
+										 ItemsSource="{Binding AddressSuggestions}"
+										 SelectedItem="{Binding SelectedAddressSuggestion}"
+										 ValueMemberBinding="{Binding Description}"
+										 FilterMode="None"
+										 Watermark="Search for address..."
+										 Classes="FormInput">
+							<AutoCompleteBox.ItemTemplate>
+								<DataTemplate x:DataType="ext:AddressSuggestion">
+									<TextBlock Text="{Binding Description}" />
+								</DataTemplate>
+							</AutoCompleteBox.ItemTemplate>
+						</AutoCompleteBox>
+                        <!-- Display validation errors for StreetLine1 -->
+                        <ItemsControl ItemsSource="{Binding (DataValidationErrors.Errors), ElementName=AddressSearch}" 
+                                      Foreground="#EF4444" FontSize="11" Margin="0,2,0,0"/>
+					</StackPanel>
+					<StackPanel Spacing="5">
+						<TextBlock Text="STREET LINE 2" Classes="LabelSmall"/>
+						<TextBox Text="{Binding Project.StreetLine2}" Classes="FormInput" Watermark="Apartment, unit, suite, etc."/>
+					</StackPanel>
+					<Grid ColumnDefinitions="*, *">
+						<StackPanel Spacing="5" Margin="0,0,5,0">
+							<TextBlock Text="CITY" Classes="LabelSmall"/>
+							<TextBox Text="{Binding Project.City}" Classes="FormInput" Watermark="e.g. Cape Town"/>
+						</StackPanel>
+						<StackPanel Spacing="5" Grid.Column="1" Margin="5,0,0,0">
+							<TextBlock Text="STATE / PROVINCE" Classes="LabelSmall"/>
+							<TextBox Text="{Binding Project.StateOrProvince}" Classes="FormInput" Watermark="e.g. Western Cape"/>
+						</StackPanel>
+					</Grid>
+					<Grid ColumnDefinitions="*, *">
+						<StackPanel Spacing="5" Margin="0,0,5,0">
+							<TextBlock Text="POSTAL CODE" Classes="LabelSmall"/>
+							<TextBox Text="{Binding Project.PostalCode}" Classes="FormInput" Watermark="e.g. 8001"/>
+						</StackPanel>
+						<StackPanel Spacing="5" Grid.Column="1" Margin="5,0,0,0">
+							<TextBlock Text="COUNTRY" Classes="LabelSmall"/>
+							<TextBox Text="{Binding Project.Country}" Classes="FormInput"/>
+						</StackPanel>
+					</Grid>
+				</StackPanel>
+
+				<!-- Status & Priority -->
+				<Grid ColumnDefinitions="*, *">
+                    <StackPanel Spacing="5" Margin="0,0,5,0">
+                        <TextBlock Text="STATUS" Classes="LabelSmall"/>
+                        <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Project.Status}" Classes="FormInput" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                    <StackPanel Spacing="5" Grid.Column="1" Margin="5,0,0,0">
+                        <TextBlock Text="PRIORITY" Classes="LabelSmall"/>
+                        <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Project.Priority}" Classes="FormInput" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Grid>
+			</StackPanel>
+		</ScrollViewer>
+	</Grid>
+</UserControl>
+
+
+

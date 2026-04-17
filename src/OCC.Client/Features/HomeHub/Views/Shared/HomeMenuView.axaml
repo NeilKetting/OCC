@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Shared"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="900"
+			 x:Class="OCC.Client.Features.HomeHub.Views.Shared.HomeMenuView"
+			 x:DataType="vm:HomeMenuViewModel">
+
+	<Border Classes="TopBar" Background="{DynamicResource TopMenuGradient}">
+		<Grid ColumnDefinitions="*,Auto, *, Auto">
+			<!-- Menu Buttons Area -->
+			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+				<StackPanel.Resources>
+					<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+				</StackPanel.Resources>
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="My Summary" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='My Summary'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconSummary}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="MY SUMMARY" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="List" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='List'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconList}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="LIST" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

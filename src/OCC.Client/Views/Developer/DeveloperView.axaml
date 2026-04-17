@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.ViewModels.Developer"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Views.Developer.DeveloperView"
+             x:DataType="vm:DeveloperViewModel">
+
+    <Border Background="White" CornerRadius="8" Margin="20" Padding="20" BoxShadow="0 4 15 0 #20000000">
+        <StackPanel Spacing="20">
+            <TextBlock Text="Developer Tools" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+            
+            <Separator Height="1" Background="{DynamicResource ThemeBorderLow}"/>
+
+            <StackPanel Spacing="10">
+                <TextBlock Text="Global System Broadcast" FontSize="18" FontWeight="SemiBold"/>
+                <TextBlock Text="Send a message to all active users instantly." Foreground="{DynamicResource TextSecondaryGray}"/>
+                
+                <TextBox Text="{Binding BroadcastMessage}" 
+                         Watermark="Type your broadcast message here..." 
+                         AcceptsReturn="True" 
+                         Height="100" 
+                         TextWrapping="Wrap"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding SendBroadcastCommand}" 
+                            Content="Send Broadcast" 
+                            Classes="Primary" 
+                            IsEnabled="{Binding !IsBusy}"/>
+                    
+                    <Button Command="{Binding SimulateApiUpdateCommand}" 
+                            Content="API Update Notice (5 min)" 
+                            Classes="Secondary" 
+                            IsEnabled="{Binding !IsBusy}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <Separator Height="1" Background="{DynamicResource ThemeBorderLow}"/>
+
+            <StackPanel Spacing="10">
+                <TextBlock Text="Debug Tools" FontSize="18" FontWeight="SemiBold"/>
+                <TextBlock Text="System information and debug controls." Foreground="{DynamicResource TextSecondaryGray}"/>
+                <!-- Log Management -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Client Logs" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Command="{Binding LoadLogsCommand}" Content="Refresh Logs" Classes="Outline"/>
+                </Grid>
+                
+                <DataGrid ItemsSource="{Binding Logs}" AutoGenerateColumns="False" Height="300" IsReadOnly="True" CanUserResizeColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Date" Binding="{Binding Timestamp}" Width="150" />
+                        <DataGridTextColumn Header="User" Binding="{Binding UserName}" Width="120" />
+                        <DataGridTextColumn Header="Machine" Binding="{Binding MachineName}" Width="120" />
+                        <DataGridTextColumn Header="OS" Binding="{Binding OSVersion}" Width="*" />
+                        <DataGridTextColumn Header="App Ver" Binding="{Binding AppVersion}" Width="100" />
+                        <DataGridTemplateColumn Header="Actions" Width="180">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
+                                        <Button Content="Download" 
+                                                Command="{Binding $parent[UserControl].((vm:DeveloperViewModel)DataContext).DownloadLogCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="Small Outline"/>
+                                        <Button Content="Delete" 
+                                                Command="{Binding $parent[UserControl].((vm:DeveloperViewModel)DataContext).DeleteLogCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="Small Danger"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

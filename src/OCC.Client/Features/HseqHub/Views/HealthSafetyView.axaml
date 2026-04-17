@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HseqHub.ViewModels"
+             xmlns:views="clr-namespace:OCC.Client.Features.HseqHub.Views"
+             xmlns:shared="clr-namespace:OCC.Client.Features.HseqHub.Views.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Features.HseqHub.Views.HealthSafetyView"
+             x:DataType="vm:HealthSafetyViewModel">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:HealthSafetyDashboardViewModel}">
+            <views:HealthSafetyDashboardView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PerformanceMonitoringViewModel}">
+            <views:PerformanceMonitoringView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:IncidentsViewModel}">
+            <views:IncidentsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TrainingViewModel}">
+            <views:TrainingView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AuditsViewModel}">
+            <views:AuditsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DocumentsViewModel}">
+            <views:DocumentsView/>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <Grid RowDefinitions="Auto, *">
+        <shared:HealthSafetyMenuView Grid.Row="0" DataContext="{Binding MenuViewModel}"/>
+
+        <Border Grid.Row="1" Background="{DynamicResource AppBackgroundSlate}">
+            <TransitioningContentControl Content="{Binding CurrentView}">
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:00:00.500" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
+        </Border>
+    </Grid>
+</UserControl>

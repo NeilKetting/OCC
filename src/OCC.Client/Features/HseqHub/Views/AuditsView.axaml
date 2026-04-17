@@ -1,0 +1,474 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HseqHub.ViewModels"
+			 xmlns:dto="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.HseqHub.Views.AuditsView"
+			 x:DataType="vm:AuditsViewModel"
+			 DragDrop.AllowDrop="True">
+
+	<Design.DataContext>
+		<vm:AuditsViewModel/>
+		</Design.DataContext>
+
+	<Grid Background="{DynamicResource AppBackgroundSlate}">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="Auto"/>
+		</Grid.ColumnDefinitions>
+
+		<Grid Grid.Column="0" RowDefinitions="Auto, *">
+			<!-- Header Bar: Title & Actions -->
+			<Border Grid.Row="0" Margin="2" Background="{DynamicResource MainPageGradient}" Classes="TopHeader">
+				<Grid ColumnDefinitions="*, Auto">
+					<StackPanel Spacing="4">
+						<TextBlock Text="Audits &amp; Inspections" Classes="H1"/>
+						<TextBlock Text="Track compliance and deviations across sites" Classes="TextSecondary"/>
+					</StackPanel>
+
+					<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+						<Button Classes="Primary" Command="{Binding CreateNewAuditCommand}">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16"/>
+								<TextBlock Text="NEW AUDIT"/>
+							</StackPanel>
+						</Button>
+						
+						<Button Classes="Secondary" Command="{Binding LoadAuditsCommand}" ToolTip.Tip="Refresh List">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<TextBlock Text="Refresh"/>
+							</StackPanel>
+						</Button>
+					</StackPanel>
+				</Grid>
+			</Border>
+
+			<!-- Loading Overlay -->
+			<Border Grid.RowSpan="2" IsVisible="{Binding IsBusy}" Background="#80000000" ZIndex="100">
+				<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+					<ProgressBar Classes="Circular" IsIndeterminate="True"/>
+					<TextBlock Text="{Binding BusyText}" Foreground="White" FontWeight="SemiBold"/>
+				</StackPanel>
+			</Border>
+
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="AttachedToVisualTree">
+					<InvokeCommandAction Command="{Binding LoadAuditsCommand}"/>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
+
+			<!-- Data Table -->
+			<Border Grid.Row="2" Classes="Card" Margin="10,0,10,10" Padding="0">
+				<DataGrid ItemsSource="{Binding Audits}"
+						  AutoGenerateColumns="False"
+						  IsReadOnly="True"
+						  Classes="AppNativeDataGrid"
+						  HeadersVisibility="Column"
+						  GridLinesVisibility="Horizontal">
+					<DataGrid.Styles>
+						<Style Selector="DataGridRow">
+							<Setter Property="ContextMenu">
+								<ContextMenu x:DataType="dto:AuditSummaryDto">
+									<MenuItem Header="Delete Audit"
+											  Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).DeleteAuditCommand}"
+											  CommandParameter="{Binding}">
+										<MenuItem.Icon>
+											<PathIcon Data="{StaticResource IconDelete}" Foreground="{DynamicResource ErrorRed}"/>
+										</MenuItem.Icon>
+									</MenuItem>
+								</ContextMenu>
+							</Setter>
+						</Style>
+					</DataGrid.Styles>
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="#" Binding="{Binding AuditNumber}" Width="Auto"/>
+						<DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd MMM yyyy'}" Width="Auto"/>
+						<DataGridTextColumn Header="Site" Binding="{Binding SiteName}" Width="Auto" MinWidth="250"/>
+						<DataGridTextColumn Header="Auditor" Binding="{Binding HseqConsultant}" MinWidth="250" Width="Auto"/>
+
+						<!-- Scores -->
+						<DataGridTemplateColumn Header="Score" Width="140">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Grid VerticalAlignment="Center">
+										<Grid.RowDefinitions>
+											<RowDefinition Height="Auto"/>
+											<RowDefinition Height="Auto"/>
+										</Grid.RowDefinitions>
+										<TextBlock Text="{Binding ActualScore, StringFormat='{}{0}%'}" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,2"/>
+										<ProgressBar Grid.Row="1" Value="{Binding ActualScore}" Maximum="100" Height="6"
+													 Foreground="{DynamicResource PrimaryTeal}" Background="#E0E0E0" CornerRadius="3"/>
+									</Grid>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Header="Status" Width="120">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Border CornerRadius="12" Padding="8,2" Background="{DynamicResource PrimaryLight}" HorizontalAlignment="Center" VerticalAlignment="Center">
+										<TextBlock Text="{Binding Status}" Foreground="{DynamicResource Primary}" FontSize="12" FontWeight="SemiBold"/>
+									</Border>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- Actions -->
+						<DataGridTemplateColumn Width="140">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal" Spacing="10">
+										<Button Classes="IconOnlyButton" Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).EditAuditCommand}" CommandParameter="{Binding}" ToolTip.Tip="Edit Score">
+											<PathIcon Data="{StaticResource IconEdit}" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}"/>
+										</Button>
+										<Button Classes="LinkButton" Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).ViewDeviationsCommand}" CommandParameter="{Binding}"
+												Content="View Deviations" Foreground="{DynamicResource Primary}"/>
+									</StackPanel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+			</Border>
+		</Grid>
+
+		<!-- Audit Editor Panel -->
+		<Border Grid.Column="1" Background="{DynamicResource CardBackground}"
+				BorderBrush="{DynamicResource BorderColor}" BorderThickness="1,0,0,0"
+				Width="650" Padding="0" IsVisible="{Binding IsEditorOpen}">
+			<Grid RowDefinitions="Auto, *, Auto">
+
+				<!-- Header -->
+				<Border Grid.Row="0" BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="24">
+					<Grid ColumnDefinitions="*, Auto">
+						<StackPanel>
+							<TextBlock Text="{Binding Editor.Title}" Classes="H2"/>
+							<TextBlock Text="Capture audit details and scores" Classes="TextSecondary"/>
+						</StackPanel>
+						<Button Grid.Column="1" Classes="Close" Command="{Binding CloseEditorCommand}">
+							<PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+						</Button>
+					</Grid>
+				</Border>
+
+				<!-- Form -->
+				<ScrollViewer Grid.Row="1">
+					<StackPanel Spacing="20" Margin="24,24,24,50">
+						<!-- Details -->
+						<Grid ColumnDefinitions="*, 16, *">
+							<StackPanel Spacing="4">
+								<TextBlock Text="Audit No" Classes="FormLabel"/>
+								<TextBox Text="{Binding Editor.CurrentAudit.AuditNumber}" Watermark="Ref #"/>
+							</StackPanel>
+							<StackPanel Grid.Column="2" Spacing="4">
+								<TextBlock Text="Date" Classes="FormLabel"/>
+								<CalendarDatePicker SelectedDate="{Binding Editor.CurrentAudit.Date}" HorizontalAlignment="Stretch"/>
+							</StackPanel>
+						</Grid>
+
+						<StackPanel Spacing="4">
+							<TextBlock Text="Site Name" Classes="FormLabel"/>
+							<TextBox Text="{Binding Editor.CurrentAudit.SiteName}" Watermark="Site / Project Name"/>
+						</StackPanel>
+
+						<StackPanel Spacing="4">
+							<TextBlock Text="Scope of Works" Classes="FormLabel"/>
+							<TextBox Text="{Binding Editor.CurrentAudit.ScopeOfWorks}" Watermark="Description of works..."/>
+						</StackPanel>
+
+						<Grid ColumnDefinitions="*, 16, *">
+							<StackPanel Spacing="4">
+								<TextBlock Text="Site Manager" Classes="FormLabel"/>
+								<TextBox Text="{Binding Editor.CurrentAudit.SiteManager}"/>
+							</StackPanel>
+							<StackPanel Grid.Column="2" Spacing="4">
+								<TextBlock Text="HSEQ Consultant" Classes="FormLabel"/>
+								<TextBox Text="{Binding Editor.CurrentAudit.HseqConsultant}"/>
+							</StackPanel>
+						</Grid>
+
+						<!-- Multi-Entry Deviations Section (Previously single fields) -->
+						<Border Height="1" Background="{DynamicResource BorderColor}" Margin="0,10"/>
+
+						<Grid ColumnDefinitions="*, Auto">
+							<TextBlock Text="Findings &amp; Non-Conformances" Classes="H3"/>
+							<Button Grid.Column="1" Classes="Secondary" Command="{Binding Editor.AddFindingCommand}">
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<PathIcon Data="{StaticResource IconPlus}" Width="14" Height="14"/>
+									<TextBlock Text="ADD FINDING"/>
+								</StackPanel>
+							</Button>
+						</Grid>
+
+						<TextBlock Text="Capture findings as listed on the audit document." Classes="TextSecondary"/>
+
+						<ItemsControl ItemsSource="{Binding Editor.Findings}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Background="White" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,10">
+										<StackPanel Spacing="10">
+											<Grid ColumnDefinitions="*, Auto">
+												<StackPanel Spacing="4">
+													<TextBlock Text="Regulation / Item Reference" Classes="FormLabel"/>
+													<TextBox Text="{Binding RegulationReference}" Watermark="Ref (e.g. PPE #1)"/>
+												</StackPanel>
+												<Button Grid.Column="1" Classes="IconOnlyButton" Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).Editor.DeleteFindingCommand}" CommandParameter="{Binding Model}" Foreground="{DynamicResource ErrorRed}" VerticalAlignment="Top" Margin="10,0,0,0">
+													<PathIcon Data="{StaticResource IconTrash}" Width="14" Height="14"/>
+												</Button>
+											</Grid>
+											<StackPanel Spacing="4">
+												<TextBlock Text="Finding Description" Classes="FormLabel"/>
+												<TextBox Text="{Binding Description}" Watermark="Describe the observed non-conformance..." TextWrapping="Wrap" AcceptsReturn="True" MinHeight="40"/>
+											</StackPanel>
+
+											<!-- Per-Finding Images in Main Editor -->
+											<StackPanel Spacing="5" Margin="0,5,0,0">
+												<TextBlock Text="Evidence Photos" Classes="LabelXSM" Foreground="{DynamicResource TextSecondary}"/>
+												<ItemsControl ItemsSource="{Binding Attachments}">
+													<ItemsControl.ItemsPanel>
+														<ItemsPanelTemplate>
+															<WrapPanel />
+														</ItemsPanelTemplate>
+													</ItemsControl.ItemsPanel>
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<Border Background="{DynamicResource PrimaryLight}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+																<StackPanel Orientation="Horizontal" Spacing="8">
+																	<PathIcon Data="{StaticResource IconImage}" Width="12" Height="12" Foreground="{DynamicResource Primary}"/>
+																	<TextBlock Text="{Binding FileName}" FontSize="11" MaxWidth="120" TextTrimming="CharacterEllipsis"/>
+																	<Button Classes="IconOnlyButton" Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).Editor.DeleteAttachmentCommand}" CommandParameter="{Binding}">
+																		<PathIcon Data="{StaticResource IconClose}" Width="10" Height="10" Foreground="{DynamicResource ErrorRed}"/>
+																	</Button>
+																</StackPanel>
+															</Border>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+												<Button Classes="LinkButton" Click="BrowseItem_Click" Content="Add Evidence Photo" Foreground="{DynamicResource Primary}" FontSize="12" HorizontalAlignment="Left"/>
+											</StackPanel>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+
+						<!-- Attachments Section (Overall Audit) -->
+						<Border Height="1" Background="{DynamicResource BorderColor}" Margin="0,10"/>
+						<StackPanel Spacing="10">
+							<TextBlock Text="AUDIT ATTACHMENTS" Classes="LabelSmall" FontWeight="Bold"/>
+
+							<!-- List of Audit Attachments -->
+							<ItemsControl ItemsSource="{Binding Editor.Attachments}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Background="White" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,5" Margin="0,0,0,5">
+											<Grid ColumnDefinitions="*, Auto">
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding FileName}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+													<StackPanel Orientation="Horizontal" Spacing="5">
+														<TextBlock Text="{Binding FileSize}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+														<TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+														<TextBlock Text="{Binding UploadedBy}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+													</StackPanel>
+												</StackPanel>
+												<Button Grid.Column="1" Classes="IconOnlyButton"
+														Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).Editor.DeleteAttachmentCommand}"
+														CommandParameter="{Binding}" Foreground="{DynamicResource ErrorRed}">
+													<PathIcon Data="{StaticResource IconTrash}" Width="14" Height="14"/>
+												</Button>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- Drop Zone -->
+							<Button Click="Browse_Click" Classes="Ghost" Padding="0" HorizontalAlignment="Stretch">
+								<Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Padding="20" CornerRadius="6" Background="#05000000">
+									<StackPanel HorizontalAlignment="Center" Spacing="5">
+										<PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,5"/>
+										<TextBlock Text="Click or drag images to upload" Classes="TextSecondary" HorizontalAlignment="Center"/>
+									</StackPanel>
+								</Border>
+							</Button>
+						</StackPanel>
+
+						<Border Height="1" Background="{DynamicResource BorderColor}" Margin="0,10"/>
+
+						<TextBlock Text="Efficiency Ratings" Classes="H3"/>
+
+						<!-- Sections List -->
+						<TextBlock Text="Efficiency Ratings" Classes="H3"/>
+
+						<!-- Sections List -->
+						<ItemsControl ItemsSource="{Binding Editor.CurrentAudit.Sections}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Classes="Card" Margin="0,0,0,10" Padding="12">
+										<Grid ColumnDefinitions="*, 80, 80, Auto">
+											<TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,10,0"/>
+
+											<StackPanel Grid.Column="1" Spacing="2" Margin="0,0,10,0">
+												<TextBlock Text="Actual" FontSize="10" Foreground="{DynamicResource TextSecondary}"/>
+												<TextBox Text="{Binding ActualScore}" />
+											</StackPanel>
+
+											<StackPanel Grid.Column="2" Spacing="2" Margin="0,0,10,0">
+												<TextBlock Text="Possible" FontSize="10" Foreground="{DynamicResource TextSecondary}"/>
+												<TextBox Text="{Binding PossibleScore}" />
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</StackPanel>
+				</ScrollViewer>
+
+				<!-- Footer Actions -->
+				<Border Grid.Row="2" Padding="24" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderColor}" Background="{DynamicResource CardBackground}">
+					<Button Classes="Primary" HorizontalAlignment="Stretch" Command="{Binding Editor.SaveCommand}">
+						<TextBlock Text="SAVE AUDIT"/>
+					</Button>
+				</Border>
+			</Grid>
+		</Border>
+
+		<!-- Deviation Action Sheet Panel -->
+		<Border Grid.Column="1" Background="{DynamicResource CardBackground}"
+				BorderBrush="{DynamicResource BorderColor}" BorderThickness="1,0,0,0"
+				Width="500" Padding="0" IsVisible="{Binding IsDeviationsOpen, FallbackValue=false}">
+			<Grid RowDefinitions="Auto, *">
+
+				<!-- Header -->
+				<Border Grid.Row="0" BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="24">
+					<Grid ColumnDefinitions="*, Auto">
+						<StackPanel>
+							<TextBlock Text="Deviation Action Sheet" Classes="H2"/>
+							<TextBlock Text="{Binding Deviations.SelectedAudit.AuditNumber, StringFormat='Audit Ref: {0}'}" Classes="TextSecondary" IsVisible="{Binding Deviations.SelectedAudit, Converter={StaticResource NullToBoolConverter}}"/>
+						</StackPanel>
+						<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+							<Button Classes="Primary" Command="{Binding Deviations.GenerateCloseOutReportCommand}" ToolTip.Tip="Generate Report">
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<PathIcon Data="{StaticResource IconDownload}" Width="14" Height="14" Foreground="White"/>
+									<TextBlock Text="REPORT"/>
+								</StackPanel>
+							</Button>
+							<Button Classes="Secondary" Command="{Binding Deviations.AddDeviationCommand}" ToolTip.Tip="Add New Deviation">
+								<PathIcon Data="{StaticResource IconPlus}" Width="14" Height="14"/>
+							</Button>
+							<Button Classes="IconOnlyButton" Command="{Binding CloseDeviationsCommand}">
+								<PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+							</Button>
+						</StackPanel>
+					</Grid>
+				</Border>
+
+				<!-- List -->
+				<ScrollViewer Grid.Row="1" Padding="24">
+					<ItemsControl ItemsSource="{Binding Deviations.Deviations}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<Border Classes="Card" Margin="0,0,0,16" BorderThickness="1" BorderBrush="{DynamicResource BorderColor}">
+									<StackPanel Spacing="12">
+										<!-- Header line -->
+										<Grid ColumnDefinitions="*, Auto">
+											<StackPanel Spacing="4">
+												<TextBlock Text="Item / Regulation" Classes="FormLabel"/>
+												<TextBox Text="{Binding RegulationReference}" Watermark="Ref (e.g. PPE #1)"/>
+											</StackPanel>
+											<Border Grid.Column="1" Background="{Binding StatusColor}" CornerRadius="4" Padding="8,4" VerticalAlignment="Top" Margin="10,0,0,0">
+												<TextBlock Text="{Binding Status}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+											</Border>
+										</Grid>
+
+										<StackPanel Spacing="4">
+											<TextBlock Text="Finding / Observation" Classes="FormLabel"/>
+											<TextBox Text="{Binding Description}" Watermark="Describe the issue..." TextWrapping="Wrap" AcceptsReturn="True" MinHeight="40"/>
+										</StackPanel>
+
+										<Border Height="1" Background="{DynamicResource BorderColor}"/>
+
+										<!-- Action Plan -->
+										<Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, 16, *">
+
+											<StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+												<TextBlock Text="Corrective Action" Classes="FormLabel"/>
+												<TextBox Text="{Binding CorrectiveAction}" Watermark="Required action..." TextWrapping="Wrap" AcceptsReturn="True" MinHeight="40"/>
+											</StackPanel>
+
+											<StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
+												<TextBlock Text="Responsible Person" Classes="FormLabel"/>
+												<ComboBox ItemsSource="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).Deviations.SiteManagers}"
+														  SelectedItem="{Binding ResponsiblePerson, Converter={StaticResource EmployeeToNameConverter}}"
+														  HorizontalAlignment="Stretch">
+													<ComboBox.ItemTemplate>
+														<DataTemplate>
+															<TextBlock Text="{Binding DisplayName}"/>
+														</DataTemplate>
+													</ComboBox.ItemTemplate>
+												</ComboBox>
+												<TextBox Text="{Binding ResponsiblePerson}" IsVisible="False"/> <!-- Backup or custom entry if needed -->
+											</StackPanel>
+
+											<StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,12,0,0">
+												<TextBlock Text="Completion Date" Classes="FormLabel"/>
+												<CalendarDatePicker SelectedDate="{Binding TargetDate}" HorizontalAlignment="Stretch"/>
+											</StackPanel>
+
+											<StackPanel Grid.Row="1" Grid.Column="2" Spacing="4" Margin="0,12,0,0">
+												<TextBlock Text="Status" Classes="FormLabel"/>
+												<ComboBox SelectedItem="{Binding Status}" HorizontalAlignment="Stretch">
+													<ComboBoxItem Content="Open"/>
+													<ComboBoxItem Content="Rectified"/>
+													<ComboBoxItem Content="Closed"/>
+												</ComboBox>
+											</StackPanel>
+
+											<!-- Save Button for this item -->
+											<Button Grid.Row="2" Grid.ColumnSpan="3" Classes="Secondary" Margin="0,12,0,0"
+													Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).Deviations.SaveDeviationCommand}"
+													CommandParameter="{Binding}"
+													Content="Update Item" HorizontalAlignment="Right"/>
+										</Grid>
+
+										<!-- Per-Item Attachments -->
+										<StackPanel Spacing="5" Margin="0,10,0,0">
+											<TextBlock Text="Item Photo Evidence" Classes="LabelXSM" Foreground="{DynamicResource TextSecondary}"/>
+											<ItemsControl ItemsSource="{Binding Attachments}">
+												<ItemsControl.ItemsPanel>
+													<ItemsPanelTemplate>
+														<WrapPanel />
+													</ItemsPanelTemplate>
+												</ItemsControl.ItemsPanel>
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<Border Background="White" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="5" Margin="0,0,8,8">
+															<StackPanel Orientation="Horizontal" Spacing="8">
+																<PathIcon Data="{StaticResource IconImage}" Width="14" Height="14" Foreground="{DynamicResource Primary}"/>
+																<TextBlock Text="{Binding FileName}" FontSize="12" MaxWidth="150" TextTrimming="CharacterEllipsis"/>
+																<Button Classes="IconOnlyButton" Command="{Binding $parent[UserControl].((vm:AuditsViewModel)DataContext).Deviations.DeleteAttachmentCommand}" CommandParameter="{Binding}">
+																	<PathIcon Data="{StaticResource IconClose}" Width="10" Height="10" Foreground="{DynamicResource ErrorRed}"/>
+																</Button>
+															</StackPanel>
+														</Border>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+											<Button Classes="LinkButton" Click="BrowseItem_Click" Content="Add Photo Evidence" Foreground="{DynamicResource Primary}" FontSize="12"/>
+											<TextBlock Text="Or drop images on the main editor to attach to audit." FontStyle="Italic" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+										</StackPanel>
+
+									</StackPanel>
+								</Border>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</ScrollViewer>
+
+			</Grid>
+		</Border>
+	</Grid>
+</UserControl>

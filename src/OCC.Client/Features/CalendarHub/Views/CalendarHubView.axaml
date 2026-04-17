@@ -1,0 +1,260 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.CalendarHub.ViewModels"
+             xmlns:models="clr-namespace:OCC.Client.Features.CalendarHub.Models"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="OCC.Client.Features.CalendarHub.Views.CalendarHubView"
+             x:DataType="vm:CalendarHubViewModel">
+
+    <UserControl.Styles>
+        <!-- Day Cell Styles -->
+        <Style Selector="Border.DayCell">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+        <Style Selector="Border.Weekend">
+            <Setter Property="Background" Value="#F9FAFB"/>
+        </Style>
+        <Style Selector="Border.NotCurrent">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        <Style Selector="Border.Today">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryTeal}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="Border.Selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryTeal}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BoxShadow" Value="0 0 10 0 #2014B8A6"/>
+        </Style>
+
+        <!-- Event Bar Styles -->
+        <Style Selector="Border.EventBar">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Border.EventBar > TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Border.EventBar.Holiday > TextBlock">
+            <Setter Property="Foreground" Value="#1F2937"/> <!-- Dark Gray/Black -->
+        </Style>
+        <Style Selector="Border.EventBar.Single">
+            <Setter Property="Margin" Value="2,1"/>
+        </Style>
+        <Style Selector="Border.EventBar.Start">
+            <Setter Property="CornerRadius" Value="4,0,0,4"/>
+            <Setter Property="Margin" Value="2,1,0,1"/>
+        </Style>
+        <Style Selector="Border.EventBar.Middle">
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="Margin" Value="0,1"/>
+        </Style>
+        <Style Selector="Border.EventBar.End">
+            <Setter Property="CornerRadius" Value="0,4,4,0"/>
+            <Setter Property="Margin" Value="0,1,2,1"/>
+        </Style>
+
+        <!-- Hover Create Button -->
+        <Style Selector="Button.CreateButton">
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.DayCell:pointerover Button.CreateButton">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="200, *">
+        <!-- Sidebar Filters -->
+        <Border Grid.Column="0" Background="{DynamicResource BackgroundLightGray}" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,1,0" Padding="20">
+            <StackPanel Spacing="20">
+                <TextBlock Text="CALENDAR FILTERS" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryGray}" Margin="0,0,0,10"/>
+                
+                <CheckBox Content="Tasks" IsChecked="{Binding ShowTasks}" IsThreeState="False"/>
+                <CheckBox Content="Meetings" IsChecked="{Binding ShowMeetings}" IsThreeState="False"/>
+                <CheckBox Content="To-Do List" IsChecked="{Binding ShowToDos}" IsThreeState="False"/>
+                <CheckBox Content="Birthdays" IsChecked="{Binding ShowBirthdays}" IsThreeState="False"/>
+                <CheckBox Content="Public Holidays" IsChecked="{Binding ShowPublicHolidays}" IsThreeState="False"/>
+                <CheckBox Content="Leave / Absence" IsChecked="{Binding ShowLeave}" IsThreeState="False"/>
+                <CheckBox Content="Order Deliveries" IsChecked="{Binding ShowOrderDeliveries}" IsThreeState="False"/>
+                
+                <Separator Margin="0,10"/>
+                
+                <TextBlock Text="LEGEND" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextTertiarySlate}"/>
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="12" Height="12" Background="#3B82F6" CornerRadius="2"/>
+                        <TextBlock Text="Tasks" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="12" Height="12" Background="#10B981" CornerRadius="2"/>
+                        <TextBlock Text="Leave" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="12" Height="12" Background="#F59E0B" CornerRadius="2"/>
+                        <TextBlock Text="Orders" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="12" Height="12" Background="#FDF2F8" BorderBrush="#F472B6" BorderThickness="1" CornerRadius="2"/>
+                        <TextBlock Text="Birthdays" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Calendar Area -->
+        <Grid Grid.Column="1" RowDefinitions="Auto, *">
+            <!-- Header -->
+            <Border Grid.Row="0" Padding="20,15" Background="White" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                    <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="15">
+                        <Button Command="{Binding PreviousMonthCommand}" Classes="IconButton">
+                            <PathIcon Data="{StaticResource IconChevronLeft}" Width="16" Height="16"/>
+                        </Button>
+                        <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}" VerticalAlignment="Center">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0} {1}">
+                                    <Binding Path="MonthName"/>
+                                    <Binding Path="YearName"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <Button Command="{Binding NextMonthCommand}" Classes="IconButton">
+                            <PathIcon Data="{StaticResource IconChevronRight}" Width="16" Height="16"/>
+                        </Button>
+                    </StackPanel>
+                    
+                    <Button Grid.Column="2" Content="Today" Classes="Primary" Command="{Binding GoToTodayCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Calendar Grid -->
+            <Grid Grid.Row="1" RowDefinitions="Auto, *">
+                <!-- Weekday Headers -->
+                <ItemsControl Grid.Row="0" ItemsSource="{Binding WeekDays}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10" Background="{DynamicResource BackgroundLightGray}" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1">
+                                <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryGray}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Days -->
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding Days}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="6" Columns="7"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Classes="DayCell"
+                                    Classes.NotCurrent="{Binding IsNotCurrentMonth}"
+                                    Classes.Weekend="{Binding IsWeekend}"
+                                    Classes.Today="{Binding IsToday}"
+                                    Classes.Selected="{Binding IsSelected}">
+                                <Interaction.Behaviors>
+                                    <EventTriggerBehavior EventName="PointerPressed">
+                                        <InvokeCommandAction Command="{Binding $parent[UserControl].((vm:CalendarHubViewModel)DataContext).SelectDayCommand}" 
+                                                             CommandParameter="{Binding}" />
+                                    </EventTriggerBehavior>
+                                </Interaction.Behaviors>
+                                <Grid RowDefinitions="Auto, *">
+                                    <Grid Grid.Row="0">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,5,0,0">
+                                            <TextBlock Text="{Binding DayNumber}" 
+                                                       FontSize="14"
+                                                       FontWeight="{Binding IsToday, Converter={x:Static ObjectConverters.IsNotNull}, ConverterParameter=Bold}"
+                                                       Foreground="{Binding IsToday, Converter={x:Static ObjectConverters.IsNotNull}, ConverterParameter={StaticResource PrimaryTeal}}"/>
+                                             <TextBlock Text="{Binding HolidayName}" 
+                                                       IsVisible="{Binding IsHoliday}" 
+                                                       FontSize="10" 
+                                                       Foreground="#EF4444" 
+                                                       Margin="8,0,0,0"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <Button Classes="CreateButton Primary" 
+                                                Content="+ Create"
+                                                Padding="6,2"
+                                                FontSize="10"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                Margin="0,5,5,0"
+                                                Command="{Binding $parent[ItemsControl].((vm:CalendarHubViewModel)DataContext).CreateTaskCommand}"
+                                                CommandParameter="{Binding}">
+                                        </Button>
+                                    </Grid>
+
+                                    <ItemsControl Grid.Row="1" ItemsSource="{Binding Events}" Margin="0,2,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Panel>
+                                                    <!-- Regular Event Bar -->
+                                                    <Border Classes="EventBar"
+                                                            Background="{Binding Color}"
+                                                            IsVisible="{Binding Type, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static models:CalendarEventType.Birthday}}"
+                                                            Classes.Holiday="{Binding Type, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:CalendarEventType.PublicHoliday}}"
+                                                            Classes.Single="{Binding Span, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:CalendarEventSpan.Single}}"
+                                                            Classes.Start="{Binding Span, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:CalendarEventSpan.Start}}"
+                                                            Classes.Middle="{Binding Span, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:CalendarEventSpan.Middle}}"
+                                                            Classes.End="{Binding Span, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:CalendarEventSpan.End}}">
+                                                        <ToolTip.Tip>
+                                                            <StackPanel Spacing="5" MaxWidth="300">
+                                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTeal}"/>
+                                                                <TextBlock Text="{Binding Type}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                                    <TextBlock Text="{Binding StartDate, StringFormat='{}{0:MMM dd}'}" FontSize="11"/>
+                                                                    <TextBlock Text="-" FontSize="11"/>
+                                                                    <TextBlock Text="{Binding EndDate, StringFormat='{}{0:MMM dd}'}" FontSize="11"/>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding Description}" FontSize="11" TextWrapping="Wrap" IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                            </StackPanel>
+                                                        </ToolTip.Tip>
+                                                        <TextBlock Text="{Binding Title}" FontSize="10" Padding="4,1" TextTrimming="CharacterEllipsis"/>
+                                                    </Border>
+                                                    
+                                                    <!-- Birthday Item -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="2,1"
+                                                            IsVisible="{Binding Type, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:CalendarEventType.Birthday}}">
+                                                        <ToolTip.Tip>
+                                                            <StackPanel Spacing="2">
+                                                                <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                                                                <TextBlock Text="Employee Birthday" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+                                                            </StackPanel>
+                                                        </ToolTip.Tip>
+                                                        <TextBlock Text="🎂" FontSize="12"/>
+                                                        <TextBlock Text="{Binding Title}" FontSize="10" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryDark}" TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </Panel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

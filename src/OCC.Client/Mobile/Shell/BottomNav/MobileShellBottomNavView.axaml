@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Shell.BottomNav"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="OCC.Client.Mobile.Shell.BottomNav.MobileShellBottomNavView"
+             x:DataType="vm:MobileShellBottomNavViewModel">
+    <Grid RowDefinitions="*, Auto">
+        <!-- Content -->
+        <ContentControl Grid.Row="0" Content="{Binding CurrentView}"/>
+        
+        <!-- Bottom Nav (Desktop-Aligned) -->
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceWhite}" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,1,0,0" Padding="10,5">
+            <UniformGrid Columns="2">
+                <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" BorderThickness="0">
+                    <StackPanel Spacing="5">
+                        <PathIcon Data="{StaticResource IconDashboard}" Width="24" Height="24" Foreground="{DynamicResource PrimaryTeal}"/>
+                        <TextBlock Text="Dash" FontSize="10" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding NavigateToRollCallCommand}" Background="Transparent" BorderThickness="0">
+                    <StackPanel Spacing="5">
+                        <PathIcon Data="{StaticResource IconTeam}" Width="24" Height="24" Foreground="{DynamicResource TextSecondaryGray}"/>
+                        <TextBlock Text="Roll Call" FontSize="10" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </StackPanel>
+                </Button>
+            </UniformGrid>
+        </Border>
+    </Grid>
+</UserControl>

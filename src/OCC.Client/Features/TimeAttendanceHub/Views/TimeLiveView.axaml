@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 xmlns:views="clr-namespace:OCC.Client.Features.TimeAttendanceHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.TimeLiveView"
+			 x:DataType="vm:TimeLiveViewModel">
+
+	<Design.DataContext>
+		<vm:TimeLiveViewModel/>
+	</Design.DataContext>
+
+	<Grid RowDefinitions="100, *">
+		<!-- Header / Controls -->
+		<!-- Just Last Updated and potentially a refresh or roll call button if needed still? User said "no need for the navigation buttons". -->
+		<!-- Keeping Roll Call button as it's the only way to input attendance manually for now if not purely automated -->
+
+		<Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="2" Background="{DynamicResource MainPageGradient}">
+			<StackPanel Spacing="5" VerticalAlignment="Center">
+				<PathIcon Data="{StaticResource IconLive}" Width="28" Height="28" Foreground="{DynamicResource PrimaryTeal}"/>
+				<TextBlock Text="Live Attendance" FontSize="20" HorizontalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<TextBlock Text="{Binding LastUpdatedText}" HorizontalAlignment="Center" Margin="10,0,0,3" Foreground="{DynamicResource TextTertiarySlate}" FontSize="12"/>
+			</StackPanel>
+
+			<!-- Branch Filter -->
+			<StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" Margin="0,0,20,0">
+				<TextBlock Text="Branch" Classes="LabelSmall" FontSize="10"
+						   Foreground="#64748B"/>
+				<ComboBox SelectedIndex="{Binding SelectedBranchFilterIndex}" Width="150" Background="White" BorderBrush="{DynamicResource BorderGray}">
+					<ComboBoxItem>All Branches</ComboBoxItem>
+					<ComboBoxItem>Johannesburg</ComboBoxItem>
+					<ComboBoxItem>Cape Town</ComboBoxItem>
+				</ComboBox>
+			</StackPanel>
+		</Grid>
+
+		<!-- Main Content (Cards) -->
+		<ScrollViewer Grid.Row="1">
+			<ItemsControl ItemsSource="{Binding LiveUsers}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel Orientation="Horizontal" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Border Width="220" Height="140" Margin="10" CornerRadius="8" Background="White"
+								BorderThickness="2" BorderBrush="{Binding BorderBrush}"
+								BoxShadow="0 2 4 0 #10000000">
+							<Grid RowDefinitions="Auto, Auto, *">
+								<!-- Name -->
+								<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontWeight="Bold" FontSize="18"
+										   VerticalAlignment="Center" HorizontalAlignment="Center"
+										   TextTrimming="CharacterEllipsis" Margin="10,25,10,5"/>
+
+								<!-- Branch & Monthly Hours -->
+								<StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,10" Orientation="Vertical" Spacing="2">
+									<TextBlock Text="{Binding Branch}" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" HorizontalAlignment="Center"/>
+									<TextBlock Text="{Binding TotalMonthHoursDisplay, StringFormat='{}Month: {0}'}" FontSize="11" Foreground="{DynamicResource TextTertiarySlate}" HorizontalAlignment="Center"/>
+								</StackPanel>
+
+								<!-- Overtime & Late Badges -->
+								<StackPanel Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,5,5,0" Orientation="Horizontal" Spacing="4">
+									<Border Background="#F5222D" CornerRadius="4" Padding="4,2"
+											IsVisible="{Binding IsLate}">
+										<TextBlock Text="{Binding LateText}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+									</Border>
+									<Border Background="{Binding OvertimeColor}" CornerRadius="4" Padding="4,2"
+											IsVisible="{Binding IsOvertimeActive}">
+										<TextBlock Text="{Binding OvertimeText}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+									</Border>
+								</StackPanel>
+
+								<!-- Times -->
+								<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Spacing="15">
+									<!-- In -->
+									<StackPanel Orientation="Vertical" Spacing="2">
+										<StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+											<PathIcon Data="{StaticResource IconTime}" Width="10" Height="10" Foreground="Green"/>
+											<TextBlock Text="IN" FontSize="10" FontWeight="Bold" Foreground="Green"/>
+										</StackPanel>
+										<TextBlock Text="{Binding ClockInTimeDisplay}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}" HorizontalAlignment="Center"/>
+									</StackPanel>
+
+									<!-- Separator -->
+									<Border Width="1" Height="25" Background="{DynamicResource BorderGray}"/>
+
+									<!-- Out -->
+									<StackPanel Orientation="Vertical" Spacing="2">
+										<StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+											<PathIcon Data="{StaticResource IconTime}" Width="10" Height="10" Foreground="#D32F2F"/>
+											<TextBlock Text="OUT" FontSize="10" FontWeight="Bold" Foreground="#D32F2F"/>
+										</StackPanel>
+										<TextBlock Text="{Binding ClockOutTimeDisplay}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}" HorizontalAlignment="Center"/>
+									</StackPanel>
+								</StackPanel>
+							</Grid>
+						</Border>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</ScrollViewer>
+
+		<!-- Roll Call Overlay -->
+		<Grid Grid.Row="0" Grid.RowSpan="2" Background="#80000000" IsVisible="{Binding IsTimesheetVisible}">
+			<views:DailyTimesheetView DataContext="{Binding CurrentTimesheet}"
+									  Margin="40"/>
+		</Grid>
+
+	</Grid>
+</UserControl>

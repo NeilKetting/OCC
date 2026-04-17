@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Dashboard"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="200"
+             x:Class="OCC.Client.Features.HomeHub.Views.MySummary.Widgets.TimeEfficiencyGraphView"
+             x:DataType="vm:SummaryViewModel">
+
+    <UserControl.Resources>
+        <conv:DonutSegmentConverter x:Key="DonutSegmentConverter"/>
+        
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="*" RowDefinitions="Auto, Auto">
+        <!-- Top Stats -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <TextBlock Text="{Binding TotalActualHours}" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextPrimaryDark}"/>
+                <TextBlock Text="/" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                <TextBlock Text="{Binding TotalPlannedHours}" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                <TextBlock Text="h" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Horizontal Bar -->
+        <Grid Grid.Row="1" Height="10" HorizontalAlignment="Stretch">
+            <!-- Background (Total Capacity) -->
+            <Border Background="#E2E8F0" CornerRadius="5"/>
+            
+            <!-- Actual Usage -->
+            <Border Background="{Binding TimeChartColor}" CornerRadius="5" HorizontalAlignment="Left">
+                <Border.Width>
+                    <MultiBinding Converter="{x:Static conv:PercentageToWidthConverter.Instance}">
+                        <Binding Path="TimeEfficiencyPercentage"/>
+                        <Binding Path="Bounds.Width" RelativeSource="{RelativeSource AncestorType=Grid}"/>
+                    </MultiBinding>
+                </Border.Width>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

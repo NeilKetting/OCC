@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:OCC.Client.ViewModels.Shared"
+		mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+		x:Class="OCC.Client.Views.Shared.UpdateDialogView"
+		x:DataType="vm:UpdateDialogViewModel"
+		Width="300" Height="250"
+		WindowStartupLocation="CenterOwner"
+		CanResize="False"
+		SystemDecorations="None"
+		Title="Update Available"
+		TransparencyLevelHint="Transparent"
+		Background="Transparent"
+		BorderThickness="0"
+		ExtendClientAreaToDecorationsHint="True">
+
+	<Design.DataContext>
+		<vm:UpdateDialogViewModel/>
+	</Design.DataContext>
+
+		<Border CornerRadius="8"
+				Background="{DynamicResource AppBackgroundSlate}"
+				BorderBrush="{DynamicResource SplashGradient}"
+				BorderThickness="3"
+				Padding="20"
+				Margin="15"
+				BoxShadow="0 4 15 8 #000">
+
+			<Grid RowDefinitions="Auto,*,Auto,Auto">
+
+				<!-- Header -->
+				<StackPanel Grid.Row="0" Spacing="10">
+					<TextBlock Text="Update Available!" FontSize="20" FontWeight="SemiBold" />
+					<TextBlock Text="{Binding NewVersion, StringFormat='Version {0} is ready to install.'}"/>
+				</StackPanel>
+
+				<!-- Status / Content -->
+				<StackPanel Grid.Row="1" VerticalAlignment="Center" Spacing="10">
+					<TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+
+					<ProgressBar Value="{Binding Progress}"
+								 Minimum="0" Maximum="100"
+								 IsVisible="{Binding IsDownloading}"
+								 Height="10"/>
+
+					<TextBlock IsVisible="{Binding IsDownloading}"
+							   HorizontalAlignment="Center" FontSize="12">
+						<Run Text="{Binding Progress}" />
+						<Run Text="%" />
+					</TextBlock>
+				</StackPanel>
+
+				<!-- Buttons -->
+				<StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,20,0,0">
+					<Button Content="Update Now"
+							Command="{Binding StartUpdateCommand}"
+							Classes="Primary"
+							IsEnabled="{Binding !IsDownloading}"/>
+				</StackPanel>
+			</Grid>
+		</Border>
+</Window>

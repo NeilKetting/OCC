@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HseqHub.ViewModels"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Features.HseqHub.Views.PerformanceMonitoringView"
+             x:DataType="vm:PerformanceMonitoringViewModel">
+			 
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="Loaded">
+            <InvokeCommandAction Command="{Binding LoadDataCommand}"/>
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
+
+    <Grid Background="{DynamicResource AppBackgroundSlate}">
+        <Grid RowDefinitions="Auto, *">
+            <!-- Header -->
+            <Border Grid.Row="0" Classes="TopHeader" Margin="10,10,10,0">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <PathIcon Data="{StaticResource IconLiveView}" Width="24" Height="24" Foreground="{DynamicResource PrimaryTeal}"/>
+                    <TextBlock Text="Performance Monitoring (Safe Hours)" Classes="H1" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Data Table -->
+            <Border Grid.Row="1" Classes="Card" Margin="10">
+                <DataGrid ItemsSource="{Binding SafeHours}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Month" Binding="{Binding Month, StringFormat='MMMM yyyy'}" Width="*"/>
+                        <DataGridTextColumn Header="Safe Hours" Binding="{Binding SafeWorkHours}" Width="*"/>
+                        <DataGridTextColumn Header="Incidents" Binding="{Binding IncidentReported}" Width="*"/>
+                        <DataGridTextColumn Header="Near Misses" Binding="{Binding NearMisses}" Width="Auto"/>
+                        <DataGridTextColumn Header="Root Cause" Binding="{Binding RootCause}" Width="2*" />
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
+                        <DataGridTextColumn Header="Reported By" Binding="{Binding ReportedBy}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

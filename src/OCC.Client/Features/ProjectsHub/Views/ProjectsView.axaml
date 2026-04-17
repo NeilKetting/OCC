@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+			 xmlns:projectShared="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+			 xmlns:local="clr-namespace:OCC.Client.Features.ProjectsHub.Views"
+			 
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectsView"
+			 x:DataType="vm:ProjectsViewModel">
+
+	<Grid>
+		<!-- Main Layout -->
+		<Grid RowDefinitions="Auto, Auto, *" Background="{DynamicResource AppBackgroundSlate}">
+			<!-- Top Bar -->
+			<projectShared:ProjectMainMenuView Grid.Row="0" DataContext="{Binding ProjectMainMenu}"/>
+			
+
+			<!-- Content Area -->
+			<TransitioningContentControl Grid.Row="2" Content="{Binding CurrentView}" Margin="2" VerticalAlignment="Stretch">
+				<TransitioningContentControl.PageTransition>
+					<CrossFade Duration="0:00:00.500" />
+				</TransitioningContentControl.PageTransition>
+			</TransitioningContentControl>
+		</Grid>
+	</Grid>
+</UserControl>
+
+
+

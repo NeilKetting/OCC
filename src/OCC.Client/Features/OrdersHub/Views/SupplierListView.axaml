@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:models="using:OCC.Shared.Models"
+			 xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+			 xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.SupplierListView"
+			 x:DataType="vm:SupplierListViewModel">
+
+	<Grid RowDefinitions="Auto, Auto, *" Margin="2">
+		<!-- Header / Tools -->
+		<Border Grid.Row="0" Margin="0,0,0,10" Classes="TopHeader" Background="{DynamicResource MainPageGradient}">
+			<Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto">
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+					<StackPanel Spacing="5">
+						<TextBlock Text="Supplier List" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold"/>
+						<TextBlock Text="Master list of all suppliers. Double-click to edit." Foreground="#94A3B8" FontSize="{StaticResource FontsizeMedium}"/>
+					</StackPanel>
+				</StackPanel>
+
+				<StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="10">
+					<Button Content="Import CSV" Classes="Secondary" Command="{Binding ImportSuppliersCommand}"
+							ToolTip.Tip="Import suppliers from CSV file"/>
+					<Button Content="Add Supplier" Classes="Primary" IsEnabled="True" Command="{Binding AddSupplierCommand}"/>
+				</StackPanel>
+				<StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,15,0,0">
+					<StackPanel>
+						<!-- Search -->
+						<TextBlock Text="Search" Classes="LabelSmall" FontSize="10"
+								   Foreground="#64748B"/>
+						<TextBox Width="250" Text="{Binding SearchQuery}" Watermark="Search by name or email..." Classes="SearchBox" VerticalAlignment="Center"/>
+					</StackPanel>
+
+					<!-- Filter -->
+					<StackPanel>
+						<TextBlock Text="Branch" Classes="LabelSmall" FontSize="10"
+								   Foreground="#64748B"/>
+						<ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranchFilter}"
+								  PlaceholderText="Branch" Width="120" VerticalAlignment="Center"/>
+					</StackPanel>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<!-- Grid -->
+		<DataGrid Grid.Row="2"
+				  ItemsSource="{Binding Suppliers}"
+				  AutoGenerateColumns="False"
+				  IsReadOnly="True"
+				  GridLinesVisibility="Horizontal"
+				  Background="White"
+				  BorderThickness="0"
+				  HeadersVisibility="Column"
+				  SelectedItem="{Binding SelectedSupplier}">
+
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="DoubleTapped">
+					<InvokeCommandAction Command="{Binding EditSupplierCommand}" CommandParameter="{Binding SelectedSupplier}"/>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
+
+			<DataGrid.Styles>
+				<Style Selector="DataGridRow" x:DataType="models:Supplier">
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="Edit" Command="{Binding $parent[UserControl].((vm:SupplierListViewModel)DataContext).EditSupplierCommand}" CommandParameter="{Binding .}"/>
+							<MenuItem Header="Delete" Command="{Binding $parent[UserControl].((vm:SupplierListViewModel)DataContext).DeleteSupplierCommand}" CommandParameter="{Binding .}" Foreground="Red"/>
+						</ContextMenu>
+					</Setter>
+				</Style>
+			</DataGrid.Styles>
+
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="Auto" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Foreground="{DynamicResource TextPrimaryDark}"/>
+				<DataGridTextColumn Header="VAT NO" Binding="{Binding VatNumber}" Width="Auto" Foreground="{DynamicResource TextPrimaryDark}"/>
+
+				<!-- Actions -->
+				<DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Button Classes="IconButton" Margin="0,0,20,0">
+								<Button.Flyout>
+									<MenuFlyout Placement="BottomEdgeAlignedRight">
+										<MenuItem Header="Edit" Command="{Binding $parent[UserControl].((vm:SupplierListViewModel)DataContext).EditSupplierCommand}" CommandParameter="{Binding .}"/>
+										<MenuItem Header="Delete" Command="{Binding $parent[UserControl].((vm:SupplierListViewModel)DataContext).DeleteSupplierCommand}" CommandParameter="{Binding .}" Foreground="Red"/>
+									</MenuFlyout>
+								</Button.Flyout>
+								<PathIcon Data="{StaticResource IconMoreHorizontal}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+							</Button>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+
+		<!-- Loading -->
+		<StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+			<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+			<TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+		</StackPanel>
+
+		<!-- Empty State -->
+		<StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+					IsVisible="{Binding !Suppliers.Count}">
+			<TextBlock Text="No suppliers found." IsVisible="{Binding !IsBusy}" Classes="LabelSmall"/>
+		</StackPanel>
+	</Grid>
+</UserControl>

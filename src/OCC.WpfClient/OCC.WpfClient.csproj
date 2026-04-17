@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.19041</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+		<!-- Professional Metadata -->
+		<Authors>Origize63</Authors>
+		<Company>Orange Circle Construction</Company>
+		<Product>OCC-ERP</Product>
+		<Description>Next Generation ERP system for Orange Circle Construction. Powered by Origize63.</Description>
+		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
+		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
+		<AssemblyName>OCC-ERP</AssemblyName>
+		<Version>1.0.4</Version>
+		<StartupObject>OCC.WpfClient.Program</StartupObject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" />
+		<PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="Microsoft.Extensions.Http" />
+		<PackageReference Include="Microsoft.Extensions.Logging" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+		<PackageReference Include="QuestPDF" />
+		<PackageReference Include="Velopack" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Assets\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Assets\Images\app.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OCC.Shared\OCC.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Update="Assets\Images\app.ico">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Update="Assets\Images\occ_bgi.jpg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Update="Assets\Images\occ_logo.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Update="Assets\Images\occ_logo.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Update="Assets\Images\occ_future_logo.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
+</Project>

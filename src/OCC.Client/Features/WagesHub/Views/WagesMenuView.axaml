@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.WagesHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Features.WagesHub.Views.WagesMenuView"
+			 x:DataType="vm:WagesMenuViewModel">
+
+	<Border Classes="TopBar">
+		<Grid ColumnDefinitions="*,Auto, *">
+			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+				<StackPanel.Resources>
+					<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+				</StackPanel.Resources>
+
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="WageRun" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='WageRun'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconWagesDollar}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="WAGE RUN" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton" Command="{Binding SetActiveTabCommand}" CommandParameter="Loans" Classes.Active="{Binding ActiveTab, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Loans'}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconWagesBill}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="LOANS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

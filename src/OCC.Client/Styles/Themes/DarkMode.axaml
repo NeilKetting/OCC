@@ -1,0 +1,50 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Brand & Primary Colors -->
+    <SolidColorBrush x:Key="Orange">#FF8F00</SolidColorBrush>
+    <!-- Teal made slightly lighter for dark mode contrast -->
+    <SolidColorBrush x:Key="PrimaryTeal">#00d4cc</SolidColorBrush> 
+    <SolidColorBrush x:Key="PrimaryTealHover">#33e0d9</SolidColorBrush>
+    	<SolidColorBrush x:Key="PrimaryTealLight">#0f766e</SolidColorBrush>
+	<SolidColorBrush x:Key="AccentOrange">#fdba74</SolidColorBrush>
+	<SolidColorBrush x:Key="AccentOrangeHover">#fed7aa</SolidColorBrush>
+	<SolidColorBrush x:Key="ActionBlue">#3B82F6</SolidColorBrush>
+	<SolidColorBrush x:Key="ActionBlueHover">#60A5FA</SolidColorBrush>
+
+    <!-- Background & Surface Colors -->
+    <!-- Main Slate Background -> Very Dark Slate -->
+    <SolidColorBrush x:Key="PrimaryBackgroundDark">#0f172a</SolidColorBrush>
+    <SolidColorBrush x:Key="AppBackgroundSlate">#0f172a</SolidColorBrush>
+    
+    <!-- Surface Colors (Cards, Panels) -->
+    <SolidColorBrush x:Key="SurfaceLightGray">#1e293b</SolidColorBrush> <!-- Was #dedfe2, now Slate 800 -->
+    <SolidColorBrush x:Key="SurfaceWhite">#1e293b</SolidColorBrush>     <!-- Was #FFFFFF, now Slate 800 (Cards) -->
+    
+    <SolidColorBrush x:Key="BorderGray">#334155</SolidColorBrush>      <!-- Was #e2e8f0, now Slate 700 -->
+    <SolidColorBrush x:Key="BorderDark">#94a3b8</SolidColorBrush>      <!-- Was #00252e, now Slate 400 -->
+
+    <!-- Text Colors -->
+    <SolidColorBrush x:Key="TextPrimaryDark">#f8fafc</SolidColorBrush>   <!-- Was Black, now Slate 50 -->
+    <SolidColorBrush x:Key="TextSecondaryDark">#cbd5e1</SolidColorBrush> <!-- Was #475569, now Slate 300 -->
+    <SolidColorBrush x:Key="TextSecondaryGray">#94a3b8</SolidColorBrush> <!-- Was #64748b, now Slate 400 -->
+    <SolidColorBrush x:Key="TextTertiarySlate">#64748b</SolidColorBrush> <!-- Was #94a3b8, now Darker Slate -->
+    <SolidColorBrush x:Key="ErrorRed">#ef4444</SolidColorBrush>
+
+    <!-- Status & Misc -->
+    <SolidColorBrush x:Key="StatusGreen">#22c55e</SolidColorBrush>
+    <SolidColorBrush x:Key="LoginBackgroundDark">#0f172a</SolidColorBrush> <!-- Kept same -->
+    <SolidColorBrush x:Key="LoginTextDark">#f8fafc</SolidColorBrush>     <!-- Inverted -->
+    <SolidColorBrush x:Key="LoginTextLight">#cbd5e1</SolidColorBrush>
+
+    <!-- Button Top Bar and Top Header Colors -->
+    <!-- Button Top Bar and Top Header Colors -->
+    <SolidColorBrush x:Key="GreenButtonBackground">#3f6212</SolidColorBrush>
+
+    <!-- Gradients -->
+    <LinearGradientBrush x:Key="HomeMenuGradient" StartPoint="50%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#1e293b"/>
+        <GradientStop Offset="0.90" Color="#c2410c"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>

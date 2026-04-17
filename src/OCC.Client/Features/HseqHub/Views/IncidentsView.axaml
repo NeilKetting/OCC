@@ -1,0 +1,289 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.HseqHub.ViewModels"
+			 xmlns:dto="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="OCC.Client.Features.HseqHub.Views.IncidentsView"
+			 x:DataType="vm:IncidentsViewModel"
+			 DragDrop.AllowDrop="True">
+	<Grid Background="{DynamicResource AppBackgroundSlate}">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="Auto"/>
+		</Grid.ColumnDefinitions>
+
+		<!-- Main Content -->
+		<Grid Grid.Column="0" RowDefinitions="Auto, *">
+
+			<!-- Header Bar: Title & Actions -->
+			<Border Grid.Row="0" Margin="2" Background="{DynamicResource MainPageGradient}" Classes="TopHeader">
+				<Grid ColumnDefinitions="*, Auto">
+					<StackPanel Spacing="4">
+						<TextBlock Text="Incidents" Classes="H1"/>
+						<TextBlock Text="Report and track workplace incidents" Classes="TextSecondary"/>
+					</StackPanel>
+
+					<Button Grid.Column="1" Classes="PrimaryButton" Command="{Binding ToggleAddCommand}" IsVisible="{Binding !Editor.IsOpen}"
+							VerticalAlignment="Center">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16"/>
+							<TextBlock Text="REPORT INCIDENT"/>
+						</StackPanel>
+					</Button>
+				</Grid>
+			</Border>
+
+			<!-- Loading Overlay -->
+			<Border Grid.RowSpan="2" IsVisible="{Binding IsBusy}" Background="#80000000" ZIndex="100">
+				<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+					<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+					<TextBlock Text="{Binding BusyText}" Foreground="White" FontWeight="SemiBold"/>
+				</StackPanel>
+			</Border>
+
+			<!-- Data Grid -->
+			<!-- Trigger load on attach if empty? Or use event trigger -->
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="AttachedToVisualTree">
+					<InvokeCommandAction Command="{Binding LoadIncidentsCommand}"/>
+				</EventTriggerBehavior>
+                <EventTriggerBehavior EventName="DoubleTapped">
+                    <InvokeCommandAction Command="{Binding OpenIncidentCommand}" CommandParameter="{Binding SelectedSummary}" />
+                </EventTriggerBehavior>
+			</Interaction.Behaviors>
+
+			<DataGrid Grid.Row="1" ItemsSource="{Binding Incidents}" AutoGenerateColumns="False"
+					  Margin="10,0,10,10" Classes="AppNativeDataGrid"
+					  SelectedItem="{Binding SelectedSummary}"
+					  IsReadOnly="True" GridLinesVisibility="Horizontal">
+				<DataGrid.Styles>
+					<Style Selector="DataGridRow">
+						<Setter Property="ContextMenu">
+							<ContextMenu x:DataType="dto:IncidentSummaryDto">
+								<MenuItem Header="Delete Incident"
+										  Command="{Binding $parent[UserControl].((vm:IncidentsViewModel)DataContext).DeleteIncidentCommand}"
+										  CommandParameter="{Binding}">
+									<MenuItem.Icon>
+										<PathIcon Data="{StaticResource IconDelete}" Foreground="{DynamicResource ErrorRed}"/>
+									</MenuItem.Icon>
+								</MenuItem>
+							</ContextMenu>
+						</Setter>
+					</Style>
+				</DataGrid.Styles>
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd MMM yyyy'}" Width="Auto"/>
+					<DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto"/>
+					<DataGridTemplateColumn Header="Severity" Width="Auto">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" VerticalAlignment="Center">
+									<Border.Styles>
+										<Style Selector="Border">
+											<Setter Property="Background" Value="{DynamicResource NeutralBadgeBackground}"/>
+											<Setter Property="TextBlock.Foreground" Value="{DynamicResource TextPrimary}"/>
+										</Style>
+										<!-- Simple styling based on value via converters or just text for now -->
+										<!-- Improve later with ValueConverter for color coding -->
+									</Border.Styles>
+									<TextBlock Text="{Binding Severity}"/>
+								</Border>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" MinWidth="250"/>
+
+					<DataGridTemplateColumn Header="Status" Width="Auto">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Border CornerRadius="12" Padding="8,2" Background="{DynamicResource PrimaryLight}" HorizontalAlignment="Center" VerticalAlignment="Center">
+									<TextBlock Text="{Binding Status}" Foreground="{DynamicResource Primary}" FontSize="12" FontWeight="SemiBold"/>
+								</Border>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn Width="80">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Button Classes="IconOnlyButton" Command="{Binding $parent[UserControl].((vm:IncidentsViewModel)DataContext).DeleteIncidentCommand}" CommandParameter="{Binding}" ToolTip.Tip="Delete Incident">
+									<PathIcon Data="{StaticResource IconDelete}" Width="16" Height="16" Foreground="{DynamicResource ErrorRed}"/>
+								</Button>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</DataGrid>
+		</Grid>
+
+		<!-- Side Panel -->
+		<Border Grid.Column="1" Background="{DynamicResource CardBackground}"
+				BorderBrush="{DynamicResource BorderColor}" BorderThickness="1,0,0,0"
+				Width="400" Padding="24" IsVisible="{Binding Editor.IsOpen, FallbackValue=false}">
+			<Grid RowDefinitions="Auto, *, Auto">
+
+				<!-- Header -->
+				<TextBlock Grid.Row="0" Text="New Incident" Classes="H2" Margin="0,0,0,24"/>
+
+				<!-- Form -->
+				<ScrollViewer Grid.Row="1" Padding="0,0,16,0">
+					<StackPanel Spacing="16">
+
+						<!-- Date -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Date &amp; Time" Classes="FormLabel"/>
+							<CalendarDatePicker SelectedDate="{Binding Editor.Incident.Date}" HorizontalAlignment="Stretch"/>
+						</StackPanel>
+
+						<!-- Type -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Incident Type" Classes="FormLabel"/>
+							<ComboBox ItemsSource="{Binding Editor.IncidentTypes}" SelectedItem="{Binding Editor.Incident.Type}" HorizontalAlignment="Stretch" PlaceholderText="Select Type..."/>
+						</StackPanel>
+
+						<!-- Severity -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Severity" Classes="FormLabel"/>
+							<ComboBox ItemsSource="{Binding Editor.IncidentSeverities}" SelectedItem="{Binding Editor.Incident.Severity}" HorizontalAlignment="Stretch" PlaceholderText="Select Severity..."/>
+						</StackPanel>
+
+						<!-- Location -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Location / Site" Classes="FormLabel"/>
+							<TextBox Text="{Binding Editor.Incident.Location}" Watermark="e.g. Warehouse Zone B"/>
+						</StackPanel>
+
+						<!-- Description -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Description" Classes="FormLabel"/>
+							<TextBox Text="{Binding Editor.Incident.Description}" Watermark="Describe what happened..."
+									 AcceptsReturn="True" Height="100" TextWrapping="Wrap"/>
+						</StackPanel>
+
+						<!-- Root Cause -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Root Cause (Optional)" Classes="FormLabel"/>
+							<TextBox Text="{Binding Editor.Incident.RootCause}" Watermark="Why did it happen?"
+									 AcceptsReturn="True" Height="80" TextWrapping="Wrap"/>
+						</StackPanel>
+
+						<!-- Corrective Action -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="Corrective Action (Optional)" Classes="FormLabel"/>
+							<TextBox Text="{Binding Editor.Incident.CorrectiveAction}" Watermark="Immediate actions taken..."
+									 AcceptsReturn="True" Height="80" TextWrapping="Wrap"/>
+						</StackPanel>
+
+						<!-- Photos Section -->
+						<Border Height="1" Background="{DynamicResource BorderColor}" Margin="0,10"/>
+						<StackPanel Spacing="10">
+							<TextBlock Text="INCIDENT PHOTOS" Classes="LabelSmall" FontWeight="Bold"/>
+
+							<!-- List of Photos -->
+							<ItemsControl ItemsSource="{Binding Editor.Photos}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Background="White" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,5" Margin="0,0,0,5">
+											<Grid ColumnDefinitions="*, Auto">
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding FileName}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+													<StackPanel Orientation="Horizontal" Spacing="5">
+														<TextBlock Text="{Binding FileSize}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+														<TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+														<TextBlock Text="{Binding UploadedBy}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+													</StackPanel>
+												</StackPanel>
+												<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+													<Button Classes="IconOnlyButton"
+															Command="{Binding $parent[UserControl].((vm:IncidentsViewModel)DataContext).Editor.ViewAttachmentCommand}"
+															CommandParameter="{Binding FilePath}" ToolTip.Tip="View Photo">
+														<PathIcon Data="{StaticResource IconEye}" Width="14" Height="14" Foreground="{DynamicResource Primary}"/>
+													</Button>
+													<Button Classes="IconOnlyButton"
+															Command="{Binding $parent[UserControl].((vm:IncidentsViewModel)DataContext).Editor.DeletePhotoCommand}"
+															CommandParameter="{Binding}" Foreground="{DynamicResource ErrorRed}" ToolTip.Tip="Delete Photo">
+														<PathIcon Data="{StaticResource IconTrash}" Width="14" Height="14"/>
+													</Button>
+												</StackPanel>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- Add Photo / Drop Zone -->
+							<Button Click="Browse_Click" Classes="Ghost" Padding="0" HorizontalAlignment="Stretch">
+								<Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Padding="20" CornerRadius="6" Background="#05000000">
+									<StackPanel HorizontalAlignment="Center" Spacing="5">
+										<PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,5"/>
+										<TextBlock Text="Click or drag photos to upload" Classes="TextSecondary" HorizontalAlignment="Center"/>
+									</StackPanel>
+								</Border>
+							</Button>
+						</StackPanel>
+
+						<!-- Documents Section -->
+						<Border Height="1" Background="{DynamicResource BorderColor}" Margin="0,10"/>
+						<StackPanel Spacing="10">
+							<TextBlock Text="SUPPORTING DOCUMENTS" Classes="LabelSmall" FontWeight="Bold"/>
+
+							<!-- List of Documents -->
+							<ItemsControl ItemsSource="{Binding Editor.Documents}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Background="White" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,5" Margin="0,0,0,5">
+											<Grid ColumnDefinitions="*, Auto">
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding FileName}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+													<StackPanel Orientation="Horizontal" Spacing="5">
+														<TextBlock Text="{Binding FileSize}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+														<TextBlock Text="•" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+														<TextBlock Text="{Binding UploadedBy}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+													</StackPanel>
+												</StackPanel>
+												<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+													<Button Classes="IconOnlyButton"
+															Command="{Binding $parent[UserControl].((vm:IncidentsViewModel)DataContext).Editor.ViewAttachmentCommand}"
+															CommandParameter="{Binding FilePath}" ToolTip.Tip="View Document">
+														<PathIcon Data="{StaticResource IconEye}" Width="14" Height="14" Foreground="{DynamicResource Primary}"/>
+													</Button>
+													<Button Classes="IconOnlyButton"
+															Command="{Binding $parent[UserControl].((vm:IncidentsViewModel)DataContext).Editor.DeleteDocumentCommand}"
+															CommandParameter="{Binding}" Foreground="{DynamicResource ErrorRed}" ToolTip.Tip="Delete Document">
+														<PathIcon Data="{StaticResource IconTrash}" Width="14" Height="14"/>
+													</Button>
+												</StackPanel>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- Add Document / Drop Zone -->
+							<Button Click="BrowseDocuments_Click" Classes="Ghost" Padding="0" HorizontalAlignment="Stretch">
+								<Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Padding="20" CornerRadius="6" Background="#05000000">
+									<StackPanel HorizontalAlignment="Center" Spacing="5">
+										<PathIcon Data="{StaticResource IconPlus}" Width="16" Height="16" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,5"/>
+										<TextBlock Text="Click or drag report documents to upload" Classes="TextSecondary" HorizontalAlignment="Center"/>
+									</StackPanel>
+								</Border>
+							</Button>
+						</StackPanel>
+
+					</StackPanel>
+				</ScrollViewer>
+
+				<!-- Footer Actions -->
+				<StackPanel Grid.Row="2" Spacing="12" Margin="0,24,0,0">
+					<Button Classes="Primary" HorizontalAlignment="Stretch" Command="{Binding Editor.SaveIncidentCommand}" Content="SAVE REPORT"/>
+					<Button Classes="Secondary" HorizontalAlignment="Stretch" Command="{Binding CancelAddCommand}" Content="CANCEL"/>
+				</StackPanel>
+
+			</Grid>
+		</Border>
+
+	</Grid>
+</UserControl>

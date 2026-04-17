@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Width="400" Height="300"
+        x:Class="OCC.Client.Views.ConfirmationDialog"
+        Title="Confirmation"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        SystemDecorations="BorderOnly"
+        Background="White">
+    
+    <Window.Styles>
+        <Style Selector="Button">
+             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+             <Setter Property="VerticalContentAlignment" Value="Center"/>
+             <Setter Property="Padding" Value="15,8"/>
+             <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+    </Window.Styles>
+
+    <Border BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" Padding="20">
+        <Grid RowDefinitions="Auto, *, Auto">
+            <TextBlock Grid.Row="0" x:Name="TitleText" Text="Title" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextPrimary}"/>
+            
+            <TextBlock Grid.Row="1" x:Name="MessageText" Text="Message content goes here..." TextWrapping="Wrap" 
+                       VerticalAlignment="Center" Margin="0,15" Foreground="{DynamicResource TextSecondary}"/>
+            
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button x:Name="CancelButton" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextPrimary}" Click="Cancel_Click"/>
+                <Button x:Name="OkButton" Content="Confirm" Background="{DynamicResource PrimaryTeal}" Foreground="White" Click="Ok_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

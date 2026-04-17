@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Dashboard"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d"
+             x:Class="OCC.Client.Features.HomeHub.Views.MySummary.Widgets.TaskStatusGraphView"
+             x:DataType="vm:SummaryViewModel">
+
+    <UserControl.Resources>
+        <conv:DonutSegmentConverter x:Key="DonutSegmentConverter"/>
+        
+        <!-- Colors -->
+        <SolidColorBrush x:Key="ChartColorNotStarted">#E2E8F0</SolidColorBrush> <!-- Slate 200 -->
+        <SolidColorBrush x:Key="ChartColorInProgress">#3B82F6</SolidColorBrush> <!-- Blue 500 -->
+        <SolidColorBrush x:Key="ChartColorCompleted">#22C55E</SolidColorBrush>   <!-- Green 500 -->
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="Auto, *">
+        <!-- Chart -->
+        <Grid Grid.Column="0" Width="120" Height="120">
+            <!-- Background Ring (Optional, if we want full grey circle underneath) -->
+            <Ellipse Width="120" Height="120" Stroke="{StaticResource ChartColorNotStarted}" StrokeThickness="15" />
+            
+            <!-- Not Started Segment (Gray - overlaid if needed, or just let background show) -->
+            <!-- Actually, let's draw them explicitly -->
+
+            <!-- In Progress -->
+            <Path Stroke="{StaticResource ChartColorInProgress}" StrokeThickness="15" StrokeLineCap="Round">
+                <Path.Data>
+                    <MultiBinding Converter="{StaticResource DonutSegmentConverter}" ConverterParameter="120">
+                        <Binding Path="InProgressStartAngle"/>
+                        <Binding Path="InProgressAngle"/>
+                    </MultiBinding>
+                </Path.Data>
+            </Path>
+
+            <!-- Completed -->
+            <Path Stroke="{StaticResource ChartColorCompleted}" StrokeThickness="15" StrokeLineCap="Round">
+                <Path.Data>
+                    <MultiBinding Converter="{StaticResource DonutSegmentConverter}" ConverterParameter="120">
+                        <Binding Path="CompletedStartAngle"/>
+                        <Binding Path="CompletedAngle"/>
+                    </MultiBinding>
+                </Path.Data>
+            </Path>
+
+            <!-- Center Text -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding TotalTaskCount}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryDark}"/>
+                 <TextBlock Text="Tasks" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Legend -->
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8" Margin="20,0,0,0">
+            
+            <!-- Not Started -->
+            <Grid ColumnDefinitions="Auto, *">
+                <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{StaticResource ChartColorNotStarted}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Not Started" Margin="8,0,0,0" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- In Progress -->
+            <Grid ColumnDefinitions="Auto, *">
+                <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{StaticResource ChartColorInProgress}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="In Progress" Margin="8,0,0,0" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Completed -->
+            <Grid ColumnDefinitions="Auto, *">
+                <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{StaticResource ChartColorCompleted}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Completed" Margin="8,0,0,0" FontSize="12" Foreground="{DynamicResource TextSecondaryGray}" VerticalAlignment="Center"/>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</UserControl>

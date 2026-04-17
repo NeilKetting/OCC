@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Shell"
+             xmlns:vmShell="using:OCC.Client.Mobile.Shell.BottomNav"
+             xmlns:vmDashboard="using:OCC.Client.Mobile.Features.Dashboard"
+             xmlns:vmRollCall="using:OCC.Client.Mobile.Features.RollCall"
+             xmlns:viewsBottom="using:OCC.Client.Mobile.Shell.BottomNav"
+             xmlns:viewsDash="using:OCC.Client.Mobile.Features.Dashboard"
+             xmlns:viewsRoll="using:OCC.Client.Mobile.Features.RollCall"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             x:Class="OCC.Client.Mobile.Shell.MobileHubView"
+             x:DataType="vm:MobileHubViewModel">
+    <ContentControl Content="{Binding CurrentView}">
+        <ContentControl.DataTemplates>
+            <!-- Bottom Navigation Shell -->
+            <DataTemplate DataType="{x:Type vmShell:MobileShellBottomNavViewModel}">
+                <viewsBottom:MobileShellBottomNavView/>
+            </DataTemplate>
+
+            <!-- Views -->
+            <DataTemplate DataType="{x:Type vmRollCall:MobileDashboardViewModel}">
+                <viewsRoll:MobileDashboardView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vmDashboard:SiteManagerDashboardViewModel}">
+                <viewsDash:SiteManagerDashboardView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vmRollCall:MobileRollCallViewModel}">
+                <viewsRoll:MobileRollCallView/>
+            </DataTemplate>
+        </ContentControl.DataTemplates>
+    </ContentControl>
+</UserControl>

@@ -1,0 +1,222 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.ProjectsHub.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="1400"
+             x:Class="OCC.Client.Features.ProjectsHub.Views.ProjectCustomerReportView"
+             x:DataType="vm:ProjectCustomerReportViewModel"
+             Background="{DynamicResource SurfaceWhite}">
+
+    <UserControl.Styles>
+        <Style Selector="Border.ReportSection">
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="Border.DataCell">
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+        <Style Selector="TextBlock.ReportHeader">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,10"/>
+        </Style>
+        <Style Selector="TextBlock.CellHeader">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="DataGrid.ReportGrid">
+            <Setter Property="GridLinesVisibility" Value="All"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="Black"/>
+            <Setter Property="VerticalGridLinesBrush" Value="Black"/>
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="DataGrid.ReportGrid DataGridColumnHeader">
+            <Setter Property="Background" Value="#FFC000"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
+        <Style Selector="DataGrid.ReportGrid DataGridRow">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <Border BorderBrush="Black" BorderThickness="2" Margin="10" Padding="0">
+            <StackPanel>
+                <!-- Header Component Placeholder (Logos) -->
+                <Grid ColumnDefinitions="*,*,*" Margin="10">
+                    <!-- Left Logo -->
+                    <Border Grid.Column="0" Background="#F4F6F8" Height="60" Width="150" HorizontalAlignment="Left">
+                        <TextBlock Text="OCC Logo" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A0AABF"/>
+                    </Border>
+                    <!-- Center Logo -->
+                    <Border Grid.Column="1" Background="#F4F6F8" Height="60" Width="150" HorizontalAlignment="Center">
+                        <TextBlock Text="Vivo Energy Logo" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A0AABF"/>
+                    </Border>
+                    <!-- Right Logo -->
+                    <Border Grid.Column="2" Background="#0C2340" Height="60" Width="150" HorizontalAlignment="Right">
+                        <TextBlock Text="ENGEN Logo" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                    </Border>
+                </Grid>
+
+                <Border Background="#0C2340" BorderBrush="Black" BorderThickness="0,2,0,2" Padding="10">
+                    <TextBlock Text="{Binding CustomerName, StringFormat='{}{0} T/A VIVO ENERGY PROJECT REPORT'}" Foreground="White" Classes="ReportHeader" Margin="0" FontSize="20" />
+                </Border>
+
+                <!-- Top Stats Grid -->
+                <!-- Use a unified grid to keep column heights aligned exactly -->
+                <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, 2*" RowDefinitions="Auto" ColumnSpacing="10" RowSpacing="10" Margin="0,10,0,0">
+                    
+                    <!-- Box 1: basic stats -->
+                    <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, Auto" VerticalAlignment="Top">
+                        <Border Grid.Row="0" Grid.Column="0" Classes="DataCell"><TextBlock Text="No" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="0" Grid.Column="1" Classes="DataCell" MinWidth="80"><TextBlock Text="{Binding ProjectWeekNumber}" HorizontalAlignment="Right"/></Border>
+                        
+                        <Border Grid.Row="1" Grid.Column="0" Classes="DataCell"><TextBlock Text="Date" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding ReportDate}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="2" Grid.Column="0" Classes="DataCell" Background="#FFC000"><TextBlock Text="Week" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="2" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding ProjectWeekNumber}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="3" Grid.Column="0" Classes="DataCell" Background="#E0E0E0"><TextBlock Text="Status" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="3" Grid.Column="1" Classes="DataCell" Background="#85E085"><TextBlock Text="{Binding ProjectStatus}" HorizontalAlignment="Center" FontWeight="Bold"/></Border>
+                    </Grid>
+
+                    <!-- Box 2: POW % -->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, Auto" VerticalAlignment="Top">
+                        <Border Grid.Row="0" Grid.Column="0" Classes="DataCell" Background="#FFC000"><TextBlock Text="POW % Required" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="0" Grid.Column="1" Classes="DataCell" MinWidth="60"><TextBlock Text="{Binding PowPercentRequired, StringFormat='{}{0:F2}'}" HorizontalAlignment="Right"/></Border>
+                        
+                        <Border Grid.Row="1" Grid.Column="0" Classes="DataCell" Background="#FFC000"><TextBlock Text="POW % Actual" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding PowPercentActual, StringFormat='{}{0:F2}'}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="2" Grid.Column="0" Classes="DataCell" Background="#FFC000"><TextBlock Text="Delay Days" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="2" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding DelayDays}" HorizontalAlignment="Right"/></Border>
+                        
+                        <!-- Empty spacer cell to keep grid height aligned -->
+                        <Border Grid.Row="3" Grid.ColumnSpan="2" Classes="DataCell" MinHeight="26" BorderThickness="1,0,1,1" BorderBrush="Transparent" />
+                    </Grid>
+
+                    <!-- Box 3: POW -->
+                    <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*, Auto" VerticalAlignment="Top">
+                        <Border Grid.Row="0" Grid.ColumnSpan="2" Classes="DataCell" Background="#FFC000"><TextBlock Text="PROGRAM OF WORKS" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+                        
+                        <Border Grid.Row="1" Grid.Column="0" Classes="DataCell"><TextBlock Text="Tasks" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Classes="DataCell" MinWidth="50"><TextBlock Text="{Binding TotalTasks}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="2" Grid.Column="0" Classes="DataCell"><TextBlock Text="In progress" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="2" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding TasksInProgress}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="3" Grid.Column="0" Classes="DataCell"><TextBlock Text="Completed" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="3" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding TasksCompleted}" HorizontalAlignment="Right"/></Border>
+                    </Grid>
+
+                    <!-- Box 4: Safe Working Hours -->
+                    <Grid Grid.Column="3" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *" VerticalAlignment="Top">
+                        <Border Grid.Row="0" Classes="DataCell" Background="#FFC000"><TextBlock Text="SAFE WORKING HOURS" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+                        <Border Grid.Row="1" Classes="DataCell" MinHeight="40">
+                            <TextBlock Text="{Binding TotalSafeWorkingHours}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#2A5C8A"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Box 5: Summary -->
+                    <Grid Grid.Column="4" RowDefinitions="Auto,*,Auto,2*" VerticalAlignment="Stretch">
+                        <Border Grid.Row="1" Classes="DataCell" Background="#FFC000"><TextBlock Text="PROJECT STATUS SUMMARY" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+                        <Border Grid.Row="2" Classes="DataCell">
+                            <TextBox Text="{Binding StatusSummary}" AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" MinHeight="150"/>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Second Band: Contract Dates & Waste -->
+                <Grid ColumnDefinitions="*, *, 2*" Margin="0,10,0,0">
+                    <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto, *, *">
+                        <Border Grid.Row="0" Grid.Column="0" Classes="DataCell" Background="#FFC000"><TextBlock Text="CONTRACT DATES" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="0" Grid.Column="1" Classes="DataCell" Background="#FFC000"><TextBlock Text="PLANNED" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+                        <Border Grid.Row="0" Grid.Column="2" Classes="DataCell" Background="#FFC000"><TextBlock Text="ACTUAL" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+
+                        <Border Grid.Row="1" Grid.Column="0" Classes="DataCell"><TextBlock Text="Site establishment" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Classes="DataCell" Background="#B4Eeb4"><TextBlock Text="{Binding SiteEstablishmentPlanned, StringFormat='{}{0:dd-MMM-yy}'}" HorizontalAlignment="Center"/></Border>
+                        <Border Grid.Row="1" Grid.Column="2" Classes="DataCell" Background="#B4Eeb4"><TextBlock Text="{Binding SiteEstablishmentActual, StringFormat='{}{0:dd-MMM-yy}'}" HorizontalAlignment="Center"/></Border>
+
+                        <Border Grid.Row="2" Grid.Column="0" Classes="DataCell"><TextBlock Text="Practical Completion" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="2" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding PracticalCompletionPlanned, StringFormat='{}{0:dd-MMM-yy}'}" HorizontalAlignment="Center"/></Border>
+                        <Border Grid.Row="2" Grid.Column="2" Classes="DataCell"><TextBlock Text="{Binding PracticalCompletionActual, StringFormat='{}{0:dd-MMM-yy}'}" HorizontalAlignment="Center"/></Border>
+                    </Grid>
+                    
+                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*, Auto" Margin="10,0,0,0">
+                        <Border Grid.Row="0" Grid.ColumnSpan="2" Classes="DataCell" Background="#FFC000"><TextBlock Text="Waste Disposal" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+                        
+                        <Border Grid.Row="1" Grid.Column="0" Classes="DataCell"><TextBlock Text="General Waste" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Classes="DataCell" MinWidth="100"><TextBlock Text="{Binding WasteGeneralQuantity}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="2" Grid.Column="0" Classes="DataCell"><TextBlock Text="Rubble" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="2" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding WasteRubbleQuantity}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="3" Grid.Column="0" Classes="DataCell"><TextBlock Text="Scrap metals" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="3" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding WasteScrapMetalsQuantity}" HorizontalAlignment="Right"/></Border>
+
+                        <Border Grid.Row="4" Grid.Column="0" Classes="DataCell"><TextBlock Text="Asbestos" Classes="CellHeader"/></Border>
+                        <Border Grid.Row="4" Grid.Column="1" Classes="DataCell"><TextBlock Text="{Binding WasteAsbestosQuantity}" HorizontalAlignment="Right"/></Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Vendor & Variations Grids -->
+                <Grid ColumnDefinitions="*, 20, *" Margin="0,10,0,0">
+                    <!-- Vendor Report -->
+                    <StackPanel Grid.Column="0">
+                        <Border Classes="DataCell" Background="#FFC000" BorderThickness="1,1,1,0"><TextBlock Text="VENDOR REPORT - HSEQ Compliance" Classes="CellHeader"/></Border>
+                        <DataGrid Classes="ReportGrid" ItemsSource="{Binding VendorReports}" AutoGenerateColumns="False" MinHeight="150">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="No." Binding="{Binding Number}" Width="50"/>
+                                <DataGridTextColumn Header="Vendor Name" Binding="{Binding VendorName}" Width="150"/>
+                                <DataGridTextColumn Header="Scope" Binding="{Binding Scope}" Width="*"/>
+                                <DataGridTextColumn Header="Safety File&#x0a;approved" Binding="{Binding SafetyFileApproved}" Width="90"/>
+                                <DataGridTextColumn Header="Approval&#x0a;score" Binding="{Binding ApprovalScore}" Width="80"/>
+                                <DataGridTextColumn Header="Audit 1" Binding="{Binding Audit1}" Width="70"/>
+                                <DataGridTextColumn Header="Audit 2" Binding="{Binding Audit2}" Width="70"/>
+                                <DataGridTextColumn Header="Audit 3" Binding="{Binding Audit3}" Width="70"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+
+                    <!-- Site Instructions / Variations -->
+                    <StackPanel Grid.Column="2">
+                        <Border Classes="DataCell" Background="#FFC000" BorderThickness="1,1,1,0"><TextBlock Text="SITE INSTRUCTIONS (VARIATION ORDERS)" Classes="CellHeader"/></Border>
+                        <DataGrid Classes="ReportGrid" ItemsSource="{Binding VariationOrders}" AutoGenerateColumns="False" MinHeight="150">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="No." Binding="{Binding Number}" Width="50"/>
+                                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                <DataGridTextColumn Header="Approved" Binding="{Binding Approved}" Width="100"/>
+                                <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Grid>
+
+                <Border Classes="DataCell" Background="#FFC000" Margin="0,10,0,0"><TextBlock Text="INCIDENT &amp; PROGRESS PHOTOS" Classes="CellHeader" HorizontalAlignment="Center"/></Border>
+                <!-- Photos Placeholder -->
+                <WrapPanel Margin="0,0,0,10" HorizontalAlignment="Center">
+                    <Border Width="300" Height="200" Background="#F4F6F8" Margin="0,10,20,10" BorderBrush="#DDDDDD" BorderThickness="1">
+                        <TextBlock Text="Photo Placeholder 1" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A0AABF"/>
+                    </Border>
+                    <Border Width="300" Height="200" Background="#F4F6F8" Margin="0,10,20,10" BorderBrush="#DDDDDD" BorderThickness="1">
+                        <TextBlock Text="Photo Placeholder 2" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A0AABF"/>
+                    </Border>
+                    <Border Width="300" Height="200" Background="#F4F6F8" Margin="0,10,0,10" BorderBrush="#DDDDDD" BorderThickness="1">
+                        <TextBlock Text="Photo Placeholder 3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A0AABF"/>
+                    </Border>
+                </WrapPanel>
+
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

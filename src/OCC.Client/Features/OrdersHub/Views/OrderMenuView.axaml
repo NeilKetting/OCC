@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d" 
+			 xmlns:vm="clr-namespace:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 x:Class="OCC.Client.OrderMenuView"
+			 x:DataType="vm:OrderMenuViewModel">
+
+	<Border Classes="TopBar">
+		<Grid ColumnDefinitions="*,Auto, *, Auto">
+
+			<!-- Menu Buttons Area -->
+			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+				<StackPanel.Resources>
+					<conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+				</StackPanel.Resources>
+
+				<Button Classes="MenuTabButton"
+						Command="{Binding SetActiveTabCommand}"
+						CommandParameter="Dashboard" Classes.Active="{Binding ActiveTab,
+						Converter={StaticResource StringEqualityConverter},
+						ConverterParameter='Dashboard'}"
+                        IsVisible="{Binding CanViewDashboard}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconSummary}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="DASHBOARD" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton"
+						Command="{Binding SetActiveTabCommand}"
+						CommandParameter="All Orders" Classes.Active="{Binding ActiveTab,
+						Converter={StaticResource StringEqualityConverter},
+						ConverterParameter='All Orders'}"
+                        IsVisible="{Binding CanViewAllOrders}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconPortfolio}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="ALL ORDERS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton"
+						Command="{Binding SetActiveTabCommand}"
+						CommandParameter="Inventory" Classes.Active="{Binding ActiveTab,
+						Converter={StaticResource StringEqualityConverter},
+						ConverterParameter='Inventory'}"
+                        IsVisible="{Binding CanViewInventory}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconList}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="INVENTORY" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+				
+				<Button Classes="MenuTabButton"
+						Command="{Binding SetActiveTabCommand}"
+						CommandParameter="Suppliers" Classes.Active="{Binding ActiveTab,
+						Converter={StaticResource StringEqualityConverter},
+						ConverterParameter='Suppliers'}"
+                        IsVisible="{Binding CanViewSuppliers}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconManageEmployees}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="SUPPLIERS" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton"
+						Command="{Binding SetActiveTabCommand}"
+						CommandParameter="Picking" Classes.Active="{Binding ActiveTab,
+						Converter={StaticResource StringEqualityConverter},
+						ConverterParameter='Picking'}"
+                        IsVisible="{Binding CanViewPickingOrders}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconPickingOrder}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="PICKING" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+
+				<Button Classes="MenuTabButton"
+						Command="{Binding SetActiveTabCommand}"
+						CommandParameter="New Order" Classes.Active="{Binding ActiveTab,
+						Converter={StaticResource StringEqualityConverter},
+						ConverterParameter='New Order'}"
+                        IsVisible="{Binding CanCreateOrders}">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<PathIcon Data="{StaticResource IconCalendar}" Classes="IconStyle" Width="16" Height="16"/>
+						<TextBlock Text="NEW ORDER" VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

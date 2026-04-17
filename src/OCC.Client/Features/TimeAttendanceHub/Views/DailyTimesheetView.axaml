@@ -1,0 +1,212 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.DailyTimesheetView"
+			 x:DataType="vm:DailyTimesheetViewModel"
+			 x:Name="Root">
+
+	<Grid RowDefinitions="Auto, Auto, *">
+		<!-- Historical Mode Banner -->
+		<Border Grid.Row="0" Background="#FFF3E0" IsVisible="{Binding IsHistorical}" Padding="12,8" Margin="5,5,5,0" CornerRadius="4" BorderBrush="#FFE0B2" BorderThickness="1">
+			<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+				<PathIcon Data="{StaticResource IconInfo}" Foreground="#E65100" Width="16" Height="16"/>
+				<TextBlock Text="Historical Mode: You are viewing or editing attendance for a past date." 
+						   Foreground="#E65100" FontWeight="SemiBold" VerticalAlignment="Center" FontSize="13"/>
+			</StackPanel>
+		</Border>
+
+		<!-- Header Bar: Title & Actions -->
+		<Border Grid.Row="1" Background="{DynamicResource MainPageGradient}" Classes="TopHeader" Margin="5">
+			<Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+				<StackPanel Spacing="5">
+					<TextBlock Text="Daily Timesheet" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+					<TextBlock Text="{Binding Date, StringFormat='{}{0:D}'}" Foreground="{DynamicResource TextSecondary}" FontSize="14"/>
+				</StackPanel>
+
+				<Button Grid.Column="1" Classes="IconButtonClose" Command="{Binding CloseCommand}" VerticalAlignment="Top"
+						ToolTip.Tip="Close details without saving">
+					<PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+				</Button>
+
+
+				<!-- Filters -->
+				<Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,15,0,0">
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20" VerticalAlignment="Center">
+
+						<StackPanel Spacing="2" VerticalAlignment="Bottom">
+							<TextBlock Text="Search" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Watermark="Search..." Width="250" Classes="FormInput">
+								<TextBox.InnerLeftContent>
+									<PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14" Margin="10,0,0,0" Foreground="{DynamicResource TextTertiarySlate}"/>
+								</TextBox.InnerLeftContent>
+							</TextBox>
+						</StackPanel>
+
+						<StackPanel Spacing="2" VerticalAlignment="Bottom">
+							<TextBlock Text="Branch" Classes="LabelSmall" FontSize="10"
+									   Foreground="#64748B"/>
+							<ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}" Width="200" Classes="FormInput"/>
+						</StackPanel>
+					</StackPanel>
+
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="20" VerticalAlignment="Center">
+						<ToggleSwitch IsChecked="{Binding IsManualMode}" OnContent="Manual Mode" OffContent="Manual Mode" Margin="10,0"/>
+					</StackPanel>
+				</Grid>
+			</Grid>
+		</Border>
+
+		<!-- Content -->
+		<Grid Grid.Row="2" ColumnDefinitions="*, 15, *" Background="#F9FAFB">
+
+			<!-- LEFT: PENDING -->
+			<Border Grid.Column="0" Background="White" CornerRadius="8" BoxShadow="0 1 3 0 #10000000">
+				<Grid RowDefinitions="Auto, *">
+					<Border Grid.Row="0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Padding="15">
+						<Grid ColumnDefinitions="Auto, *, Auto">
+							<CheckBox Grid.Column="0" IsChecked="{Binding IsAllSelected}" Margin="0,0,10,0" ToolTip.Tip="Select All"/>
+							<TextBlock Grid.Column="1" Text="Pending Action" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+
+							<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+								<Button Content="Batch Clock In"
+										Command="{Binding ClockInSelectedCommand}"
+										Classes="SuccessButton"
+										Padding="10,4" FontSize="12"
+										IsVisible="{Binding PendingStaff.Count}"/>
+								<Border Background="{DynamicResource PrimaryTealLight}" CornerRadius="12" Padding="8,2" VerticalAlignment="Center">
+									<TextBlock Text="{Binding PendingStaff.Count, StringFormat='{}{0} Staff'}"
+											   Foreground="{DynamicResource PrimaryTeal}" FontWeight="Bold" FontSize="12"/>
+								</Border>
+							</StackPanel>
+						</Grid>
+					</Border>
+
+					<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+						<ItemsControl ItemsSource="{Binding PendingStaff}" Margin="0,10,0,50">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Margin="15,5" Padding="10" Background="White" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" CornerRadius="4">
+										<Grid ColumnDefinitions="Auto, *, Auto">
+											<!-- Selection -->
+											<CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" Margin="0,0,10,0"/>
+
+											<!-- Info -->
+											<StackPanel Grid.Column="1" Spacing="4">
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<TextBlock Text="{Binding Name}" FontWeight="Medium" TextWrapping="Wrap"/>
+													<!-- Leave Badge -->
+													<Border IsVisible="{Binding IsOnLeave}" Background="#FFF3E0" CornerRadius="4" Padding="6,2">
+														<TextBlock Text="{Binding LeaveType}" Foreground="#E65100" FontSize="10" FontWeight="Bold"/>
+													</Border>
+												</StackPanel>
+												<TextBlock Text="{Binding Role, Converter={x:Static conv:FriendlyEnumConverter.Instance}}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+												<TextBlock Text="{Binding Branch}" FontSize="11" Foreground="{DynamicResource TextSecondaryGray}"/>
+											</StackPanel>
+
+											<!-- Actions -->
+											<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+												<Button Content="Clock In"
+														Command="{Binding #Root.DataContext.MarkPresentCommand}"
+														CommandParameter="{Binding}"
+														Classes="SuccessButton"/>
+
+												<Button Content="Clock Out"
+														Command="{Binding #Root.DataContext.MarkAbsentCommand}"
+														CommandParameter="{Binding}"
+														Classes="DangerButton"/>
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</Grid>
+			</Border>
+
+			<!-- RIGHT: LOGGED -->
+			<Border Grid.Column="2" Background="White" CornerRadius="8" BoxShadow="0 1 3 0 #10000000">
+				<Grid RowDefinitions="Auto, *">
+					<Border Grid.Row="0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Padding="15">
+						<Grid ColumnDefinitions="Auto, *, Auto">
+							<CheckBox Grid.Column="0" IsChecked="{Binding IsAllLoggedSelected}" Margin="0,0,10,0" ToolTip.Tip="Select All"/>
+							<TextBlock Grid.Column="1" Text="Actioned" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+
+							<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+								<Button Content="Batch Clock Out"
+										Command="{Binding ClockOutSelectedCommand}"
+										Classes="DangerButton"
+										Padding="10,4" FontSize="12"
+										IsVisible="{Binding LoggedStaff.Count}"/>
+								<Border Background="{DynamicResource PrimaryTealLight}" CornerRadius="12" Padding="8,2" VerticalAlignment="Center">
+									<TextBlock Text="{Binding LoggedStaff.Count, StringFormat='{}{0} Logged'}"
+											   Foreground="{DynamicResource PrimaryTeal}" FontWeight="Bold" FontSize="12"/>
+								</Border>
+							</StackPanel>
+						</Grid>
+					</Border>
+
+					<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+						<ItemsControl ItemsSource="{Binding LoggedStaff}" Margin="0,10,0,50">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Margin="15,5" Padding="10" Background="White" BorderBrush="{DynamicResource BorderGray}" BorderThickness="1" CornerRadius="4">
+										<Grid ColumnDefinitions="Auto, *, 120, 100">
+											<!-- Selection -->
+											<CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" Margin="0,0,10,0"/>
+
+											<!-- Info -->
+											<StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+												<TextBlock Text="{Binding Name}" FontWeight="Medium" TextWrapping="Wrap"/>
+												<StackPanel Orientation="Horizontal" Spacing="8">
+													<!-- Status Badge (Text Only, Removed Background "Circle") -->
+													<TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Bold" TextWrapping="Wrap"
+															   Foreground="{Binding Status, Converter={x:Static conv:AttendanceStatusToBrushConverter.Instance}}"/>
+												</StackPanel>
+											</StackPanel>
+
+											<!-- Times -->
+											<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center" Margin="20,0">
+												<StackPanel>
+													<TextBlock Text="IN" FontSize="9" Foreground="Gray"/>
+													<TextBlock Text="{Binding ClockInTime, StringFormat='{}{0:hh\\:mm}', TargetNullValue=--:--}" FontWeight="Medium"/>
+												</StackPanel>
+												<StackPanel>
+													<TextBlock Text="OUT" FontSize="9" Foreground="Gray"/>
+													<TextBlock Text="{Binding ClockOutTime, StringFormat='{}{0:hh\\:mm}', TargetNullValue=--:--}" FontWeight="Medium"/>
+												</StackPanel>
+											</StackPanel>
+
+											<!-- Actions -->
+											<StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
+												<Button Command="{Binding #Root.DataContext.EditEntryCommand}"
+														CommandParameter="{Binding}"
+														Classes="IconOnlyButton" Padding="6" Background="Transparent" BorderThickness="0"
+														ToolTip.Tip="Edit Time">
+													<PathIcon Data="{StaticResource IconEdit}" Width="14" Height="14" Foreground="{DynamicResource TextSecondary}"/>
+												</Button>
+
+												<Button Content="Clock Out"
+														Command="{Binding #Root.DataContext.ClockOutCommand}"
+														CommandParameter="{Binding}"
+														Classes="SecondaryButton" FontSize="12" Padding="10,5"
+														IsVisible="{Binding ClockOutTime, Converter={x:Static ObjectConverters.IsNull}}"/>
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</Grid>
+			</Border>
+
+		</Grid>
+	</Grid>
+</UserControl>

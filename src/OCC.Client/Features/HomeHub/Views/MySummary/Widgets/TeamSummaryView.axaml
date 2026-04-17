@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.Features.HomeHub.ViewModels.Dashboard"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
+             x:Class="OCC.Client.Features.HomeHub.Views.MySummary.Widgets.TeamSummaryView"
+             x:DataType="vm:TeamSummaryViewModel">
+
+    <Border CornerRadius="12" Background="White" BoxShadow="0 4 20 0 #15000000" ClipToBounds="True">
+        <Grid>     
+            
+            <!--<Border Background="#A0000000" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="5">
+                    <TextBlock Text="Team Summary" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Feature Coming Soon" FontSize="14" Foreground="#E0E0E0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>-->
+        </Grid>
+    </Border>
+</UserControl>

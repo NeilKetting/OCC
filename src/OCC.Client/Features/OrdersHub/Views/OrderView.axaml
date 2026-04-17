@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:client="using:OCC.Client"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:views="using:OCC.Client.Features.OrdersHub.Views"
+			 xmlns:local="using:OCC.Client.Features.OrdersHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.OrderView"
+			 x:DataType="vm:OrderViewModel">
+
+	<Design.DataContext>
+		<vm:CreateOrderViewModel/>
+	</Design.DataContext>
+
+	<Grid RowDefinitions="Auto, Auto, *">
+		<!-- Menu Bar -->
+		<client:OrderMenuView Grid.Row="0" DataContext="{Binding OrderMenu}"/>		
+		<!-- Content -->
+
+
+		<!-- Content Area -->
+		<!-- View Content -->
+		<ContentControl Grid.Row="2" Content="{Binding CurrentView}">
+			<ContentControl.DataTemplates>
+				<DataTemplate DataType="{x:Type vm:OrderDashboardViewModel}">
+					<local:OrderDashboardView />
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vm:OrderListViewModel}">
+					<local:OrderListView />
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vm:CreateOrderViewModel}">
+					<local:CreateOrderView />
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vm:InventoryViewModel}">
+					<local:InventoryView />
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vm:SupplierListViewModel}">
+					<local:SupplierListView />
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vm:PickingOrderViewModel}">
+					<local:PickingOrderView />
+				</DataTemplate>
+			</ContentControl.DataTemplates>
+		</ContentControl>
+
+		<!-- Popup Overlay -->
+		<Grid Grid.Row="0" Grid.RowSpan="3" Background="#80000000" 
+			  IsVisible="{Binding IsOrderDetailVisible, FallbackValue=false}"
+			  IsHitTestVisible="{Binding IsOrderDetailVisible, FallbackValue=false}">
+			<Grid>
+				<views:CreateOrderView DataContext="{Binding OrderDetailVM}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+			</Grid>
+		</Grid>
+
+		<Grid Grid.Row="0" Grid.RowSpan="3" Background="#80000000" 
+			  IsVisible="{Binding IsSupplierDetailVisible, FallbackValue=false}"
+			  IsHitTestVisible="{Binding IsSupplierDetailVisible, FallbackValue=false}">
+			<Grid>
+				<views:SupplierDetailView DataContext="{Binding SupplierDetailVM}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+			</Grid>
+		</Grid>
+
+		<Grid Grid.Row="0" Grid.RowSpan="3" Background="#80000000" 
+			  IsVisible="{Binding IsReceiveOrderVisible, FallbackValue=false}"
+			  IsHitTestVisible="{Binding IsReceiveOrderVisible, FallbackValue=false}">
+			<Grid>
+				<views:ReceiveOrderView DataContext="{Binding ReceiveOrderVM}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+			</Grid>
+		</Grid>
+	</Grid>
+</UserControl>

@@ -1,0 +1,192 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.TaskHub.ViewModels"
+			 xmlns:conv="clr-namespace:OCC.Client.Converters"
+			 xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+			 x:Class="OCC.Client.Features.TaskHub.Views.TaskListView"
+			 x:DataType="vm:TaskListViewModel">
+
+	<UserControl.Resources>
+		<conv:BoolToChevronConverter x:Key="BoolToChevronConverter"/>
+	</UserControl.Resources>
+
+	<UserControl.Styles>		
+		<Style Selector="PathIcon.HeaderIcon">
+			<Setter Property="Width" Value="14"/>
+			<Setter Property="Height" Value="14"/>
+			<Setter Property="Foreground" Value="{DynamicResource TextTertiarySlate}"/>
+		</Style>
+	</UserControl.Styles>
+	
+	<UserControl.DataTemplates>
+		<DataTemplate DataType="vm:TaskTreeItemViewModel">
+			<StackPanel>
+				<!-- Task Item Row -->
+				<Border BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Background="Transparent" Padding="20,12">
+					<Interaction.Behaviors>
+						<EventTriggerBehavior EventName="DoubleTapped">
+							<InvokeCommandAction 
+								Command="{Binding $parent[UserControl].((vm:TaskListViewModel)DataContext).SelectTaskCommand}"
+								CommandParameter="{Binding Id}"/>
+						</EventTriggerBehavior>
+					</Interaction.Behaviors>
+
+					<Grid ColumnDefinitions="40, 2.5*, 1*, 1*, 1*, 30, 30, 30">
+						<CheckBox Grid.Column="0" 
+								  IsChecked="{Binding IsCompleted, Mode=OneWay}" 
+								  Command="{Binding $parent[UserControl].((vm:TaskListViewModel)DataContext).ToggleTaskCompleteCommand}"
+								  CommandParameter="{Binding}"
+								  Margin="0,-5,0,0"/>
+
+						<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="{Binding IndentLevel, Converter={StaticResource IntToIndentationConverter}}">
+							<!-- Chevron for Groups -->
+							<ToggleButton IsChecked="{Binding IsExpanded}"
+										  IsVisible="{Binding Children.Count}"
+										  Background="Transparent"
+										  Width="16" Height="16"
+										  Padding="0">
+								<PathIcon Data="{Binding IsExpanded, Converter={StaticResource BoolToChevronConverter}}" 
+										  Width="10" Height="10" 
+										  Foreground="{DynamicResource TextSecondaryGray}"/>
+							</ToggleButton>
+							<!-- Placeholder for non-groups/leafs to align text. 
+							     If Children.Count is 0, ToggleButton is collapsed. 
+								 We might want a constant spacer or just let the margin handle indentation. 
+								 The converter IndentLevel -> Margin handles structure. -->
+								 
+							<TextBlock Text="{Binding Title}" 
+									   VerticalAlignment="Center" 
+									   Foreground="{DynamicResource TextPrimaryDark}" 
+									   Classes.Group="{Binding IsGroup}">
+								<TextBlock.Styles>
+									<Style Selector="TextBlock.Group">
+										<Setter Property="FontWeight" Value="Bold"/>
+									</Style>
+								</TextBlock.Styles>
+							</TextBlock>
+						</StackPanel>
+
+						<!-- Progress Column -->
+						<StackPanel Grid.Column="2" Spacing="5" VerticalAlignment="Center">
+							<ProgressBar Value="{Binding PercentComplete}"
+										 Height="6"
+										 CornerRadius="3"
+										 Background="#E2E8F0"
+										 Foreground="{Binding StatusColor, Converter={StaticResource StatusToBrushConverter}}"/>
+							<TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}%'}" FontSize="9" Foreground="{DynamicResource TextSecondaryGray}" HorizontalAlignment="Right"/>
+						</StackPanel>
+						<TextBlock Grid.Column="3" Text="{Binding Priority}" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+						<TextBlock Grid.Column="4" Text="{Binding DueDate, StringFormat='{}{0:MMM dd}'}" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+
+						<TextBlock Grid.Column="5" Text="{Binding CommentsCount}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+						<TextBlock Grid.Column="6" Text="{Binding AttachmentsCount}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+
+						<!-- More Actions Menu -->
+						<Button Grid.Column="7" Background="Transparent" Padding="5" CornerRadius="4">
+							<PathIcon Data="{StaticResource IconMoreHorizontal}" Width="16" Height="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+							<Button.Flyout>
+								<MenuFlyout>
+									<MenuItem Header="Edit" 
+											  Command="{Binding $parent[UserControl].((vm:TaskListViewModel)DataContext).SelectTaskCommand}"
+											  CommandParameter="{Binding Id}"/>
+									<Separator/>
+									<MenuItem Header="Delete" Foreground="#EF4444"
+											  Command="{Binding $parent[UserControl].((vm:TaskListViewModel)DataContext).DeleteTaskCommand}"
+											  CommandParameter="{Binding Id}">
+										<MenuItem.Icon>
+											<PathIcon Data="{StaticResource IconTrash}" Width="12" Height="12"/>
+										</MenuItem.Icon>
+									</MenuItem>
+								</MenuFlyout>
+							</Button.Flyout>
+						</Button>
+					</Grid>
+				</Border>
+
+				<!-- Recursive Children -->
+				<ItemsControl ItemsSource="{Binding Children}" IsVisible="{Binding IsExpanded}"/>
+			</StackPanel>
+		</DataTemplate>
+	</UserControl.DataTemplates>
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- List Header -->
+		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,0,0,1" Padding="20,10">
+			<Grid ColumnDefinitions="40, 2.5*, 1*, 1*, 1*, 30, 30, 30">
+				<TextBlock Grid.Column="0" Text="DONE" Classes="LabelSmall"/>
+				<TextBlock Grid.Column="1" Text="TASK NAME" Classes="LabelSmall"/>
+				<TextBlock Grid.Column="2" Text="PROGRESS" Classes="LabelSmall"/>
+				<TextBlock Grid.Column="3" Text="PRIORITY" Classes="LabelSmall"/>
+				<TextBlock Grid.Column="4" Text="DUE" Classes="LabelSmall"/>
+
+				<!-- Icons -->
+				<PathIcon Grid.Column="5" Classes="HeaderIcon" Data="{StaticResource IconChat}" HorizontalAlignment="Center"/>
+				<PathIcon Grid.Column="6" Classes="HeaderIcon" Data="{StaticResource IconAttach}" HorizontalAlignment="Center"/>
+				<!-- Ellipsis Placeholder -->
+				<TextBlock Grid.Column="7" Text="" Classes="LabelSmall"/>
+			</Grid>
+		</Border>
+
+		<!-- Task List Area -->
+		<ScrollViewer Grid.Row="1">
+			<StackPanel>
+				<!-- New Task Button -->
+				<Button Command="{Binding NewTaskCommand}" Background="Transparent" Padding="20,12" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+					<StackPanel Orientation="Horizontal" Spacing="15">
+						<Border Width="20" Height="20" CornerRadius="10" Background="{DynamicResource TextSecondaryGray}">
+							<PathIcon Data="{StaticResource IconPlus}" Width="10" Height="10" Foreground="White"/>
+						</Border>
+						<TextBlock Text="New Task" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+					</StackPanel>
+				</Button>
+
+				<!-- Grouped List -->
+				<ItemsControl ItemsSource="{Binding ProjectGroups}">
+					<ItemsControl.ItemTemplate>
+						<DataTemplate>
+							<StackPanel>
+								<!-- Project Header Group -->
+								<Button Command="{Binding ToggleExpandCommand}" 
+										Background="#FAFAFA" 
+										BorderThickness="0,0,0,1" 
+										BorderBrush="{DynamicResource BorderGray}"
+										HorizontalAlignment="Stretch" 
+										HorizontalContentAlignment="Stretch"
+										Padding="15,8">
+									<Grid ColumnDefinitions="Auto, *">
+										<StackPanel Orientation="Horizontal" Spacing="10" Grid.Column="0">
+											<PathIcon Data="{Binding IsExpanded, Converter={StaticResource BoolToChevronConverter}}" 
+													  Width="10" Height="10" Foreground="{DynamicResource TextSecondaryGray}"/>
+											<TextBlock Text="{Binding ProjectName}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+										</StackPanel>
+									</Grid>
+								</Button>
+
+								<!-- Project Tasks (Implicit Template) -->
+								<ItemsControl ItemsSource="{Binding RootTasks}" IsVisible="{Binding IsExpanded}"/>
+							</StackPanel>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</StackPanel>
+		</ScrollViewer>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+            <ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+            <TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+        </StackPanel>
+
+        <!-- Empty State -->
+         <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                     IsVisible="{Binding !ProjectGroups.Count}">
+             <TextBlock Text="No tasks found." IsVisible="{Binding !IsBusy}" Classes="LabelSmall"/>
+         </StackPanel>
+	</Grid>
+</UserControl>
+
+
+

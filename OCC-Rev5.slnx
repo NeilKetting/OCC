@@ -1,0 +1,14 @@
+<Solution>
+  <Project Path="src/OCC.API/OCC.API.csproj" />
+  <Project Path="src/OCC.Client.Android/OCC.Client.Android.csproj">
+    <Build Solution="Debug|*" Project="true" />
+    <Deploy Solution="Debug|*" Project="true" />
+  </Project>
+  <Project Path="src/OCC.Client.Desktop/OCC.Client.Desktop.csproj" />
+  <Project Path="src/OCC.Client/OCC.Client.csproj" />
+  <Project Path="src/OCC.WpfClient/OCC.WpfClient.csproj">
+    <Build Solution="Debug|*" Project="true" />
+  </Project>
+  <Project Path="src/OCC.Shared/OCC.Shared.csproj" />
+  <Project Path="src/OCC.Tests/OCC.Tests.csproj" />
+</Solution>

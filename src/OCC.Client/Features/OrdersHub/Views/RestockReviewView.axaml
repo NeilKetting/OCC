@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:models="using:OCC.Client.Models"
+			 xmlns:client="using:OCC.Client"
+			 xmlns:dto="using:OCC.Shared.DTOs"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.RestockReviewView"
+			 x:DataType="vm:RestockReviewViewModel">
+
+	<UserControl.Styles>
+		<Style Selector="ListBoxItem">
+			<Setter Property="Padding" Value="4"/>
+			<Setter Property="Margin" Value="0,0,0,4"/>
+		</Style>
+	</UserControl.Styles>
+
+	<Border Background="#F9FAFB">
+		<Grid RowDefinitions="Auto, Auto, *">
+
+			<!-- Shared Menu -->
+			<client:OrderMenuView Grid.Row="0" DataContext="{Binding OrderMenu}"/>
+
+			<!-- Header -->
+			<Border Grid.Row="1"  Background="{DynamicResource MainPageGradient}" Margin="2" Padding="20">
+				<Grid ColumnDefinitions="*, Auto">
+					<StackPanel>
+						<TextBlock Text="Restock Review" FontSize="20" FontWeight="Bold"/>
+						<TextBlock Text="Review low stock items and creates purchase orders." Opacity="0.8" Margin="0,5,0,0"/>
+					</StackPanel>
+					<Button Grid.Column="1" Command="{Binding CloseCommand}" Classes="Ghost" Foreground="White">
+						<PathIcon Data="{StaticResource IconClose}"/>
+					</Button>
+				</Grid>
+			</Border>
+
+			<!-- Content -->
+			<ScrollViewer Grid.Row="2" Padding="20">
+				<ItemsControl ItemsSource="{Binding Groups}">
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="vm:SupplierRestockGroup">
+							<Border Background="White" CornerRadius="8" Margin="0,0,0,20" Padding="15" BoxShadow="0 1 3 0 #20000000">
+								<StackPanel>
+									<!-- Supplier Header -->
+									<Grid ColumnDefinitions="*, Auto" Margin="0,0,0,15">
+										<StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+											<Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource ThemeAccentBrush}" VerticalAlignment="Center">
+												<PathIcon Data="{StaticResource IconSupplier}" Foreground="White" Width="20" Height="20"/>
+											</Border>
+											<StackPanel>
+												<TextBlock Text="{Binding SupplierName}" FontWeight="Bold" FontSize="16"/>
+												<TextBlock Text="{Binding Count, StringFormat='{}{0} Items Low'}" Classes="Caption"/>
+											</StackPanel>
+										</StackPanel>
+										<Button Grid.Column="1" Content="Create Order" Classes="Primary"
+												Command="{Binding $parent[UserControl].((vm:RestockReviewViewModel)DataContext).CreateOrderCommand}"
+												CommandParameter="{Binding .}"/>
+									</Grid>
+
+									<Border Classes="Separator"/>
+
+									<!-- Items List -->
+									<ItemsControl ItemsSource="{Binding Items}">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate x:DataType="dto:RestockCandidateDto">
+												<Grid ColumnDefinitions="*, 200, 100" Margin="0,8">
+
+													<!-- Item Info -->
+													<StackPanel Grid.Column="0">
+														<TextBlock FontWeight="SemiBold" VerticalAlignment="Center">
+															<Run Text="{Binding Item.Description}"/>
+															<Run Text=" [" Foreground="Gray"/>
+															<Run Text="{Binding TargetBranch}" Foreground="{Binding TargetBranch, Converter={StaticResource BranchToColorConverter}}" FontWeight="Bold"/>
+															<Run Text="]" Foreground="Gray"/>
+														</TextBlock>
+														<TextBlock Text="{Binding Item.Sku}" Classes="Caption"/>
+													</StackPanel>
+
+													<!-- Visual Bar -->
+													<StackPanel Grid.Column="1" VerticalAlignment="Center">
+														<!-- Label -->
+														<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,2" Spacing="4">
+															<TextBlock Text="{Binding QuantityOnHandForBranch}" Foreground="Red" FontWeight="Bold" FontSize="11"/>
+															<TextBlock Text="+" FontSize="11"/>
+															<TextBlock Text="{Binding QuantityOnOrder}" Foreground="Blue" FontWeight="Bold" FontSize="11"/>
+															<TextBlock Text="/" FontSize="11"/>
+															<TextBlock Text="{Binding TargetReorderPoint, StringFormat='{}{0} (Min)'}" Foreground="Gray" FontSize="11"/>
+														</StackPanel>
+
+														<!-- Bar Container -->
+														<Border Height="8" CornerRadius="4" Background="#E5E7EB" ClipToBounds="True">
+															<ToolTip.Tip>
+																<StackPanel Spacing="5" Margin="5">
+																	<TextBlock Text="Stock Level Legend" FontWeight="Bold" Margin="0,0,0,5"/>
+																	<StackPanel Orientation="Horizontal" Spacing="10">
+																		<Rectangle Width="12" Height="12" Fill="#EF4444" RadiusX="2" RadiusY="2"/>
+																		<TextBlock Text="In Stock" VerticalAlignment="Center" FontSize="11"/>
+																	</StackPanel>
+																	<StackPanel Orientation="Horizontal" Spacing="10">
+																		<Rectangle Width="12" Height="12" Fill="#3B82F6" RadiusX="2" RadiusY="2"/>
+																		<TextBlock Text="On Order" VerticalAlignment="Center" FontSize="11"/>
+																	</StackPanel>
+																	<StackPanel Orientation="Horizontal" Spacing="10">
+																		<Rectangle Width="12" Height="12" Fill="#D1D5DB" RadiusX="2" RadiusY="2"/>
+																		<TextBlock Text="Gap to Min Threshold" VerticalAlignment="Center" FontSize="11"/>
+																	</StackPanel>
+																</StackPanel>
+															</ToolTip.Tip>
+															<Grid>
+																<Grid.ColumnDefinitions>
+																	<ColumnDefinition Width="{Binding QuantityOnHandForBranch, Converter={StaticResource DoubleToStarGridLengthConverter}}"/>
+																	<ColumnDefinition Width="{Binding QuantityOnOrder, Converter={StaticResource DoubleToStarGridLengthConverter}}"/>
+																	<ColumnDefinition Width="{Binding Gap, Converter={StaticResource DoubleToStarGridLengthConverter}}"/>
+																</Grid.ColumnDefinitions>
+
+																<!-- Hand Stock (Red) -->
+																<Rectangle Grid.Column="0" Fill="#EF4444"/>
+
+																<!-- On Order (Blue) -->
+																<Rectangle Grid.Column="1" Fill="#3B82F6"/>
+
+																<!-- Gap (Light Gray) -->
+																<Rectangle Grid.Column="2" Fill="#D1D5DB"/>
+															</Grid>
+														</Border>
+													</StackPanel>
+												</Grid>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+								</StackPanel>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</ScrollViewer>
+
+			<StackPanel Grid.Row="0" Grid.RowSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+				<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+
+				<TextBlock Text="Comparing Inventory..." Margin="0,10,0,0"/>
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

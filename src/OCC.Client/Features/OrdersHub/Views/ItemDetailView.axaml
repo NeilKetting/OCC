@@ -1,0 +1,213 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 mc:Ignorable="d"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.ItemDetailView"
+			 x:DataType="vm:ItemDetailViewModel">
+
+	<UserControl.Styles>
+		<Style Selector="TextBox.FormInput">
+			<Setter Property="Height" Value="22"/>
+			<Setter Property="Padding" Value="8,3"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="ComboBox">
+			<Setter Property="Height" Value="22"/>
+			<Setter Property="Padding" Value="8,3"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="TextBlock.Label">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="{DynamicResource TextSecondaryDark}"/>
+			<Setter Property="Margin" Value="0,0,0,3"/>
+		</Style>
+	</UserControl.Styles>
+
+	<UserControl.KeyBindings>
+		<KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+	</UserControl.KeyBindings>
+
+	<Border Background="{DynamicResource SurfaceWhite}"
+			CornerRadius="0"
+			BoxShadow="0 2 15 5 #292828"
+			VerticalAlignment="Center"
+			HorizontalAlignment="Center"
+			MaxWidth="800" MaxHeight="800">
+		<Grid RowDefinitions="Auto, *, Auto, Auto">
+
+			<!-- Header -->
+			<Border Grid.Row="0"
+					BorderThickness="0,0,0,2"
+					Background="{DynamicResource WeatheredCementGradient}"
+					Padding="20,0">
+				<Grid Grid.Row="0"
+					  ColumnDefinitions="*, Auto"
+					  Margin="15">
+					<StackPanel Spacing="5">
+						<TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"
+								   TextTrimming="CharacterEllipsis" MaxLines="1" TextWrapping="NoWrap"/>
+						<TextBlock Text="Product Details and Inventory Levels." FontSize="14" Foreground="{DynamicResource TextSecondaryGray}"/>
+					</StackPanel>
+					<Button Grid.Column="1" Classes="IconButtonClose" Command="{Binding CancelCommand}" VerticalAlignment="Top">
+						<PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+					</Button>
+				</Grid>
+			</Border>
+
+			<!-- Content -->
+			<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+				<Grid ColumnDefinitions="*, 30, *" Margin="30,30,30,30">
+					<!-- Left Column -->
+					<StackPanel Grid.Column="0" Spacing="10">
+
+						<!-- Product Info -->
+						<TextBlock Text="General Information" Classes="SectionHeader" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource PrimaryTeal}"/>
+
+						<Grid ColumnDefinitions="*, 20, *">
+							<StackPanel Grid.Column="0" Spacing="10">
+								<TextBlock Text="Product Code / SKU" Classes="FormLabel"/>
+								<TextBox Text="{Binding Sku}" Classes="FormInput" Watermark="e.g. CEM-50"/>
+							</StackPanel>
+
+							<StackPanel Grid.Column="2" Spacing="10">
+								<TextBlock Text="Unit Price (R)" Classes="FormLabel"/>
+								<TextBox Text="{Binding Price}" Classes="FormInput" Watermark="0.00"/>
+							</StackPanel>
+						</Grid>
+
+						<StackPanel Spacing="10">
+							<TextBlock Text="Description" Classes="FormLabel"/>
+							<TextBox Text="{Binding Description}" Classes="FormInput" Watermark="e.g. Cement 50kg" 
+									 Height="NaN" MinHeight="22" AcceptsReturn="True" TextWrapping="Wrap"/>
+						</StackPanel>
+
+						<Grid ColumnDefinitions="*, 20, *">
+							<StackPanel Grid.Column="0" Spacing="10">
+								<TextBlock Text="Category" Classes="FormLabel"/>
+								<!-- Editable ComboBox for Category -->
+								<ComboBox ItemsSource="{Binding AvailableCategories}"
+										  Text="{Binding Category}"
+										  IsEditable="True"
+										  IsTextSearchEnabled="True"
+										  Classes="FormInput"
+										  HorizontalAlignment="Stretch"
+										  VerticalContentAlignment="Center"
+										  PlaceholderText="Select or Type New..."/>
+							</StackPanel>
+
+							<StackPanel Grid.Column="2" Spacing="10">
+								<TextBlock Text="Unit of Measure" Classes="FormLabel"/>
+								<!-- Standard Dropdown for UOM -->
+								<ComboBox ItemsSource="{Binding AvailableUOMs}"
+										  SelectedItem="{Binding UnitOfMeasure}"
+										  Classes="FormInput"
+										  HorizontalAlignment="Stretch"
+										  VerticalContentAlignment="Center"
+										  PlaceholderText="Select Unit"/>
+							</StackPanel>
+						</Grid>
+
+						<StackPanel Spacing="10">
+							<TextBlock Text="Preferred Supplier" Classes="FormLabel"/>
+							<ComboBox ItemsSource="{Binding AvailableSuppliers}"
+									  SelectedValue="{Binding SupplierName}"
+									  SelectedValueBinding="{Binding Name}"
+									  DisplayMemberBinding="{Binding Name}"
+									  Classes="FormInput"
+									  HorizontalAlignment="Stretch"
+									  VerticalContentAlignment="Center"
+									  PlaceholderText="Select Supplier"/>
+						</StackPanel>
+
+						<StackPanel Spacing="10">
+							<TextBlock Text="Location (Warehouse)" Classes="FormLabel"/>
+							<TextBox Text="{Binding Location}" Classes="FormInput" Watermark="e.g. Aisle 4, Shelf B"/>
+						</StackPanel>
+
+
+						
+					</StackPanel>
+					<!-- Right Column -->
+					<StackPanel Grid.Column="2" Spacing="10">
+						<!-- Inventory Levels -->
+						<TextBlock Text="Inventory Levels" Classes="SectionHeader" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource PrimaryTeal}"/>
+                        
+						<ToggleSwitch Content="Allow Stock Tracking" 
+                                      IsChecked="{Binding IsStockItem}"
+                                      OnContent="Yes" OffContent="No"
+                                      Theme="{DynamicResource MaterialToggleSwitch}"/>
+
+						<ToggleSwitch Content="Track Low Stock" 
+                                      IsChecked="{Binding IsTrackingLowStock}"
+                                      IsVisible="{Binding IsStockItem}"
+                                      OnContent="Yes" OffContent="No"
+                                      Theme="{DynamicResource MaterialToggleSwitch}"/>
+
+                        <StackPanel IsVisible="{Binding IsStockItem}" Spacing="10">
+                            
+                            <Grid ColumnDefinitions="*, 20, *">
+                                <StackPanel Grid.Column="0" Spacing="10">
+                                    <TextBlock Text="JHB Quantity" Classes="FormLabel"/>
+                                    <TextBox Text="{Binding JhbQuantity}" Classes="FormInput" Watermark="0" IsReadOnly="{Binding !IsEditMode}"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2" Spacing="10">
+                                    <TextBlock Text="CPT Quantity" Classes="FormLabel"/>
+                                    <TextBox Text="{Binding CptQuantity}" Classes="FormInput" Watermark="0" IsReadOnly="{Binding !IsEditMode}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*, 20, *">
+                                <StackPanel Grid.Column="0" Spacing="10">
+                                    <TextBlock Text="Total On Hand" Classes="FormLabel"/>
+                                    <!-- Read Only to prevent manual edits bypassing Receive/Adjust flow -->
+                                    <TextBox Text="{Binding QuantityOnHand}" Classes="FormInput" Watermark="0" IsReadOnly="True" Background="#F8FAFC"/>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <TextBlock Text="Reorder Points (Branch Specific)" Classes="FormLabel" Margin="0,5,0,0"/>
+
+                            <Grid ColumnDefinitions="*, 20, *" IsVisible="{Binding IsTrackingLowStock}">
+                                <StackPanel Grid.Column="0" Spacing="10">
+                                    <TextBlock Text="JHB Threshold" Classes="FormLabel" FontSize="11" Foreground="Gray"/>
+                                    <TextBox Text="{Binding JhbReorderPoint}" Classes="FormInput" Watermark="10"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2" Spacing="10" IsVisible="{Binding IsTrackingLowStock}">
+                                    <TextBlock Text="CPT Threshold" Classes="FormLabel" FontSize="11" Foreground="Gray"/>
+                                    <TextBox Text="{Binding CptReorderPoint}" Classes="FormInput" Watermark="10"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel> <!-- End of Stock Tracking Group -->
+
+						<StackPanel Spacing="10">
+							<TextBlock Text="Avg Buying Price (R)" Classes="FormLabel"/>
+							<Border BorderBrush="{DynamicResource ThemeBorderLow}" BorderThickness="1" CornerRadius="4" Padding="10,5" Background="#F8FAFC">
+								<TextBlock Text="{Binding AverageCost, StringFormat='R {0:F2}'}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryDark}"/>
+							</Border>
+						</StackPanel>
+						</StackPanel>
+				</Grid>
+			</ScrollViewer>
+
+			<!-- Footer Separator -->
+			<Grid Grid.Row="2" Height="2" Background="{DynamicResource PrimaryTeal}"/>
+
+			<!-- Action Buttons -->
+			<StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" Margin="20,15" HorizontalAlignment="Right">
+				<Button Content="Cancel" Command="{Binding CancelCommand}" Classes="Cancel"/>
+				<Button Content="Save Item" Command="{Binding SaveCommand}" Classes="Primary"/>
+			</StackPanel>
+
+			<!-- Loading -->
+			<StackPanel Grid.RowSpan="4" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+				<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+				<TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>

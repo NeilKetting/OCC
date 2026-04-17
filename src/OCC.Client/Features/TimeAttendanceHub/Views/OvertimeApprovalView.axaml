@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Features.TimeAttendanceHub.Views.OvertimeApprovalView"
+             x:Name="Root"
+             x:DataType="vm:OvertimeApprovalViewModel">
+    
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Border Grid.Row="0" Margin="0,0,0,10" Classes="TopHeader" Background="{DynamicResource MainPageGradient}">
+             <Grid ColumnDefinitions="*, Auto">
+                 <StackPanel>
+                <TextBlock Text="Overtime Approvals" Classes="H1" VerticalAlignment="Center"/>
+					<TextBlock Text="Approve or Deny overtime requests." Foreground="#94A3B8" FontSize="{StaticResource FontsizeMedium}"/>
+				</StackPanel>
+                <Button Grid.Column="1" Command="{Binding LoadDataCommand}" Classes="Secondary" Content="Refresh"/>
+             </Grid>
+        </Border>
+
+        <!-- List -->
+        <DataGrid Grid.Row="1" ItemsSource="{Binding PendingRequests}" 
+                  SelectedItem="{Binding SelectedRequest}"
+                  IsReadOnly="True"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="1" BorderBrush="{DynamicResource BorderGray}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" Width="*" MinWidth="250"/>
+                <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='d'}" Width="Auto"/>
+                <DataGridTextColumn Header="Start" Binding="{Binding StartTime}" Width="Auto"/>
+                <DataGridTextColumn Header="End" Binding="{Binding EndTime}" Width="Auto"/>
+                <DataGridTextColumn Header="Hours" Binding="{Binding DurationHours, StringFormat='N1'}" Width="Auto"/>
+                <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*" MinWidth="200"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                   <DataGridTemplateColumn.CellTemplate>
+                       <DataTemplate>
+                           <StackPanel Orientation="Horizontal" Spacing="5">
+                               <Button Command="{Binding #Root.DataContext.ApproveCommand}" 
+                                       CommandParameter="{Binding}"
+                                       Content="Approve"
+                                       Theme="{StaticResource PrimaryButton}"
+                                       Foreground="White"
+                                       Background="#10B981"/>
+                           </StackPanel>
+                       </DataTemplate>
+                   </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <!-- Action Area for Selected (Rejection needs input) -->
+        <Border Grid.Row="1" VerticalAlignment="Bottom" Margin="20" Background="White" 
+                BoxShadow="0 4 15 0 #20000000" CornerRadius="8" Padding="15"
+                IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+             <StackPanel Spacing="10">
+                 <TextBlock Text="Action Selected Request" FontWeight="SemiBold"/>
+                 <TextBlock Text="{Binding SelectedRequest.Employee.DisplayName, StringFormat='Request for {0}'}"/>
+                 <Grid ColumnDefinitions="*, Auto">
+                    <TextBox Grid.Column="0" Text="{Binding RejectionReason}" Watermark="Reason for rejection (Required for Reject)" Margin="0,0,10,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Command="{Binding ApproveCommand}" CommandParameter="{Binding SelectedRequest}" Content="Approve" Background="#10B981" Foreground="White"/>
+                        <Button Command="{Binding RejectCommand}" CommandParameter="{Binding SelectedRequest}" Content="Reject" Background="#EF4444" Foreground="White"/>
+                    </StackPanel>
+                 </Grid>
+             </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

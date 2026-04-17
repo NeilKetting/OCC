@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:OCC.Client.Features.CoreHub.ViewModels"
+		mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+		x:Class="OCC.Client.Features.CoreHub.Views.SplashView"
+		x:DataType="vm:SplashViewModel"
+		Title="Orange Circle Construction"
+		Width="460" Height="360"
+		WindowStartupLocation="CenterScreen"
+		SystemDecorations="None"
+		Background="Transparent"
+		TransparencyLevelHint="Transparent"
+		BorderThickness="0"
+		BorderBrush="Transparent"
+		Topmost="True">
+
+	<Border Background="{DynamicResource SideMenuGradient}" CornerRadius="35" 
+			BorderThickness="4"
+			BorderBrush="{DynamicResource SplashGradient}"
+			Padding="20" 
+			Margin="30"
+			BoxShadow="0 8 24 0 #60000000">
+		<Grid RowDefinitions="*, Auto, Auto">
+
+			<!-- Logo area -->
+			<StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+				<!-- Placeholder for Logo if available, using Text for now -->
+				<Image Source="avares://OCC.Client/Assets/Images/occ_logo2.png"
+					   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+			</StackPanel>
+
+			<!-- Status -->
+			<StackPanel Grid.Row="1" Spacing="10" Margin="0,30,0,0">
+				<TextBlock Text="{Binding StatusText}" HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryLight}"/>
+				<ProgressBar IsIndeterminate="{Binding IsChecking}" Value="{Binding Progress}" Maximum="100" Height="4" Width="200" Foreground="{DynamicResource Orange}"/>
+			</StackPanel>
+
+			<!-- Version -->
+			<TextBlock Grid.Row="2" Text="{Binding CurrentVersion}" HorizontalAlignment="Center" Margin="0,20,0,0" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource Orange}"/>
+		</Grid>
+	</Border>
+</Window>

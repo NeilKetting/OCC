@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:OCC.Client.Features.TimeAttendanceHub.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+			 x:Class="OCC.Client.Features.TimeAttendanceHub.Views.ManualAttendanceView"
+			 x:DataType="vm:ManualAttendanceViewModel">
+
+	<Grid RowDefinitions="Auto, *">
+		<!-- Header / Filters -->
+		<Border Grid.Row="0" Padding="20" Background="{DynamicResource MainPageGradient}">
+			<StackPanel Spacing="15">
+				<TextBlock Text="Manual Attendance Entry" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+
+				<Grid ColumnDefinitions="Auto, 15, Auto, 15, Auto, 15, *, Auto" RowDefinitions="Auto, Auto">
+					<!-- Date & Branch -->
+					<StackPanel Grid.Column="0" Spacing="5">
+						<TextBlock Text="Date" Classes="LabelSmall" Foreground="{DynamicResource TextTertiarySlate}"/>
+						<CalendarDatePicker SelectedDate="{Binding SelectedDate}" DisplayDateEnd="{Binding MaxDate}" Width="150"/>
+					</StackPanel>
+
+					<StackPanel Grid.Column="2" Spacing="5">
+						<TextBlock Text="Branch Filter" Classes="LabelSmall" Foreground="{DynamicResource TextTertiarySlate}"/>
+						<ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}" Width="150"/>
+					</StackPanel>
+
+					<StackPanel Grid.Column="4" Spacing="5">
+						<TextBlock Text="Pay Type" Classes="LabelSmall" Foreground="{DynamicResource TextTertiarySlate}"/>
+						<ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}" Width="120"/>
+					</StackPanel>
+
+					<StackPanel Grid.Column="6" Spacing="5">
+						<TextBlock Text="Search Staff" Classes="LabelSmall" Foreground="{DynamicResource TextTertiarySlate}"/>
+						<TextBox Text="{Binding SearchText}" Watermark="Search by name..." Width="250">
+							<TextBox.InnerRightContent>
+								<PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14" Margin="0,0,8,0" Foreground="{DynamicResource TextTertiarySlate}"/>
+							</TextBox.InnerRightContent>
+						</TextBox>
+					</StackPanel>
+
+					<!-- Clock Times -->
+					<StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="15">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Clock In" Classes="LabelSmall" Foreground="{DynamicResource TextTertiarySlate}"/>
+							<TimePicker SelectedTime="{Binding ClockInTime}" ClockIdentifier="24HourClock"/>
+						</StackPanel>
+						<StackPanel Spacing="5">
+							<TextBlock Text="Clock Out" Classes="LabelSmall" Foreground="{DynamicResource TextTertiarySlate}"/>
+							<TimePicker SelectedTime="{Binding ClockOutTime}" ClockIdentifier="24HourClock"/>
+						</StackPanel>
+					</StackPanel>
+				</Grid>
+			</StackPanel>
+		</Border>
+
+		<!-- Content: Employee Selection -->
+		<Grid Grid.Row="1" RowDefinitions="*, Auto" Margin="20">
+			<Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #08000000">
+				<DataGrid x:Name="EmployeesDataGrid" ItemsSource="{Binding Employees}" AutoGenerateColumns="False"
+						  IsReadOnly="False" CanUserResizeColumns="True"
+						  GridLinesVisibility="Horizontal" Background="Transparent"
+						  KeyDown="EmployeesDataGrid_KeyDown">
+					<DataGrid.Columns>
+						<DataGridTemplateColumn Width="50">
+							<DataGridTemplateColumn.Header>
+								<CheckBox IsChecked="{Binding IsAllSelected}" HorizontalAlignment="Center"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate x:DataType="vm:SelectableEmployeeViewModel">
+									<CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTextColumn Header="Employee Name" Binding="{Binding DisplayName}" Width="Auto" MinWidth="250" IsReadOnly="True"/>
+						<DataGridTextColumn Header="Branch" Binding="{Binding Branch}" Width="Auto" IsReadOnly="True"/>
+						<DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="Auto" IsReadOnly="True"/>
+					</DataGrid.Columns>
+				</DataGrid>
+			</Border>
+
+			<!-- Action Bar -->
+			<Border Grid.Row="1" Margin="0,20,0,0" Padding="15" Background="#F8FAFC" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+				<Grid ColumnDefinitions="*, Auto">
+					<StackPanel Grid.Column="0" VerticalAlignment="Center">
+						<TextBlock Text="Ready to commit attendance?" FontWeight="SemiBold"/>
+						<TextBlock Text="This will create records for all selected employees on the specified date."
+								   FontSize="12" Foreground="{DynamicResource TextSecondaryGray}"/>
+					</StackPanel>
+
+					<Button Grid.Column="1" Command="{Binding CommitAttendanceCommand}"
+							Classes="Primary" Padding="25,12">
+						<StackPanel Orientation="Horizontal" Spacing="10">
+							<PathIcon Data="{StaticResource IconCheck}" Width="18" Height="18"/>
+							<TextBlock Text="Commit Attendance Records" FontWeight="Bold"/>
+						</StackPanel>
+					</Button>
+				</Grid>
+			</Border>
+		</Grid>
+
+		<!-- Loading Overlay -->
+		<Border Grid.Row="1" Background="#80FFFFFF" IsVisible="{Binding IsBusy}">
+			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+				<ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+				<TextBlock Text="Processing..." Classes="LabelSmall"/>
+			</StackPanel>
+		</Border>
+	</Grid>
+</UserControl>

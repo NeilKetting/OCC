@@ -1,0 +1,92 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+	<!-- Brand & Primary Colors -->
+	<Color x:Key="OrangeColor">#FF8F00</Color>
+	<SolidColorBrush x:Key="Orange" Color="{StaticResource OrangeColor}"/>
+	
+	<Color x:Key="PrimaryTealColor">#00b5ad</Color>
+	<SolidColorBrush x:Key="PrimaryTeal" Color="{StaticResource PrimaryTealColor}"/>
+	<SolidColorBrush x:Key="PrimaryTealHover">#00a39c</SolidColorBrush>
+	<SolidColorBrush x:Key="PrimaryTealLight">#e0f2f1</SolidColorBrush>
+	<SolidColorBrush x:Key="AccentOrange">#F97637</SolidColorBrush>
+	<SolidColorBrush x:Key="AccentOrangeHover">#FA8C56</SolidColorBrush>
+	<SolidColorBrush x:Key="ActionBlue">#3B82F6</SolidColorBrush>
+	<SolidColorBrush x:Key="ActionBlueHover">#2563EB</SolidColorBrush>
+
+	<!-- Background & Surface Colors -->
+	<SolidColorBrush x:Key="PrimaryBackgroundDark">#576A8F</SolidColorBrush>
+
+
+	<SolidColorBrush x:Key="AppBackgroundSlate">#f8fafc</SolidColorBrush>
+	<SolidColorBrush x:Key="SurfaceLightGray">#dedfe2</SolidColorBrush>
+	<SolidColorBrush x:Key="SurfaceWhite">#FFFFFF</SolidColorBrush>
+	<SolidColorBrush x:Key="BorderGray">#e2e8f0</SolidColorBrush>
+	<SolidColorBrush x:Key="BorderDark">#00252e</SolidColorBrush>
+
+	<!-- Text Colors -->
+	<SolidColorBrush x:Key="TextPrimaryLight">#EAEFEF</SolidColorBrush>
+	<SolidColorBrush x:Key="TextSecondaryLight">#ACBAC4</SolidColorBrush>
+
+
+	<SolidColorBrush x:Key="TextPrimaryDark">#000000</SolidColorBrush>
+	<SolidColorBrush x:Key="TextSecondaryDark">#475569</SolidColorBrush>
+	<SolidColorBrush x:Key="TextSecondaryGray">#64748b</SolidColorBrush>
+	<SolidColorBrush x:Key="TextTertiarySlate">#94a3b8</SolidColorBrush>
+	<SolidColorBrush x:Key="ErrorRed">#EF4444</SolidColorBrush> <!-- Extracted from inline styles -->
+
+	<!-- Status & Misc -->
+	<SolidColorBrush x:Key="StatusGreen">#22c55e</SolidColorBrush>
+
+	<Color x:Key="LoginBackgroundDarkColor">#0f172a</Color>
+	<SolidColorBrush x:Key="LoginBackgroundDark" Color="{StaticResource LoginBackgroundDarkColor}"/>
+	<SolidColorBrush x:Key="LoginTextDark">#1e293b</SolidColorBrush>
+	<SolidColorBrush x:Key="LoginTextLight">#64748b</SolidColorBrush>
+
+	<!-- Button Top Bar and Top Header Colors -->
+	<!-- Button Top Bar and Top Header Colors -->
+	<SolidColorBrush x:Key="GreenButtonBackground">#B6F500</SolidColorBrush>
+
+	<!-- Gradients -->
+	<LinearGradientBrush x:Key="HomeMenuGradient" StartPoint="50%,0%" EndPoint="100%,0%">
+		<GradientStop Offset="0" Color="#DEDFE2"/>
+		<GradientStop Offset="0.90" Color="#ED985F"/>
+	</LinearGradientBrush>
+
+	<LinearGradientBrush x:Key="SideMenuGradient" StartPoint="0%,0%" EndPoint="100%,0%">
+		<GradientStop Offset="0.2" Color="#262626"/>
+		<GradientStop Offset="1.0" Color="#576A8F"/>
+	</LinearGradientBrush>
+
+	<LinearGradientBrush x:Key="TopMenuGradient" StartPoint="0%,0%" EndPoint="100%,0%">
+		<GradientStop Offset="0.0" Color="#576A8F"/>
+		<GradientStop Offset="0.5" Color="#576A8F"/>
+		<GradientStop Offset="1.0" Color="#FF8F00"/>
+	</LinearGradientBrush>
+
+	<LinearGradientBrush x:Key="WeatheredCementGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+		<GradientStop Offset="0.0" Color="#F1F5F9" />
+		<GradientStop Offset="1.0" Color="#CBD5E1" />
+	</LinearGradientBrush>
+
+	<LinearGradientBrush x:Key="SplashGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+		<!-- Acid Green -->
+		<GradientStop Offset="0.0" Color="#00FF6A"/>
+		<!-- Electric Cyan / Blue -->
+		<GradientStop Offset="0.22" Color="#00CFFF"/>
+		<!-- Hard Red Punch -->
+		<GradientStop Offset="0.42" Color="#FF003C"/>
+		<!-- White Flash -->
+		<GradientStop Offset="0.70" Color="#FFFFFF"/>
+		<!-- Orange -->
+		<GradientStop Offset="1.0" Color="#FF8F00"/>
+	</LinearGradientBrush>
+
+		<LinearGradientBrush x:Key="MainPageGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+		<!-- Acid Green -->
+		<GradientStop Offset="0.22" Color="#dedfe2"/>
+		<!-- Electric Cyan / Blue -->
+		<GradientStop Offset="1.00" Color="#9eedff"/>
+	</LinearGradientBrush>
+
+</ResourceDictionary>

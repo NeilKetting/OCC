@@ -1,0 +1,140 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:OCC.Client.Features.OrdersHub.ViewModels"
+			 xmlns:models="using:OCC.Shared.Models"
+			 xmlns:wrappers="using:OCC.Client.ModelWrappers"
+			 xmlns:controls="using:OCC.Client.Controls"
+			 xmlns:views="using:OCC.Client.Features.OrdersHub.Views"
+			 mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+			 x:Class="OCC.Client.Features.OrdersHub.Views.PickingOrderView"
+			 x:DataType="vm:PickingOrderViewModel">
+
+	<UserControl.Resources>
+		<DataTemplate x:Key="ItemTemplate" x:DataType="wrappers:OrderLineWrapper">
+			<TextBlock Text="{Binding ItemCode}" VerticalAlignment="Center" Padding="10,0"/>
+		</DataTemplate>
+
+		<DataTemplate x:Key="DescriptionTemplate" x:DataType="wrappers:OrderLineWrapper">
+			<TextBlock Text="{Binding Description}" VerticalAlignment="Center" Padding="10,0" TextTrimming="CharacterEllipsis"/>
+		</DataTemplate>
+
+		<DataTemplate x:Key="QtyTemplate" x:DataType="wrappers:OrderLineWrapper">
+			<NumericUpDown Value="{Binding QuantityOrdered}"
+						   Minimum="0.01"
+						   Increment="1"
+						   FormatString="0.##"
+						   HorizontalContentAlignment="Right"
+						   ShowButtonSpinner="True"
+                           Height="28" Padding="5,0"/>
+		</DataTemplate>
+
+		<DataTemplate x:Key="UnitTemplate" x:DataType="wrappers:OrderLineWrapper">
+			<TextBlock Text="{Binding UnitOfMeasure}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+		</DataTemplate>
+	</UserControl.Resources>
+
+	<Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
+		<!-- Header -->
+		<Border Grid.Row="0" Padding="0,0,0,15" BorderBrush="{DynamicResource ThemeBorderLow}" BorderThickness="0,0,0,1">
+			<Grid ColumnDefinitions="Auto, *, Auto">
+				<StackPanel Orientation="Horizontal" Spacing="15">
+					<TextBlock Text="PIKING ORDER" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+					<TextBlock Text="{Binding CurrentOrder.OrderNumber}" FontSize="20" VerticalAlignment="Bottom" Foreground="Gray"/>
+				</StackPanel>
+				
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+					<TextBlock Text="Branch:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+					<TextBlock Text="{Binding CurrentOrder.Branch}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryBrush}"/>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<!-- Sub Header: Project Selection -->
+		<Border Grid.Row="1" Padding="0,15" Background="#F9F9F9" Margin="0,0,0,15" CornerRadius="4">
+			<StackPanel Spacing="10" Margin="15,0">
+				<TextBlock Text="Target Project / Site" FontWeight="SemiBold" FontSize="12"/>
+				<Grid ColumnDefinitions="*, 300">
+					<ComboBox ItemsSource="{Binding Projects}" 
+							  SelectedItem="{Binding SelectedProject}"
+							  PlaceholderText="Select target project..."
+							  HorizontalAlignment="Stretch">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="models:Project">
+								<TextBlock Text="{Binding Name}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+                    <!-- Note: Ideally Projects should be in PickingOrderViewModel but re-using parent for now if needed -->
+				</Grid>
+			</StackPanel>
+		</Border>
+
+		<!-- Main Content: Picking List -->
+		<Grid Grid.Row="2" RowDefinitions="Auto, *">
+			<!-- Add Item via Lookup -->
+			<Border Grid.Row="0" Background="White" BorderBrush="{DynamicResource ThemeBorderLow}" BorderThickness="1" Padding="10" CornerRadius="4" Margin="0,0,0,10">
+				<Grid ColumnDefinitions="*, Auto">
+					<controls:SearchableComboBox 
+						ItemsSource="{Binding InventoryLookup.FilteredItems}"
+						SelectedItem="{Binding InventoryLookup.SelectedItem}"
+						Text="{Binding InventoryLookup.SearchText, Mode=TwoWay}"
+						ValueMemberBinding="{Binding Description, DataType=models:InventoryItem}"
+						Watermark="Search stock in your branch..."
+						HorizontalAlignment="Stretch">
+                        <controls:SearchableComboBox.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding AddLineCommand}"/>
+                        </controls:SearchableComboBox.KeyBindings>
+						<controls:SearchableComboBox.ItemTemplate>
+							<DataTemplate x:DataType="models:InventoryItem">
+								<Grid ColumnDefinitions="100, *, Auto">
+									<TextBlock Grid.Column="0" Text="{Binding Sku}" FontWeight="Bold"/>
+									<TextBlock Grid.Column="1" Text="{Binding Description}" Margin="10,0,0,0"/>
+									<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" Margin="10,0,0,0">
+										<TextBlock Text="In Stock:" Foreground="Gray" FontSize="11" VerticalAlignment="Center"/>
+										<TextBlock Text="{Binding QuantityOnHand}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding UnitOfMeasure}" Foreground="Gray" FontSize="11" VerticalAlignment="Center"/>
+									</StackPanel>
+								</Grid>
+							</DataTemplate>
+						</controls:SearchableComboBox.ItemTemplate>
+					</controls:SearchableComboBox>
+					<Button Grid.Column="1" Content="Add Item" Command="{Binding AddLineCommand}" Classes="Primary" Margin="10,0,0,0" Width="100"/>
+				</Grid>
+			</Border>
+
+			<DataGrid Grid.Row="1" ItemsSource="{Binding CurrentOrder.Lines}"
+					  CanUserResizeColumns="True"
+					  GridLinesVisibility="Horizontal"
+					  RowHeight="35"
+					  BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLow}">
+				<DataGrid.Columns>
+					<DataGridTemplateColumn Header="SKU" Width="Auto" CellTemplate="{StaticResource ItemTemplate}"/>
+					<DataGridTemplateColumn Header="DESCRIPTION" Width="Auto" CellTemplate="{StaticResource DescriptionTemplate}"/>
+					<DataGridTemplateColumn Header="PICK QTY" MinWidth="150" Width="Auto" CellTemplate="{StaticResource QtyTemplate}"/>
+					<DataGridTemplateColumn Header="UNIT" Width="Auto" CellTemplate="{StaticResource UnitTemplate}"/>
+					<DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Button Command="{Binding $parent[UserControl].((vm:PickingOrderViewModel)DataContext).RemoveLineCommand}"
+										CommandParameter="{Binding}"
+										Background="Transparent" BorderThickness="0" Padding="5">
+									<PathIcon Data="{StaticResource IconDelete}" Foreground="Red" Width="14" Height="14"/>
+								</Button>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</DataGrid>
+		</Grid>
+
+		<!-- Footer -->
+		<Border Grid.Row="3" Padding="0,15,0,0" BorderBrush="{DynamicResource ThemeBorderLow}" BorderThickness="0,1,0,0" Margin="0,10,0,0">
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15">
+				<Button Content="Cancel" Command="{Binding CloseCommand}" Classes="Secondary" Width="100"/>
+				<Button Content="Confirm Picking" Command="{Binding SubmitOrderCommand}" Classes="Primary" Width="150"/>
+			</StackPanel>
+		</Border>
+	</Grid>
+</UserControl>

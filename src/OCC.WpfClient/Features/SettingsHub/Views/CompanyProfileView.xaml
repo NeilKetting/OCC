@@ -1,0 +1,306 @@
+<UserControl x:Class="OCC.WpfClient.Features.SettingsHub.Views.CompanyProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OCC.WpfClient.Features.SettingsHub.Views"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.SettingsHub.ViewModels"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             d:DataContext="{d:DesignInstance Type=vm:CompanyProfileViewModel, IsDesignTimeCreatable=True}">
+    
+    <Grid Margin="20">
+
+        <Border Background="{StaticResource CardBackground}" 
+                CornerRadius="16" 
+                BorderBrush="{StaticResource GlassBorder}" 
+                BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.3" Color="Black"/>
+            </Border.Effect>
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Grid.Row="0" Padding="24" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Company Profile" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                            <TextBlock Text="Manage company details and branch settings." Margin="0,4,0,0" Foreground="{StaticResource TextSub}"/>
+                        </StackPanel>
+                        
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                Command="{Binding CloseCommand}" 
+                                Style="{StaticResource GhostButton}">
+
+                            <Path Data="{StaticResource IconClose}" Fill="{StaticResource TextSub}" Stretch="Uniform" Width="12" Height="12"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Content -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left Column: General Info -->
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Path Data="{StaticResource IconInformation}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="General Information" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Company Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.CompanyName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. Orange Circle Construction"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Registration Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.RegistrationNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 2020/123456/07"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="VAT Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.VatNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 4123456789"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.Email}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. info@orangecircle.co.za"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,32">
+                                <TextBlock Text="Website" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.Website}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. www.orangecircle.co.za"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Path Data="{StaticResource IconBank}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="Banking Details" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Bank Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.BankName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. FNB"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Account Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.AccountName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Account Holder Name"/>
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Account Number" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CompanyDetails.AccountNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Account Number"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Branch Code" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CompanyDetails.BranchCode}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Branch Code"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Account Type" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CompanyDetails.AccountType}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. Current Account"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Middle Column: Location Settings -->
+                        <StackPanel Grid.Column="1" Margin="12,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Path Data="{StaticResource IconHome}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="Location Details" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Branch Tabs -->
+                            <Border Background="{StaticResource InputBackground}" CornerRadius="12" Padding="4" Margin="0,0,0,16">
+                                <ListBox ItemsSource="{Binding AvailableBranches}" 
+                                         SelectedItem="{Binding SelectedBranch}" 
+                                         Background="Transparent" 
+                                         BorderThickness="0">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border x:Name="border" Background="Transparent" CornerRadius="8" Padding="16,8" Margin="0,0,4,0">
+                                                            <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                <ContentPresenter.Resources>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
+                                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                                    </Style>
+                                                                </ContentPresenter.Resources>
+                                                            </ContentPresenter>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="{StaticResource CardBackground}"/>
+                                                                <Setter TargetName="content" Property="TextBlock.Foreground" Value="{StaticResource AccentBlue}"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="{StaticResource InputBackgroundHover}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
+                            </Border>
+
+                            <TextBlock Text="{Binding SelectedBranch, StringFormat='Editing details for {0} Branch'}" 
+                                       FontSize="12" Foreground="{StaticResource AccentBlue}" FontStyle="Italic" Margin="0,0,0,16"/>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Shift Start Time" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.ShiftStartTime, StringFormat='hh\\:mm'}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 07:00"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Shift End Time" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.ShiftEndTime, StringFormat='hh\\:mm'}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 16:45"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Branch Phone" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.Phone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Phone Number"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Branch Fax" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.Fax}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Fax Number"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Address Line 1" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CurrentBranchDetails.AddressLine1}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Street Address"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="Address Line 2" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding CurrentBranchDetails.AddressLine2}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Suburb / Building"/>
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="City" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.City}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="City"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Postal Code" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.PostalCode}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Right Column: Departments -->
+                        <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Path Data="{StaticResource IconEnvelope}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="Department Emails" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+
+                            <TextBlock Text="{Binding SelectedBranch, StringFormat='Manage recipient emails for {0} system notifications.'}" 
+                                       FontSize="12" Foreground="{StaticResource TextSub}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                            <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Departments}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource InputBackground}" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBox Text="{Binding Department, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Department Name" Height="32" Margin="0,0,0,8" FontSize="12"/>
+                                                        <TextBox Text="{Binding EmailAddress, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Email Address" Height="32" FontSize="12"/>
+                                                    </StackPanel>
+                                                    
+                                                    <Button Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0" 
+                                                            Style="{StaticResource GhostButton}"
+                                                            Command="{Binding DataContext.RemoveDepartmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Remove Department">
+                                                        <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Stretch="Uniform" Width="14" Height="14"/>
+                                                    </Button>
+
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <Button Content="Add New Department" 
+                                    Command="{Binding AddDepartmentCommand}" 
+                                    Style="{StaticResource SecondaryButton}" 
+                                    HorizontalAlignment="Stretch" Margin="0,12,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
+                <!-- Footer -->
+                <Border Grid.Row="2" Padding="24" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,1,0,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Close" Command="{Binding CloseCommand}" Style="{StaticResource GhostButton}" Width="100" Margin="0,0,12,0"/>
+                        <Button Content="Save Changes" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="150"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

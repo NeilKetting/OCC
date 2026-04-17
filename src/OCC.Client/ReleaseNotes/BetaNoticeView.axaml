@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.ReleaseNotes"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="OCC.Client.ReleaseNotes.BetaNoticeView"
+             x:DataType="vm:BetaNoticeViewModel">
+
+    <Design.DataContext>
+        <vm:BetaNoticeViewModel/>
+        </Design.DataContext>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <!-- Increased Shadow Opacity (0.2 -> 0.4) -->
+        <Border Background="White" CornerRadius="12" Width="600" 
+                VerticalAlignment="Top" HorizontalAlignment="Center" 
+                Padding="40" Margin="40" BoxShadow="0 10 40 0 #A0000000">
+            <StackPanel Spacing="20">
+                <!-- Header -->
+                <StackPanel Spacing="5" HorizontalAlignment="Center">
+                    <PathIcon Data="{StaticResource IconInfo}" Width="40" Height="40" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Pre-Release Beta Notice" FontSize="24" FontWeight="Bold" Foreground="#111827" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding VersionText}" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <Separator Background="#E5E7EB" Height="1" Margin="0,10"/>
+
+                <!-- Content -->
+                <TextBlock Text="Welcome to the latest beta version of the Orange Circle Construction Application." 
+                           TextWrapping="Wrap" FontSize="16" Foreground="#374151" TextAlignment="Center"/>
+
+                <StackPanel Spacing="15">
+                    <TextBlock Text="We have enabled the following features for testing:" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563"/>
+                    
+                    <!-- Notifications -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="15">
+                         <StackPanel Spacing="5">
+                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                 <PathIcon Data="{StaticResource IconCheck}" Width="16" Height="16" Foreground="Green"/>
+                                 <TextBlock Text="Notifications (New)" FontWeight="Bold"/>
+                             </StackPanel>
+                             <TextBlock Text="• Live Admin Alerts (Leave, Overtime, Registration)" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                             <TextBlock Text="• Dynamic Status Icon (Red/Orange/Gray)" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                         </StackPanel>
+                    </Border>
+
+                    <!-- Time & Attendance -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="15">
+                         <StackPanel Spacing="5">
+                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                 <PathIcon Data="{StaticResource IconCheck}" Width="16" Height="16" Foreground="Green"/>
+                                 <TextBlock Text="Time &amp; Attendance" FontWeight="Bold"/>
+                             </StackPanel>
+                             <TextBlock Text="• Doctor's Note Attachment (PDF/Image)" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                             <TextBlock Text="• Improved Roll Call Logic" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                             <TextBlock Text="• Live History Updates" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                         </StackPanel>
+                    </Border>
+
+                    <!-- Employee Management -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="15">
+                         <StackPanel Spacing="5">
+                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                 <PathIcon Data="{StaticResource IconCheck}" Width="16" Height="16" Foreground="Green"/>
+                                 <TextBlock Text="Employee Management" FontWeight="Bold"/>
+                             </StackPanel>
+                             <TextBlock Text="• Improved View Transitions" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                             <TextBlock Text="• Detailed Profiles &amp; Team Allocation" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                         </StackPanel>
+                    </Border>
+
+                    <!-- Order System -->
+                    <Border Background="#F3F4F6" CornerRadius="8" Padding="15">
+                         <StackPanel Spacing="5">
+                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                 <PathIcon Data="{StaticResource IconCheck}" Width="16" Height="16" Foreground="Green"/>
+                                 <TextBlock Text="Order System (New)" FontWeight="Bold"/>
+                             </StackPanel>
+                             <TextBlock Text="• Improved Supplier Detail View (2-Column Layout)" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                             <TextBlock Text="• Bank Selection Dropdown &amp; Validation" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                             <TextBlock Text="• Fixed Pop-up Scrolling &amp; Z-Index Issues" Margin="26,0,0,0" FontSize="12" Foreground="#6B7280"/>
+                         </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Footer / Action Area -->
+                <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,10,0,0">
+                    <Button Command="{Binding OpenReleaseNotesCommand}" Content="View Change Log" 
+                            Classes="Secondary" FontSize="12"/>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                        <Button Command="{Binding CancelCommand}" Content="Exit" 
+                                Background="Transparent" Foreground="#EF4444" BorderBrush="Transparent"/>
+                        <Button Command="{Binding AcceptCommand}" Classes="Primary" Padding="20,10">
+                            <TextBlock Text="I Understand, Proceed" FontWeight="Bold"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

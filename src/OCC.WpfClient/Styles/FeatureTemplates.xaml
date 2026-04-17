@@ -1,0 +1,131 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mainVm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
+                    xmlns:mainViews="clr-namespace:OCC.WpfClient.Features.Main.Views"
+                    xmlns:empVm="clr-namespace:OCC.WpfClient.Features.EmployeeHub.ViewModels"
+                    xmlns:empViews="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
+                    xmlns:userVm="clr-namespace:OCC.WpfClient.Features.Admin.Users.ViewModels"
+                    xmlns:userViews="clr-namespace:OCC.WpfClient.Features.Admin.Users.Views"
+                    xmlns:chatVm="clr-namespace:OCC.WpfClient.Features.ChatHub.ViewModels"
+                    xmlns:chatViews="clr-namespace:OCC.WpfClient.Features.ChatHub.Views"
+                    xmlns:shVm="clr-namespace:OCC.WpfClient.Features.SupportHub.ViewModels"
+                    xmlns:shViews="clr-namespace:OCC.WpfClient.Features.SupportHub.Views"
+                    xmlns:custVm="clr-namespace:OCC.WpfClient.Features.CustomerHub.ViewModels"
+                    xmlns:custViews="clr-namespace:OCC.WpfClient.Features.CustomerHub.Views"
+                    xmlns:authVm="clr-namespace:OCC.WpfClient.Features.AuthHub.ViewModels"
+                    xmlns:authViews="clr-namespace:OCC.WpfClient.Features.AuthHub.Views"
+                    xmlns:procVm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
+                    xmlns:procViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views"
+                    xmlns:mainShellVm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
+                    xmlns:mainShellViews="clr-namespace:OCC.WpfClient.Features.Main.Views"
+                    xmlns:settVm="clr-namespace:OCC.WpfClient.Features.SettingsHub.ViewModels"
+                    xmlns:settViews="clr-namespace:OCC.WpfClient.Features.SettingsHub.Views"
+                    xmlns:projVm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
+                    xmlns:projViews="clr-namespace:OCC.WpfClient.Features.ProjectHub.Views"
+                    xmlns:splashVm="clr-namespace:OCC.WpfClient.Features.Splash.ViewModels"
+                    xmlns:splashViews="clr-namespace:OCC.WpfClient.Features.Splash.Views">
+
+    <!-- Auth -->
+    <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
+        <authViews:AuthView />
+    </DataTemplate>
+
+    <!-- Main Shell -->
+    <DataTemplate DataType="{x:Type mainShellVm:MainViewModel}">
+        <mainShellViews:MainView />
+    </DataTemplate>
+
+    <!-- Dashboard -->
+    <DataTemplate DataType="{x:Type mainVm:DashboardViewModel}">
+        <mainViews:DashboardView />
+    </DataTemplate>
+
+    <!-- Profile -->
+    <DataTemplate DataType="{x:Type mainVm:ProfileViewModel}">
+        <mainViews:ProfileView />
+    </DataTemplate>
+
+    <!-- Employees -->
+    <DataTemplate DataType="{x:Type empVm:EmployeeListViewModel}">
+        <empViews:EmployeeListView />
+    </DataTemplate>
+
+    <!-- Admin Users -->
+    <DataTemplate DataType="{x:Type userVm:UserListViewModel}">
+        <userViews:UserListView />
+    </DataTemplate>
+
+    <!-- Chat -->
+    <DataTemplate DataType="{x:Type chatVm:ChatViewModel}">
+        <chatViews:ChatView />
+    </DataTemplate>
+
+    <!-- Support Hub -->
+    <DataTemplate DataType="{x:Type shVm:ReportBugViewModel}">
+        <shViews:ReportBugView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type shVm:SupportViewModel}">
+        <shViews:SupportView />
+    </DataTemplate>
+
+    <!-- Customers -->
+    <DataTemplate DataType="{x:Type custVm:CustomerListViewModel}">
+        <custViews:CustomerListView />
+    </DataTemplate>
+
+    <!-- Procurement -->
+    <DataTemplate DataType="{x:Type procVm:ProcurementViewModel}">
+        <procViews:ProcurementView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procVm:InventoryViewModel}">
+        <procViews:InventoryView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procVm:PurchaseOrderViewModel}">
+        <procViews:PurchaseOrderView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procVm:SupplierViewModel}">
+        <procViews:SupplierListView/>
+    </DataTemplate>
+
+    <!-- Settings Hub -->
+    <DataTemplate DataType="{x:Type settVm:CompanyProfileViewModel}">
+        <settViews:CompanyProfileView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type settVm:CompanySettingsViewModel}">
+        <settViews:CompanySettingsView />
+    </DataTemplate>
+
+    <!-- Project Hub -->
+    <DataTemplate DataType="{x:Type projVm:ProjectDashboardViewModel}">
+        <projViews:ProjectDashboardView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectsViewModel}">
+        <projViews:ProjectsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectDetailViewModel}">
+        <projViews:ProjectDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectSpecificDashboardViewModel}">
+        <projViews:ProjectSpecificDashboardView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectTasksViewModel}">
+        <projViews:ProjectTasksView />
+    </DataTemplate>
+
+    <!-- Splash -->
+    <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
+        <splashViews:SplashView />
+    </DataTemplate>
+
+
+
+</ResourceDictionary>

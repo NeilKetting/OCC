@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.Client.ViewModels.Core;assembly=OCC.Client"
+             xmlns:vmShared="using:OCC.Client.ViewModels.Shared"
+             xmlns:viewsShared="using:OCC.Client.Views.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Client.Views.Core.MainView"
+             x:DataType="vm:MainViewModel">
+
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+    <Grid>
+        <ContentControl Content="{Binding CurrentViewModel}" />
+        
+
+        <!-- Change Email Overlay (Higher Z-Index) -->
+        <Grid IsVisible="{Binding IsChangeEmailVisible}" Background="#50000000">
+            <ContentControl Content="{Binding ChangeEmailPopup}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="{x:Type vmShared:ChangeEmailPopupViewModel}">
+                        <viewsShared:ChangeEmailPopupView/>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </Grid>
+    </Grid>
+</UserControl>

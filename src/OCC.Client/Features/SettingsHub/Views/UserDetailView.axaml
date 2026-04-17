@@ -1,0 +1,145 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Features.SettingsHub.ViewModels"
+             xmlns:conv="clr-namespace:OCC.Client.Converters"
+             mc:Ignorable="d"
+             x:Class="OCC.Client.Features.SettingsHub.Views.UserDetailView"
+             x:DataType="vm:UserDetailViewModel"
+             Focusable="True">
+             
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+    </UserControl.KeyBindings>
+
+    <Design.DataContext>
+        <vm:UserDetailViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter"/>
+    </UserControl.Resources>
+
+    <Border Background="{DynamicResource SurfaceWhite}"
+            CornerRadius="0"
+            BoxShadow="0 2 15 5 #292828"
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Stretch"
+            MaxWidth="900">
+        <Grid RowDefinitions="Auto, *, Auto, Auto">
+
+            <!-- Header -->
+            <Border Grid.Row="0"
+                    Background="White"
+                    BorderThickness="0,0,0,2"
+                    BorderBrush="{DynamicResource PrimaryTeal}"
+                    Padding="20,0">
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*, Auto"
+                      Margin="25">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryDark}"/>
+                        <TextBlock Text="User Details &amp; Permissions" FontSize="16" Foreground="{DynamicResource TextSecondaryGray}"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="IconButton" Command="{Binding CancelCommand}" VerticalAlignment="Top"
+                            ToolTip.Tip="Close without saving">
+                        <PathIcon Data="{StaticResource IconClose}" Width="16" Height="16"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Scrollable Content -->
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="20" Margin="25,10,25,50">
+                    <Grid ColumnDefinitions="*, 30, *, 30, *">
+                        
+                        <!-- Left Column: Personal Info -->
+                        <StackPanel Grid.Column="0" Spacing="10">
+                            <StackPanel>
+                                <TextBlock Text="First Name" Classes="FormLabel"/>
+                                <TextBox x:Name="FirstNameInput" Text="{Binding FirstName}" Classes="FormInput" Watermark="e.g. Alice"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Last Name" Classes="FormLabel"/>
+                                <TextBox Text="{Binding LastName}" Classes="FormInput" Watermark="e.g. Smith"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Location" Classes="FormLabel"/>
+                                <TextBox Text="{Binding Location}" Classes="FormInput" Watermark="e.g. Cape Town"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Middle Column: Contact & Security -->
+                        <StackPanel Grid.Column="2" Spacing="10">
+                            <StackPanel>
+                                <TextBlock Text="Email Address" Classes="FormLabel"/>
+                                <TextBox Text="{Binding Email}" Classes="FormInput" Watermark="alice@example.com"/>
+                            </StackPanel>
+                             <StackPanel>
+                                <TextBlock Text="Phone Number" Classes="FormLabel"/>
+                                <TextBox Text="{Binding Phone}" Classes="FormInput" Watermark="+27..."/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Password" Classes="FormLabel"/>
+                                <TextBox Text="{Binding Password}" Classes="FormInput" PasswordChar="*" Watermark="Reset or Set Password"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Right Column: Access & Rate -->
+                        <StackPanel Grid.Column="4" Spacing="10">
+                            <StackPanel>
+                                <TextBlock Text="User Role" Classes="FormLabel"/>
+                                <ComboBox SelectedItem="{Binding SelectedRole}" ItemsSource="{Binding UserRoles}" HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+
+
+                            <!-- Access Switches -->
+                            <StackPanel Spacing="10" Margin="0,10,0,0">
+                                <ToggleSwitch IsChecked="{Binding IsApproved}" 
+                                              OnContent="User is Approved" 
+                                              OffContent="Approval Pending"
+                                              HorizontalAlignment="Left"/>
+                                
+                                <ToggleSwitch IsChecked="{Binding IsEmailVerified}" 
+                                              OnContent="Email Verified" 
+                                              OffContent="Email Unknown"
+                                              HorizontalAlignment="Left"/>
+                            </StackPanel>
+
+                            <!-- Module Permissions -->
+                            <StackPanel Spacing="5" Margin="0,15,0,0">
+                                <TextBlock Text="Module Access" Classes="FormLabel" FontWeight="SemiBold"/>
+                                <CheckBox IsChecked="{Binding CanAccessOrders}" Content="Orders &amp; Restocking"/>
+                                <CheckBox IsChecked="{Binding CanAccessInventoryOnly}" Content="Inventory Only"/>
+                                <CheckBox IsChecked="{Binding CanCreateProjects}" Content="Project Creation"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer Separator -->
+            <Grid Grid.Row="2" Height="2" Background="{DynamicResource PrimaryTeal}"/>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" Margin="20,15" HorizontalAlignment="Right">
+                <Button Content="Cancel" Command="{Binding CancelCommand}" Classes="Cancel"/>
+                <Button Content="{Binding SaveButtonText}" Command="{Binding SaveCommand}" Classes="Primary"/>
+            </StackPanel>
+
+            <!-- Saving -->
+            <StackPanel Grid.RowSpan="4" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+                <ProgressBar IsIndeterminate="True" Width="200" Foreground="{DynamicResource Orange}"/>
+                <TextBlock Text="{Binding BusyText}" HorizontalAlignment="Center" Margin="0,10,0,0" Classes="LabelSmall"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
