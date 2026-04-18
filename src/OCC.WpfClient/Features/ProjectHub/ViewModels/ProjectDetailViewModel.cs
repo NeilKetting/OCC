@@ -18,6 +18,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IProjectService _projectService;
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
         private readonly ProjectTasksViewModel _tasksVM;
+        private readonly ProjectGanttViewModel _ganttVM;
 
         [ObservableProperty] private Project? _project;
         [ObservableProperty] private ViewModelBase _currentView;
@@ -25,11 +26,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public ViewModelBase? ActiveOverlay => CurrentView;
 
-        public ProjectDetailViewModel(IProjectService projectService, ProjectSpecificDashboardViewModel dashboardVM, ProjectTasksViewModel tasksVM)
+        public ProjectDetailViewModel(IProjectService projectService, ProjectSpecificDashboardViewModel dashboardVM, ProjectTasksViewModel tasksVM, ProjectGanttViewModel ganttVM)
         {
             _projectService = projectService;
             _dashboardVM = dashboardVM;
             _tasksVM = tasksVM;
+            _ganttVM = ganttVM;
             _currentView = _dashboardVM;
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
@@ -46,6 +48,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var tasks = await _projectService.GetProjectTasksAsync(projectId);
                 _dashboardVM.UpdateProjectData(Project, tasks);
                 _tasksVM.UpdateTasks(ProjectId, tasks);
+                _ganttVM.UpdateTasks(ProjectId, tasks.ToList());
                 UpdateStatus("Ready");
             }
         }
@@ -63,5 +66,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         [RelayCommand]
         private void ShowTasks() => CurrentView = _tasksVM;
+
+        [RelayCommand]
+        private void ShowGantt() => CurrentView = _ganttVM;
     }
 }

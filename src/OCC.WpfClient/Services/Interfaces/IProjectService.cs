@@ -14,5 +14,8 @@ namespace OCC.WpfClient.Services.Interfaces
         Task CreateProjectAsync(Project project);
         Task UpdateProjectAsync(Project project);
         Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId);
+        List<ProjectTask> BuildTaskHierarchy(IEnumerable<ProjectTask> allTasks);
+        List<ProjectTask> FlattenHierarchy(IEnumerable<ProjectTask> rootTasks);
+        void ToggleExpand(ProjectTask task);
     }
 }

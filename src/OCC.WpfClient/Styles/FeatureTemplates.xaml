@@ -121,6 +121,10 @@
         <projViews:ProjectTasksView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type projVm:ProjectGanttViewModel}">
+        <projViews:ProjectGanttView />
+    </DataTemplate>
+
     <!-- Splash -->
     <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
         <splashViews:SplashView />

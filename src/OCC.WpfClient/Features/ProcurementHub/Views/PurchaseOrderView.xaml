@@ -50,21 +50,135 @@
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="4,0,0,0"/>
             <Setter Property="ap:CommandProperties.HideArrow" Value="True"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                    <Setter Property="Background" Value="{StaticResource InputBackground}"/>
-                    <Setter Property="ap:CommandProperties.HideArrow" Value="False"/>
-                </Trigger>
-                <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                    <Setter Property="Background" Value="{StaticResource InputBackground}"/>
-                    <Setter Property="ap:CommandProperties.HideArrow" Value="False"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid x:Name="templateRoot" SnapsToDevicePixels="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition x:Name="ArrowColumn" Width="0" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <ToggleButton x:Name="toggleButton"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Background="{TemplateBinding Background}"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Grid.ColumnSpan="2"
+                                          Focusable="False"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="templateRoot"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="0">
+                                            <Grid x:Name="splitBorder">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition x:Name="ArrowCol" Width="0" />
+                                                </Grid.ColumnDefinitions>
+                                                <Path x:Name="Arrow"
+                                                      Grid.Column="1"
+                                                      Data="M 0 0 L 4 4 L 8 0"
+                                                      Stroke="{StaticResource TextSub}"
+                                                      StrokeThickness="2"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Center"
+                                                      Visibility="Collapsed" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True"/>
+                                                    <Condition Binding="{Binding Path=(ap:CommandProperties.HideArrow), RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="False"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
+                                                <Setter TargetName="ArrowCol" Property="Width" Value="25" />
+                                            </MultiDataTrigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
+                                                <Setter TargetName="ArrowCol" Property="Width" Value="25" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            
+                            <ContentPresenter x:Name="contentPresenter"
+                                              Grid.Column="0"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              IsHitTestVisible="False" />
+
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Grid.Column="0"
+                                     Margin="{TemplateBinding Padding}"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}"
+                                     Visibility="Collapsed"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="{TemplateBinding Foreground}"
+                                     CaretBrush="{TemplateBinding Foreground}">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border x:Name="border" Background="Transparent">
+                                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False" Background="Transparent" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+
+                            <Popup x:Name="PART_Popup"
+                                   Grid.ColumnSpan="2"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border x:Name="DropDownBorder"
+                                        Background="{StaticResource CardBackground}"
+                                        BorderBrush="{StaticResource GlassBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Margin="0,2,0,0">
+                                    <ScrollViewer Margin="4" SnapsToDevicePixels="True">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="contentPresenter" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ArrowColumn" Property="Width" Value="25" />
+                                <Setter Property="ap:CommandProperties.HideArrow" Value="False"/>
+                                <Setter Property="Background" Value="{StaticResource InputBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="ArrowColumn" Property="Width" Value="25" />
+                                <Setter Property="ap:CommandProperties.HideArrow" Value="False"/>
+                                <Setter Property="Background" Value="{StaticResource InputBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="CompactDatePicker" TargetType="DatePicker" BasedOn="{StaticResource ModernDatePicker}">
@@ -370,6 +484,8 @@
                                                   SelectedValuePath="Sku"
                                                   HorizontalContentAlignment="Stretch"
                                                   VerticalContentAlignment="Center"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0"
                                                   ap:CommandProperties.LostFocusCommand="{Binding DataContext.ValidateLineItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   ap:CommandProperties.SelectionChangedCommand="{Binding DataContext.UpdateLineItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   ap:CommandProperties.CommandParameter="{Binding}">
@@ -399,6 +515,12 @@
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                         <Setter Property="HorizontalAlignment" Value="Center"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsItemValid}" Value="False">
+                                                <Setter Property="Visibility" Value="Hidden"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -407,6 +529,11 @@
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                         <Setter Property="HorizontalAlignment" Value="Center"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsItemValid}" Value="False">
+                                                <Setter Property="Visibility" Value="Hidden"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -415,6 +542,11 @@
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsItemValid}" Value="False">
+                                                <Setter Property="Visibility" Value="Hidden"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -425,6 +557,11 @@
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                         <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsItemValid}" Value="False">
+                                                <Setter Property="Visibility" Value="Hidden"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>

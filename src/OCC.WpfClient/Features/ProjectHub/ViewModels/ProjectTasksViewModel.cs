@@ -10,9 +10,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
+using CommunityToolkit.Mvvm.Messaging;
+using OCC.WpfClient.Infrastructure.Messages;
+
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectTasksViewModel : ViewModelBase, IOverlayProvider
+    public partial class ProjectTasksViewModel : ViewModelBase, IOverlayProvider, IRecipient<TaskUpdatedMessage>
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IProjectTaskService _taskService;
@@ -33,6 +36,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _serviceProvider = serviceProvider;
             _taskService = taskService;
             Title = "Tasks";
+            WeakReferenceMessenger.Default.Register(this);
         }
 
         public void UpdateTasks(Guid projectId, IEnumerable<ProjectTask> tasks)
@@ -161,6 +165,38 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Tasks.Remove(task);
             HasTasks = Tasks.Any();
             NotifySuccess("Task Deleted", $"Task '{task.Name}' has been removed.");
+        }
+
+        public async void Receive(TaskUpdatedMessage message)
+        {
+            // Find the task locally and update it
+            var updatedTask = await _taskService.GetTaskAsync(message.TaskId);
+            if (updatedTask == null) return;
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                var existing = Tasks.FirstOrDefault(t => t.Id == message.TaskId);
+                if (existing != null)
+                {
+                    // Update properties manually to trigger UI refresh on the object in the list
+                    existing.Status = updatedTask.Status;
+                    existing.PercentComplete = updatedTask.PercentComplete;
+                    existing.IsOnHold = updatedTask.IsOnHold;
+                    existing.HoldReason = updatedTask.HoldReason;
+                    existing.Name = updatedTask.Name;
+                    existing.IsExpanded = updatedTask.IsExpanded; // Preserve or update
+                    
+                    // Force refresh colors and labels
+                    existing.NotifyPropertyChanged(nameof(existing.StatusColor));
+                    existing.NotifyPropertyChanged(nameof(existing.IsComplete));
+                    existing.NotifyPropertyChanged(nameof(existing.IsOverdue));
+                }
+                else
+                {
+                    // If it's a new task or we can't find it, we might need to rebuild hierarchy
+                    // But for simple updates, this is enough.
+                }
+            });
         }
     }
 }

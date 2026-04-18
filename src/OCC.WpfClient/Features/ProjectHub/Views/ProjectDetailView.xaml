@@ -67,6 +67,20 @@
                             <TextBlock Grid.Column="1" Text="Tasks" VerticalAlignment="Center" Margin="5,0,0,0"/>
                         </Grid>
                     </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarNavItem}" 
+                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectGanttViewModel}}"
+                                 Command="{Binding ShowGanttCommand}"
+                                 Margin="0,2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Path Data="{StaticResource IconCalendar}" Fill="White" Width="16" Height="16" Stretch="Uniform" Opacity="0.7"/>
+                            <TextBlock Grid.Column="1" Text="Gantt Chart" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </Grid>
+                    </RadioButton>
                 </StackPanel>
             </Grid>
         </Border>

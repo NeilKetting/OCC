@@ -1,19 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using OCC.WpfClient.ModelWrappers;
-using OCC.WpfClient.Services.Interfaces;
-using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Infrastructure.Messages;
+using OCC.Shared.DTOs;
 using OCC.Shared.Enums;
 using OCC.Shared.Models;
-using OCC.Shared.DTOs;
-using System;
-using System.Collections.Generic;
+using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Infrastructure.Messages;
+using OCC.WpfClient.ModelWrappers;
+using OCC.WpfClient.Services.Interfaces;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
@@ -28,7 +23,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ITaskAttachmentService _attachmentService;
         private readonly IDialogService _dialogService;
         private readonly IAuthService _authService;
-
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
         private bool _isSuppressingUpdates = false;
         private Guid _currentTaskId;
@@ -39,15 +33,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isShowingAllSubtasks;
         [ObservableProperty] private bool _isCreateMode;
         [ObservableProperty] private string _parentTaskName = string.Empty;
+        [ObservableProperty] private Project? _selectedProject;
         
         public bool IsProjectLinkVisible => IsCreateMode;
         public bool IsSubtask => Task?.Model?.ParentId != null;
         public bool IsParentTask => !IsSubtask;
         public bool IsManualProgressEnabled => Task != null && !Task.HasSubtasks;
+        public event EventHandler? CloseInitiated;
+        public event EventHandler? CloseFinished;
+        public int CommentsCount => Comments.Count;
+        public int SubtaskCount => Subtasks.Count;
+        public int AttachmentsCount => Attachments.Count;
 
-        [ObservableProperty] private Project? _selectedProject;
         public ObservableCollection<Project> AvailableProjects { get; } = new();
-
         public ObservableCollection<TaskComment> Comments { get; } = new();
         public ObservableCollection<TaskAttachment> Attachments { get; } = new();
         public ObservableCollection<ProjectTask> Subtasks { get; } = new();
@@ -56,17 +54,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ObservableCollection<EmployeeSummaryDto> AvailableStaff { get; } = new();
         public ObservableCollection<User> AvailableContractors { get; } = new();
         public ObservableCollection<ToDoItemWrapper> ToDoList { get; } = new();
-
-        public List<string> AvailableStatuses { get; } = new() { "Not Started", "Started", "Halfway", "Almost Done", "Done" };
-
-        public event EventHandler? CloseInitiated;
-        public event EventHandler? CloseFinished;
-
         public ObservableCollection<ReminderFrequency> ReminderFrequencies { get; } = new(Enum.GetValues<ReminderFrequency>());
-
-        public int CommentsCount => Comments.Count;
-        public int SubtaskCount => Subtasks.Count;
-        public int AttachmentsCount => Attachments.Count;
+        public List<string> AvailableStatuses { get; } = new() { "Not Started", "In Progress", "Started", "Halfway", "Almost Done", "Completed" };
 
         public TaskDetailViewModel(
             IProjectTaskService projectTaskService,

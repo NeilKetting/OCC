@@ -46,6 +46,10 @@ namespace OCC.WpfClient.ModelWrappers
         [ObservableProperty] private int _percentComplete;
         [ObservableProperty] private bool _isOnHold;
         [ObservableProperty] private string _priority = "Medium";
+        
+        [ObservableProperty]
+        [CustomValidation(typeof(ProjectTaskWrapper), nameof(ValidateHoldReason))]
+        private string _holdReason = string.Empty;
         [ObservableProperty] private DateTime? _startDate;
         [ObservableProperty] private DateTime? _finishDate;
         [ObservableProperty] private DateTime? _actualStartDate;
@@ -72,6 +76,7 @@ namespace OCC.WpfClient.ModelWrappers
                 Status = _model.Status;
                 PercentComplete = _model.PercentComplete;
                 IsComplete = _model.IsComplete;
+                HoldReason = _model.HoldReason;
 
                 StartDate = _model.StartDate == DateTime.MinValue ? null : _model.StartDate;
                 FinishDate = _model.FinishDate == DateTime.MinValue ? null : _model.FinishDate;
@@ -103,6 +108,7 @@ namespace OCC.WpfClient.ModelWrappers
             _model.Status = Status;
             _model.PercentComplete = PercentComplete;
             _model.IsOnHold = IsOnHold;
+            _model.HoldReason = HoldReason;
             _model.Priority = Priority;
             
             var safeMinDate = new DateTime(1753, 1, 1);
@@ -133,7 +139,7 @@ namespace OCC.WpfClient.ModelWrappers
             else
             {
                 if (PercentComplete == 100) PercentComplete = 50; 
-                Status = PercentComplete == 0 ? "Not Started" : "Started";
+                UpdateStatusFromPercent();
                 ActualCompleteDate = null;
             }
             _model.ActualCompleteDate = ActualCompleteDate;
@@ -176,12 +182,39 @@ namespace OCC.WpfClient.ModelWrappers
             _model.PercentComplete = value;
             if (value == 100 && !IsComplete) IsComplete = true;
             else if (value < 100 && IsComplete) IsComplete = false;
+            else UpdateStatusFromPercent();
+        }
+
+        private void UpdateStatusFromPercent()
+        {
+            if (PercentComplete >= 100) Status = "Completed";
+            else if (PercentComplete >= 75) Status = "Almost Done";
+            else if (PercentComplete >= 50) Status = "Halfway";
+            else if (PercentComplete > 0) Status = "Started";
+            else Status = "Not Started";
         }
 
         partial void OnIsOnHoldChanged(bool value)
         {
             _model.IsOnHold = value;
             UpdateStatusColor();
+            ValidateProperty(HoldReason, nameof(HoldReason));
+        }
+
+        partial void OnHoldReasonChanged(string value)
+        {
+            _model.HoldReason = value;
+            ValidateProperty(value, nameof(HoldReason));
+        }
+
+        public static ValidationResult? ValidateHoldReason(string? value, ValidationContext context)
+        {
+            var instance = (ProjectTaskWrapper)context.ObjectInstance;
+            if (instance.IsOnHold && string.IsNullOrWhiteSpace(value))
+            {
+                return new ValidationResult("A reason is required when placing a task on hold.");
+            }
+            return ValidationResult.Success;
         }
 
         partial void OnPriorityChanged(string value) => _model.Priority = value;

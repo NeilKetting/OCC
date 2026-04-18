@@ -180,6 +180,7 @@ namespace OCC.API.Controllers
                 existingTask.ParentId = task.ParentId;
                 existingTask.Type = task.Type;
                 existingTask.IsOnHold = task.IsOnHold;
+                existingTask.HoldReason = task.HoldReason;
                 existingTask.OrderIndex = task.OrderIndex;
                 existingTask.IndentLevel = task.IndentLevel;
                 existingTask.IsGroup = task.IsGroup;

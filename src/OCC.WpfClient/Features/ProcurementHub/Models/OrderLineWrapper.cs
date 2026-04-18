@@ -22,13 +22,23 @@ namespace OCC.WpfClient.Features.ProcurementHub.Models
         public Guid? InventoryItemId
         {
             get => Model.InventoryItemId;
-            set { Model.InventoryItemId = value; OnPropertyChanged(); }
+            set 
+            { 
+                Model.InventoryItemId = value; 
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsItemValid));
+            }
         }
 
         public string ItemCode
         {
             get => Model.ItemCode;
-            set { Model.ItemCode = value; OnPropertyChanged(); }
+            set 
+            { 
+                Model.ItemCode = value; 
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsItemValid));
+            }
         }
 
         public string Description
@@ -73,6 +83,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.Models
 
         public decimal LineTotal => Model.LineTotal;
         public decimal VatAmount => Model.VatAmount;
+
+        public bool IsItemValid => !string.IsNullOrWhiteSpace(ItemCode) && InventoryItemId.HasValue;
 
         public void UpdateCalculations()
         {

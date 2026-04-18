@@ -5,6 +5,7 @@ using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -138,6 +139,77 @@ namespace OCC.WpfClient.Services
                 _logger.LogError(ex, "Error fetching tasks for project {ProjectId} from {Url}", projectId, url);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Reconstructs the task hierarchy (parent-child relationships) from a flat list.
+        /// </summary>
+        public List<ProjectTask> BuildTaskHierarchy(IEnumerable<ProjectTask> allTasks)
+        {
+            var taskList = allTasks.ToList();
+
+            foreach (var task in taskList)
+            {
+                task.Children.Clear();
+            }
+
+            var rootTasks = new List<ProjectTask>();
+            var lookup = taskList.ToDictionary(t => t.Id);
+
+            foreach (var task in taskList)
+            {
+                if (task.ParentId.HasValue && task.ParentId != Guid.Empty && lookup.TryGetValue(task.ParentId.Value, out var parent))
+                {
+                    parent.Children.Add(task);
+                }
+                else
+                {
+                    rootTasks.Add(task);
+                }
+            }
+
+            foreach (var task in taskList)
+            {
+                if (task.Children.Any())
+                {
+                    task.Children = task.Children.OrderBy(c => c.OrderIndex).ToList();
+                }
+            }
+
+            return rootTasks.OrderBy(t => t.OrderIndex).ToList();
+        }
+
+        /// <summary>
+        /// Converts the hierarchical tree of tasks back into a flat list for UI display.
+        /// </summary>
+        public List<ProjectTask> FlattenHierarchy(IEnumerable<ProjectTask> rootTasks)
+        {
+            var flatList = new List<ProjectTask>();
+            foreach (var rootTask in rootTasks)
+            {
+                FlattenTask(rootTask, flatList, 0);
+            }
+            return flatList;
+        }
+
+        private void FlattenTask(ProjectTask task, List<ProjectTask> flatList, int level)
+        {
+            task.IndentLevel = level;
+            flatList.Add(task);
+
+            if (task.IsExpanded && task.Children != null && task.Children.Any())
+            {
+                foreach (var child in task.Children)
+                {
+                    FlattenTask(child, flatList, level + 1);
+                }
+            }
+        }
+
+        public void ToggleExpand(ProjectTask task)
+        {
+            if (task == null) return;
+            task.IsExpanded = !task.IsExpanded;
         }
     }
 }

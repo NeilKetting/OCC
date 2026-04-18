@@ -61,18 +61,19 @@
                                 <TextBlock Text="{Binding Task.DisplayId}" Foreground="{StaticResource TextSub}" FontSize="12" Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
                                 
                                 <StackPanel Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}}">
-                                    <TextBlock Text="Initialize Task" Foreground="White" FontSize="18" FontWeight="Bold" Visibility="{Binding IsSubtask, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
+                                    <TextBlock Text="Initialize Task" Foreground="White" FontSize="18" FontWeight="Bold" 
+                                               Visibility="{Binding IsSubtask, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
                                     <StackPanel Orientation="Horizontal" Visibility="{Binding IsSubtask, Converter={StaticResource VisibilityConverter}}">
-                                        <TextBlock Text="New Sub-task for:" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding ParentTaskName}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="New Sub-task for:" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Bottom"/>
+                                        <TextBlock Text="{Binding ParentTaskName}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Bottom"/>
                                     </StackPanel>
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
                                     <StackPanel Orientation="Horizontal" Visibility="{Binding IsSubtask, Converter={StaticResource VisibilityConverter}}">
-                                        <TextBlock Text="SUBTASK" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="SUBTASK NAME: " Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Bottom"/>
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Task.Name}" Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Task.Name}" Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Bottom"/>
                                 </StackPanel>
                             </StackPanel>
 
@@ -120,6 +121,14 @@
                             <StackPanel Margin="0,0,0,20">
                                 <TextBlock Text="HOLD" Style="{StaticResource LabelText}"/>
                                 <CheckBox Content="On Hold" IsChecked="{Binding Task.IsOnHold}" Style="{StaticResource ModernCheckBox}" Margin="0,5,0,0"/>
+                                
+                                <StackPanel Visibility="{Binding Task.IsOnHold, Converter={StaticResource VisibilityConverter}}" Margin="0,10,0,0">
+                                    <TextBlock Text="HOLD REASON (Required)" Style="{StaticResource LabelText}" Foreground="{StaticResource SecondaryGold}"/>
+                                    <TextBox Text="{Binding Task.HoldReason, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernInput}" 
+                                             ap:WatermarkProperties.Watermark="Explain why this task is paused..."
+                                             MinHeight="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                                </StackPanel>
                             </StackPanel>
 
                             <!-- Progress -->

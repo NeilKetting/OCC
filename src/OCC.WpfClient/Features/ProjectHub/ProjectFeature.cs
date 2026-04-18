@@ -23,6 +23,7 @@ namespace OCC.WpfClient.Features.ProjectHub
             services.AddTransient<ProjectTasksViewModel>();
             services.AddTransient<TaskDetailViewModel>();
             services.AddTransient<CreateProjectViewModel>();
+            services.AddTransient<ProjectGanttViewModel>();
         }
 
         public void RegisterRoutes(INavigationService navigationService)

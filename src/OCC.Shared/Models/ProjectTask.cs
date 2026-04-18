@@ -27,6 +27,11 @@ namespace OCC.Shared.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(propertyName);
+        }
+
 
 
         private Guid? _ownerId;
@@ -78,12 +83,13 @@ namespace OCC.Shared.Models
             get => _percentComplete; 
             set 
             { 
-               if (_percentComplete != value) 
-               { 
-                   _percentComplete = value; 
-                   OnPropertyChanged(); 
-                   OnPropertyChanged(nameof(IsComplete)); 
-               } 
+                if (_percentComplete != value) 
+                { 
+                    _percentComplete = value; 
+                    UpdateStatusFromPercent();
+                    OnPropertyChanged(); 
+                    OnPropertyChanged(nameof(IsComplete)); 
+                } 
             } 
         }
 
@@ -128,45 +134,64 @@ namespace OCC.Shared.Models
             {
                 if (value)
                 {
-                    Status = "Done";
+                    Status = "Completed";
                     PercentComplete = 100;
                 }
                 else
                 {
-                    Status = PercentComplete == 0 ? "Not Started" : "Started";
-                    if (PercentComplete == 100) PercentComplete = 75;
+                    if (PercentComplete == 100) PercentComplete = 50; 
+                    UpdateStatusFromPercent();
+                    ActualCompleteDate = null;
                 }
                 OnPropertyChanged();
             }
         }
+
+        private void UpdateStatusFromPercent()
+        {
+            if (PercentComplete >= 100) Status = "Completed";
+            else if (PercentComplete >= 75) Status = "Almost Done";
+            else if (PercentComplete >= 50) Status = "Halfway";
+            else if (PercentComplete > 0) Status = "Started";
+            else Status = "Not Started";
+        }
+
+        [NotMapped]
+        public bool IsOverdue => !IsComplete && FinishDate < DateTime.Now && Status != "Cancelled";
 
         [NotMapped]
         public string StatusColor 
         {
             get
             {
-                if (IsOnHold) return "#10B981"; // Emerald-500
+                if (IsOnHold) return "#FFC107"; // Yellow (SecondaryGold)
+                if (IsOverdue) return "#FF4B4B"; // Red (ErrorRed)
+                
                 switch (Status)
                 {
                     case "Not Started": 
-                    case "To Do": return "#94A3B8"; // Slate-400
+                    case "To Do": return "#A0FFFFFF"; // Grey (TextSub)
                     case "Started": 
-                    case "In Progress": return "#3B82F6"; // Blue-500
-                    case "Halfway": return "#8B5CF6"; // Violet-500
-                    case "Almost Done": return "#EC4899"; // Pink-500
+                    case "In Progress": return "#2E9DFF"; // Blue (AccentBlue)
+                    case "Halfway": return "#8B5CF6"; // Violet
+                    case "Almost Done": return "#EC4899"; // Pink
                     case "Done": 
-                    case "Completed": return "#22C55E"; // Green-500
+                    case "Completed": return "#00C853"; // Green (SuccessGreen)
                     default: 
-                        if (PercentComplete >= 90) return "#EC4899";
-                        if (PercentComplete >= 40) return "#8B5CF6";
-                        if (PercentComplete > 0) return "#3B82F6";
-                        return "#94A3B8";
+                        if (PercentComplete >= 100) return "#00C853";
+                        if (PercentComplete >= 75) return "#EC4899";
+                        if (PercentComplete >= 50) return "#8B5CF6";
+                        if (PercentComplete > 0) return "#2E9DFF";
+                        return "#A0FFFFFF";
                 }
             }
         }
 
         /// <summary> Detailed description or instructions for the task. </summary>
         public string Description { get; set; } = string.Empty;
+
+        /// <summary> If work is temporarily suspended, why is it on hold? </summary>
+        public string HoldReason { get; set; } = string.Empty;
 
         /// <summary> The category of the activity (Task vs Meeting). </summary>
         public TaskType Type { get; set; } = TaskType.Task;
