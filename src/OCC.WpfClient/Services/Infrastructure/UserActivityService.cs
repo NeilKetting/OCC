@@ -70,21 +70,21 @@ namespace OCC.WpfClient.Services.Infrastructure
             if (idleTime.TotalMinutes >= IdleThresholdMinutes && !IsAway)
             {
                 IsAway = true;
-                UpdateAwayScale(idleTime);
+                UpdateInactiveScale(idleTime);
                 _ = _signalRService.UpdateStatusAsync("Away");
             }
             else if (IsAway)
             {
-                UpdateAwayScale(idleTime);
+                UpdateInactiveScale(idleTime);
             }
         }
 
-        private void UpdateAwayScale(TimeSpan idleTime)
+        private void UpdateInactiveScale(TimeSpan idleTime)
         {
             string timeString = idleTime.TotalHours >= 1 
                 ? $"{(int)idleTime.TotalHours}h {idleTime.Minutes}m" 
                 : $"{idleTime.Minutes}m";
-            StatusText = $"Away ({timeString})";
+            StatusText = $"Inactive ({timeString})";
         }
 
         private void OnInputActivity(object sender, PreProcessInputEventArgs e)

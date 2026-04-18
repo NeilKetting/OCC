@@ -126,7 +126,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private bool _isSidebarMinimized = true;
 
         [ObservableProperty]
-        private string _userActivityStatus = "Ready";
+        private string _userActivityStatus = "Active";
+
+        [ObservableProperty]
+        private bool _isUserInactive;
 
         [ObservableProperty]
         private string _dbStatusText = "Connected";
@@ -272,10 +275,15 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
             // Setup User Activity Monitoring
             UserActivityStatus = _userActivityService.StatusText;
+            IsUserInactive = _userActivityService.IsAway;
+            
             _userActivityService.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(UserActivityService.StatusText))
                     UserActivityStatus = _userActivityService.StatusText;
+                
+                if (e.PropertyName == nameof(UserActivityService.IsAway))
+                    IsUserInactive = _userActivityService.IsAway;
             };
 
             // Start DB Polling
