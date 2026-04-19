@@ -22,10 +22,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
         private readonly IEmployeeService _employeeService;
+        private readonly ISubContractorService _subContractorService;
         private readonly IUserService _userService;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly ISettingsService _settingsService;
         private readonly IToastService _toastService;
+        private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
 
@@ -48,6 +50,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isAddressMissing = true;
         [ObservableProperty] private string _validationMessage = "Geofencing requires a site address.";
         [ObservableProperty] private AddressSuggestion? _selectedAddressSuggestion;
+        [ObservableProperty] private bool _isReconciling;
+        public ObservableCollection<AssigneeReconciliationRow> ReconciliationRows { get; } = new();
 
         public ObservableCollection<Employee> SiteManagers { get; } = new();
         public ObservableCollection<Customer> Customers { get; } = new();
@@ -64,18 +68,22 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IEmployeeService employeeService,
             IUserService userService,
             IGoogleMapsService googleMapsService,
+            ISubContractorService subContractorService,
             ISettingsService settingsService,
-            IToastService toastService)
+            IToastService toastService,
+            OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings)
         {
             _projectService = projectService;
             _customerService = customerService;
             _employeeService = employeeService;
+            _subContractorService = subContractorService;
             _userService = userService;
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
             _toastService = toastService;
+            _connectionSettings = connectionSettings;
 
-            _project = new ProjectWrapper(new Project 
+            Project = new ProjectWrapper(new Project 
             { 
                 Status = "Planning", 
                 Priority = "Medium", 
@@ -84,8 +92,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 ProjectManager = "Neil Ketting"
             });
 
-            Project.PropertyChanged += Project_PropertyChanged;
             _ = LoadDataAsync();
+        }
+
+        partial void OnProjectChanged(ProjectWrapper value)
+        {
+            if (value != null)
+            {
+                value.PropertyChanged += Project_PropertyChanged;
+            }
         }
 
         private async Task LoadDataAsync()
@@ -116,7 +131,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     SiteManagers.Add(emp);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _toastService.ShowError("Error", "Failed to load lookup data.");
             }
@@ -150,6 +165,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(_connectionSettings.GoogleApiKey))
+            {
+                _toastService.ShowWarning("Setup Required", "Google Maps API Key is missing. Suggestions will not work.");
+                return;
+            }
+
             // Debounce logic
             _addressCts?.Cancel();
             _addressCts = new System.Threading.CancellationTokenSource();
@@ -163,16 +184,21 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 
                 if (token.IsCancellationRequested) return;
 
+                if (suggestions == null || !suggestions.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine("[CreateProjectViewModel] No suggestions returned. Verify API Key.");
+                }
+
                 AddressSuggestions.Clear();
-                foreach (var s in suggestions) AddressSuggestions.Add(s);
+                foreach (var s in suggestions ?? Array.Empty<AddressSuggestion>()) AddressSuggestions.Add(s);
             }
             catch (OperationCanceledException)
             {
                 // Ignore cancellation
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Address Search Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Address Search Error");
             }
         }
 
@@ -210,10 +236,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     _sessionToken = Guid.NewGuid().ToString();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _toastService.ShowError("Google Maps", "Failed to retrieve address details.");
-                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Place Details Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Place Details Error");
             }
             finally
             {
@@ -255,7 +281,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 ProjectCreated?.Invoke(this, Project.Id);
                 CloseRequested?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _toastService.ShowError("Error", "Failed to create project.");
             }
@@ -281,17 +307,134 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 
                 if (!string.IsNullOrEmpty(result.ProjectName)) Project.Name = result.ProjectName;
                 _importedTasks = result.Tasks;
-                
+
+                await MatchAssigneesAsync(result.Resources);
+            }
+            catch (Exception)
+            {
+                ImportProgressMessage = "Error occurred during import.";
+            }
+            finally
+            {
+                IsImporting = false;
+            }
+        }
+
+        private async Task MatchAssigneesAsync(List<string> resourceNames)
+        {
+            ReconciliationRows.Clear();
+            if (resourceNames == null || !resourceNames.Any())
+            {
+                ImportProgressMessage = "Import Complete!";
+                ShowImportComplete = true;
+                return;
+            }
+
+            ImportProgressMessage = "Matching assignees...";
+            
+            var employees = await _employeeService.GetEmployeesAsync();
+            var subContractors = await _subContractorService.GetSubContractorSummariesAsync();
+
+            var potentialMatches = new List<AssigneeSelectionViewModel>();
+            foreach (var e in employees) potentialMatches.Add(new AssigneeSelectionViewModel { Id = e.Id, Name = e.DisplayName, Role = e.Role.ToString(), Type = AssigneeType.Staff, Branch = e.Branch });
+            foreach (var sc in subContractors) potentialMatches.Add(new AssigneeSelectionViewModel { Id = sc.Id, Name = sc.Name, Role = "Contractor", Type = AssigneeType.Contractor, Branch = sc.Branch });
+
+            foreach (var rName in resourceNames)
+            {
+                // Exact Match check
+                var exact = potentialMatches.FirstOrDefault(m => string.Equals(m.Name, rName, StringComparison.OrdinalIgnoreCase));
+                if (exact != null)
+                {
+                    // Update imported tasks directly
+                    ResolveAssignee(rName, exact.Id, exact.Name, exact.Type);
+                    continue;
+                }
+
+                // Fuzzy Match check
+                var fuzzyMatches = potentialMatches
+                    .Select(m => new { Match = m, Score = SimilarityHelper.GetSimilarity(rName, m.Name) })
+                    .Where(x => x.Score >= 0.8)
+                    .OrderByDescending(x => x.Score)
+                    .Take(5)
+                    .ToList();
+
+                var row = new AssigneeReconciliationRow { ImportedName = rName };
+                foreach (var f in fuzzyMatches) row.SuggestedMatches.Add(f.Match);
+
+                if (fuzzyMatches.Any())
+                {
+                    row.Action = ReconciliationAction.MapToExisting;
+                    row.SelectedMatch = fuzzyMatches.First().Match;
+                }
+                else
+                {
+                    row.Action = ReconciliationAction.CreateNew;
+                }
+
+                ReconciliationRows.Add(row);
+            }
+
+            if (ReconciliationRows.Any())
+            {
+                IsReconciling = true;
+            }
+            else
+            {
+                ImportProgressMessage = "Import Complete!";
+                ShowImportComplete = true;
+            }
+        }
+
+        private void ResolveAssignee(string importedName, Guid assigneeId, string resolvedName, AssigneeType type)
+        {
+            if (_importedTasks == null) return;
+
+            foreach (var task in _importedTasks)
+            {
+                foreach (var assignment in task.Assignments.Where(a => a.AssigneeName == importedName))
+                {
+                    assignment.AssigneeId = assigneeId;
+                    assignment.AssigneeName = resolvedName;
+                    assignment.AssigneeType = type;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task ConfirmReconciliation()
+        {
+            IsBusy = true;
+            BusyText = "Applying reconciliation...";
+
+            try
+            {
+                foreach (var row in ReconciliationRows)
+                {
+                    if (row.Action == ReconciliationAction.Skip) continue;
+
+                    if (row.Action == ReconciliationAction.CreateNew)
+                    {
+                        var newSub = new SubContractor { Name = row.ImportedName, Branch = Project.Location ?? "Jhb" };
+                        var created = await _subContractorService.CreateSubContractorAsync(newSub);
+                        ResolveAssignee(row.ImportedName, created.Id, created.Name, AssigneeType.Contractor);
+                    }
+                    else if (row.Action == ReconciliationAction.MapToExisting && row.SelectedMatch != null)
+                    {
+                        ResolveAssignee(row.ImportedName, row.SelectedMatch.Id, row.SelectedMatch.Name, row.SelectedMatch.Type);
+                    }
+                }
+
+                IsReconciling = false;
                 ImportProgressMessage = "Import Complete!";
                 ShowImportComplete = true;
             }
             catch (Exception ex)
             {
-                ImportProgressMessage = $"Error: {ex.Message}";
+                _toastService.ShowError("Reconciliation", $"Error during reconciliation: {ex.Message}");
             }
             finally
             {
-                IsImporting = false;
+                IsBusy = false;
             }
         }
 

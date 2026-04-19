@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.Measure;
 using OCC.Shared.Models;
 using SkiaSharp;
 using System;
@@ -23,6 +24,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private int _completedTasks;
         [ObservableProperty] private int _inProgressTasks;
         [ObservableProperty] private int _toDoTasks;
+        [ObservableProperty] private int _delayedStartTasks;
         [ObservableProperty] private int _overdueTasks;
         [ObservableProperty] private double _overallProgress;
         [ObservableProperty] private string _projectHealth = "Healthy";
@@ -31,6 +33,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _etaStatus = "ON TRACK";
         [ObservableProperty] private string _streetLine1 = string.Empty;
         [ObservableProperty] private string _cityStatePostal = string.Empty;
+        
+        public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColors.White);
 
         public ObservableCollection<ISeries> StatusSeries { get; set; } = new();
         public ObservableCollection<ISeries> ScheduleSeries { get; set; } = new();
@@ -80,7 +84,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ToDoTasks = nonGroupTasks.Count(t => t.Status == "To Do" || t.Status == "New" || t.Status == "Not Started");
 
             var now = DateTime.Now;
-            OverdueTasks = nonGroupTasks.Count(t => t.Status != "Completed" && t.Status != "Done" && t.FinishDate < now);
+            OverdueTasks = nonGroupTasks.Count(t => !t.IsComplete && t.FinishDate < now);
+            DelayedStartTasks = nonGroupTasks.Count(t => !t.IsComplete && t.Status == "Not Started" && t.StartDate < now && t.FinishDate >= now);
 
             if (TotalTasks > 0)
             {
@@ -107,16 +112,60 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private void UpdateCharts()
         {
             StatusSeries.Clear();
-            AddStatusSeries("Completed", CompletedTasks, SKColors.Teal);
-            AddStatusSeries("In Progress", InProgressTasks, SKColors.CornflowerBlue);
-            AddStatusSeries("To Do", ToDoTasks, SKColors.SlateGray);
+            var nonGroupTasks = _allTasks.Where(t => !t.IsGroup).ToList();
+            
+            // Group tasks by assignees. Since one task can have many assignees, 
+            // we'll count occurrences of each staff member.
+            var assigneeCounts = new Dictionary<string, int>();
+            int unassigned = 0;
+
+            foreach (var task in nonGroupTasks)
+            {
+                if (task.Assignments != null && task.Assignments.Any())
+                {
+                    foreach (var a in task.Assignments)
+                    {
+                        var name = a.AssigneeName ?? "Unknown";
+                        assigneeCounts[name] = assigneeCounts.GetValueOrDefault(name) + 1;
+                    }
+                }
+                else
+                {
+                    unassigned++;
+                }
+            }
+
+            // Colors for workload distribution (shades of blue)
+            var blueShades = new[] { "#1D4ED8", "#2563EB", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE" };
+            int colorIndex = 0;
+
+            foreach (var (name, count) in assigneeCounts.OrderByDescending(x => x.Value).Take(5))
+            {
+                AddStatusSeries(name, count, SKColor.Parse(blueShades[colorIndex % blueShades.Length]));
+                colorIndex++;
+            }
+
+            if (assigneeCounts.Count > 5)
+            {
+                int otherCount = assigneeCounts.OrderByDescending(x => x.Value).Skip(5).Sum(x => x.Value);
+                AddStatusSeries("Other Staff", otherCount, SKColor.Parse("#94A3B8")); // Greyish blue
+            }
+
+            if (unassigned > 0)
+            {
+                AddStatusSeries("Unassigned", unassigned, SKColor.Parse("#1E293B")); // Very dark blue/slate
+            }
 
             ScheduleSeries.Clear();
             int behind = OverdueTasks;
-            int onTrack = TotalTasks - CompletedTasks - OverdueTasks;
-            AddScheduleSeries("Ahead/Done", CompletedTasks, SKColors.LightSeaGreen);
-            AddScheduleSeries("On Track", onTrack, SKColors.RoyalBlue);
-            AddScheduleSeries("Behind", behind, SKColors.IndianRed);
+            int delayed = DelayedStartTasks;
+            int onTrack = Math.Max(0, TotalTasks - CompletedTasks - behind - delayed);
+
+            // Using descriptive labels as requested: Ahead/Done, On Track, Delayed Start, Behind
+            AddScheduleSeries("Ahead/Done", CompletedTasks, SKColor.Parse("#1D4ED8"));
+            AddScheduleSeries("On Track", onTrack, SKColor.Parse("#60A5FA"));
+            AddScheduleSeries("Delayed Start", delayed, SKColor.Parse("#38BDF8"));
+            AddScheduleSeries("Behind", behind, SKColor.Parse("#1E3A8A"));
 
             ProgressGaugeSeries.Clear();
             ProgressGaugeSeries.Add(new PieSeries<double>
@@ -147,8 +196,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 Name = name,
                 Values = new double[] { value },
-                InnerRadius = 60,
-                Fill = new SolidColorPaint(color)
+                InnerRadius = 0,
+                Fill = new SolidColorPaint(color),
+                DataLabelsPosition = PolarLabelsPosition.Middle,
+                DataLabelsFormatter = point => $"{point.StackedValue?.Share ?? 0:P0}",
+                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsSize = 13
             });
         }
 
@@ -159,8 +212,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 Name = name,
                 Values = new double[] { value },
-                InnerRadius = 60,
-                Fill = new SolidColorPaint(color)
+                InnerRadius = 0,
+                Fill = new SolidColorPaint(color),
+                DataLabelsPosition = PolarLabelsPosition.Middle,
+                DataLabelsFormatter = point => $"{point.StackedValue?.Share ?? 0:P0}",
+                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsSize = 13
             });
         }
 

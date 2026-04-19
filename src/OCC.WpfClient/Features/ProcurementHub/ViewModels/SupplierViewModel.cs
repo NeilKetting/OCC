@@ -13,18 +13,14 @@ using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
-    public partial class SupplierViewModel : OverlayHostViewModel
+    public partial class SupplierViewModel : ListViewModelBase<SupplierSummaryDto>
     {
         private readonly ISupplierService _supplierService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<SupplierViewModel> _logger;
         private List<SupplierSummaryDto> _allSuppliers = new();
 
-        [ObservableProperty] private string _searchQuery = string.Empty;
         [ObservableProperty] private string _selectedBranchFilter = "All";
-        [ObservableProperty] private ObservableCollection<SupplierSummaryDto> _suppliers = new();
-        [ObservableProperty] private int _totalCount;
-        [ObservableProperty] private SupplierSummaryDto? _selectedSupplier;
 
         public List<string> BranchOptions { get; } = new List<string> { "All" }.Concat(Enum.GetNames(typeof(Branch))).ToList();
 
@@ -38,11 +34,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _logger = logger;
             Title = "Supplier Management";
 
-            _ = LoadData();
+            _ = LoadDataAsync();
         }
 
-        [RelayCommand]
-        public async Task LoadData()
+        public override async Task LoadDataAsync()
         {
             try
             {
@@ -52,7 +47,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 var suppliers = await _supplierService.GetSupplierSummariesAsync();
                 _allSuppliers = suppliers.OrderBy(s => s.Name).ToList();
 
-                FilterSuppliers();
+                FilterItems();
             }
             catch (Exception ex)
             {
@@ -75,13 +70,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task EditSupplier(SupplierSummaryDto? summary)
         {
-            if (summary == null) return;
+            var target = summary ?? SelectedItem;
+            if (target == null) return;
 
             try
             {
                 IsBusy = true;
                 BusyText = "Loading details...";
-                var supplier = await _supplierService.GetSupplierAsync(summary.Id);
+                var supplier = await _supplierService.GetSupplierAsync(target.Id);
                 if (supplier != null)
                 {
                     OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger));
@@ -101,10 +97,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task DeleteSupplier(SupplierSummaryDto? summary)
         {
-            if (summary == null) return;
+            var target = summary ?? SelectedItem;
+            if (target == null) return;
 
             var confirmed = await _dialogService.ShowConfirmationAsync("Delete Supplier",
-                $"Are you sure you want to delete '{summary.Name}'? This action cannot be undone.");
+                $"Are you sure you want to delete '{target.Name}'? This action cannot be undone.");
 
             if (!confirmed) return;
 
@@ -112,8 +109,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 IsBusy = true;
                 BusyText = "Deleting supplier...";
-                await _supplierService.DeleteSupplierAsync(summary.Id);
-                await LoadData();
+                await _supplierService.DeleteSupplierAsync(target.Id);
+                await LoadDataAsync();
             }
             catch (Exception ex)
             {
@@ -126,10 +123,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
         }
 
-        partial void OnSearchQueryChanged(string value) => FilterSuppliers();
-        partial void OnSelectedBranchFilterChanged(string value) => FilterSuppliers();
+        partial void OnSelectedBranchFilterChanged(string value) => FilterItems();
 
-        private void FilterSuppliers()
+        protected override void FilterItems()
         {
             IEnumerable<SupplierSummaryDto> filtered = _allSuppliers;
 
@@ -150,13 +146,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
 
             var result = filtered.ToList();
-            Suppliers = new ObservableCollection<SupplierSummaryDto>(result);
+            Items = new ObservableCollection<SupplierSummaryDto>(result);
             TotalCount = result.Count;
         }
 
-        public void CloseDetailView()
-        {
-            CloseOverlay();
-        }
+        public void CloseDetailView() => CloseOverlay();
     }
 }

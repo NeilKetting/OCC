@@ -81,8 +81,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 _serviceProvider.GetRequiredService<IEmployeeService>(),
                 _serviceProvider.GetRequiredService<IUserService>(),
                 _serviceProvider.GetRequiredService<IGoogleMapsService>(),
+                _serviceProvider.GetRequiredService<ISubContractorService>(),
                 _serviceProvider.GetRequiredService<ISettingsService>(),
-                _toastService);
+                _toastService,
+                _serviceProvider.GetRequiredService<OCC.WpfClient.Services.Infrastructure.ConnectionSettings>());
 
             vm.CloseRequested += (s, e) => CloseOverlay();
             vm.ProjectCreated += (s, id) => { 

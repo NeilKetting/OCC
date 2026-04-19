@@ -12,7 +12,7 @@ using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 {
-    public partial class UserListViewModel : OverlayHostViewModel
+    public partial class UserListViewModel : ListViewModelBase<User>
     {
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
@@ -20,17 +20,8 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         private readonly ILogger<UserListViewModel> _logger;
         private List<User> _allUsers = new();
 
-        [ObservableProperty]
-        private string _searchQuery = string.Empty;
-
-        [ObservableProperty]
-        private ObservableCollection<User> _users = new();
-
-        [ObservableProperty] private int _totalCount;
         [ObservableProperty] private int _pendingApprovalCount;
         [ObservableProperty] private int _adminCount;
-
-        [ObservableProperty] private User? _selectedUser;
 
         public UserListViewModel(
             IUserService userService, 
@@ -44,11 +35,10 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _logger = logger;
             Title = "User Management";
             
-            _ = LoadData();
+            _ = LoadDataAsync();
         }
 
-        [RelayCommand]
-        public async Task LoadData()
+        public override async Task LoadDataAsync()
         {
             try
             {
@@ -58,7 +48,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 var users = await _userService.GetUsersAsync();
                 _allUsers = users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
                 
-                FilterUsers();
+                FilterItems();
             }
             catch (Exception ex)
             {
@@ -80,24 +70,30 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [RelayCommand]
         public void EditUser(User? user)
         {
-            if (user == null) return;
-            OpenOverlay(new UserDetailViewModel(this, user, _userService, _dialogService, _logger));
+            var target = user ?? SelectedItem;
+            if (target == null) return;
+            OpenOverlay(new UserDetailViewModel(this, target, _userService, _dialogService, _logger));
         }
 
         [RelayCommand]
         private async Task DeleteUser(User? user)
         {
-            if (user == null) return;
+            var target = user ?? SelectedItem;
+            if (target == null) return;
             
-            // Assume confirmation for now as per image '...' menu usually has Delete
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete User", 
+                $"Are you sure you want to delete user '{target.FirstName} {target.LastName}'?");
+
+            if (!confirmed) return;
+
             try
             {
                 IsBusy = true;
                 BusyText = "Deleting user...";
-                var success = await _userService.DeleteUserAsync(user.Id);
+                var success = await _userService.DeleteUserAsync(target.Id);
                 if (success)
                 {
-                    await LoadData();
+                    await LoadDataAsync();
                 }
             }
             finally
@@ -106,9 +102,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             }
         }
 
-        partial void OnSearchQueryChanged(string value) => FilterUsers();
-
-        private void FilterUsers()
+        protected override void FilterItems()
         {
             var filtered = _allUsers.AsEnumerable();
 
@@ -122,17 +116,14 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             }
 
             var result = filtered.ToList();
-            Users = new ObservableCollection<User>(result);
+            Items = new ObservableCollection<User>(result);
 
             // Update Stats
-            TotalCount = _allUsers.Count;
-            PendingApprovalCount = _allUsers.Count(u => !u.IsApproved);
-            AdminCount = _allUsers.Count(u => u.UserRole == UserRole.Admin);
+            TotalCount = result.Count;
+            PendingApprovalCount = result.Count(u => !u.IsApproved);
+            AdminCount = result.Count(u => u.UserRole == UserRole.Admin);
         }
 
-        public void CloseDetailView()
-        {
-            CloseOverlay();
-        }
+        public void CloseDetailView() => CloseOverlay();
     }
 }

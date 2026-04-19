@@ -191,9 +191,24 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             }
         }
 
+        protected override async Task<bool> ValidateAsync()
+        {
+            ValidationErrors.Clear();
+            if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName))
+            {
+                ValidationErrors.Add("Both first name and last name are required.");
+                HasErrors = true;
+                await PulseValidationAsync();
+                return false;
+            }
+            HasErrors = false;
+            return true;
+        }
+
         protected override void OnSaveSuccess()
         {
-            _parent.LoadData().ConfigureAwait(false);
+            NotifySuccess("Success", $"User '{FirstName} {LastName}' saved successfully.");
+            _parent.LoadDataAsync().ConfigureAwait(false);
             _parent.CloseDetailView();
         }
 

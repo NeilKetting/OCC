@@ -8,6 +8,7 @@ using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.ModelWrappers;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Features.ProjectHub.Models;
 using System.Collections.ObjectModel;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
@@ -21,6 +22,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ITaskAssignmentService _assignmentService;
         private readonly ITaskCommentService _commentService;
         private readonly ITaskAttachmentService _attachmentService;
+        private readonly ISubContractorService _subContractorService;
         private readonly IDialogService _dialogService;
         private readonly IAuthService _authService;
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
@@ -57,6 +59,30 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ObservableCollection<ReminderFrequency> ReminderFrequencies { get; } = new(Enum.GetValues<ReminderFrequency>());
         public List<string> AvailableStatuses { get; } = new() { "Not Started", "In Progress", "Started", "Halfway", "Almost Done", "Completed" };
 
+        [ObservableProperty] private string _assigneeSearchText = string.Empty;
+        public ObservableCollection<AssigneeSelectionViewModel> AllPotentialAssignees { get; } = new();
+        public ObservableCollection<AssigneeSelectionViewModel> FilteredAssignees { get; } = new();
+
+        partial void OnAssigneeSearchTextChanged(string value)
+        {
+            ApplyAssigneeFilter();
+        }
+
+        private void ApplyAssigneeFilter()
+        {
+            FilteredAssignees.Clear();
+            var search = AssigneeSearchText?.ToLowerInvariant();
+            
+            var items = string.IsNullOrWhiteSpace(search) 
+                ? AllPotentialAssignees 
+                : AllPotentialAssignees.Where(a => 
+                    a.Name.ToLowerInvariant().Contains(search) || 
+                    a.Role.ToLowerInvariant().Contains(search) ||
+                    a.Branch.ToLowerInvariant().Contains(search));
+
+            foreach (var item in items) FilteredAssignees.Add(item);
+        }
+
         public TaskDetailViewModel(
             IProjectTaskService projectTaskService,
             IEmployeeService employeeService,
@@ -65,6 +91,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ITaskAssignmentService assignmentService,
             ITaskCommentService commentService,
             ITaskAttachmentService attachmentService,
+            ISubContractorService subContractorService,
             IDialogService dialogService,
             IAuthService authService)
         {
@@ -75,6 +102,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _assignmentService = assignmentService;
             _commentService = commentService;
             _attachmentService = attachmentService;
+            _subContractorService = subContractorService;
             _dialogService = dialogService;
             _authService = authService;
             
@@ -152,6 +180,106 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             await LoadComments();
             await LoadAssignments();
+            await LoadPotentialAssigneesAsync();
+        }
+
+        private async Task LoadPotentialAssigneesAsync()
+        {
+            AllPotentialAssignees.Clear();
+
+            // 1. Add "Us" Options
+            AllPotentialAssignees.Add(new AssigneeSelectionViewModel 
+            { 
+                Id = Guid.Empty, // Placeholder for company
+                Name = "Circle Construction - Jhb", 
+                Role = "Internal", 
+                Type = AssigneeType.Staff,
+                Branch = "Jhb"
+            });
+            AllPotentialAssignees.Add(new AssigneeSelectionViewModel 
+            { 
+                Id = Guid.Empty, 
+                Name = "Orange Circle Construction - CPT", 
+                Role = "Internal", 
+                Type = AssigneeType.Staff,
+                Branch = "CPT"
+            });
+
+            // 2. Load Employees
+            var employees = await _employeeService.GetEmployeesAsync();
+            foreach (var e in employees.Where(x => x.Status == EmployeeStatus.Active))
+            {
+                // Only Site Managers and Foremans as requested
+                if (e.Role.ToString().Contains("Manager") || e.Role.ToString().Contains("Foreman"))
+                {
+                    AllPotentialAssignees.Add(new AssigneeSelectionViewModel
+                    {
+                        Id = e.Id,
+                        Name = e.DisplayName,
+                        Role = e.Role.ToString(),
+                        Type = AssigneeType.Staff,
+                        Branch = e.Branch
+                    });
+                }
+            }
+
+            // 3. Load SubContractors
+            var subContractors = await _subContractorService.GetSubContractorSummariesAsync();
+            foreach (var sc in subContractors)
+            {
+                AllPotentialAssignees.Add(new AssigneeSelectionViewModel
+                {
+                    Id = sc.Id,
+                    Name = sc.Name,
+                    Role = "Contractor",
+                    Type = AssigneeType.Contractor,
+                    Branch = sc.Branch
+                });
+            }
+
+            // Mark existing assignments
+            foreach (var assignee in AllPotentialAssignees)
+            {
+                assignee.IsSelected = Assignments.Any(a => a.AssigneeId == assignee.Id || (assignee.Id == Guid.Empty && a.AssigneeName == assignee.Name));
+            }
+
+            ApplyAssigneeFilter();
+        }
+
+        [RelayCommand]
+        private async Task ToggleAssignment(AssigneeSelectionViewModel assignee)
+        {
+            if (assignee == null) return;
+
+            // Toggle VM state
+            assignee.IsSelected = !assignee.IsSelected;
+
+            if (assignee.IsSelected)
+            {
+                var newAssignment = new TaskAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    TaskId = _currentTaskId,
+                    AssigneeId = assignee.Id,
+                    AssigneeName = assignee.Name,
+                    AssigneeType = assignee.Type
+                };
+
+                Assignments.Add(newAssignment);
+                if (!IsCreateMode) await _assignmentService.AddAssignmentAsync(newAssignment);
+            }
+            else
+            {
+                var existing = Assignments.FirstOrDefault(a => a.AssigneeId == assignee.Id || (assignee.Id == Guid.Empty && a.AssigneeName == assignee.Name));
+                if (existing != null)
+                {
+                    Assignments.Remove(existing);
+                    if (!IsCreateMode) await _assignmentService.DeleteAssignmentAsync(existing.Id);
+                }
+            }
+            
+            OnPropertyChanged(nameof(Task)); // Refresh initials etc
+            Task.RefreshAssigneeInfo();
         }
 
         private async Task LoadComments()

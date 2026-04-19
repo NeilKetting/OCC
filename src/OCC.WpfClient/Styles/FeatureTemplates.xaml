@@ -125,6 +125,10 @@
         <projViews:ProjectGanttView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type projVm:SubContractorListViewModel}">
+        <projViews:SubContractorListView />
+    </DataTemplate>
+
     <!-- Splash -->
     <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
         <splashViews:SplashView />

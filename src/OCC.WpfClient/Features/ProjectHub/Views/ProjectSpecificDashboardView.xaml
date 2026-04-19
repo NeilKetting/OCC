@@ -113,13 +113,13 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="300"/>
+                            <RowDefinition Height="400"/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Task Distribution" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Breakdown by current status" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                            <TextBlock Text="Breakdown by staff workload" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </StackPanel>
-                        <lvc:PieChart Grid.Row="1" Series="{Binding StatusSeries}" Background="Transparent" />
+                        <lvc:PieChart Grid.Row="1" Series="{Binding StatusSeries}" Background="Transparent" LegendPosition="Bottom" LegendTextPaint="{Binding LegendTextPaint}" />
                     </Grid>
                 </Border>
 
@@ -128,13 +128,13 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="300"/>
+                            <RowDefinition Height="400"/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Schedule Health" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="Deadlines vs Completion" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </StackPanel>
-                        <lvc:PieChart Grid.Row="1" Series="{Binding ScheduleSeries}" Background="Transparent" />
+                        <lvc:PieChart Grid.Row="1" Series="{Binding ScheduleSeries}" Background="Transparent" LegendPosition="Bottom" LegendTextPaint="{Binding LegendTextPaint}" />
                     </Grid>
                 </Border>
             </Grid>

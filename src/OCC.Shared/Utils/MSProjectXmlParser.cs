@@ -10,7 +10,7 @@ namespace OCC.Shared.Utils
 {
     public class MSProjectXmlParser
     {
-        public async Task<(List<ProjectTask> Tasks, string? ProjectName)> ParseAsync(Stream stream, IProgress<string>? progress = null)
+        public async Task<(List<ProjectTask> Tasks, List<string> Resources, string? ProjectName)> ParseAsync(Stream stream, IProgress<string>? progress = null)
         {
             try
             {
@@ -32,7 +32,7 @@ namespace OCC.Shared.Utils
                 var tasksElement = project.Element(ns + "Tasks");
                 if (tasksElement == null)
                 {
-                    return (new List<ProjectTask>(), null); // No tasks found
+                    return (new List<ProjectTask>(), new List<string>(), null); // No tasks found
                 }
 
                 var flatTasks = new List<(ProjectTask Task, int OutlineLevel)>();
@@ -44,6 +44,7 @@ namespace OCC.Shared.Utils
 
                 // Parse Resources
                 var resourceMap = new Dictionary<string, string>(); // ResUID -> Name
+                var allResourceNames = new HashSet<string>();
                 var resourcesElement = project.Element(ns + "Resources");
                 if (resourcesElement != null)
                 {
@@ -54,6 +55,7 @@ namespace OCC.Shared.Utils
                         if (!string.IsNullOrEmpty(resUid) && !string.IsNullOrEmpty(resName))
                         {
                             resourceMap[resUid] = resName;
+                            allResourceNames.Add(resName);
                         }
                     }
                 }
@@ -145,6 +147,20 @@ namespace OCC.Shared.Utils
                         Priority = FormatPriority(priorityStr)
                     };
 
+                    // Populate Assignments (Names only for now, ID to be resolved by VM)
+                    if (!string.IsNullOrEmpty(xmlUid) && taskResourceMap.TryGetValue(xmlUid, out var assignedNames))
+                    {
+                        foreach (var rName in assignedNames)
+                        {
+                            task.Assignments.Add(new TaskAssignment 
+                            { 
+                                AssigneeName = rName,
+                                TaskId = task.Id
+                            });
+                        }
+                        task.AssignedTo = string.Join(", ", assignedNames);
+                    }
+
                     // Capture Predecessors (XML UIDs)
                     var predecessors = taskElem.Elements(ns + "PredecessorLink");
                     foreach (var predLink in predecessors)
@@ -221,12 +237,12 @@ namespace OCC.Shared.Utils
                 }
 
                 progress?.Report("Import complete!");
-                return (rootTasks, projectName);
+                return (rootTasks, allResourceNames.ToList(), projectName);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error parsing XML: {ex.Message}");
-                return (new List<ProjectTask>(), null);
+                return (new List<ProjectTask>(), new List<string>(), null);
             }
         }
 

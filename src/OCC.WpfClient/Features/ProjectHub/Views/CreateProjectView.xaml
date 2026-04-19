@@ -12,7 +12,7 @@
 
     <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource OrangeBrush}"
             BorderThickness="1"
-            CornerRadius="20" Margin="10">
+            CornerRadius="20" Margin="-20,-70,-20,-20">
         <Border.Effect>
             <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.5"/>
         </Border.Effect>
@@ -280,6 +280,71 @@
                     </ScrollViewer>
                 </Border>
             </Grid>
+
+            <!-- Assignee Reconciliation Overlay -->
+            <Border Background="#F20A0A0A" Visibility="{Binding IsReconciling, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="20" Padding="40">
+                <Grid MaxWidth="800">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,25">
+                        <TextBlock Text="Assignee Reconciliation" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="The following people in the project file need to be mapped to our records." 
+                                   Foreground="{StaticResource TextSub}" FontSize="14" Margin="0,5,0,0"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Background="{StaticResource InputBackground}" CornerRadius="12" Padding="15">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding ReconciliationRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#0DFFFFFF" CornerRadius="10" Padding="15" Margin="0,0,0,12" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="200"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="IMPORTED NAME" Style="{StaticResource LabelText}" FontSize="9"/>
+                                                    <TextBlock Text="{Binding ImportedName}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" Margin="20,0,0,0">
+                                                    <TextBlock Text="ACTION" Style="{StaticResource LabelText}" FontSize="9" Margin="0,0,0,8"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                        <RadioButton Content="Map to Existing" IsChecked="{Binding Action, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ReconciliationAction.MapToExisting}}" Style="{StaticResource PremiumRadioButtonStyle}" Margin="0,0,15,0"/>
+                                                        <RadioButton Content="Create New Subcontractor" IsChecked="{Binding Action, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ReconciliationAction.CreateNew}}" Style="{StaticResource PremiumRadioButtonStyle}" Margin="0,0,15,0"/>
+                                                        <RadioButton Content="Skip" IsChecked="{Binding Action, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ReconciliationAction.Skip}}" Style="{StaticResource PremiumRadioButtonStyle}"/>
+                                                    </StackPanel>
+
+                                                    <StackPanel Visibility="{Binding IsMapped, Converter={StaticResource VisibilityConverter}}">
+                                                        <TextBlock Text="SELECT MATCH" Style="{StaticResource LabelText}" FontSize="9" Margin="0,0,0,5"/>
+                                                        <ComboBox ItemsSource="{Binding SuggestedMatches}" SelectedItem="{Binding SelectedMatch}" Style="{StaticResource ModernComboBox}" DisplayMemberPath="DisplayName"/>
+                                                        <TextBlock Text="Best fuzzy matches shown above." Foreground="{StaticResource SuccessGreen}" FontSize="11" Margin="2,5,0,0" FontStyle="Italic"/>
+                                                    </StackPanel>
+
+                                                    <Border Background="#1A3B82F6" CornerRadius="8" Padding="12,8" Visibility="{Binding IsNew, Converter={StaticResource VisibilityConverter}}">
+                                                        <TextBlock Text="This will create a new Subcontractor entry in our system." Foreground="{StaticResource AccentBlue}" FontSize="12" FontStyle="Italic"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                        <Button Command="{Binding ConfirmReconciliationCommand}" Content="Apply &amp; Continue" Style="{StaticResource ActionButtonPrimary}" Width="200" Height="45"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
             <!-- Import Overlay -->
             <Border Background="#CC000000" Visibility="{Binding IsImporting, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="20">

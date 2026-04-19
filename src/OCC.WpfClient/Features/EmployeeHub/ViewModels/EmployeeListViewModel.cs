@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 {
-    public partial class EmployeeListViewModel : OverlayHostViewModel
+    public partial class EmployeeListViewModel : ListViewModelBase<EmployeeSummaryDto>
     {
         private readonly IEmployeeService _employeeService;
         private readonly IUserService _userService;
@@ -21,22 +21,13 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private List<EmployeeSummaryDto> _allEmployees = new();
 
         [ObservableProperty]
-        private string _searchQuery = string.Empty;
-
-        [ObservableProperty]
         private int _selectedFilterIndex = 0; // 0 = Everyone, 1 = Permanent, 2 = Contract
 
         [ObservableProperty]
         private int _selectedBranchFilterIndex = 0; // 0 = All, 1 = JHB, 2 = CPT
 
-        [ObservableProperty]
-        private ObservableCollection<EmployeeSummaryDto> _employees = new();
-
-        [ObservableProperty] private int _totalCount;
         [ObservableProperty] private int _permanentCount;
         [ObservableProperty] private int _contractCount;
-
-        [ObservableProperty] private EmployeeSummaryDto? _selectedEmployee;
 
         // Column Visibility - Core
         [ObservableProperty] private bool _isNumberVisible = true;
@@ -79,10 +70,9 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _settingsService = settingsService;
             _logger = logger;
             Title = "Employees";
-            OverlayViewModel = null;
             
             LoadLayout();
-            _ = LoadData();
+            _ = LoadDataAsync();
         }
 
         private void LoadLayout()
@@ -140,8 +130,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _settingsService.Save();
         }
 
-        [RelayCommand]
-        public async Task LoadData()
+        public override async Task LoadDataAsync()
         {
             try
             {
@@ -152,12 +141,11 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                 _allEmployees = employees.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToList();
                 
                 _logger.LogInformation("Loaded {Count} employees", _allEmployees.Count);
-                FilterEmployees();
+                FilterItems();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading employees");
-                // In a real app we might show an alert, but let's at least log it properly
             }
             finally
             {
@@ -175,13 +163,14 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [RelayCommand]
         private async Task EditEmployee(EmployeeSummaryDto? summary)
         {
-            if (summary == null) return;
+            var target = summary ?? SelectedItem;
+            if (target == null) return;
             
             try
             {
                 IsBusy = true;
                 BusyText = "Loading employee details...";
-                var dto = await _employeeService.GetEmployeeAsync(summary.Id);
+                var dto = await _employeeService.GetEmployeeAsync(target.Id);
                 if (dto != null)
                 {
                     var model = new Models.EmployeeModel(dto);
@@ -195,20 +184,24 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task DeleteEmployee(EmployeeSummaryDto? employee)
+        private async Task DeleteEmployee(EmployeeSummaryDto? summary)
         {
-            if (employee == null) return;
+            var target = summary ?? SelectedItem;
+            if (target == null) return;
             
-            // In a real app, we'd show a confirmation dialog here.
-            // For now, let's assume confirmation and implement the logic.
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Employee", 
+                $"Are you sure you want to delete '{target.FirstName} {target.LastName}'? This action cannot be undone.");
+
+            if (!confirmed) return;
+
             try
             {
                 IsBusy = true;
                 BusyText = "Deleting employee...";
-                var success = await _employeeService.DeleteEmployeeAsync(employee.Id);
+                var success = await _employeeService.DeleteEmployeeAsync(target.Id);
                 if (success)
                 {
-                    await LoadData();
+                    await LoadDataAsync();
                 }
             }
             finally
@@ -237,8 +230,6 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 
                 await System.IO.File.WriteAllTextAsync(fullPath, jsonString);
                 _logger.LogInformation("Exported employees to {Path}", fullPath);
-                
-                // Note: In a real app we'd show a success message to the user here.
             }
             catch (Exception ex)
             {
@@ -249,24 +240,20 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [RelayCommand]
         private void OpenEmployeeReport(EmployeeSummaryDto? employee)
         {
-            if (employee == null) return;
-            _logger.LogInformation("Open Report requested for {Id}", employee.Id);
-            // Stub for now, as EmployeeReportViewModel might not exist in WPF yet
+            var target = employee ?? SelectedItem;
+            if (target == null) return;
+            _logger.LogInformation("Open Report requested for {Id}", target.Id);
         }
 
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
-        public void CloseDetailView()
-        {
-            CloseOverlay();
-        }
+        public void CloseDetailView() => CloseOverlay();
 
-        partial void OnSearchQueryChanged(string value) => FilterEmployees();
-        partial void OnSelectedFilterIndexChanged(int value) => FilterEmployees();
-        partial void OnSelectedBranchFilterIndexChanged(int value) => FilterEmployees();
+        partial void OnSelectedFilterIndexChanged(int value) => FilterItems();
+        partial void OnSelectedBranchFilterIndexChanged(int value) => FilterItems();
 
-        private void FilterEmployees()
+        protected override void FilterItems()
         {
             var filtered = _allEmployees.AsEnumerable();
 
@@ -297,7 +284,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             };
 
             var result = filtered.ToList();
-            Employees = new ObservableCollection<EmployeeSummaryDto>(result);
+            Items = new ObservableCollection<EmployeeSummaryDto>(result);
 
             // Update Stats
             TotalCount = result.Count;

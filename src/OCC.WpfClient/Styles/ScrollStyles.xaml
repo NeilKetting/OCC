@@ -9,12 +9,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Thumb}">
                     <Rectangle x:Name="thumbRect" 
-                               Fill="{StaticResource GlassBorderUltraLight}" 
-                               RadiusX="1.5" RadiusY="1.5" 
-                               Width="3"/>
+                               Fill="{StaticResource GlassBorderLight}" 
+                               RadiusX="3" RadiusY="3"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Fill" TargetName="thumbRect" Value="{StaticResource GlassBorderLight}" />
+                            <Setter Property="Fill" TargetName="thumbRect" Value="{StaticResource GlassBorderMedium}" />
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter Property="Fill" TargetName="thumbRect" Value="{StaticResource TextSub}" />
@@ -42,8 +41,8 @@
     <Style TargetType="{x:Type ScrollBar}">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Width" Value="5"/>
-        <Setter Property="MinWidth" Value="5"/>
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="MinWidth" Value="8"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollBar}">
@@ -62,14 +61,15 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="Orientation" Value="Horizontal">
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
                             <Setter Property="Width" Value="Auto"/>
-                            <Setter Property="MinWidth" Value="0"/>
-                            <Setter Property="Height" Value="5"/>
-                            <Setter Property="MinHeight" Value="5"/>
+                            <Setter Property="MinWidth" Value="200"/>
+                            <Setter Property="Height" Value="10"/>
+                            <Setter Property="MinHeight" Value="10"/>
                             <Setter TargetName="PART_Track" Property="Orientation" Value="Horizontal"/>
                             <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
                             <Setter TargetName="Thumb" Property="Width" Value="Auto"/>
-                            <Setter TargetName="Thumb" Property="Height" Value="3"/>
+                            <Setter TargetName="Thumb" Property="Height" Value="8"/>
                             <Setter TargetName="Thumb" Property="Margin" Value="0,1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -111,6 +111,7 @@
                                    AutomationProperties.AutomationId="HorizontalScrollBar" 
                                    Cursor="Arrow" 
                                    VerticalAlignment="Bottom"
+                                   Margin="0,0,12,0"
                                    Maximum="{TemplateBinding ScrollableWidth}" 
                                    Minimum="0" 
                                    Orientation="Horizontal" 

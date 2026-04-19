@@ -19,6 +19,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
         private readonly ProjectTasksViewModel _tasksVM;
         private readonly ProjectGanttViewModel _ganttVM;
+        private readonly SubContractorListViewModel _subContractorsVM;
 
         [ObservableProperty] private Project? _project;
         [ObservableProperty] private ViewModelBase _currentView;
@@ -26,12 +27,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public ViewModelBase? ActiveOverlay => CurrentView;
 
-        public ProjectDetailViewModel(IProjectService projectService, ProjectSpecificDashboardViewModel dashboardVM, ProjectTasksViewModel tasksVM, ProjectGanttViewModel ganttVM)
+        public ProjectDetailViewModel(IProjectService projectService, ProjectSpecificDashboardViewModel dashboardVM, ProjectTasksViewModel tasksVM, ProjectGanttViewModel ganttVM, SubContractorListViewModel subContractorsVM)
         {
             _projectService = projectService;
             _dashboardVM = dashboardVM;
             _tasksVM = tasksVM;
             _ganttVM = ganttVM;
+            _subContractorsVM = subContractorsVM;
             _currentView = _dashboardVM;
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
@@ -69,5 +71,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         [RelayCommand]
         private void ShowGantt() => CurrentView = _ganttVM;
+
+        [RelayCommand]
+        private void ShowSubContractors() => CurrentView = _subContractorsVM;
     }
 }

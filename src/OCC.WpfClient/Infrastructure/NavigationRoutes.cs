@@ -23,6 +23,7 @@ namespace OCC.WpfClient.Infrastructure
         public const string Picking = "Picking";
         public const string Procurement = "Procurement";
         public const string PurchaseOrder = "PurchaseOrder";
+        public const string SubContractors = "SubContractors";
         
         // System Routes
         public const string AccessDenied = "AccessDenied";

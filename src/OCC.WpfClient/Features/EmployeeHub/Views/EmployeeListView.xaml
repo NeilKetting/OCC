@@ -7,6 +7,7 @@
              xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
              xmlns:views="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:EmployeeListViewModel}">
@@ -21,8 +22,14 @@
     </UserControl.Resources>
 
     <Grid Margin="0" Background="{StaticResource AppBackground}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <!-- Main Background Content (will be blurred/dimmed) -->
         <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Style.Triggers>
@@ -39,12 +46,12 @@
             </Grid.Style>
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <!-- Header -->
                 <RowDefinition Height="Auto" />
                 <!-- Compact Filters & Stats -->
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <!-- Grid -->
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -176,38 +183,24 @@
             </Border>
 
             <!-- Employee Grid -->
-            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="2" ClipToBounds="True"
-                    Margin="10,0,10,10" CornerRadius="0">
-                <DataGrid ItemsSource="{Binding Employees}" 
-                          SelectedItem="{Binding SelectedEmployee}"
+            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="2" 
+                    HorizontalAlignment="Stretch"
+                    Margin="10,0,10,10" CornerRadius="16">
+                <DataGrid ItemsSource="{Binding Items}" 
+                          SelectedItem="{Binding SelectedItem}"
                           AutoGenerateColumns="False" 
                           IsReadOnly="True"
                           ColumnReordered="DataGrid_ColumnReordered"
                           ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    <DataGrid.Style>
-                        <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
-                            <!-- Implicit styles -->
-                        </Style>
-                    </DataGrid.Style>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Cursor" Value="Hand" />
-                            <Setter Property="Background" Value="Transparent" />
-                            <!-- MouseBinding at row level via Style is tricky in pure XAML; using a simpler approach -->
-                        </Style>
-                    </DataGrid.RowStyle>
-                    <DataGrid.InputBindings>
-                        <MouseBinding MouseAction="LeftDoubleClick" 
-                                      Command="{Binding EditEmployeeCommand}"
-                                      CommandParameter="{Binding SelectedEmployee}" />
-                    </DataGrid.InputBindings>
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="False"
+                          Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="NUMBER" Binding="{Binding EmployeeNumber}" Width="Auto" Visibility="{Binding Data.IsNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
-                        <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding DisplayName}" Width="Auto" />
-                        <DataGridTextColumn Header="POSITION" Binding="{Binding Role}" Width="Auto" Visibility="{Binding Data.IsPositionVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="NUMBER" Binding="{Binding EmployeeNumber}" Width="Auto" Visibility="{Binding Data.IsNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding DisplayName}" Width="Auto" FontWeight="Bold" />
+                        <DataGridTextColumn Header="POSITION" Binding="{Binding Role}" Width="Auto" Visibility="{Binding Data.IsPositionVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource AccentBlue}" />
                         <DataGridTextColumn Header="TYPE" Binding="{Binding EmploymentType}" Width="Auto" Visibility="{Binding Data.IsTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
-                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource TextSub}" />
 
                         <!-- New Columns -->
                         <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
@@ -228,20 +221,61 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Content="" FontFamily="Segoe MDL2 Assets" 
-                                                Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextSub}" Margin="0,0,15,0"
-                                                Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" Cursor="Hand" ToolTip="Edit Employee" />
-
-                                        <Button Content="" FontFamily="Segoe MDL2 Assets" 
-                                                Background="Transparent" BorderThickness="0" Foreground="#80FF4B4B"
-                                                Command="{Binding DataContext.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" Cursor="Hand" ToolTip="Delete Employee" />
+                                        <Button Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open Details">
+                                            <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="14" Height="14" Stretch="Uniform" Opacity="0.8"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Edit">
+                                            <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="14" Height="14" Stretch="Uniform"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete">
+                                            <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
+                                        </Button>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <!-- Use Tag to bridge the ViewModel to the ContextMenu -->
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" 
+                                    Value="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                        <MenuItem Header="Open Details" 
+                                                  Command="{Binding Path=PlacementTarget.Tag.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="12" Height="12" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Edit Employee" 
+                                                  Command="{Binding Path=PlacementTarget.Tag.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="12" Height="12" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator Style="{x:Null}" Visibility="Collapsed"/>
+                                        <MenuItem Header="Delete Employee" 
+                                                  Command="{Binding Path=PlacementTarget.Tag.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"
+                                                  Foreground="{StaticResource ErrorRed}">
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="12" Height="12" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.RowStyle>
                 </DataGrid>
             </Border>
 

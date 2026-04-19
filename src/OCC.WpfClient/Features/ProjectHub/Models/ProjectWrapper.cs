@@ -71,6 +71,12 @@ namespace OCC.WpfClient.Features.ProjectHub.Models
             set { Model.ProjectManager = value; OnPropertyChanged(); }
         }
 
+        public string Location
+        {
+            get => Model.Location;
+            set { Model.Location = value; OnPropertyChanged(); }
+        }
+
         public Guid? SiteManagerId
         {
             get => Model.SiteManagerId;

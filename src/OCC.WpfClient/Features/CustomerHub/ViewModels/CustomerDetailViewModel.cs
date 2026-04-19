@@ -108,9 +108,24 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             }
         }
 
+        protected override async Task<bool> ValidateAsync()
+        {
+            ValidationErrors.Clear();
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                ValidationErrors.Add("Customer name is required.");
+                HasErrors = true;
+                await PulseValidationAsync();
+                return false;
+            }
+            HasErrors = false;
+            return true;
+        }
+
         protected override void OnSaveSuccess()
         {
-            _parent.LoadData().ConfigureAwait(false);
+            NotifySuccess("Success", $"Customer '{Name}' saved successfully.");
+            _parent.LoadDataAsync().ConfigureAwait(false);
             _parent.CloseDetailView();
         }
 

@@ -26,6 +26,7 @@ namespace OCC.WpfClient.ModelWrappers
         public bool HasSubtasks => _model.Children != null && _model.Children.Any();
         public string DisplayId => $"T-{(_model.Id == Guid.Empty ? "NEW" : _model.Id.ToString().Substring(Math.Max(0, _model.Id.ToString().Length - 4)))}";
         public string AssigneeInitials => _model.AssigneeInitials;
+        public void RefreshAssigneeInfo() => OnPropertyChanged(nameof(AssigneeInitials));
 
         [ObservableProperty]
         [Required(ErrorMessage = "Task name is required")]

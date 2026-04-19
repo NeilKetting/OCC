@@ -527,7 +527,8 @@
                 <ContentControl Grid.Row="1" Content="{Binding ActiveHub}" Margin="0"/>
 
                 <!-- Status Bar (Complete Parity) -->
-                <Border Grid.Row="2" Background="#1A000000" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="30,0">
+                <Border Grid.Row="2" Background="#1A000000" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="30,0"
+                        TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType" UseLayoutRounding="True" SnapsToDevicePixels="True">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -552,7 +553,7 @@
                                         </Style>
                                     </Path.Style>
                                 </Path>
-                                <TextBlock Text="{Binding UserActivityStatus}" FontSize="11" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding UserActivityStatus}" FontSize="12" VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
@@ -633,11 +634,11 @@
                             <!-- Action Text Logic -->
                             <Grid VerticalAlignment="Center">
                                 <!-- Busy Message -->
-                                <TextBlock Text="{Binding BusyMessage}" Foreground="White" FontSize="11" VerticalAlignment="Center" FontWeight="SemiBold"
+                                <TextBlock Text="{Binding BusyMessage}" Foreground="White" FontSize="12" VerticalAlignment="Center" FontWeight="SemiBold"
                                            Visibility="{Binding IsAppBusy, Converter={StaticResource VisibilityConverter}}"/>
                                 
                                 <!-- Status Message (Ready, Saved, etc.) -->
-                                <TextBlock Text="{Binding StatusMessage}" Foreground="White" FontSize="11" Opacity="0.7" VerticalAlignment="Center"
+                                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"
                                            Visibility="{Binding IsAppBusy, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
                             </Grid>
                         </StackPanel>
@@ -672,7 +673,7 @@
                                 </Button.Style>
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="{DynamicResource IconBug}" Fill="{DynamicResource SecondaryGold}" Width="12" Height="12" Margin="0,1,8,0" VerticalAlignment="Center" Stretch="Uniform"/>
-                                    <TextBlock Text="Report Bug" Foreground="{StaticResource TextSub}" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Report Bug" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
@@ -682,8 +683,8 @@
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Cursor="Hand" 
                                         Background="Transparent" MouseLeftButtonDown="OnOnlineStatusClick">
                                 <Path Data="{DynamicResource IconUserOnline}" Fill="{DynamicResource AccentBlue}" Width="14" Height="14" Margin="0,0,8,0" VerticalAlignment="Center" Stretch="Uniform"/>
-                                <TextBlock Text="Online: " Foreground="{StaticResource TextSub}" FontSize="11" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding OnlineCount}" Foreground="White" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Online: " Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding OnlineCount}" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>

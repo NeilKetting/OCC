@@ -201,10 +201,26 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             }
         }
 
+        protected override async Task<bool> ValidateAsync()
+        {
+            ValidationErrors.Clear();
+            Employee.Validate();
+            if (Employee.HasErrors)
+            {
+                foreach (var err in Employee.GetErrors())
+                {
+                    ValidationErrors.Add(err.ErrorMessage ?? "Validation error");
+                }
+                HasErrors = true;
+                await PulseValidationAsync();
+                return false;
+            }
+            HasErrors = false;
+            return true;
+        }
+
         protected override async Task ExecuteSaveAsync()
         {
-            Employee.Validate();
-            if (Employee.HasErrors) throw new Exception("Validation failed.");
 
             if (IsNew)
             {
@@ -220,7 +236,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 
         protected override void OnSaveSuccess()
         {
-            _parent.LoadDataCommand.ExecuteAsync(null).ConfigureAwait(false);
+            NotifySuccess("Success", $"Employee '{Employee.DisplayName}' saved successfully.");
+            _parent.LoadDataAsync().ConfigureAwait(false);
             _parent.CloseDetailView();
         }
 

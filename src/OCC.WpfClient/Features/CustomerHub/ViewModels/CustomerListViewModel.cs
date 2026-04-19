@@ -13,21 +13,12 @@ using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 {
-    public partial class CustomerListViewModel : OverlayHostViewModel
+    public partial class CustomerListViewModel : ListViewModelBase<CustomerSummaryDto>
     {
         private readonly ICustomerService _customerService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<CustomerListViewModel> _logger;
         private List<CustomerSummaryDto> _allCustomers = new();
-
-        [ObservableProperty]
-        private string _searchQuery = string.Empty;
-
-        [ObservableProperty]
-        private ObservableCollection<CustomerSummaryDto> _customers = new();
-
-        [ObservableProperty] private int _totalCount;
-        [ObservableProperty] private CustomerSummaryDto? _selectedCustomer;
 
         public CustomerListViewModel(
             ICustomerService customerService,
@@ -39,11 +30,10 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             _logger = logger;
             Title = "Customer Management";
             
-            _ = LoadData();
+            _ = LoadDataAsync();
         }
 
-        [RelayCommand]
-        public async Task LoadData()
+        public override async Task LoadDataAsync()
         {
             try
             {
@@ -53,7 +43,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 var customers = await _customerService.GetCustomerSummariesAsync();
                 _allCustomers = customers.OrderBy(c => c.Name).ToList();
                 
-                FilterCustomers();
+                FilterItems();
             }
             catch (Exception ex)
             {
@@ -75,13 +65,14 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         [RelayCommand]
         private async Task EditCustomer(CustomerSummaryDto? summary)
         {
-            if (summary == null) return;
+            var target = summary ?? SelectedItem;
+            if (target == null) return;
             
             try
             {
                 IsBusy = true;
                 BusyText = "Loading details...";
-                var customer = await _customerService.GetCustomerAsync(summary.Id);
+                var customer = await _customerService.GetCustomerAsync(target.Id);
                 if (customer != null)
                 {
                     OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger));
@@ -96,10 +87,11 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         [RelayCommand]
         private async Task DeleteCustomer(CustomerSummaryDto? summary)
         {
-            if (summary == null) return;
+            var target = summary ?? SelectedItem;
+            if (target == null) return;
             
             var confirmed = await _dialogService.ShowConfirmationAsync("Delete Customer", 
-                $"Are you sure you want to delete '{summary.Name}'? This action cannot be undone.");
+                $"Are you sure you want to delete '{target.Name}'? This action cannot be undone.");
 
             if (!confirmed) return;
 
@@ -107,10 +99,10 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             {
                 IsBusy = true;
                 BusyText = "Deleting customer...";
-                var success = await _customerService.DeleteCustomerAsync(summary.Id);
+                var success = await _customerService.DeleteCustomerAsync(target.Id);
                 if (success)
                 {
-                    await LoadData();
+                    await LoadDataAsync();
                 }
             }
             finally
@@ -119,9 +111,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             }
         }
 
-        partial void OnSearchQueryChanged(string value) => FilterCustomers();
-
-        private void FilterCustomers()
+        protected override void FilterItems()
         {
             var filtered = _allCustomers.AsEnumerable();
 
@@ -135,13 +125,10 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             }
 
             var result = filtered.ToList();
-            Customers = new ObservableCollection<CustomerSummaryDto>(result);
-            TotalCount = _allCustomers.Count;
+            Items = new ObservableCollection<CustomerSummaryDto>(result);
+            TotalCount = result.Count;
         }
 
-        public void CloseDetailView()
-        {
-            CloseOverlay();
-        }
+        public void CloseDetailView() => CloseOverlay();
     }
 }

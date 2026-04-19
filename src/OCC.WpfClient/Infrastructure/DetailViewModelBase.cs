@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.WpfClient.Infrastructure.Exceptions;
@@ -11,6 +13,10 @@ namespace OCC.WpfClient.Infrastructure
     {
         protected readonly IDialogService _dialogService;
         protected readonly ILogger _logger;
+
+        [ObservableProperty] private int _animationPulse;
+        [ObservableProperty] private bool _hasErrors;
+        public ObservableCollection<string> ValidationErrors { get; } = new();
 
         protected DetailViewModelBase(IDialogService dialogService, ILogger logger)
         {
@@ -56,7 +62,7 @@ namespace OCC.WpfClient.Infrastructure
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during save operation");
-                await _dialogService.ShowAlertAsync("Error", $"Failed to save changes: {ex.Message}");
+                NotifyError("Save Error", $"Failed to save changes: {ex.Message}");
             }
             finally
             {
@@ -77,5 +83,12 @@ namespace OCC.WpfClient.Infrastructure
         protected virtual Task<bool> ValidateAsync() => Task.FromResult(true);
         protected virtual void OnSaveSuccess() { }
         protected virtual void OnCancel() { }
+
+        protected async Task PulseValidationAsync()
+        {
+            AnimationPulse = 0;
+            await Task.Delay(100);
+            AnimationPulse = 1;
+        }
     }
 }
