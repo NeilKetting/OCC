@@ -119,8 +119,22 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             
             if (confirm)
             {
-                // TODO: Implement deletion in service if available
-                _toastService.ShowInfo("Action", "Deletion requested.");
+                IsBusy = true;
+                try
+                {
+                    await _projectService.DeleteProjectAsync(project.Id);
+                    _toastService.ShowSuccess("Deleted", "Project deleted successfully.");
+                    await LoadDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting project {Id}", project.Id);
+                    _toastService.ShowError("Error", "Failed to delete project. Please try again.");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
         }
 

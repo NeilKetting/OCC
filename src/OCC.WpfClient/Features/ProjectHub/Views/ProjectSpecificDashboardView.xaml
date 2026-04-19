@@ -23,14 +23,18 @@
                 <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Padding="10">
                     <StackPanel>
                         <TextBlock Text="PROJECT HEALTH" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" TextWrapping="Wrap"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,15,0,5">
-                            <Ellipse Width="12" Height="12" Fill="{Binding ProjectHealthColor}" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <Grid Margin="0,15,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Grid.Column="0" Width="12" Height="12" Fill="{Binding ProjectHealthColor}" VerticalAlignment="Center" Margin="0,0,10,0">
                                 <Ellipse.Effect>
                                     <DropShadowEffect BlurRadius="8" Color="White" Opacity="0.3" ShadowDepth="0"/>
                                 </Ellipse.Effect>
                             </Ellipse>
-                            <TextBlock Text="{Binding ProjectHealth}" Foreground="White" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"/>
-                        </StackPanel>
+                            <TextBlock Grid.Column="1" Text="{Binding ProjectHealth}" Foreground="White" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
+                        </Grid>
                         <TextBlock Text="Based on overdue tasks" Foreground="{StaticResource TextSub}" FontSize="10" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
@@ -61,7 +65,7 @@
                 <Border Style="{StaticResource GlassCard}" Margin="10,0,0,0" Padding="10">
                     <StackPanel>
                         <TextBlock Text="PREDICTED COMPLETION" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding EtaDateString}" Foreground="{StaticResource OrangeBrush}" FontSize="18" FontWeight="Bold" Margin="0,15,0,5" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding EtaDateString}" Foreground="{StaticResource OrangeBrush}" FontSize="18" FontWeight="Bold" Margin="0,15,0,5" TextWrapping="Wrap" MaxWidth="200"/>
                         <Border Background="#15FFFFFF" HorizontalAlignment="Left" CornerRadius="4" Padding="6,2">
                             <TextBlock Text="{Binding EtaStatus}" Foreground="White" FontSize="10" FontWeight="SemiBold" TextWrapping="Wrap"/>
                         </Border>
@@ -115,7 +119,7 @@
                             <TextBlock Text="Task Distribution" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="Breakdown by current status" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </StackPanel>
-                        <lvc:PieChart Grid.Row="1" Series="{Binding StatusSeries}" LegendPosition="Right" Background="Transparent" />
+                        <lvc:PieChart Grid.Row="1" Series="{Binding StatusSeries}" Background="Transparent" />
                     </Grid>
                 </Border>
 
@@ -130,7 +134,7 @@
                             <TextBlock Text="Schedule Health" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="Deadlines vs Completion" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </StackPanel>
-                        <lvc:PieChart Grid.Row="1" Series="{Binding ScheduleSeries}" LegendPosition="Right" Background="Transparent" />
+                        <lvc:PieChart Grid.Row="1" Series="{Binding ScheduleSeries}" Background="Transparent" />
                     </Grid>
                 </Border>
             </Grid>

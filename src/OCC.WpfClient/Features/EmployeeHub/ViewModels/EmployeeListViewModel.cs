@@ -1,17 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Services.Infrastructure;
-using OCC.WpfClient.Features.EmployeeHub.Models;
+using OCC.WpfClient.Services.Interfaces;
+using System.Collections.ObjectModel;
 
 namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 {

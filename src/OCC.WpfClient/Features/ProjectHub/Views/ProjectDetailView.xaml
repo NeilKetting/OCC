@@ -98,18 +98,18 @@
             <Border Grid.Row="0" Height="80" Padding="30,0" Background="#05FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" 
-                                VerticalAlignment="Center" Margin="0,0,10,0">
-                        <TextBlock Text="{Binding Project.Name}" FontSize="24" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding Project.Description}" FontSize="12" Foreground="{StaticResource TextSub}" Margin="0,2,0,0"/>
-                    </StackPanel>
+                    <Grid Grid.Column="0" VerticalAlignment="Center" Margin="0,0,30,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Project.Name}" FontSize="22" FontWeight="Bold" Foreground="White" TextWrapping="WrapWithOverflow" MaxWidth="600" HorizontalAlignment="Left"/>
+                            <TextBlock Text="{Binding Project.Description}" FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,2,0,0" TextWrapping="Wrap" MaxWidth="600" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
 
                     <!-- Site Manager Mini Profile -->
-                    <StackPanel Grid.Column="1"
-                                Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Width="36" Height="36" CornerRadius="18" Background="{StaticResource AccentBlue}">
                             <TextBlock Text="PM" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>

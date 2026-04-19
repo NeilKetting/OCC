@@ -15,11 +15,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public enum ProjectCreationMode
-    {
-        Quick,
-        Comprehensive
-    }
+    // Enum moved to Models namespace to avoid circular dependencies
 
     public partial class CreateProjectViewModel : ViewModelBase
     {
@@ -31,6 +27,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IToastService _toastService;
         private string _sessionToken = Guid.NewGuid().ToString();
+        private System.Threading.CancellationTokenSource? _addressCts;
 
         public event EventHandler? CloseRequested;
         public event EventHandler<Guid>? ProjectCreated;
@@ -153,9 +150,30 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 return;
             }
 
-            var suggestions = await _googleMapsService.GetAddressSuggestionsAsync(Project.StreetLine1, _sessionToken);
-            AddressSuggestions.Clear();
-            foreach (var s in suggestions) AddressSuggestions.Add(s);
+            // Debounce logic
+            _addressCts?.Cancel();
+            _addressCts = new System.Threading.CancellationTokenSource();
+            var token = _addressCts.Token;
+
+            try
+            {
+                await Task.Delay(300, token);
+                
+                var suggestions = await _googleMapsService.GetAddressSuggestionsAsync(Project.StreetLine1, _sessionToken);
+                
+                if (token.IsCancellationRequested) return;
+
+                AddressSuggestions.Clear();
+                foreach (var s in suggestions) AddressSuggestions.Add(s);
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore cancellation
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Address Search Error: {ex.Message}");
+            }
         }
 
         partial void OnSelectedAddressSuggestionChanged(AddressSuggestion? value)
@@ -168,42 +186,69 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private async Task HandleAddressSelection(AddressSuggestion suggestion)
         {
-            var details = await _googleMapsService.GetPlaceDetailsAsync(suggestion.PlaceId, _sessionToken);
-            if (details != null)
+            if (suggestion == null) return;
+
+            try
             {
-                Project.StreetLine1 = details.StreetLine1;
-                Project.StreetLine2 = details.StreetLine2;
-                Project.City = details.City;
-                Project.StateOrProvince = details.StateOrProvince;
-                Project.PostalCode = details.PostalCode;
-                Project.Country = details.Country;
-                Project.Latitude = details.Latitude;
-                Project.Longitude = details.Longitude;
+                IsBusy = true;
+                BusyText = "Fetching address details...";
                 
-                AddressSuggestions.Clear();
-                SelectedAddressSuggestion = null;
-                _sessionToken = Guid.NewGuid().ToString();
+                var details = await _googleMapsService.GetPlaceDetailsAsync(suggestion.PlaceId, _sessionToken);
+                if (details != null)
+                {
+                    Project.StreetLine1 = details.StreetLine1;
+                    Project.StreetLine2 = details.StreetLine2;
+                    Project.City = details.City;
+                    Project.StateOrProvince = details.StateOrProvince;
+                    Project.PostalCode = details.PostalCode;
+                    Project.Country = details.Country;
+                    Project.Latitude = details.Latitude;
+                    Project.Longitude = details.Longitude;
+                    
+                    AddressSuggestions.Clear();
+                    SelectedAddressSuggestion = null;
+                    _sessionToken = Guid.NewGuid().ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Google Maps", "Failed to retrieve address details.");
+                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Place Details Error: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
+
+        [ObservableProperty] private int _animationPulse;
+        [ObservableProperty] private bool _showValidationSummary;
 
         [RelayCommand]
         private async Task CreateProject()
         {
-            Project.Validate();
+            // Sync VM selection to Model before validation
+            Project.CustomerId = SelectedCustomer?.Id;
+            Project.Customer = SelectedCustomer?.Name ?? string.Empty;
+            Project.SiteManagerId = SelectedSiteManager?.Id;
+
+            Project.Validate(CreationMode);
+
             if (Project.HasValidationErrors)
             {
-                _toastService.ShowWarning("Validation", "Please correct the errors before saving.");
+                // Pulse the animation signal
+                AnimationPulse = 0;
+                await Task.Delay(100); // Give dispatcher time to process the reset
+                AnimationPulse = 1;
+                
+                var firstError = Project.Errors.FirstOrDefault() ?? "Please correct the errors before saving.";
+                _toastService.ShowWarning("Validation", firstError);
                 return;
             }
 
             try
             {
                 IsBusy = true;
-                Project.SiteManagerId = SelectedSiteManager?.Id;
-                Project.CustomerId = SelectedCustomer?.Id;
-                Project.Customer = SelectedCustomer?.Name ?? string.Empty;
-                Project.SiteManagerId = SelectedSiteManager?.Id;
-
                 await _projectService.CreateProjectAsync(Project.Model);
 
                 _toastService.ShowSuccess("Success", $"Project '{Project.Name}' created successfully.");

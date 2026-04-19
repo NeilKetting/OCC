@@ -125,6 +125,23 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        public async Task DeleteProjectAsync(Guid id)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/Projects/{id}");
+            try
+            {
+                var response = await client.DeleteAsync(url);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting project {Id} at {Url}", id, url);
+                throw;
+            }
+        }
+
         public async Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId)
         {
             var client = _httpClientFactory.CreateClient();

@@ -13,6 +13,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<Project?> GetProjectAsync(Guid id);
         Task CreateProjectAsync(Project project);
         Task UpdateProjectAsync(Project project);
+        Task DeleteProjectAsync(Guid id);
         Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId);
         List<ProjectTask> BuildTaskHierarchy(IEnumerable<ProjectTask> allTasks);
         List<ProjectTask> FlattenHierarchy(IEnumerable<ProjectTask> rootTasks);

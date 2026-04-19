@@ -2,9 +2,16 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace OCC.WpfClient.Features.ProjectHub.Models
 {
+    public enum ProjectCreationMode
+    {
+        Quick,
+        Comprehensive
+    }
+
     public class ProjectWrapper : ViewModelBase
     {
         public Project Model { get; }
@@ -131,14 +138,35 @@ namespace OCC.WpfClient.Features.ProjectHub.Models
             set { Model.Longitude = value; OnPropertyChanged(); }
         }
 
-        public bool HasValidationErrors { get; private set; }
-        public List<string> Errors { get; } = new();
+        public bool HasValidationErrors { get; set; }
+        public ObservableCollection<string> Errors { get; } = new();
 
-        public void Validate()
+        public void Validate(ProjectCreationMode mode)
         {
             Errors.Clear();
             if (string.IsNullOrWhiteSpace(Name)) Errors.Add("Project Name is required.");
+            if (string.IsNullOrWhiteSpace(StreetLine1)) Errors.Add("Site Street Address is required.");
+            if (CustomerId == null || CustomerId == Guid.Empty) Errors.Add("Customer selection is required.");
+            //if (SiteManagerId == null || SiteManagerId == Guid.Empty) Errors.Add("Site Manager selection is required.");
+
+            if (mode == ProjectCreationMode.Comprehensive)
+            {
+                if (string.IsNullOrWhiteSpace(ShortName)) Errors.Add("Project ID / Ref is required.");
+                if (string.IsNullOrWhiteSpace(Status)) Errors.Add("Status is required.");
+                if (string.IsNullOrWhiteSpace(Priority)) Errors.Add("Priority is required.");
+                
+                if (EndDate < StartDate) Errors.Add("End Date cannot be before Start Date.");
+                
+                // Detailed location for comprehensive
+                if (string.IsNullOrWhiteSpace(City)) Errors.Add("City is required for full projects.");
+                if (string.IsNullOrWhiteSpace(Country)) Errors.Add("Country is required for full projects.");
+            }
             
+            RefreshErrorState();
+        }
+
+        public void RefreshErrorState()
+        {
             HasValidationErrors = Errors.Count > 0;
             OnPropertyChanged(nameof(HasValidationErrors));
             OnPropertyChanged(nameof(Errors));

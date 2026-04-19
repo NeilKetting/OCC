@@ -27,24 +27,6 @@
         <conv:VisibilityConverter x:Key="VisibilityConverter"/>
         <conv:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         
-        <Style x:Key="CompactLabel" TargetType="TextBlock" BasedOn="{StaticResource FormLabelText}">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Margin" Value="0,0,0,2"/>
-        </Style>
-        
-        <Style x:Key="CompactTextBox" TargetType="TextBox" BasedOn="{StaticResource ModernInput}">
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="5,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="CompactComboBox" TargetType="ComboBox" BasedOn="{StaticResource ModernComboBox}">
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-
         <!-- QuickBooks style: Invisible when empty, shows on hover/focus -->
         <Style x:Key="QuickBooksComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource CompactComboBox}">
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -179,11 +161,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style x:Key="CompactDatePicker" TargetType="DatePicker" BasedOn="{StaticResource ModernDatePicker}">
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="FontSize" Value="11"/>
         </Style>
 
         <!-- QuickBooks Toolbar Button Style (Vertical Layout) -->

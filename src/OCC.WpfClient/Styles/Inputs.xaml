@@ -139,8 +139,8 @@
         <Setter Property="BorderBrush" Value="{StaticResource InputBorder}" />
         <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="10,0,0,0" />
         <Setter Property="FontSize" Value="{StaticResource FontSizeRegular}" />
+        <Setter Property="Padding" Value="15,0,0,0" />
         <Setter Property="Height" Value="40" />
         <Setter Property="IsTextSearchEnabled" Value="True" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -672,5 +672,23 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <!-- Compact Input Styles -->
+    <Style x:Key="CompactTextBox" TargetType="TextBox" BasedOn="{StaticResource ModernInput}">
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Padding" Value="5,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="CompactComboBox" TargetType="ComboBox" BasedOn="{StaticResource ModernComboBox}">
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="CompactDatePicker" TargetType="DatePicker" BasedOn="{StaticResource ModernDatePicker}">
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="FontSize" Value="11"/>
     </Style>
 </ResourceDictionary>

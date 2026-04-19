@@ -60,7 +60,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void GoToRegistry()
         {
-            _navigationService.NavigateTo(NavigationRoutes.Projects);
+            WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Projects));
         }
 
         [RelayCommand]

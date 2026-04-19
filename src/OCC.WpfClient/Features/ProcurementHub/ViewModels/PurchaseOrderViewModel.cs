@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
 using OCC.WpfClient.Features.ProcurementHub.Models;
 using OCC.WpfClient.Infrastructure;
+using CommunityToolkit.Mvvm.Messaging;
+using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs;
 using System.Collections.ObjectModel;
@@ -184,7 +186,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     _currentIndex = 0;
                 }
                 
-                _navigationService.NavigateTo<ProcurementViewModel>();
+                WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
+                WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
             }
             catch (Exception ex)
             {
@@ -254,7 +257,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task CancelAsync()
         {
-            _navigationService.NavigateTo<ProcurementViewModel>();
+            WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
+            WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
         }
 
         private bool _isShowingItemNotFoundDialog = false;
@@ -320,7 +324,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private void GoBack()
         {
-            _navigationService.NavigateTo<ProcurementViewModel>();
+            WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
+            WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
         }
 
         [RelayCommand]
@@ -467,7 +472,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         {
             if (CurrentOrder == null) return;
             // logic to delete current draft if needed
-            _navigationService.NavigateTo<ProcurementViewModel>();
+            WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
+            WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
         }
 
         private void ShowNewItemDialog(OrderLineWrapper line)

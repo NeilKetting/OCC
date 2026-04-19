@@ -15,8 +15,12 @@ namespace OCC.WpfClient.Services
 
         public Task<bool> ShowConfirmationAsync(string title, string message)
         {
-            var result = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
-            return Task.FromResult(result == MessageBoxResult.Yes);
+            var dialog = new CustomDialogView(title, message, "Yes", null, "No");
+            if (dialog.ShowDialog() == true)
+            {
+                return Task.FromResult(dialog.Result == CustomDialogResult.Primary);
+            }
+            return Task.FromResult(false);
         }
 
         public Task<CustomDialogResult> ShowConflictResolutionAsync(string title, string message)
