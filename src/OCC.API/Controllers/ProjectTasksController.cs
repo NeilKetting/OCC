@@ -104,6 +104,41 @@ namespace OCC.API.Controllers
             }
         }
 
+        // GET: api/ProjectTasks/recent-updates
+        [HttpGet("recent-updates")]
+        public async Task<ActionResult<IEnumerable<OCC.Shared.DTOs.DashboardUpdateDto>>> GetRecentUpdates()
+        {
+            try
+            {
+                var explicitStatuses = new[] { "Started", "Halfway", "Almost Done", "Completed", "Done" };
+                
+                var topTasks = await _context.ProjectTasks
+                    .Include(t => t.Project)
+                    .Where(t => explicitStatuses.Contains(t.Status))
+                    .OrderByDescending(t => t.UpdatedAtUtc ?? t.CreatedAtUtc)
+                    .Take(10)
+                    .AsNoTracking()
+                    .ToListAsync();
+                
+                var dtos = topTasks.Select(t => new OCC.Shared.DTOs.DashboardUpdateDto
+                {
+                    Timestamp = t.UpdatedAtUtc ?? t.CreatedAtUtc,
+                    User = string.IsNullOrEmpty(t.UpdatedBy) ? t.CreatedBy : t.UpdatedBy,
+                    Action = "Status Changed",
+                    TaskName = t.Name,
+                    ProjectName = t.Project?.Name ?? string.Empty,
+                    Status = t.Status
+                });
+
+                return Ok(dtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving recent task updates");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         // POST: api/ProjectTasks
         [HttpPost]
         public async Task<ActionResult<ProjectTask>> PostProjectTask(ProjectTask task)
@@ -222,6 +257,18 @@ namespace OCC.API.Controllers
                 try
                 {
                     await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", id);
+                    
+                    if (existingTask.Status != task.Status)
+                    {
+                        var updateDto = new OCC.Shared.DTOs.DashboardUpdateDto
+                        {
+                            Timestamp = DateTime.UtcNow,
+                            User = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "System",
+                            TaskName = task.Name,
+                            Status = task.Status
+                        };
+                        await _hubContext.Clients.All.SendAsync("DashboardUpdate", updateDto);
+                    }
                 }
                 catch (Exception sigEx)
                 {

@@ -9,6 +9,7 @@ namespace OCC.WpfClient.Services.Interfaces
     {
         event Action<List<UserConnectionInfo>> UserListUpdated;
         event Action<string> NotificationReceived;
+        event Action<DashboardUpdateDto> DashboardUpdateReceived;
         
         bool IsConnected { get; }
         int OnlineCount { get; }

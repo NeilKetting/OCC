@@ -41,4 +41,31 @@ namespace OCC.Shared.DTOs
         public decimal HourlyRate { get; set; }
         public decimal TotalCost => (decimal)Hours * HourlyRate;
     }
+
+    public class DashboardUpdateDto
+    {
+        public DateTime Timestamp { get; set; }
+        public string User { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public string TaskName { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+
+        public string Message
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Status))
+                    return $"{Action} '{TaskName}' by {User}.";
+                
+                string formattedStatus = Status;
+                if (formattedStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                    return $"Task '{TaskName}' completed by {User}.";
+                if (formattedStatus.Equals("Started", StringComparison.OrdinalIgnoreCase))
+                    return $"Task '{TaskName}' started by {User}.";
+                
+                return $"Task '{TaskName}' progress: {Status} (updated by {User}).";
+            }
+        }
+    }
 }

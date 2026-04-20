@@ -57,7 +57,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ObservableCollection<User> AvailableContractors { get; } = new();
         public ObservableCollection<ToDoItemWrapper> ToDoList { get; } = new();
         public ObservableCollection<ReminderFrequency> ReminderFrequencies { get; } = new(Enum.GetValues<ReminderFrequency>());
-        public List<string> AvailableStatuses { get; } = new() { "Not Started", "In Progress", "Started", "Halfway", "Almost Done", "Completed" };
+        public List<string> AvailableStatuses { get; } = new() { "Not Started", "Started", "Halfway", "Almost Done", "Completed" };
 
         [ObservableProperty] private string _assigneeSearchText = string.Empty;
         public ObservableCollection<AssigneeSelectionViewModel> AllPotentialAssignees { get; } = new();

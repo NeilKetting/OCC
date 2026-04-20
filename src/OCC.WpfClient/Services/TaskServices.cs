@@ -89,6 +89,23 @@ namespace OCC.WpfClient.Services
             var response = await client.DeleteAsync(url);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task<IEnumerable<OCC.Shared.DTOs.DashboardUpdateDto>> GetRecentUpdatesAsync()
+        {
+            var client = HttpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl("api/ProjectTasks/recent-updates");
+            try
+            {
+                var updates = await client.GetFromJsonAsync<IEnumerable<OCC.Shared.DTOs.DashboardUpdateDto>>(url);
+                return updates ?? new List<OCC.Shared.DTOs.DashboardUpdateDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get recent updates");
+                return new List<OCC.Shared.DTOs.DashboardUpdateDto>();
+            }
+        }
     }
 
     public class TaskAssignmentService : TaskServiceBase, ITaskAssignmentService

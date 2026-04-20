@@ -98,12 +98,23 @@
 
             <!-- Recent Activity Placeholder -->
             <Border Grid.Column="1" Style="{StaticResource GlassCard}" Padding="20">
-                <StackPanel>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     <TextBlock Text="Recent Updates" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,20"/>
-                    <TextBlock Text="New project 'Engen Bendor' created." FontSize="14" Foreground="{StaticResource TextSub}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Task 'Site Clearance' completed by Neil." FontSize="14" Foreground="{StaticResource TextSub}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Budget update for 'Mall Expansion'." FontSize="14" Foreground="{StaticResource TextSub}" Margin="0,0,0,12"/>
-                </StackPanel>
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding RecentUpdates}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,12">
+                                    <TextBlock Text="{Binding Message}" FontSize="14" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:g}'}" FontSize="11" Foreground="#66FFFFFF"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

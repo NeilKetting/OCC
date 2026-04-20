@@ -12,6 +12,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<ProjectTask> CreateTaskAsync(ProjectTask task);
         Task UpdateTaskAsync(ProjectTask task);
         Task DeleteTaskAsync(Guid id);
+        Task<IEnumerable<OCC.Shared.DTOs.DashboardUpdateDto>> GetRecentUpdatesAsync();
     }
 
     public interface ITaskAssignmentService

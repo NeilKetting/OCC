@@ -19,6 +19,7 @@ namespace OCC.WpfClient.Services
         
         public event Action<List<UserConnectionInfo>>? UserListUpdated;
         public event Action<string>? NotificationReceived;
+        public event Action<DashboardUpdateDto>? DashboardUpdateReceived;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int OnlineCount => OnlineUsers.Count;
@@ -62,6 +63,11 @@ namespace OCC.WpfClient.Services
             _hubConnection.On<string>("ReceiveNotification", (message) =>
             {
                 NotificationReceived?.Invoke(message);
+            });
+
+            _hubConnection.On<DashboardUpdateDto>("DashboardUpdate", (update) =>
+            {
+                DashboardUpdateReceived?.Invoke(update);
             });
 
             try
