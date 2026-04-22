@@ -15,7 +15,7 @@
 		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
 		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
 		<AssemblyName>OCC-ERP</AssemblyName>
-		<Version>1.0.4</Version>
+		<Version>1.0.5</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
 	</PropertyGroup>
 

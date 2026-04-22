@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Velopack;
 
 namespace OCC.WpfClient.Services.Interfaces
