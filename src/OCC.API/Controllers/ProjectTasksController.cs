@@ -81,6 +81,25 @@ namespace OCC.API.Controllers
             }
         }
 
+        [HttpGet("assigned-to/{subContractorId}")]
+        public async Task<ActionResult<IEnumerable<ProjectTask>>> GetSubContractorTasks(Guid subContractorId)
+        {
+            try
+            {
+                var query = _context.ProjectTasks
+                    .Include(t => t.Assignments)
+                    .Where(t => t.Assignments.Any(a => a.AssigneeType == AssigneeType.Contractor && a.AssigneeId == subContractorId))
+                    .AsNoTracking();
+
+                return await query.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving tasks for subcontractor {Id}", subContractorId);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         // GET: api/ProjectTasks/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectTask>> GetProjectTask(Guid id)
@@ -229,7 +248,15 @@ namespace OCC.API.Controllers
                 existingTask.ActualCompleteDate = TaskHelper.EnsureUtc(task.ActualCompleteDate);
                 existingTask.PercentComplete = task.PercentComplete;
                 existingTask.Priority = task.Priority;
+                
+                var wasNotCompleted = existingTask.Status != "Completed" && existingTask.Status != "Done";
                 existingTask.Status = task.Status;
+                
+                if (wasNotCompleted && (task.Status == "Completed" || task.Status == "Done"))
+                {
+                    await UpdateContractorPerformance(existingTask);
+                }
+
                 existingTask.Duration = task.Duration;
                 existingTask.PlannedDurationHours = task.PlannedDurationHours;
                 existingTask.ActualDuration = task.ActualDuration;
@@ -425,6 +452,69 @@ namespace OCC.API.Controllers
         }
 
         private bool ProjectTaskExists(Guid id) => _context.ProjectTasks.Any(e => e.Id == id);
+
+        private async Task UpdateContractorPerformance(ProjectTask task)
+        {
+            try
+            {
+                // Ensure assignments are loaded
+                await _context.Entry(task).Collection(t => t.Assignments).LoadAsync();
+                
+                var contractorAssignments = task.Assignments
+                    .Where(a => a.AssigneeType == AssigneeType.Contractor)
+                    .ToList();
+
+                foreach (var assignment in contractorAssignments)
+                {
+                    var contractor = await _context.SubContractors.FindAsync(assignment.AssigneeId);
+                    if (contractor != null)
+                    {
+                        contractor.CompletedTasksCount++;
+                        
+                        // On-time check
+                        // Note: Ensure dates are compared correctly as UTC
+                        bool isOnTime = (task.ActualCompleteDate ?? DateTime.UtcNow) <= task.FinishDate;
+                        
+                        // Calculate new OnTimeRate
+                        int oldCount = contractor.CompletedTasksCount - 1;
+                        if (contractor.CompletedTasksCount > 0)
+                        {
+                            contractor.OnTimeRate = (contractor.OnTimeRate * oldCount + (isOnTime ? 1m : 0m)) / contractor.CompletedTasksCount;
+                        }
+                        
+                        // Recalculate Rating using the Dilution Formula
+                        decimal baseRating = contractor.OnTimeRate * 5.0m;
+                        
+                        // Get snag stats for fair weighting
+                        var snags = await _context.SnagJobs.Where(s => s.SubContractorId == contractor.Id).ToListAsync();
+                        int activeSnags = snags.Count(s => s.Status == SnagStatus.Open || s.Status == SnagStatus.InProgress);
+                        int resolvedSnags = snags.Count - activeSnags;
+                        
+                        decimal activeDeduction = activeSnags * 0.3m;
+                        decimal snagRatio = contractor.CompletedTasksCount > 0 
+                            ? (decimal)resolvedSnags / contractor.CompletedTasksCount 
+                            : resolvedSnags > 0 ? 0.5m : 0m;
+                        
+                        decimal historicalDeduction = Math.Min(snagRatio * 1.5m, 1.5m);
+                        
+                        contractor.Rating = Math.Max(1.0m, Math.Min(5.0m, baseRating - activeDeduction - historicalDeduction));
+
+                        // Set Tier
+                        contractor.PerformanceTier = contractor.Rating switch
+                        {
+                            >= 4.8m => "Diamond",
+                            >= 4.0m => "Gold",
+                            >= 3.0m => "Silver",
+                            _ => "Bronze"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating contractor performance for task {Id}", task.Id);
+            }
+        }
     }
     
     public static class TaskHelper

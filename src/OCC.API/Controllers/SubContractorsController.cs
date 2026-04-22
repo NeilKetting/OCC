@@ -39,7 +39,9 @@ namespace OCC.API.Controllers
                         Email = c.Email,
                         Phone = c.Phone,
                         Specialties = c.Specialties,
-                        Branch = c.Branch
+                        Branch = c.Branch,
+                        PerformanceTier = c.PerformanceTier,
+                        ColorTheme = c.ColorTheme
                     })
                     .AsNoTracking()
                     .ToListAsync();

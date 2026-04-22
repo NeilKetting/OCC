@@ -1,0 +1,108 @@
+<UserControl x:Class="OCC.WpfClient.Features.SubContractorHub.Views.SnagDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.SubContractorHub.ViewModels"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="500">
+
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="SnagStatusEnum" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:SnagStatus"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+    
+    <Border Background="{StaticResource OverlayBackground}" CornerRadius="15" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1">
+        <Grid Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header -->
+                <RowDefinition Height="*" />    <!-- Content -->
+                <RowDefinition Height="Auto" /> <!-- Footer -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White" />
+                <Button Style="{StaticResource ToolbarIconButton}" HorizontalAlignment="Right" Command="{Binding CloseCommand}">
+                    <Path Data="{StaticResource IconClose}" Fill="{StaticResource TextSub}" Width="14" Height="14" Stretch="Uniform"/>
+                </Button>
+            </Grid>
+
+            <!-- Content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Project Selection -->
+                    <TextBlock Text="PROJECT" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding Projects}" 
+                              SelectedItem="{Binding SelectedProject}" 
+                              DisplayMemberPath="Name"
+                              Style="{StaticResource ModernComboBox}" 
+                              Margin="0,5,0,20" Height="40"/>
+
+                    <!-- Sub-Contractor Selection -->
+                    <TextBlock Text="PARTNER" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding SubContractors}" 
+                              SelectedItem="{Binding SelectedSubContractor}" 
+                              DisplayMemberPath="Name"
+                              Style="{StaticResource ModernComboBox}" 
+                              Margin="0,5,0,20" Height="40"/>
+
+                    <!-- Original Task (Optional) -->
+                    <TextBlock Text="ASSOCIATED TASK (Optional)" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding PossibleTasks}" 
+                              SelectedItem="{Binding SelectedTask}" 
+                              DisplayMemberPath="Name"
+                              Style="{StaticResource ModernComboBox}" 
+                              Margin="0,5,0,20" Height="40"
+                              ap:WatermarkProperties.Watermark="Select the original task where snag occurred"/>
+
+                    <!-- Snag Title -->
+                    <TextBlock Text="SNAG DESCRIPTION TITLE" Style="{StaticResource FormLabelText}"/>
+                    <TextBox Text="{Binding Snag.Title, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource ModernInput}" 
+                             Margin="0,5,0,20" Height="40"
+                             ap:WatermarkProperties.Watermark="e.g. Paint finish uneven on north wall"/>
+
+                    <!-- Detailed Notes -->
+                    <TextBlock Text="DETAILED NOTES" Style="{StaticResource FormLabelText}"/>
+                    <TextBox Text="{Binding Snag.Description, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource ModernInput}" 
+                             Margin="0,5,0,20" Height="100" 
+                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="10"
+                             ap:WatermarkProperties.Watermark="Provide specific details or instructions for fixing..."/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="DUE DATE" Style="{StaticResource FormLabelText}"/>
+                            <DatePicker SelectedDate="{Binding Snag.DueDate}" Style="{StaticResource ModernDatePicker}" Margin="0,5,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="STATUS" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding Source={StaticResource SnagStatusEnum}}" 
+                                      SelectedItem="{Binding Snag.Status}" 
+                                      Style="{StaticResource ModernComboBox}" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Cancel" Style="{StaticResource SecondaryButton}" Width="100" Height="40" Margin="0,0,15,0" Command="{Binding CloseCommand}"/>
+                <Button Content="Save Snag" Style="{StaticResource PrimaryButton}" Width="140" Height="40" Command="{Binding SaveAsyncCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,7 +1,7 @@
 using System.Windows.Controls;
-using OCC.WpfClient.Features.ProjectHub.ViewModels;
+using OCC.WpfClient.Features.SubContractorHub.ViewModels;
 
-namespace OCC.WpfClient.Features.ProjectHub.Views
+namespace OCC.WpfClient.Features.SubContractorHub.Views
 {
     public partial class SubContractorListView : UserControl
     {

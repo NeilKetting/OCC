@@ -55,14 +55,14 @@ if %errorlevel% neq 0 (
 
 REM 4. Publish
 echo [DEPLOY] Publishing to Live Folder...
-if exist "..\OCC.API\OCC.API.csproj" (
-    dotnet publish "..\OCC.API\OCC.API.csproj" -c Release -o "C:\inetpub\wwwroot\OCC-API" --nologo
+if exist "..\src\OCC.API\OCC.API.csproj" (
+    dotnet publish "..\src\OCC.API\OCC.API.csproj" -c Release -o "C:\inetpub\wwwroot\OCC-API" --nologo
     if %errorlevel% neq 0 (
         echo [ERROR] Publish failed!
         pause
     )
 ) else (
-    echo [ERROR] ..\OCC.API\OCC.API.csproj NOT FOUND!
+    echo [ERROR] ..\src\OCC.API\OCC.API.csproj NOT FOUND!
     pause
 )
 

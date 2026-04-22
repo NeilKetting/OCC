@@ -81,6 +81,7 @@ namespace OCC.API.Data
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatMessageAttachment> ChatMessageAttachments { get; set; }
         public DbSet<ChatMessageReadReceipt> ChatMessageReadReceipts { get; set; }
+        public DbSet<SnagJob> SnagJobs { get; set; }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -439,6 +440,27 @@ namespace OCC.API.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<SnagJob>(entity =>
+            {
+                entity.HasOne(s => s.Project)
+                    .WithMany()
+                    .HasForeignKey(s => s.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(s => s.SubContractor)
+                    .WithMany()
+                    .HasForeignKey(s => s.SubContractorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(s => s.OriginalTask)
+                    .WithMany()
+                    .HasForeignKey(s => s.OriginalTaskId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.Property(e => e.Status).HasConversion<string>();
+                entity.Property(e => e.Severity).HasConversion<string>();
+            });
+
             modelBuilder.Entity<Order>()
                 .HasOne<Project>()
                 .WithMany()
@@ -456,6 +478,12 @@ namespace OCC.API.Data
                 .WithMany()
                 .HasForeignKey(tr => tr.TaskId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SubContractor>(entity =>
+            {
+                entity.Property(e => e.Rating).HasPrecision(18, 2);
+                entity.Property(e => e.OnTimeRate).HasPrecision(18, 2);
+            });
 
             // Chat Configuration
             modelBuilder.Entity<ChatSessionUser>()

@@ -12,11 +12,12 @@ using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Services.Infrastructure;
 
-namespace OCC.WpfClient.Features.ProjectHub.ViewModels
+namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
 {
     public partial class SubContractorListViewModel : ListViewModelBase<SubContractorSummaryDto>
     {
         private readonly ISubContractorService _subContractorService;
+        private readonly IUserService _userService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<SubContractorListViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
@@ -38,11 +39,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public SubContractorListViewModel(
             ISubContractorService subContractorService,
+            IUserService userService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
             ILogger<SubContractorListViewModel> logger)
         {
             _subContractorService = subContractorService;
+            _userService = userService;
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = logger;
@@ -128,7 +131,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private void AddSubContractor()
         {
             var contractor = new SubContractor();
-            OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _dialogService, _logger));
+            OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger));
         }
 
         [RelayCommand]
@@ -144,7 +147,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var contractor = await _subContractorService.GetSubContractorAsync(target.Id);
                 if (contractor != null)
                 {
-                    OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _dialogService, _logger));
+                    OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger));
                 }
             }
             finally

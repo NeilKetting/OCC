@@ -9,6 +9,7 @@ namespace OCC.WpfClient.Services.Interfaces
     public interface ISubContractorService
     {
         Task<IEnumerable<SubContractorSummaryDto>> GetSubContractorSummariesAsync();
+        Task<IEnumerable<SubContractor>> GetSubContractorsAsync();
         Task<SubContractor?> GetSubContractorAsync(Guid id);
         Task<SubContractor> CreateSubContractorAsync(SubContractor subContractor);
         Task<bool> UpdateSubContractorAsync(SubContractor subContractor);

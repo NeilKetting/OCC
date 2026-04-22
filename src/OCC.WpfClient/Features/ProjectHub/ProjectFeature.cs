@@ -24,10 +24,6 @@ namespace OCC.WpfClient.Features.ProjectHub
             services.AddTransient<TaskDetailViewModel>();
             services.AddTransient<CreateProjectViewModel>();
             services.AddTransient<ProjectGanttViewModel>();
-            
-            services.AddSingleton<ISubContractorService, SubContractorService>();
-            services.AddTransient<SubContractorListViewModel>();
-            services.AddTransient<SubContractorDetailViewModel>();
         }
 
         public void RegisterRoutes(INavigationService navigationService)
@@ -35,7 +31,6 @@ namespace OCC.WpfClient.Features.ProjectHub
             navigationService.RegisterRoute(NavigationRoutes.ProjectDashboard, typeof(ProjectDashboardViewModel));
             navigationService.RegisterRoute(NavigationRoutes.Projects, typeof(ProjectsViewModel));
             navigationService.RegisterRoute(NavigationRoutes.ProjectDetail, typeof(ProjectDetailViewModel));
-            navigationService.RegisterRoute(NavigationRoutes.SubContractors, typeof(SubContractorListViewModel));
         }
 
         public IEnumerable<NavItem> GetNavigationItems()
@@ -52,12 +47,6 @@ namespace OCC.WpfClient.Features.ProjectHub
                 "Projects",
                 "IconList",
                 NavigationRoutes.Projects,
-                "Operations"));
-
-            projects.Children.Add(new NavItem(
-                "Sub-Contractors",
-                "IconTeam",
-                NavigationRoutes.SubContractors,
                 "Operations"));
 
             yield return projects;

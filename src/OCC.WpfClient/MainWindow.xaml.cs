@@ -124,6 +124,10 @@ namespace OCC.WpfClient
                     mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
                     mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
                     mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top);
+
+                    // Crucial: Set track sizes to prevent window from growing beyond bounds
+                    mmi.ptMaxTrackSize.X = mmi.ptMaxSize.X;
+                    mmi.ptMaxTrackSize.Y = mmi.ptMaxSize.Y;
                 }
             }
 
@@ -156,8 +160,8 @@ namespace OCC.WpfClient
             public int Bottom;
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class MONITORINFO
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MONITORINFO
         {
             public uint cbSize;
             public RECT rcMonitor;
@@ -168,7 +172,7 @@ namespace OCC.WpfClient
         [DllImport("user32.dll")]
         private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
         private const int MONITOR_DEFAULTTONEAREST = 2;

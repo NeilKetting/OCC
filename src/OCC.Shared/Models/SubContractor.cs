@@ -29,5 +29,15 @@ namespace OCC.Shared.Models
         /// A hex color assigned to uniquely identify this SubContractor visually in tracking dashboards.
         /// </summary>
         public string ColorTheme { get; set; } = string.Empty;
+
+        // Performance Metrics
+        public decimal Rating { get; set; } = 5.0m;
+        public string PerformanceTier { get; set; } = "Silver";
+        public decimal OnTimeRate { get; set; } = 100.0m;
+        public int CompletedTasksCount { get; set; }
+        public int TotalSnagsCount { get; set; }
+
+        // Portal Access
+        public Guid? PortalUserId { get; set; }
     }
 }

@@ -286,6 +286,23 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     IsUserInactive = _userActivityService.IsAway;
             };
 
+            _userActivityService.SessionExpired += async (s, e) => 
+            {
+                await App.Current.Dispatcher.Invoke(async () => 
+                {
+                    WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Session Expired", "You have been logged out due to inactivity.", ToastType.Warning)));
+                    await Logout();
+                });
+            };
+
+            _userActivityService.SessionWarning += (s, e) => 
+            {
+                App.Current.Dispatcher.Invoke(() => 
+                {
+                    WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Inactivity Warning", "Your session will expire in 1 minute. Move the mouse to stay logged in.", ToastType.Info)));
+                });
+            };
+
             // Start DB Polling
             StartDbPolling();
             

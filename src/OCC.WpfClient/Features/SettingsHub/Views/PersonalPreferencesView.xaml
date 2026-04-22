@@ -25,7 +25,7 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20">
+                <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="10">
                     <StackPanel>
                         <TextBlock Text="Window Behavior" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>
                         <Separator Background="{StaticResource GlassBorderLight}" Margin="0,0,0,15"/>
@@ -39,9 +39,32 @@
                                 <TextBlock Text="Maximize covers the entire screen (including taskbar)" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                                 <TextBlock Text="If disabled, the application will respect your multi-monitor setups and leave the Windows taskbar visible." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <ToggleButton Grid.Column="1" VerticalAlignment="Center"
-                                          IsChecked="{Binding MaximizeOverTaskbar}" 
-                                          Style="{StaticResource ModernToggleButton}"/>
+                            <CheckBox Grid.Column="1" VerticalAlignment="Center"
+                                      IsChecked="{Binding MaximizeOverTaskbar}" 
+                                      Style="{StaticResource ModernToggleSwitch}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="10">
+                    <StackPanel>
+                        <TextBlock Text="Security" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>
+                        <Separator Background="{StaticResource GlassBorderLight}" Margin="0,0,0,15"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Session Timeout (Minutes)" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                <TextBlock Text="Automatically log out after a period of inactivity to protect your account." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider Width="150" Minimum="1" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" 
+                                        Value="{Binding SessionTimeoutMinutes}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                                <TextBlock Text="{Binding SessionTimeoutMinutes, StringFormat='{}{0} min'}" Foreground="White" Width="50" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>

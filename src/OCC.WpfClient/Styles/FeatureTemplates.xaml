@@ -23,7 +23,9 @@
                     xmlns:projVm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
                     xmlns:projViews="clr-namespace:OCC.WpfClient.Features.ProjectHub.Views"
                     xmlns:splashVm="clr-namespace:OCC.WpfClient.Features.Splash.ViewModels"
-                    xmlns:splashViews="clr-namespace:OCC.WpfClient.Features.Splash.Views">
+                    xmlns:splashViews="clr-namespace:OCC.WpfClient.Features.Splash.Views"
+                    xmlns:subHubVm="clr-namespace:OCC.WpfClient.Features.SubContractorHub.ViewModels"
+                    xmlns:subHubViews="clr-namespace:OCC.WpfClient.Features.SubContractorHub.Views">
 
     <!-- Auth -->
     <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
@@ -100,6 +102,10 @@
         <settViews:CompanySettingsView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type settVm:PersonalPreferencesViewModel}">
+        <settViews:PersonalPreferencesView />
+    </DataTemplate>
+
     <!-- Project Hub -->
     <DataTemplate DataType="{x:Type projVm:ProjectDashboardViewModel}">
         <projViews:ProjectDashboardView />
@@ -125,8 +131,17 @@
         <projViews:ProjectGanttView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type projVm:SubContractorListViewModel}">
-        <projViews:SubContractorListView />
+    <!-- Partner Hub -->
+    <DataTemplate DataType="{x:Type subHubVm:PerformanceDashboardViewModel}">
+        <subHubViews:PerformanceDashboardView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type subHubVm:SubContractorListViewModel}">
+        <subHubViews:SubContractorListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type subHubVm:SnagListViewModel}">
+        <subHubViews:SnagListView />
     </DataTemplate>
 
     <!-- Splash -->

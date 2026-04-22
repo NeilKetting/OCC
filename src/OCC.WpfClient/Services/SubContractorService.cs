@@ -61,6 +61,21 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        public async Task<IEnumerable<SubContractor>> GetSubContractorsAsync()
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl("api/SubContractors");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<IEnumerable<SubContractor>>(url) ?? new List<SubContractor>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching sub-contractors from {Url}", url);
+                return new List<SubContractor>();
+            }
+        }
+
         public async Task<SubContractor?> GetSubContractorAsync(Guid id)
         {
             EnsureAuthorization();

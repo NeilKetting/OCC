@@ -70,5 +70,24 @@ namespace OCC.Shared.DTOs
                 return $"Task '{TaskName}' progress: {Status} (updated by {userName}).";
             }
         }
+
+        public string StatusColor
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Status)) return "#A0FFFFFF";
+
+                return Status switch
+                {
+                    "Not Started" or "To Do" => "#A0FFFFFF", // Grey (TextSub)
+                    "Started" or "In Progress" => "#2E9DFF", // Blue (AccentBlue)
+                    "Halfway" => "#8B5CF6", // Violet
+                    "Almost Done" => "#EC4899", // Pink
+                    "Done" or "Completed" => "#00C853", // Green (SuccessGreen)
+                    "On Hold" => "#FFC107", // Yellow (SecondaryGold)
+                    _ => "#A0FFFFFF"
+                };
+            }
+        }
     }
 }

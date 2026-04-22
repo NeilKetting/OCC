@@ -24,6 +24,8 @@ namespace OCC.WpfClient.Infrastructure
         public const string Procurement = "Procurement";
         public const string PurchaseOrder = "PurchaseOrder";
         public const string SubContractors = "SubContractors";
+        public const string SnagList = "SnagList";
+        public const string PerformanceDashboard = "PerformanceDashboard";
         
         // System Routes
         public const string AccessDenied = "AccessDenied";

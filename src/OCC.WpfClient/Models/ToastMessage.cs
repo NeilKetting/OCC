@@ -11,6 +11,15 @@ namespace OCC.WpfClient.Models
         public ToastType Type { get; set; } = ToastType.Info;
         public DateTime CreatedAt { get; } = DateTime.Now;
 
+        public ToastMessage() { }
+
+        public ToastMessage(string title, string message, ToastType type = ToastType.Info)
+        {
+            Title = title;
+            Message = message;
+            Type = type;
+        }
+
         [ObservableProperty]
         private double _opacity = 1.0;
 

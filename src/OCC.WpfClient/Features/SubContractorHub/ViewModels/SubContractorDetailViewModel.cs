@@ -8,14 +8,16 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
 
-namespace OCC.WpfClient.Features.ProjectHub.ViewModels
+namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
 {
     public partial class SubContractorDetailViewModel : DetailViewModelBase
     {
         private readonly SubContractorListViewModel _parent;
         private readonly ISubContractorService _subContractorService;
+        private readonly IUserService _userService;
         private readonly SubContractor _model;
 
         [ObservableProperty] private string _name;
@@ -25,6 +27,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _branch;
         [ObservableProperty] private string _colorTheme;
         
+        [ObservableProperty] private bool _hasPortalAccess;
+        [ObservableProperty] private string _portalPassword = string.Empty;
+        [ObservableProperty] private string _linkedUserName = "No Portal Account Linked";
+        [ObservableProperty] private bool _isPasswordVisible;
+        
         public ObservableCollection<SpecialtyOption> SpecialtyOptions { get; } = new();
 
         public bool IsNew => _model.Id == Guid.Empty;
@@ -33,12 +40,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             SubContractorListViewModel parent,
             SubContractor model,
             ISubContractorService subContractorService,
+            IUserService userService,
             IDialogService dialogService,
             ILogger logger) : base(dialogService, logger)
         {
             _parent = parent;
             _model = model;
             _subContractorService = subContractorService;
+            _userService = userService;
 
             Title = IsNew ? "New Sub-Contractor" : $"Edit {model.Name}";
             
@@ -49,6 +58,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _branch = model.Branch;
             _colorTheme = model.ColorTheme ?? string.Empty;
 
+            _hasPortalAccess = model.PortalUserId != null;
+            if (_hasPortalAccess)
+            {
+                _ = LoadLinkedUserAsync();
+            }
+
             if (IsNew)
             {
                 // Generate color dynamically after initialization
@@ -56,6 +71,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
 
             InitializeSpecialties(model.Specialties);
+        }
+
+        private async Task LoadLinkedUserAsync()
+        {
+            if (_model.PortalUserId.HasValue)
+            {
+                var user = await _userService.GetUserAsync(_model.PortalUserId.Value);
+                if (user != null)
+                {
+                    LinkedUserName = user.Email;
+                }
+            }
         }
 
         private async Task GenerateUniqueColorAsync()
@@ -122,6 +149,44 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             
             _model.Specialties = string.Join(", ", selectedSpecialties);
 
+            // Portal Access Logic
+            if (HasPortalAccess && _model.PortalUserId == null)
+            {
+                // Try to find user by email first
+                var users = await _userService.GetUsersAsync();
+                var existingUser = users.FirstOrDefault(u => u.Email.Equals(Email, System.StringComparison.OrdinalIgnoreCase));
+                
+                if (existingUser != null)
+                {
+                    _model.PortalUserId = existingUser.Id;
+                }
+                else if (!string.IsNullOrWhiteSpace(PortalPassword))
+                {
+                    // Create new user
+                    var newUser = new User
+                    {
+                        Email = Email,
+                        Password = PortalPassword,
+                        FirstName = Name.Split(' ')[0],
+                        LastName = Name.Contains(" ") ? Name.Substring(Name.IndexOf(" ") + 1) : "Contractor",
+                        UserRole = UserRole.ExternalContractor,
+                        IsApproved = true
+                    };
+                    
+                    var success = await _userService.CreateUserAsync(newUser);
+                    if (success)
+                    {
+                        var allUsers = await _userService.GetUsersAsync();
+                        var created = allUsers.FirstOrDefault(u => u.Email.Equals(Email, System.StringComparison.OrdinalIgnoreCase));
+                        if (created != null) _model.PortalUserId = created.Id;
+                    }
+                }
+            }
+            else if (!HasPortalAccess)
+            {
+                _model.PortalUserId = null;
+            }
+
             if (IsNew)
             {
                 await _subContractorService.CreateSubContractorAsync(_model);
@@ -131,7 +196,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var success = await _subContractorService.UpdateSubContractorAsync(_model);
                 if (!success)
                 {
-                    throw new Exception("Failed to update sub-contractor. Please check your connection.");
+                    throw new System.Exception("Failed to update sub-contractor. Please check your connection.");
                 }
             }
         }

@@ -24,6 +24,7 @@ using OCC.WpfClient.Features.Shell.ViewModels;
 using OCC.WpfClient.Features.CustomerHub;
 using OCC.WpfClient.Features.SettingsHub;
 using OCC.WpfClient.Features.ProjectHub;
+using OCC.WpfClient.Features.SubContractorHub;
 using OCC.Shared.Interfaces;
 using OCC.Shared.Services;
 using System.Net.Http;
@@ -134,6 +135,7 @@ namespace OCC.WpfClient
                 new CustomerFeature(),
                 new ProcurementFeature(),
                 new ProjectFeature(),
+                new SubContractorFeature(),
                 new SettingsFeature()
             };
 

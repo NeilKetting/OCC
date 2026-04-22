@@ -106,6 +106,22 @@ namespace OCC.WpfClient.Services
                 return new List<OCC.Shared.DTOs.DashboardUpdateDto>();
             }
         }
+
+        public async Task<IEnumerable<ProjectTask>> GetSubContractorTasksAsync(Guid subContractorId)
+        {
+            var client = HttpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/ProjectTasks/assigned-to/{subContractorId}");
+            try
+            {
+                return await client.GetFromJsonAsync<IEnumerable<ProjectTask>>(url) ?? new List<ProjectTask>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get subcontractor tasks for {Id}", subContractorId);
+                return new List<ProjectTask>();
+            }
+        }
     }
 
     public class TaskAssignmentService : TaskServiceBase, ITaskAssignmentService

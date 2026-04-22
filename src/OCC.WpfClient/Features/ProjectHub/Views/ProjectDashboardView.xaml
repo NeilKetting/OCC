@@ -109,7 +109,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Margin="0,0,0,12">
-                                        <TextBlock Text="{Binding Message}" FontSize="14" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Message}" FontSize="14" Foreground="{Binding StatusColor}" TextWrapping="Wrap"/>
                                         <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:g}'}" FontSize="11" Foreground="#66FFFFFF"/>
                                     </StackPanel>
                                 </DataTemplate>
