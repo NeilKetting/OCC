@@ -13,6 +13,7 @@
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <AndroidStoreUncompressedFileExtensions>.dll</AndroidStoreUncompressedFileExtensions>
+    <SkipWorkloadIntegrityCheck>true</SkipWorkloadIntegrityCheck>
   </PropertyGroup>
 
 
