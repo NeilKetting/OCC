@@ -188,6 +188,7 @@ namespace OCC.WpfClient.ModelWrappers
 
         private void UpdateStatusFromPercent()
         {
+            if (IsOnHold) return;
             if (PercentComplete >= 100) Status = "Completed";
             else if (PercentComplete >= 75) Status = "Almost Done";
             else if (PercentComplete >= 50) Status = "Halfway";
@@ -198,6 +199,14 @@ namespace OCC.WpfClient.ModelWrappers
         partial void OnIsOnHoldChanged(bool value)
         {
             _model.IsOnHold = value;
+            if (value)
+            {
+                Status = "On Hold";
+            }
+            else if (Status == "On Hold")
+            {
+                UpdateStatusFromPercent();
+            }
             UpdateStatusColor();
             ValidateProperty(HoldReason, nameof(HoldReason));
         }

@@ -23,6 +23,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _phone;
         [ObservableProperty] private string _address;
         [ObservableProperty] private string _branch;
+        [ObservableProperty] private string _colorTheme;
         
         public ObservableCollection<SpecialtyOption> SpecialtyOptions { get; } = new();
 
@@ -46,8 +47,38 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _phone = model.Phone ?? string.Empty;
             _address = model.Address ?? string.Empty;
             _branch = model.Branch;
+            _colorTheme = model.ColorTheme ?? string.Empty;
+
+            if (IsNew)
+            {
+                // Generate color dynamically after initialization
+                _ = GenerateUniqueColorAsync();
+            }
 
             InitializeSpecialties(model.Specialties);
+        }
+
+        private async Task GenerateUniqueColorAsync()
+        {
+            try
+            {
+                var existing = await _subContractorService.GetSubContractorSummariesAsync();
+                var usedColors = existing.Select(e => e.ColorTheme?.ToUpperInvariant()).Where(c => !string.IsNullOrEmpty(c)).ToHashSet();
+
+                var random = new Random();
+                string generated;
+                do
+                {
+                    generated = $"#{random.Next(0x1000000):X6}";
+                } while (usedColors.Contains(generated));
+
+                ColorTheme = generated;
+            }
+            catch
+            {
+                // Fallback if network fails during creation setup
+                ColorTheme = $"#{new Random().Next(0x1000000):X6}";
+            }
         }
 
         private void InitializeSpecialties(string? specialties)
@@ -83,6 +114,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _model.Phone = Phone;
             _model.Address = Address;
             _model.Branch = Branch;
+            _model.ColorTheme = ColorTheme;
             
             var selectedSpecialties = SpecialtyOptions
                 .Where(x => x.IsChecked)
@@ -156,12 +188,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 _model.Address = latest.Address;
                 _model.Specialties = latest.Specialties;
                 _model.RowVersion = latest.RowVersion;
+                _model.ColorTheme = latest.ColorTheme;
 
                 Name = _model.Name;
                 Email = _model.Email ?? string.Empty;
                 Phone = _model.Phone ?? string.Empty;
                 Address = _model.Address ?? string.Empty;
                 Branch = _model.Branch;
+                ColorTheme = _model.ColorTheme ?? string.Empty;
 
                 SpecialtyOptions.Clear();
                 InitializeSpecialties(_model.Specialties);

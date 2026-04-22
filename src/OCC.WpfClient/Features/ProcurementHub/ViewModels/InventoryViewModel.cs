@@ -6,6 +6,7 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -18,6 +19,17 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly IInventoryService _inventoryService;
         private readonly IToastService _toastService;
         private readonly ILogger<InventoryViewModel> _logger;
+        private readonly LocalSettingsService _settingsService;
+
+        // Column Visibility
+        [ObservableProperty] private bool _isSkuVisible = true;
+        [ObservableProperty] private bool _isDescriptionVisible = true;
+        [ObservableProperty] private bool _isCategoryVisible = true;
+        [ObservableProperty] private bool _isQuantityVisible = true;
+        [ObservableProperty] private bool _isLocationVisible = true;
+        [ObservableProperty] private bool _isStatusVisible = true;
+
+        [ObservableProperty] private bool _isColumnPickerOpen;
 
         [ObservableProperty]
         private ObservableCollection<InventoryItem> _items = new();
@@ -33,12 +45,19 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private System.ComponentModel.ICollectionView? _itemsView;
 
-        public InventoryViewModel(IInventoryService inventoryService, IToastService toastService, ILogger<InventoryViewModel> logger)
+        public InventoryViewModel(
+            IInventoryService inventoryService, 
+            IToastService toastService, 
+            ILogger<InventoryViewModel> logger,
+            LocalSettingsService settingsService)
         {
             _inventoryService = inventoryService;
             _toastService = toastService;
             _logger = logger;
+            _settingsService = settingsService;
             Title = "Inventory Management";
+
+            LoadLayout();
 
             // Listen for stock updates
             WeakReferenceMessenger.Default.Register<StockUpdatedMessage>(this, (r, m) =>
@@ -131,5 +150,47 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _logger.LogInformation("Add Item command triggered");
             _toastService.ShowInfo("Coming Soon", "The Add Item feature is currently under development.");
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.InventoryListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsSkuVisible = layout.Columns.FirstOrDefault(c => c.Header == "SKU")?.IsVisible ?? true;
+                IsDescriptionVisible = layout.Columns.FirstOrDefault(c => c.Header == "Description")?.IsVisible ?? true;
+                IsCategoryVisible = layout.Columns.FirstOrDefault(c => c.Header == "Category")?.IsVisible ?? true;
+                IsQuantityVisible = layout.Columns.FirstOrDefault(c => c.Header == "Quantity")?.IsVisible ?? true;
+                IsLocationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Location")?.IsVisible ?? true;
+                IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new System.Collections.Generic.List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "SKU", IsVisible = IsSkuVisible },
+                    new() { Header = "Description", IsVisible = IsDescriptionVisible },
+                    new() { Header = "Category", IsVisible = IsCategoryVisible },
+                    new() { Header = "Quantity", IsVisible = IsQuantityVisible },
+                    new() { Header = "Location", IsVisible = IsLocationVisible },
+                    new() { Header = "Status", IsVisible = IsStatusVisible }
+                }
+            };
+            _settingsService.Settings.InventoryListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsSkuVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsDescriptionVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsCategoryVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsQuantityVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsLocationVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 {
@@ -23,20 +24,66 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private int _pendingApprovalCount;
         [ObservableProperty] private int _adminCount;
 
+        // Column Visibility
+        [ObservableProperty] private bool _isEmailVisible = true;
+        [ObservableProperty] private bool _isRoleVisible = true;
+        [ObservableProperty] private bool _isStatusVisible = true;
+        
+        [ObservableProperty] private bool _isColumnPickerOpen;
+
+        private readonly LocalSettingsService _settingsService;
+
         public UserListViewModel(
             IUserService userService, 
             IAuthService authService,
             IDialogService dialogService,
+            LocalSettingsService settingsService,
             ILogger<UserListViewModel> logger)
         {
             _userService = userService;
             _authService = authService;
             _dialogService = dialogService;
+            _settingsService = settingsService;
             _logger = logger;
             Title = "User Management";
             
+            LoadLayout();
             _ = LoadDataAsync();
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.UserListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
+                IsRoleVisible = layout.Columns.FirstOrDefault(c => c.Header == "Role")?.IsVisible ?? true;
+                IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "Email", IsVisible = IsEmailVisible },
+                    new() { Header = "Role", IsVisible = IsRoleVisible },
+                    new() { Header = "Status", IsVisible = IsStatusVisible }
+                }
+            };
+
+            _settingsService.Settings.UserListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsRoleVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
         public override async Task LoadDataAsync()
         {

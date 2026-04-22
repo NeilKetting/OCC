@@ -6,6 +6,8 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
              xmlns:views="clr-namespace:OCC.WpfClient.Features.ProjectHub.Views"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:SubContractorListViewModel}">
@@ -14,6 +16,8 @@
         <DataTemplate DataType="{x:Type vm:SubContractorDetailViewModel}">
             <views:SubContractorDetailView />
         </DataTemplate>
+        <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
     </UserControl.Resources>
 
     <Grid Margin="0" Background="{StaticResource AppBackground}">
@@ -46,7 +50,7 @@
                 <RowDefinition Height="*" />    <!-- Grid -->
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+             <!-- Header -->
             <Grid Grid.Row="0" Margin="10">
                 <StackPanel>
                     <TextBlock Text="Sub-Contractors" FontSize="26" FontWeight="Bold" Foreground="White" />
@@ -70,7 +74,9 @@
                         <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
                         <ColumnDefinition Width="250" />  <!-- Search Box -->
                         <ColumnDefinition Width="Auto" /> <!-- Branch Filter -->
-                        <ColumnDefinition Width="200" />  <!-- Specialty Filter -->
+                        <ColumnDefinition Width="Auto" /> <!-- Specialty Filter -->
+                        <ColumnDefinition Width="Auto" /> <!-- Divider -->
+                        <ColumnDefinition Width="Auto" /> <!-- Columns -->
                         <ColumnDefinition Width="*" />    <!-- Spacer -->
                         <ColumnDefinition Width="Auto" /> <!-- Stats -->
                     </Grid.ColumnDefinitions>
@@ -104,7 +110,7 @@
             </Border>
 
             <!-- Grid -->
-            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,5,10,10" HorizontalAlignment="Stretch" CornerRadius="16">
+            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,5,10,10" HorizontalAlignment="Stretch" CornerRadius="0">
                 <DataGrid ItemsSource="{Binding Items}" 
                           SelectedItem="{Binding SelectedItem}"
                           AutoGenerateColumns="False" 
@@ -117,8 +123,8 @@
                           ScrollViewer.CanContentScroll="False"
                           Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="200" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="120">
+                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="Auto" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -127,9 +133,9 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="SPECIALTIES" Binding="{Binding Specialties}" Width="*" Foreground="{StaticResource AccentBlue}" />
-                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="200" Foreground="{StaticResource TextSub}" />
-                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="150" />
+                        <DataGridTextColumn Header="SPECIALTIES" Binding="{Binding Specialties}" Width="Auto" Foreground="{StaticResource AccentBlue}" Visibility="{Binding Data.IsSpecialtiesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         
                         <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>

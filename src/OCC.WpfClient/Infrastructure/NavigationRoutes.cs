@@ -31,6 +31,7 @@ namespace OCC.WpfClient.Infrastructure
         public const string AuditLog = "AuditLog";
         public const string CompanySettings = "CompanySettings";
         public const string CompanyProfile = "CompanyProfile";
+        public const string PersonalPreferences = "PersonalPreferences";
         public const string UserPreferences = "UserPreferences";
         public const string HealthSafety = "HealthSafety";
         public const string Alerts = "Alerts";

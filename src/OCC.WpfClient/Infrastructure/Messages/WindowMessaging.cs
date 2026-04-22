@@ -16,4 +16,13 @@ namespace OCC.WpfClient.Infrastructure.Messages
         {
         }
     }
+
+    public class PreferenceChangedMessage
+    {
+        public string PreferenceName { get; }
+        public PreferenceChangedMessage(string name)
+        {
+            PreferenceName = name;
+        }
+    }
 }

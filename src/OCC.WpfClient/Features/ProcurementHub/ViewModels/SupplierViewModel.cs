@@ -10,6 +10,7 @@ using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
@@ -18,7 +19,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly ISupplierService _supplierService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<SupplierViewModel> _logger;
+        private readonly LocalSettingsService _settingsService;
         private List<SupplierSummaryDto> _allSuppliers = new();
+
+        // Column Visibility
+        [ObservableProperty] private bool _isBranchVisible = true;
+        [ObservableProperty] private bool _isContactVisible = true;
+        [ObservableProperty] private bool _isPhoneVisible = true;
+        
+        [ObservableProperty] private bool _isColumnPickerOpen;
 
         [ObservableProperty] private string _selectedBranchFilter = "All";
 
@@ -27,15 +36,51 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         public SupplierViewModel(
             ISupplierService supplierService,
             IDialogService dialogService,
+            LocalSettingsService settingsService,
             ILogger<SupplierViewModel> logger)
         {
             _supplierService = supplierService;
             _dialogService = dialogService;
+            _settingsService = settingsService;
             _logger = logger;
             Title = "Supplier Management";
 
+            LoadLayout();
             _ = LoadDataAsync();
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.SupplierListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsBranchVisible = layout.Columns.FirstOrDefault(c => c.Header == "Branch")?.IsVisible ?? true;
+                IsContactVisible = layout.Columns.FirstOrDefault(c => c.Header == "Contact")?.IsVisible ?? true;
+                IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "Branch", IsVisible = IsBranchVisible },
+                    new() { Header = "Contact", IsVisible = IsContactVisible },
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible }
+                }
+            };
+            _settingsService.Settings.SupplierListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsBranchVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsContactVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
         public override async Task LoadDataAsync()
         {

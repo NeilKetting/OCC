@@ -10,6 +10,7 @@ using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
@@ -18,7 +19,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ISubContractorService _subContractorService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<SubContractorListViewModel> _logger;
+        private readonly LocalSettingsService _settingsService;
         private List<SubContractorSummaryDto> _allContractors = new();
+
+        // Column Visibility
+        [ObservableProperty] private bool _isBranchVisible = true;
+        [ObservableProperty] private bool _isSpecialtiesVisible = true;
+        [ObservableProperty] private bool _isPhoneVisible = true;
+        [ObservableProperty] private bool _isEmailVisible = true;
+        
+        [ObservableProperty] private bool _isColumnPickerOpen;
 
         [ObservableProperty] private string _selectedBranch = "All Branches";
         [ObservableProperty] private string _selectedSpecialty = "All Specialties";
@@ -29,15 +39,54 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public SubContractorListViewModel(
             ISubContractorService subContractorService,
             IDialogService dialogService,
+            LocalSettingsService settingsService,
             ILogger<SubContractorListViewModel> logger)
         {
             _subContractorService = subContractorService;
             _dialogService = dialogService;
+            _settingsService = settingsService;
             _logger = logger;
             Title = "Sub-Contractor Management";
             
+            LoadLayout();
             _ = LoadDataAsync();
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.SubContractorListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsBranchVisible = layout.Columns.FirstOrDefault(c => c.Header == "Branch")?.IsVisible ?? true;
+                IsSpecialtiesVisible = layout.Columns.FirstOrDefault(c => c.Header == "Specialties")?.IsVisible ?? true;
+                IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
+                IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "Branch", IsVisible = IsBranchVisible },
+                    new() { Header = "Specialties", IsVisible = IsSpecialtiesVisible },
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible },
+                    new() { Header = "Email", IsVisible = IsEmailVisible }
+                }
+            };
+            _settingsService.Settings.SubContractorListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsBranchVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsSpecialtiesVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
         public override async Task LoadDataAsync()
         {

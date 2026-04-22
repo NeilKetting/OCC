@@ -19,12 +19,14 @@ namespace OCC.WpfClient.Features.SettingsHub
             services.AddSingleton<ISettingsService, SettingsService>();
             services.AddTransient<CompanyProfileViewModel>();
             services.AddTransient<CompanySettingsViewModel>();
+            services.AddTransient<PersonalPreferencesViewModel>();
         }
 
         public void RegisterRoutes(INavigationService navigationService)
         {
             navigationService.RegisterRoute(NavigationRoutes.CompanyProfile, typeof(CompanyProfileViewModel));
             navigationService.RegisterRoute(NavigationRoutes.CompanySettings, typeof(CompanySettingsViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.PersonalPreferences, typeof(PersonalPreferencesViewModel));
         }
 
         public IEnumerable<NavItem> GetNavigationItems()
@@ -36,6 +38,12 @@ namespace OCC.WpfClient.Features.SettingsHub
                 "IconHome",
                 NavigationRoutes.CompanyProfile,
                 "Administration"));
+
+            settings.Children.Add(new NavItem(
+                "Personal Preferences",
+                "IconUser",
+                NavigationRoutes.PersonalPreferences,
+                "Personal"));
 
             settings.Children.Add(new NavItem(
                 "System Settings",

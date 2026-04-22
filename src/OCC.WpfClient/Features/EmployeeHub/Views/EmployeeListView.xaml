@@ -185,7 +185,7 @@
             <!-- Employee Grid -->
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="2" 
                     HorizontalAlignment="Stretch"
-                    Margin="10,0,10,10" CornerRadius="16">
+                    Margin="10,0,10,10" CornerRadius="0">
                 <DataGrid ItemsSource="{Binding Items}" 
                           SelectedItem="{Binding SelectedItem}"
                           AutoGenerateColumns="False" 

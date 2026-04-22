@@ -6,6 +6,8 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
              xmlns:views="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:SupplierViewModel}">
@@ -14,6 +16,8 @@
         <DataTemplate DataType="{x:Type vm:SupplierDetailViewModel}">
             <views:SupplierDetailView />
         </DataTemplate>
+        <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
     </UserControl.Resources>
     
     <Grid Margin="5,10,5,5">
@@ -40,7 +44,7 @@
                 <RowDefinition Height="*" />    <!-- Grid -->
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+             <!-- Header -->
             <Grid Grid.Row="0" Margin="5,0,5,20">
                 <StackPanel>
                     <TextBlock Text="Supplier Management" FontSize="26" FontWeight="Bold" Foreground="White" />
@@ -58,13 +62,14 @@
             </Grid>
 
             <!-- Stats & Search Line -->
-            <Border Grid.Row="1" Background="{StaticResource GlassBackground}" BorderBrush="{StaticResource GlassBorder}" 
-                    BorderThickness="1" CornerRadius="10" Padding="15,10" Margin="5,0,5,15">
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="5,0,5,15">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
-                        <ColumnDefinition Width="200" />  <!-- Search Box -->
+                        <ColumnDefinition Width="250" />  <!-- Search Box -->
                         <ColumnDefinition Width="150" />  <!-- Branch Filter -->
+                        <ColumnDefinition Width="Auto" /> <!-- Divider -->
+                        <ColumnDefinition Width="Auto" /> <!-- Columns -->
                         <ColumnDefinition Width="*" />    <!-- Spacer -->
                         <ColumnDefinition Width="Auto" /> <!-- Stats -->
                     </Grid.ColumnDefinitions>
@@ -79,8 +84,30 @@
                     <ComboBox Grid.Column="2" ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranchFilter}" 
                               Style="{StaticResource ModernComboBox}" Height="32" Margin="15,0,0,0"/>
 
+                    <Border Grid.Column="3" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+
+                    <!-- Columns Selection -->
+                    <Grid Grid.Column="4">
+                        <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                                <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                                <StackPanel>
+                                    <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                    <CheckBox Content="Branch" IsChecked="{Binding IsBranchVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Contact" IsChecked="{Binding IsContactVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Phone" IsChecked="{Binding IsPhoneVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
                     <!-- Stats -->
-                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
                         <StackPanel Margin="0,0,30,0">
                             <TextBlock Text="TOTAL SUPPLIERS" FontSize="10" Foreground="{StaticResource TextSub}" FontWeight="Bold"/>
                             <TextBlock Text="{Binding TotalCount}" FontSize="18" Foreground="White" FontWeight="SemiBold"/>
@@ -98,12 +125,12 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="None"
                           CanUserAddRows="False"
-                          Style="{StaticResource ModernDataGrid}">
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="120" Foreground="{StaticResource TextSub}" />
-                        <DataGridTextColumn Header="CONTACT" Binding="{Binding ContactPerson}" Width="*" Foreground="{StaticResource TextSub}" />
-                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="150" />
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="120" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="CONTACT" Binding="{Binding ContactPerson}" Width="*" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsContactVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="150" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         
                         <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
@@ -172,3 +199,4 @@
         <ContentControl Content="{Binding OverlayViewModel}" />
     </Grid>
 </UserControl>
+

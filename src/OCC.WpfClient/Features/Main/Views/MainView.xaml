@@ -434,7 +434,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Top Bar -->
-                <Border Grid.Row="0" Height="50" Padding="30,0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+                <Border Grid.Row="0" Height="70" Padding="30,0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
                     <Grid>
                         <!-- Workspace Tabs -->
                         <ListBox x:Name="TabsListBox" ItemsSource="{Binding OpenHubs}" SelectedItem="{Binding ActiveHub}" 

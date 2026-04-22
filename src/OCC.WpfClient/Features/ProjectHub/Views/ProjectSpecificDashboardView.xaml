@@ -101,6 +101,42 @@
                 </Border>
             </UniformGrid>
 
+            <!-- Active Sub-Contractors Section -->
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,0,30" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="ACTIVE SUB-CONTRACTORS" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="External trade partners currently assigned to project tasks" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding SubContractors}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#10FFFFFF" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15,10" Margin="0,0,10,10">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding ColorTheme}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="5" Color="White" Opacity="0.2" ShadowDepth="0"/>
+                                            </Border.Effect>
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+
             <!-- 3. Charts Row -->
             <Grid>
                 <Grid.ColumnDefinitions>

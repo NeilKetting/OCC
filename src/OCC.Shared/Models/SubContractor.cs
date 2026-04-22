@@ -24,5 +24,10 @@ namespace OCC.Shared.Models
         public string? Specialties { get; set; }
 
         public string Branch { get; set; } = "Johannesburg";
+
+        /// <summary>
+        /// A hex color assigned to uniquely identify this SubContractor visually in tracking dashboards.
+        /// </summary>
+        public string ColorTheme { get; set; } = string.Empty;
     }
 }

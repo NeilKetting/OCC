@@ -9,7 +9,18 @@ namespace OCC.WpfClient.Services.Infrastructure
         public string LastEmail { get; set; } = string.Empty;
         public bool RememberMe { get; set; } = false;
         public int SessionTimeoutMinutes { get; set; } = 5;
+        public bool MaximizeOverTaskbar { get; set; } = false;
         public Features.EmployeeHub.Models.EmployeeListLayout? EmployeeListLayout { get; set; }
+
+        // Layouts for other List Views
+        public Features.EmployeeHub.Models.EmployeeListLayout? UserListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? CustomerListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? InventoryListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? PurchaseOrderListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? SupplierListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectsListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectTasksListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? SubContractorListLayout { get; set; }
     }
 
     public class LocalSettingsService

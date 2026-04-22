@@ -10,5 +10,6 @@ namespace OCC.Shared.DTOs
         public string? Phone { get; set; }
         public string? Specialties { get; set; }
         public string Branch { get; set; } = string.Empty;
+        public string ColorTheme { get; set; } = string.Empty;
     }
 }

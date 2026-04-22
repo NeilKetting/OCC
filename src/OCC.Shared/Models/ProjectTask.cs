@@ -149,6 +149,7 @@ namespace OCC.Shared.Models
 
         private void UpdateStatusFromPercent()
         {
+            if (IsOnHold) return;
             if (PercentComplete >= 100) Status = "Completed";
             else if (PercentComplete >= 75) Status = "Almost Done";
             else if (PercentComplete >= 50) Status = "Halfway";
@@ -177,6 +178,7 @@ namespace OCC.Shared.Models
                     case "Almost Done": return "#EC4899"; // Pink
                     case "Done": 
                     case "Completed": return "#00C853"; // Green (SuccessGreen)
+                    case "On Hold": return "#FFC107"; // Yellow (SecondaryGold)
                     default: 
                         if (PercentComplete >= 100) return "#00C853";
                         if (PercentComplete >= 75) return "#EC4899";
@@ -208,8 +210,29 @@ namespace OCC.Shared.Models
         /// <summary> Resources (employees/teams) assigned to this task. </summary>
         public ICollection<TaskAssignment> Assignments { get; set; } = new List<TaskAssignment>();
         
+        private bool _isOnHold;
         /// <summary> If true, work is temporarily suspended. </summary>
-        public bool IsOnHold { get; set; }
+        public bool IsOnHold 
+        { 
+            get => _isOnHold; 
+            set 
+            { 
+                if (_isOnHold != value) 
+                { 
+                    _isOnHold = value; 
+                    if (_isOnHold)
+                    {
+                        Status = "On Hold";
+                    }
+                    else if (Status == "On Hold")
+                    {
+                        UpdateStatusFromPercent();
+                    }
+                    OnPropertyChanged(); 
+                    OnPropertyChanged(nameof(StatusColor)); 
+                } 
+            } 
+        }
 
         /// <summary> Foreign Key to the parent <see cref="Models.Project"/>. Nullable for Personal Tasks. </summary>
         public Guid? ProjectId { get; set; }

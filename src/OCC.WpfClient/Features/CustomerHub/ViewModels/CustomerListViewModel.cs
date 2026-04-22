@@ -10,6 +10,7 @@ using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 {
@@ -18,20 +19,59 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         private readonly ICustomerService _customerService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<CustomerListViewModel> _logger;
+        private readonly LocalSettingsService _settingsService;
         private List<CustomerSummaryDto> _allCustomers = new();
+
+        [ObservableProperty] private bool _isEmailVisible = true;
+        [ObservableProperty] private bool _isPhoneVisible = true;
+        
+        [ObservableProperty] private bool _isColumnPickerOpen;
 
         public CustomerListViewModel(
             ICustomerService customerService,
             IDialogService dialogService,
+            LocalSettingsService settingsService,
             ILogger<CustomerListViewModel> logger)
         {
             _customerService = customerService;
             _dialogService = dialogService;
+            _settingsService = settingsService;
             _logger = logger;
             Title = "Customer Management";
             
+            LoadLayout();
             _ = LoadDataAsync();
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.CustomerListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
+                IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "Email", IsVisible = IsEmailVisible },
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible }
+                }
+            };
+            _settingsService.Settings.CustomerListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
         public override async Task LoadDataAsync()
         {

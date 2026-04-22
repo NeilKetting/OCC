@@ -5,12 +5,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1024"
              d:DataContext="{d:DesignInstance Type=vm:InventoryViewModel}">
     
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
+        <conv:VisibilityConverter x:Key="VisibilityConverter"/>
+        <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
     </UserControl.Resources>
 
     <Grid Margin="0"  Background="{StaticResource AppBackground}">
@@ -20,7 +23,7 @@
             <RowDefinition Height="*" />    <!-- Grid -->
         </Grid.RowDefinitions>
 
-        <!-- Header: Title, Subtitle, and Add Button -->
+         <!-- Header: Title, Subtitle, and Add Button -->
         <Grid Grid.Row="0" Margin="10">
             <StackPanel>
                 <TextBlock Text="Inventory Management" FontSize="26" FontWeight="Bold" Foreground="White"/>
@@ -47,6 +50,7 @@
                     <ColumnDefinition Width="Auto" /> <!-- Divider -->
                     <ColumnDefinition Width="Auto" /> <!-- Category Filter -->
                     <ColumnDefinition Width="Auto" /> <!-- Status Filter -->
+                    <ColumnDefinition Width="Auto" /> <!-- Columns -->
                     <ColumnDefinition Width="*" />    <!-- Spacer -->
                     <ColumnDefinition Width="Auto" /> <!-- Stats Badges -->
                 </Grid.ColumnDefinitions>
@@ -77,8 +81,31 @@
                     <ComboBoxItem Content="Out of Stock" />
                 </ComboBox>
 
+                <!-- Columns Selection -->
+                <Grid Grid.Column="5">
+                    <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                            <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </ToggleButton>
+                    <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                            <StackPanel>
+                                <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                <CheckBox Content="SKU" IsChecked="{Binding IsSkuVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Description" IsChecked="{Binding IsDescriptionVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Category" IsChecked="{Binding IsCategoryVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Quantity" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Location" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
+
                 <!-- Stats Badges -->
-                <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
@@ -96,16 +123,16 @@
         </Border>
 
         <!-- DataGrid Section: Wrapped in reference-compliant border -->
-        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="2" ClipToBounds="True"
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="2" ClipToBounds="True" CornerRadius="0"
                 Margin="10,0,10,10">
             <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" 
                       Background="Transparent" BorderThickness="0" CanUserAddRows="False"
-                      IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                      IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="150"/>
-                    <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="*"/>
-                    <DataGridTextColumn Header="CATEGORY" Binding="{Binding Category}" Width="150"/>
-                    <DataGridTextColumn Header="QUANTITY" Binding="{Binding QuantityOnHand}" Width="120">
+                    <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="150" Visibility="{Binding Data.IsSkuVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="*" Visibility="{Binding Data.IsDescriptionVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="CATEGORY" Binding="{Binding Category}" Width="150" Visibility="{Binding Data.IsCategoryVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="QUANTITY" Binding="{Binding QuantityOnHand}" Width="120" Visibility="{Binding Data.IsQuantityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -118,8 +145,8 @@
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="LOCATION" Binding="{Binding Location}" Width="150"/>
-                    <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="120"/>
+                    <DataGridTextColumn Header="LOCATION" Binding="{Binding Location}" Width="150" Visibility="{Binding Data.IsLocationVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="120" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
@@ -129,3 +156,4 @@
                         Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
     </Grid>
 </UserControl>
+

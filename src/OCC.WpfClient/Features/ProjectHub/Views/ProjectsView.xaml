@@ -6,6 +6,8 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
              xmlns:views="clr-namespace:OCC.WpfClient.Features.ProjectHub.Views"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:ProjectsViewModel}">
@@ -13,55 +15,83 @@
         <DataTemplate DataType="{x:Type vm:CreateProjectViewModel}">
             <views:CreateProjectView/>
         </DataTemplate>
+        <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
     </UserControl.Resources>
 
     <Grid Background="{StaticResource AppBackground}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Toolbar -->
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Filters -->
             <RowDefinition Height="*"/>    <!-- Grid -->
         </Grid.RowDefinitions>
 
-        <!-- Toolbar Section -->
-        <Border Grid.Row="0" Style="{StaticResource ToolbarBorder}" Margin="20,20,20,0">
+         <!-- Header Section -->
+        <Grid Grid.Row="0" Margin="20,20,20,0">
+            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                <TextBlock Text="Projects" FontSize="26" FontWeight="Bold" Foreground="White" />
+                <TextBlock Text="Monitor and manage all active design and construction projects." Style="{StaticResource FormLabelText}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Command="{Binding AddProjectCommand}" Style="{StaticResource PrimaryButton}" Height="36" Padding="20,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource IconPlus}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,10,0"/>
+                        <TextBlock Text="Create New Project" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Filters & Stats Line -->
+        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="20,10">
             <Grid>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <TextBlock Text="Projects" VerticalAlignment="Center" Margin="0,0,30,0" 
-                               FontSize="22" FontWeight="Bold" Foreground="White" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
+                    <ColumnDefinition Width="250" />  <!-- Search Box -->
+                    <ColumnDefinition Width="Auto" /> <!-- Divider -->
+                    <ColumnDefinition Width="Auto" /> <!-- Refresh -->
+                    <ColumnDefinition Width="Auto" /> <!-- Columns -->
+                    <ColumnDefinition Width="*" />    <!-- Spacer -->
+                </Grid.ColumnDefinitions>
 
-                    <!-- Search Box -->
-                    <Border Background="{StaticResource InputBackground}" CornerRadius="20" Width="300" Height="36" Margin="0,0,20,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="36"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Path Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" 
-                                  Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center"/>
-                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                     Background="Transparent" BorderThickness="0" Foreground="White" 
-                                     VerticalContentAlignment="Center" CaretBrush="White" 
-                                     ap:WatermarkProperties.Watermark="Search projects..."/>
-                        </Grid>
-                    </Border>
+                <!-- Search -->
+                <Path Grid.Column="0" Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" Width="14" Height="14" Margin="5,0,10,0" VerticalAlignment="Center" Stretch="Uniform"/>
+                <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                         Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
+                         ap:WatermarkProperties.Watermark="Search projects..."/>
 
-                    <Button Command="{Binding LoadDataAsyncCommand}" Style="{StaticResource ToolbarIconButton}" ToolTip="Refresh Data">
-                        <Path Data="{StaticResource IconRefresh}" Fill="White" Width="18" Height="18" Stretch="Uniform"/>
-                    </Button>
-                </StackPanel>
+                <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Command="{Binding AddProjectCommand}" Style="{StaticResource PrimaryButton}" Height="36" Padding="20,0">
+                <Button Grid.Column="3" Command="{Binding LoadDataAsyncCommand}" Style="{StaticResource ToolbarIconButton}" ToolTip="Refresh Data" Margin="0,0,15,0">
+                    <Path Data="{StaticResource IconRefresh}" Fill="White" Width="18" Height="18" Stretch="Uniform" Opacity="0.6"/>
+                </Button>
+
+                <!-- Columns Selection -->
+                <Grid Grid.Column="4">
+                    <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
                         <StackPanel Orientation="Horizontal">
-                            <Path Data="{StaticResource IconPlus}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,10,0"/>
-                            <TextBlock Text="Create New Project"/>
+                            <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                            <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                         </StackPanel>
-                    </Button>
-                </StackPanel>
+                    </ToggleButton>
+                    <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                            <StackPanel>
+                                <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                <CheckBox Content="Progress" IsChecked="{Binding IsProgressVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Site Manager" IsChecked="{Binding IsManagerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Latest Update" IsChecked="{Binding IsUpdateVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
             </Grid>
         </Border>
 
         <!-- Data Grid -->
-        <Border Grid.Row="1" Margin="20" Background="{StaticResource CardBackground}" CornerRadius="16" Padding="1">
+        <Border Grid.Row="2" Margin="20,0,20,20" Background="{StaticResource CardBackground}" CornerRadius="0" Padding="1">
             <Grid>
                 <!-- Empty State -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
@@ -74,11 +104,14 @@
                 <DataGrid ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}" 
                           AutoGenerateColumns="False" IsReadOnly="True" 
                           Style="{StaticResource ModernDataGrid}" 
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="False"
                           Visibility="{Binding Projects.Count, Converter={StaticResource VisibilityConverter}}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="1.5*" MinWidth="200" />
                         
-                        <DataGridTemplateColumn Header="PROGRESS" Width="*" MinWidth="120">
+                        <DataGridTemplateColumn Header="PROGRESS" Width="*" MinWidth="120" Visibility="{Binding Data.IsProgressVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid VerticalAlignment="Center" Margin="10,0">
@@ -94,7 +127,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="SITE MANAGER" Width="Auto">
+                        <DataGridTemplateColumn Header="SITE MANAGER" Width="Auto" Visibility="{Binding Data.IsManagerVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Width="30" Height="30" CornerRadius="15" Margin="20,0"
@@ -109,9 +142,9 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="LATEST UPDATE" Binding="{Binding LatestFinish, StringFormat='{}{0:d}'}" Width="Auto" />
+                        <DataGridTextColumn Header="LATEST UPDATE" Binding="{Binding LatestFinish, StringFormat='{}{0:d}'}" Width="Auto" Visibility="{Binding Data.IsUpdateVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         
-                        <DataGridTemplateColumn Header="STATUS" Width="Auto">
+                        <DataGridTemplateColumn Header="STATUS" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Background="#1AFFFFFF" Padding="8,4" CornerRadius="4" HorizontalAlignment="Left" Margin="10,0">

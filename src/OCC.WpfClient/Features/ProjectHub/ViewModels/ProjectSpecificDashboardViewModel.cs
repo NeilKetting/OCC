@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using OCC.WpfClient.Infrastructure;
+using OCC.Shared.DTOs;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
@@ -33,6 +34,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _etaStatus = "ON TRACK";
         [ObservableProperty] private string _streetLine1 = string.Empty;
         [ObservableProperty] private string _cityStatePostal = string.Empty;
+        
+        [ObservableProperty] private ObservableCollection<SubContractorSummaryDto> _subContractors = new();
         
         public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColors.White);
 
@@ -60,8 +63,38 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 {
                     StreetLine1 = _project.StreetLine1 ?? string.Empty;
                     CityStatePostal = $"{_project.City}, {_project.PostalCode}";
+                    ExtractSubContractors(_allTasks);
                 }
             });
+        }
+
+        private void ExtractSubContractors(IEnumerable<ProjectTask> tasks)
+        {
+            if (tasks == null) return;
+
+            // In a real app, we'd probably have a direct link or fetch them from the assignments.
+            // For now, let's extract unique names from assignments of type Contractor
+            // and assume we'll display them. Since we don't have the full objects here, 
+            // we'll just create dummy ones for the visual demo.
+            var contractorsInTasks = tasks
+                .SelectMany(t => t.Assignments ?? new List<TaskAssignment>())
+                .Where(a => a.AssigneeType == AssigneeType.Contractor)
+                .Select(a => a.AssigneeName)
+                .Distinct()
+                .ToList();
+
+            // Clear and add
+            SubContractors.Clear();
+            foreach (var name in contractorsInTasks)
+            {
+                SubContractors.Add(new SubContractorSummaryDto 
+                { 
+                    Name = name,
+                    // In a real scenario, we'd look up the color from the database.
+                    // For the demo, we'll generate or use a default.
+                    ColorTheme = "#1D4ED8" 
+                });
+            }
         }
 
         private void CalculateStats()

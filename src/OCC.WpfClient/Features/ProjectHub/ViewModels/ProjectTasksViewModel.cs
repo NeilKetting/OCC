@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OCC.Shared.Models;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Services.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,6 +20,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IProjectTaskService _taskService;
+        private readonly LocalSettingsService _settingsService;
+
+        // Column Visibility
+        [ObservableProperty] private bool _isStartVisible = true;
+        [ObservableProperty] private bool _isEndVisible = true;
+        [ObservableProperty] private bool _isProgressVisible = true;
+        [ObservableProperty] private bool _isStageVisible = true;
+        [ObservableProperty] private bool _isDurationVisible = true;
+        [ObservableProperty] private bool _isAssignedVisible = true;
+
+        [ObservableProperty] private bool _isColumnPickerOpen;
 
         [ObservableProperty] private ObservableCollection<ProjectTask> _tasks = new();
         [ObservableProperty] private ProjectTask? _selectedTask;
@@ -27,17 +39,73 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private Guid _projectId;
         [ObservableProperty] private string _parentTaskName = string.Empty;
 
+        [ObservableProperty] private string _searchQuery = string.Empty;
+        [ObservableProperty] private string _selectedStageFilter = "All Stages";
+
+        public ObservableCollection<string> AvailableStages { get; } = new() 
+        {
+            "All Stages", "Not Started", "Started", "Halfway", "Almost Done", "Completed", "On Hold"
+        };
+
         private List<ProjectTask> _rootTasks = new();
 
         public ViewModelBase? ActiveOverlay => CurrentTaskDetail;
 
-        public ProjectTasksViewModel(IServiceProvider serviceProvider, IProjectTaskService taskService)
+        public ProjectTasksViewModel(
+            IServiceProvider serviceProvider, 
+            IProjectTaskService taskService,
+            LocalSettingsService settingsService)
         {
             _serviceProvider = serviceProvider;
             _taskService = taskService;
+            _settingsService = settingsService;
             Title = "Tasks";
+            
+            LoadLayout();
             WeakReferenceMessenger.Default.Register(this);
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.ProjectTasksListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsStartVisible = layout.Columns.FirstOrDefault(c => c.Header == "Start")?.IsVisible ?? true;
+                IsEndVisible = layout.Columns.FirstOrDefault(c => c.Header == "End")?.IsVisible ?? true;
+                IsProgressVisible = layout.Columns.FirstOrDefault(c => c.Header == "Progress")?.IsVisible ?? true;
+                IsStageVisible = layout.Columns.FirstOrDefault(c => c.Header == "Stage")?.IsVisible ?? true;
+                IsDurationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Duration")?.IsVisible ?? true;
+                IsAssignedVisible = layout.Columns.FirstOrDefault(c => c.Header == "Assigned")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "Start", IsVisible = IsStartVisible },
+                    new() { Header = "End", IsVisible = IsEndVisible },
+                    new() { Header = "Progress", IsVisible = IsProgressVisible },
+                    new() { Header = "Stage", IsVisible = IsStageVisible },
+                    new() { Header = "Duration", IsVisible = IsDurationVisible },
+                    new() { Header = "Assigned", IsVisible = IsAssignedVisible }
+                }
+            };
+            _settingsService.Settings.ProjectTasksListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsStartVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsEndVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsProgressVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsStageVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsDurationVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsAssignedVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
         public void UpdateTasks(Guid projectId, IEnumerable<ProjectTask> tasks)
         {
@@ -71,7 +139,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private void RefreshDisplayList()
         {
             var flatList = new List<ProjectTask>();
-            foreach (var root in _rootTasks)
+            
+            // Reapply filters to roots
+            var filteredRoots = _rootTasks.Where(t => MatchesFilter(t)).ToList();
+            
+            foreach (var root in filteredRoots)
             {
                 FlattenTask(root, flatList);
             }
@@ -83,8 +155,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             });
         }
 
+        private bool MatchesFilter(ProjectTask task)
+        {
+            bool matchesSearch = string.IsNullOrWhiteSpace(SearchQuery) || 
+                task.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
+
+            bool matchesStage = SelectedStageFilter == "All Stages" || 
+                task.Status.Equals(SelectedStageFilter, StringComparison.OrdinalIgnoreCase);
+
+            // If this task doesn't match but a child does, we still show the parent
+            bool anyChildMatches = task.Children?.Any(c => MatchesFilter(c)) ?? false;
+
+            return (matchesSearch && matchesStage) || anyChildMatches;
+        }
+
         private void FlattenTask(ProjectTask task, List<ProjectTask> flatList)
         {
+            if (!MatchesFilter(task)) return;
+
             flatList.Add(task);
             if (task.IsExpanded && task.Children != null && task.Children.Any())
             {
@@ -95,6 +183,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 }
             }
         }
+
+        partial void OnSearchQueryChanged(string value) => RefreshDisplayList();
+        partial void OnSelectedStageFilterChanged(string value) => RefreshDisplayList();
 
         [RelayCommand]
         private void ToggleExpand(ProjectTask task)

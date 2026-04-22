@@ -7,6 +7,7 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -24,6 +25,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ILogger<ProjectsViewModel> _logger;
         private readonly IToastService _toastService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly LocalSettingsService _settingsService;
+
+        // Column Visibility
+        [ObservableProperty] private bool _isProgressVisible = true;
+        [ObservableProperty] private bool _isManagerVisible = true;
+        [ObservableProperty] private bool _isUpdateVisible = true;
+        [ObservableProperty] private bool _isStatusVisible = true;
+
+        [ObservableProperty] private bool _isColumnPickerOpen;
 
         [ObservableProperty] private ObservableCollection<ProjectSummaryDto> _projects = new();
         [ObservableProperty] private ProjectSummaryDto? _selectedProject;
@@ -37,7 +47,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IDialogService dialogService,
             ILogger<ProjectsViewModel> logger,
             IToastService toastService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            LocalSettingsService settingsService)
         {
             _projectService = projectService;
             _customerService = customerService;
@@ -45,10 +56,48 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _logger = logger;
             _toastService = toastService;
             _serviceProvider = serviceProvider;
+            _settingsService = settingsService;
 
             Title = "Projects";
+            LoadLayout();
             _ = LoadDataAsync();
         }
+
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.ProjectsListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsProgressVisible = layout.Columns.FirstOrDefault(c => c.Header == "Progress")?.IsVisible ?? true;
+                IsManagerVisible = layout.Columns.FirstOrDefault(c => c.Header == "Manager")?.IsVisible ?? true;
+                IsUpdateVisible = layout.Columns.FirstOrDefault(c => c.Header == "Update")?.IsVisible ?? true;
+                IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            {
+                Columns = new System.Collections.Generic.List<Features.EmployeeHub.Models.ColumnConfig>
+                {
+                    new() { Header = "Progress", IsVisible = IsProgressVisible },
+                    new() { Header = "Manager", IsVisible = IsManagerVisible },
+                    new() { Header = "Update", IsVisible = IsUpdateVisible },
+                    new() { Header = "Status", IsVisible = IsStatusVisible }
+                }
+            };
+            _settingsService.Settings.ProjectsListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsProgressVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsManagerVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsUpdateVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
         [RelayCommand]
         public async Task LoadDataAsync()

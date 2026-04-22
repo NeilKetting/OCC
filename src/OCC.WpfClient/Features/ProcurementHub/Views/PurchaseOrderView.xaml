@@ -630,3 +630,4 @@
         <ContentControl Grid.RowSpan="4" Content="{Binding OverlayViewModel}" Panel.ZIndex="1000"/>
     </Grid>
 </UserControl>
+

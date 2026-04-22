@@ -52,7 +52,7 @@ namespace OCC.Client.ModelWrappers
             AdditionalComments = _model.AdditionalComments;
             Status = _model.Status;
             IsInvoiced = _model.IsInvoiced;
-            RowVersion = _model.RowVersion;
+            RowVersion = _model.RowVersion ?? Array.Empty<byte>();
         }
 
         public void CommitToModel()

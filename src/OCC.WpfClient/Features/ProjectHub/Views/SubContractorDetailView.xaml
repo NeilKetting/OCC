@@ -98,6 +98,14 @@
                                                 <ComboBoxItem Content="Cape Town"/>
                                             </ComboBox>
                                         </StackPanel>
+
+                                        <StackPanel Margin="0,0,0,15">
+                                            <TextBlock Text="Theme Color (Hex)" Style="{StaticResource FormLabelText}"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Width="34" Height="34" CornerRadius="4" Margin="0,0,10,0" Background="{Binding ColorTheme}" BorderThickness="1" BorderBrush="#33FFFFFF"/>
+                                                <TextBox Text="{Binding ColorTheme, UpdateSourceTrigger=PropertyChanged}" Width="100" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="#HEX"/>
+                                            </StackPanel>
+                                        </StackPanel>
                                         
                                         <StackPanel Margin="0,0,0,25">
                                             <TextBlock Text="Headquarters Address" Style="{StaticResource FormLabelText}"/>

@@ -7,6 +7,7 @@
              xmlns:views="clr-namespace:OCC.WpfClient.Features.Admin.Users.Views"
              xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
@@ -17,6 +18,8 @@
         <DataTemplate DataType="{x:Type vm:UserDetailViewModel}">
             <views:UserDetailView />
         </DataTemplate>
+        <utils:BindingProxy x:Key="Proxy" Data="{Binding}" />
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
     </UserControl.Resources>
 
     <Grid Margin="5,10,5,5" Background="{StaticResource AppBackground}">
@@ -43,7 +46,7 @@
                 <RowDefinition Height="*" />    <!-- Grid -->
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+             <!-- Header -->
             <Grid Grid.Row="0" Margin="5,0,5,20">
                 <StackPanel>
                     <TextBlock Text="User Management" FontSize="26" FontWeight="Bold" Foreground="White" />
@@ -61,12 +64,13 @@
             </Grid>
 
             <!-- Stats & Search Line -->
-            <Border Grid.Row="1" Background="{StaticResource GlassBackground}" BorderBrush="{StaticResource GlassBorder}" 
-                    BorderThickness="1" CornerRadius="10" Padding="15,10" Margin="5,0,5,15">
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="5,0,5,15">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
-                        <ColumnDefinition Width="200" />  <!-- Search Box -->
+                        <ColumnDefinition Width="250" />  <!-- Search Box -->
+                        <ColumnDefinition Width="Auto" /> <!-- Divider -->
+                        <ColumnDefinition Width="Auto" /> <!-- Columns -->
                         <ColumnDefinition Width="*" />    <!-- Spacer -->
                         <ColumnDefinition Width="Auto" /> <!-- Stats -->
                     </Grid.ColumnDefinitions>
@@ -77,8 +81,30 @@
                              Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
                              ap:WatermarkProperties.Watermark="Search users..."/>
 
+                    <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+
+                    <!-- Columns Selection -->
+                    <Grid Grid.Column="3">
+                        <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                                <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                                <StackPanel>
+                                    <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                    <CheckBox Content="Email" IsChecked="{Binding IsEmailVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Role" IsChecked="{Binding IsRoleVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
                     <!-- Stats -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
                         <StackPanel Margin="0,0,30,0">
                             <TextBlock Text="TOTAL USERS" FontSize="10" Foreground="{StaticResource TextSub}" FontWeight="Bold"/>
                             <TextBlock Text="{Binding TotalCount}" FontSize="18" Foreground="White" FontWeight="SemiBold"/>
@@ -104,13 +130,16 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="None"
                           CanUserAddRows="False"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="False"
                           Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="NAME" Binding="{Binding DisplayName}" Width="*" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="*" Foreground="{StaticResource TextSub}" />
-                        <DataGridTextColumn Header="ROLE" Binding="{Binding UserRole}" Width="150" />
-                        
-                        <DataGridTemplateColumn Header="STATUS" Width="120">
+                        <DataGridTextColumn Header="NAME" Binding="{Binding DisplayName}" Width="Auto" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="ROLE" Binding="{Binding UserRole}" Width="Auto" Visibility="{Binding Data.IsRoleVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
+
+                        <DataGridTemplateColumn Header="STATUS" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border HorizontalAlignment="Left" CornerRadius="4" Padding="8,3" Margin="4">
