@@ -50,21 +50,24 @@ namespace OCC.Shared.DTOs
         public string TaskName { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public string? DisplayName { get; set; }
 
         public string Message
         {
             get
             {
+                string userName = !string.IsNullOrEmpty(DisplayName) ? DisplayName : User;
+
                 if (string.IsNullOrEmpty(Status))
-                    return $"{Action} '{TaskName}' by {User}.";
+                    return $"{Action} '{TaskName}' by {userName}.";
                 
                 string formattedStatus = Status;
                 if (formattedStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
-                    return $"Task '{TaskName}' completed by {User}.";
+                    return $"Task '{TaskName}' completed by {userName}.";
                 if (formattedStatus.Equals("Started", StringComparison.OrdinalIgnoreCase))
-                    return $"Task '{TaskName}' started by {User}.";
+                    return $"Task '{TaskName}' started by {userName}.";
                 
-                return $"Task '{TaskName}' progress: {Status} (updated by {User}).";
+                return $"Task '{TaskName}' progress: {Status} (updated by {userName}).";
             }
         }
     }

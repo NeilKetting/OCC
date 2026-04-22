@@ -104,16 +104,18 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <TextBlock Text="Recent Updates" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,20"/>
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding RecentUpdates}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="0,0,0,12">
-                                    <TextBlock Text="{Binding Message}" FontSize="14" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:g}'}" FontSize="11" Foreground="#66FFFFFF"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-10,0" Padding="0,0,10,0">
+                        <ItemsControl ItemsSource="{Binding RecentUpdates}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding Message}" FontSize="14" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:g}'}" FontSize="11" Foreground="#66FFFFFF"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>

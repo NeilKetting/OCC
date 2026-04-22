@@ -104,7 +104,6 @@ namespace OCC.API.Controllers
             }
         }
 
-        // GET: api/ProjectTasks/recent-updates
         [HttpGet("recent-updates")]
         public async Task<ActionResult<IEnumerable<OCC.Shared.DTOs.DashboardUpdateDto>>> GetRecentUpdates()
         {
@@ -119,16 +118,39 @@ namespace OCC.API.Controllers
                     .Take(10)
                     .AsNoTracking()
                     .ToListAsync();
+
+                // Resolve Display Names
+                var userIds = topTasks.Select(t => string.IsNullOrEmpty(t.UpdatedBy) ? t.CreatedBy : t.UpdatedBy)
+                    .Where(id => !string.IsNullOrEmpty(id) && id != "System")
+                    .Distinct()
+                    .ToList();
+
+                var userGuids = userIds.Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                    .Where(g => g != Guid.Empty)
+                    .ToList();
+
+                var userMap = await _context.Users
+                    .Where(u => userGuids.Contains(u.Id))
+                    .ToDictionaryAsync(u => u.Id.ToString(), u => u.DisplayName ?? u.Email);
                 
-                var dtos = topTasks.Select(t => new OCC.Shared.DTOs.DashboardUpdateDto
+                var dtos = topTasks.Select(t => 
                 {
-                    Timestamp = t.UpdatedAtUtc ?? t.CreatedAtUtc,
-                    User = string.IsNullOrEmpty(t.UpdatedBy) ? t.CreatedBy : t.UpdatedBy,
-                    Action = "Status Changed",
-                    TaskName = t.Name,
-                    ProjectName = t.Project?.Name ?? string.Empty,
-                    Status = t.Status
-                });
+                    var userId = string.IsNullOrEmpty(t.UpdatedBy) ? t.CreatedBy : t.UpdatedBy;
+                    string? displayName = null;
+                    if (userId == "System") displayName = "System";
+                    else if (!string.IsNullOrEmpty(userId)) userMap.TryGetValue(userId, out displayName);
+
+                    return new OCC.Shared.DTOs.DashboardUpdateDto
+                    {
+                        Timestamp = t.UpdatedAtUtc ?? t.CreatedAtUtc,
+                        User = userId,
+                        DisplayName = displayName,
+                        Action = "Status Changed",
+                        TaskName = t.Name,
+                        ProjectName = t.Project?.Name ?? string.Empty,
+                        Status = t.Status
+                    };
+                }).ToList();
 
                 return Ok(dtos);
             }
@@ -264,6 +286,7 @@ namespace OCC.API.Controllers
                         {
                             Timestamp = DateTime.UtcNow,
                             User = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "System",
+                            DisplayName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value,
                             TaskName = task.Name,
                             Status = task.Status
                         };
