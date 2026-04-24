@@ -102,5 +102,11 @@ namespace OCC.Client.Services.Repositories.ApiServices
             };
             await AddAsync(notif);
         }
+
+        public Task ScheduleAlarmAsync(Guid id, string title, string message, DateTime triggerTime)
+        {
+            // Desktop implementation could be added here later if needed
+            return Task.CompletedTask;
+        }
     }
 }

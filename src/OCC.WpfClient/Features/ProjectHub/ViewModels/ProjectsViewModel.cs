@@ -111,7 +111,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading project summaries");
-                _toastService.ShowError("Error", "Failed to load projects");
+                _toastService.ShowError("Error", $"Failed to load projects: {ex.Message}");
             }
             finally
             {

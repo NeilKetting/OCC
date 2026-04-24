@@ -30,6 +30,7 @@ namespace OCC.Client
     public partial class App : Application
     {
         public IServiceProvider? Services { get; private set; }
+        public static Action<IServiceCollection>? RegisterPlatformServices { get; set; }
 
         public override void Initialize()
         {
@@ -159,6 +160,8 @@ namespace OCC.Client
                     .AddSupportHub()
                     .AddSettingsHub()
                     .AddMobileHub();
+
+            RegisterPlatformServices?.Invoke(services);
         }
 
         private void DisableAvaloniaDataAnnotationValidation()

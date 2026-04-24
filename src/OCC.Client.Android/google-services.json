@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "252587602101",
+    "project_id": "occ-erp",
+    "storage_bucket": "occ-erp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252587602101:android:525ad027c3ff90c05acefc",
+        "android_client_info": {
+          "package_name": "OrangeCircleConstruction.OCC.Client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2921Ya78f6R0PhdwbYIK9-xvsB0DhWAs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

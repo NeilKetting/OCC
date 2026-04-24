@@ -3,20 +3,69 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:OCC.Client.Mobile.Features.RollCall"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="OCC.Client.Mobile.Features.RollCall.MobileRollCallView"
-             x:DataType="vm:MobileRollCallViewModel">
-    <Grid RowDefinitions="Auto, *">
-        <Border Grid.Row="0" Padding="20" Background="{DynamicResource PrimaryTeal}">
-            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+             x:DataType="vm:MobileRollCallViewModel"
+             Background="#0F172A">
+    
+    <Grid RowDefinitions="Auto, Auto, *">
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="25,40,25,25" Background="#1E293B">
+            <StackPanel Spacing="5">
+                <TextBlock Text="Daily Crew" FontSize="14" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                <TextBlock Text="Roll Call" FontSize="26" FontWeight="Bold" Foreground="White"/>
+            </StackPanel>
         </Border>
-        
-        <StackPanel Grid.Row="1" Spacing="20" VerticalAlignment="Center">
-            <PathIcon Data="{StaticResource IconTeam}" Width="60" Height="60" Foreground="{DynamicResource PrimaryTeal}"/>
-            <TextBlock Text="Roll call feature coming soon." HorizontalAlignment="Center" FontSize="18"/>
-            <TextBlock Text="Site managers will be able to take attendance of their team here." 
-                       HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryGray}"/>
-            <Button Content="Start Roll Call" HorizontalAlignment="Stretch" Classes="Primary"/>
-        </StackPanel>
+
+        <!-- Project Selector -->
+        <Border Grid.Row="1" Background="#0F172A" Padding="20,10">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Select Site / Project" FontSize="12" Foreground="#94A3B8" Margin="5,0"/>
+                <ComboBox ItemsSource="{Binding AssignedProjects}" 
+                          SelectedItem="{Binding SelectedProject}"
+                          HorizontalAlignment="Stretch"
+                          Background="#1E293B" BorderThickness="0" CornerRadius="12">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" Foreground="White"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </Border>
+
+        <!-- Crew List -->
+        <ScrollViewer Grid.Row="2">
+            <StackPanel Spacing="15" Margin="20">
+                <ItemsControl ItemsSource="{Binding Crew}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:EmployeeAttendanceViewModel">
+                            <Border Background="#1E293B" CornerRadius="12" Padding="15" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#334155">
+                                        <TextBlock Text="{Binding Employee.FirstName[0]}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1" Margin="15,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Employee.DisplayName}" FontWeight="Bold" Foreground="White"/>
+                                        <TextBlock Text="{Binding Employee.Role}" FontSize="12" Foreground="#94A3B8"/>
+                                    </StackPanel>
+
+                                    <ToggleSwitch Grid.Column="2" IsChecked="{Binding IsPresent}" 
+                                                  OnContent="IN" OffContent="OUT"
+                                                  Command="{Binding ToggleAttendanceCommand}"
+                                                  Foreground="White"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Busy Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsBusy}" Background="#B00F172A">
+            <ProgressBar IsIndeterminate="True" Width="100" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F97316"/>
+        </Border>
     </Grid>
 </UserControl>

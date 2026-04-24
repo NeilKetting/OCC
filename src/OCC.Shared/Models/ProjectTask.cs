@@ -109,6 +109,9 @@ namespace OCC.Shared.Models
 
         /// <summary> The date/time of the next reminder. </summary>
         public DateTime? NextReminderDate { get; set; }
+
+        /// <summary> Tracked for real-time synchronization order. </summary>
+        public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
         #endregion
 
         private string _status = "Not Started";

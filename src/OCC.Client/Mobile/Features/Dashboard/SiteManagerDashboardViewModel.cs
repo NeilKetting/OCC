@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
+using OCC.Client.ViewModels.Messages;
 
 namespace OCC.Client.Mobile.Features.Dashboard
 {
@@ -24,6 +26,15 @@ namespace OCC.Client.Mobile.Features.Dashboard
 
         [ObservableProperty]
         private ObservableCollection<DashboardProjectViewModel> _projects = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DashboardTaskViewModel> _overdueTasks = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DashboardTaskViewModel> _todayTasks = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DashboardTaskViewModel> _onHoldTasks = new();
 
         [ObservableProperty]
         private bool _hasProjects;
@@ -42,7 +53,16 @@ namespace OCC.Client.Mobile.Features.Dashboard
             _taskRepository = taskRepository;
             _commentRepository = commentRepository;
             _attachmentService = attachmentService;
-            Title = "My Projects";
+            Title = "Site Manager Dashboard";
+
+            // Register for real-time updates
+            WeakReferenceMessenger.Default.Register<EntityUpdatedMessage>(this, async (r, m) =>
+            {
+                if (m.Value.EntityType == "ProjectTask" || m.Value.EntityType == "Project")
+                {
+                    await LoadProjectsAsync();
+                }
+            });
         }
 
         public async Task LoadProjectsAsync()
@@ -84,16 +104,33 @@ namespace OCC.Client.Mobile.Features.Dashboard
                     .ToList();
 
                 Projects.Clear();
+                OverdueTasks.Clear();
+                TodayTasks.Clear();
+                OnHoldTasks.Clear();
+
                 foreach (var project in filteredProjects)
                 {
-                    // Filter tasks for this project that are due today or overdue
-                    var projectTasks = allMyTasks
-                        .Where(t => t.ProjectId == project.Id && 
-                                    (t.FinishDate.Date == DateTime.Today.Date || (t.FinishDate.Date < DateTime.Today.Date && !t.IsComplete)))
-                        .OrderBy(t => t.OrderIndex)
-                        .ToList();
+                    var projectVm = new DashboardProjectViewModel(project, new List<ProjectTask>(), _taskRepository, _commentRepository, _attachmentService);
+                    Projects.Add(projectVm);
+                }
 
-                    Projects.Add(new DashboardProjectViewModel(project, projectTasks, _taskRepository, _commentRepository, _attachmentService));
+                // Organize all tasks into categories
+                foreach (var task in allMyTasks)
+                {
+                    var taskVm = new DashboardTaskViewModel(task, _taskRepository, _commentRepository, _attachmentService);
+                    
+                    if (task.IsOnHold)
+                    {
+                        OnHoldTasks.Add(taskVm);
+                    }
+                    else if (task.IsOverdue)
+                    {
+                        OverdueTasks.Add(taskVm);
+                    }
+                    else if (task.FinishDate.Date == DateTime.Today.Date && !task.IsComplete)
+                    {
+                        TodayTasks.Add(taskVm);
+                    }
                 }
 
                 HasProjects = Projects.Any();

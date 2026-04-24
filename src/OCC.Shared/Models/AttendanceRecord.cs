@@ -24,6 +24,9 @@ namespace OCC.Shared.Models
         /// <summary> The calendar date of the attendance entry. </summary>
         public DateTime Date { get; set; }
 
+        /// <summary> Foreign key to the Project where the attendance occurred. </summary>
+        public Guid? ProjectId { get; set; }
+
         /// <summary> The category of presence (Present, Absent, Sick, etc.). </summary>
         public AttendanceStatus Status { get; set; } = AttendanceStatus.Present;
         

@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Client.Mobile.Features.Dashboard"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="OCC.Client.Mobile.Features.Dashboard.SubContractorDashboardView"
+             x:DataType="vm:SubContractorDashboardViewModel"
+             Background="#0F172A">
+    
+    <Grid RowDefinitions="Auto, *">
+        <!-- Premium Header -->
+        <Border Grid.Row="0" Padding="25,40,25,25" Background="#1E293B">
+            <StackPanel Spacing="5">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="Sub-Contractor" FontSize="14" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <Button Grid.Column="1" Command="{Binding RefreshCommand}" Background="Transparent" Padding="0">
+                        <PathIcon Data="{StaticResource IconRefresh}" Width="20" Height="20" Foreground="#2E9DFF"/>
+                    </Button>
+                </Grid>
+                <TextBlock Text="My Assignments" FontSize="26" FontWeight="Bold" Foreground="White"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="25" Margin="20">
+                
+                <!-- Performance Card -->
+                <Border Background="#1E293B" CornerRadius="16" Padding="20">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="My Performance" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="Task Completion Rate" FontSize="12" Foreground="#94A3B8"/>
+                            <TextBlock Text="{Binding CompletionRate, StringFormat={}{0}%}" FontSize="32" FontWeight="Black" Foreground="#2E9DFF" Margin="0,10,0,0"/>
+                        </StackPanel>
+                        <Panel Grid.Column="1" Width="80" Height="80">
+                            <!-- Placeholder for circular progress -->
+                            <Arc Width="70" Height="70" Stroke="#334155" StrokeThickness="8" StartAngle="0" SweepAngle="360"/>
+                            <Arc Width="70" Height="70" Stroke="#2E9DFF" StrokeThickness="8" StartAngle="-90" SweepAngle="270"/>
+                        </Panel>
+                    </Grid>
+                </Border>
+
+                <!-- Tasks -->
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Action Required" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,5"/>
+                    
+                    <!-- Overdue -->
+                    <ItemsControl ItemsSource="{Binding MyOverdueTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:DashboardTaskViewModel">
+                                <Border Background="#334155" CornerRadius="12" Padding="15" Margin="0,0,0,10" BorderBrush="#EF4444" BorderThickness="1">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{Binding Task.Name}" FontWeight="Bold" Foreground="White"/>
+                                            <TextBlock Text="OVERDUE" FontSize="10" FontWeight="Black" Foreground="#EF4444"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Command="{Binding ToggleStatusCommand}" Classes="IconButton">
+                                            <PathIcon Data="{StaticResource IconCheck}" Foreground="#94A3B8"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Today -->
+                    <ItemsControl ItemsSource="{Binding MyTodayTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:DashboardTaskViewModel">
+                                <Border Background="#1E293B" CornerRadius="12" Padding="15" Margin="0,0,0,10">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{Binding Task.Name}" FontWeight="Bold" Foreground="White"/>
+                                            <TextBlock Text="Due Today" FontSize="11" Foreground="#2E9DFF"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Command="{Binding ToggleStatusCommand}" Classes="IconButton">
+                                            <PathIcon Data="{StaticResource IconCheck}" Foreground="#94A3B8"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Busy Overlay -->
+        <Border Grid.Row="1" IsVisible="{Binding IsBusy}" Background="#B00F172A">
+            <ProgressBar IsIndeterminate="True" Width="100" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#2E9DFF"/>
+        </Border>
+    </Grid>
+</UserControl>

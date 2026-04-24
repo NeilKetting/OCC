@@ -16,6 +16,9 @@ namespace OCC.Client.Services.Interfaces
         
         // Helper to send a simplified notification
         Task SendReminderAsync(string title, string message, string? action = null);
+
+        /// <summary> Schedules a local alarm/notification on the device. </summary>
+        Task ScheduleAlarmAsync(Guid id, string title, string message, DateTime triggerTime);
         
         event EventHandler<Notification>? NotificationReceived;
     }
