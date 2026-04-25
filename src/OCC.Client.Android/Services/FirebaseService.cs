@@ -3,6 +3,7 @@ using Android.Content;
 using Firebase.Messaging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 
 namespace OCC.Client.Android.Services
 {
@@ -10,6 +11,15 @@ namespace OCC.Client.Android.Services
     [IntentFilter(new[] { "com.google.firebase.MESSAGING_EVENT" })]
     public class FirebaseService : FirebaseMessagingService
     {
+        public FirebaseService()
+        {
+        }
+
+        protected FirebaseService(IntPtr handle, global::Android.Runtime.JniHandleOwnership transfer)
+            : base(handle, transfer)
+        {
+        }
+
         public override void OnMessageReceived(RemoteMessage message)
         {
             base.OnMessageReceived(message);
@@ -31,9 +41,19 @@ namespace OCC.Client.Android.Services
 
         private void ShowNotification(string title, string body)
         {
+            // Ensure channel exists (in case AlarmReceiver hasn't run yet)
+            CreateNotificationChannel();
+
             var intent = new Intent(this, typeof(MainActivity));
             intent.AddFlags(ActivityFlags.ClearTop);
-            var pendingIntent = PendingIntent.GetActivity(this, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+            
+            var flags = PendingIntentFlags.UpdateCurrent;
+            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.M)
+            {
+                flags |= PendingIntentFlags.Immutable;
+            }
+
+            var pendingIntent = PendingIntent.GetActivity(this, 0, intent, flags);
 
             var builder = new AndroidX.Core.App.NotificationCompat.Builder(this, AlarmReceiver.ChannelId)
                 .SetSmallIcon(Resource.Drawable.occ_app_icon)
@@ -43,8 +63,24 @@ namespace OCC.Client.Android.Services
                 .SetPriority(AndroidX.Core.App.NotificationCompat.PriorityHigh)
                 .SetContentIntent(pendingIntent);
 
-            var notificationManager = NotificationManager.FromContext(this);
-            notificationManager?.Notify(new Random().Next(), builder.Build());
+            var notificationManager = AndroidX.Core.App.NotificationManagerCompat.From(this);
+            notificationManager.Notify(new Random().Next(), builder.Build());
+        }
+
+        private void CreateNotificationChannel()
+        {
+            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
+            {
+                var channel = new NotificationChannel(AlarmReceiver.ChannelId, "OCC Reminders", NotificationImportance.High)
+                {
+                    Description = "Alarms and reminders for field tasks"
+                };
+                channel.EnableVibration(true);
+                channel.SetShowBadge(true);
+
+                var notificationManager = (NotificationManager)GetSystemService(Context.NotificationService)!;
+                notificationManager.CreateNotificationChannel(channel);
+            }
         }
     }
 }

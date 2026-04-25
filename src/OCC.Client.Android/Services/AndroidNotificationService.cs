@@ -4,6 +4,7 @@ using Android.OS;
 using OCC.Client.Services.Interfaces;
 using OCC.Shared.Models;
 using System;
+using System.Runtime.Versioning;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

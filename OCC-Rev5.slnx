@@ -10,5 +10,10 @@
     <Build Solution="Debug|*" Project="true" />
   </Project>
   <Project Path="src/OCC.Shared/OCC.Shared.csproj" />
+  <Project Path="src/OCC.Mobile/OCC.Mobile.csproj" />
+  <Project Path="src/OCC.Mobile.Android/OCC.Mobile.Android.csproj">
+    <Build Solution="Debug|*" Project="true" />
+    <Deploy Solution="Debug|*" Project="true" />
+  </Project>
   <Project Path="src/OCC.Tests/OCC.Tests.csproj" />
 </Solution>

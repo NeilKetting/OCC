@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using AndroidX.Core.App;
 using System;
+using System.Runtime.Versioning;
 
 namespace OCC.Client.Android.Services
 {
@@ -11,6 +12,15 @@ namespace OCC.Client.Android.Services
     {
         public const string ChannelId = "occ_reminders_channel";
         public const int NotificationId = 1001;
+
+        public AlarmReceiver()
+        {
+        }
+
+        protected AlarmReceiver(IntPtr handle, global::Android.Runtime.JniHandleOwnership transfer)
+            : base(handle, transfer)
+        {
+        }
 
         public override void OnReceive(Context? context, Intent? intent)
         {

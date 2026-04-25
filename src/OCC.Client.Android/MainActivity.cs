@@ -3,6 +3,8 @@ using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Runtime.Versioning;
 
 namespace OCC.Client.Android
 {
@@ -16,13 +18,27 @@ namespace OCC.Client.Android
     {
         protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
         {
-            // Register native services BEFORE the app builder starts
-            App.RegisterPlatformServices = services =>
+            try 
             {
-                services.AddSingleton<OCC.Client.Services.Interfaces.INotificationService>(new Services.AndroidNotificationService(this));
-            };
+                /*
+                // Register native services BEFORE the app builder starts
+                App.RegisterPlatformServices = services =>
+                {
+                    services.AddSingleton<OCC.Client.Services.Interfaces.INotificationService>(new Services.AndroidNotificationService(this.ApplicationContext));
+                };
+                */
 
-            base.OnCreate(savedInstanceState);
+                // Initialize the SplashScreen API (required for modern Android themes)
+                // AndroidX.Core.SplashScreen.SplashScreen.InstallSplashScreen(this);
+
+                base.OnCreate(savedInstanceState);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CRITICAL ERROR IN ONCREATE: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                throw;
+            }
         }
 
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)

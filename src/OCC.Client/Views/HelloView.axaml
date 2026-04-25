@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OCC.Client.Views.HelloView">
+    <Grid Background="#0F172A">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+            <Border Width="120" Height="120" Background="#0D9488" CornerRadius="60">
+                <TextBlock Text="OCC" 
+                           Foreground="White" 
+                           FontSize="40" 
+                           FontWeight="Bold" 
+                           VerticalAlignment="Center" 
+                           HorizontalAlignment="Center"/>
+            </Border>
+            
+            <TextBlock Text="OCC IS ALIVE" 
+                       Foreground="White" 
+                       FontSize="32" 
+                       FontWeight="SemiBold" 
+                       HorizontalAlignment="Center"/>
+            
+            <TextBlock Text="Starting from scratch for stability..." 
+                       Foreground="#94A3B8" 
+                       FontSize="16" 
+                       HorizontalAlignment="Center"/>
+            
+            <Button Content="READY TO TEST LOGIN" 
+                    Background="#F97316" 
+                    Foreground="White" 
+                    Padding="20,10" 
+                    CornerRadius="8"
+                    HorizontalAlignment="Center"
+                    Margin="0,40,0,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

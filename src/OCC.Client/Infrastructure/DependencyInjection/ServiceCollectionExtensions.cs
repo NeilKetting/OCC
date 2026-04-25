@@ -50,7 +50,7 @@ namespace OCC.Client.Infrastructure.DependencyInjection
             services.AddSingleton<ITimeServiceV2, TimeServiceV2>();
 
             services.AddSingleton<IUpdateService, UpdateService>();
-            services.AddSingleton<IPdfService, PdfService>();
+            // services.AddSingleton<IPdfService, PdfService>();
             services.AddSingleton<IExportService, ExportService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IToastService, ToastService>();
@@ -70,7 +70,11 @@ namespace OCC.Client.Infrastructure.DependencyInjection
             services.AddSingleton<ILogUploadService, LogUploadService>();
 
             // --- Database & Repositories ---
-            services.AddDbContext<Data.AppDbContext>(options => { }, ServiceLifetime.Transient); 
+            // Only add the DB Context if we are NOT on Android/iOS (Mobile uses API only)
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsBrowser() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                services.AddDbContext<Data.AppDbContext>(options => { }, ServiceLifetime.Transient); 
+            }
             
             services.AddTransient<IRepository<User>, ApiUserRepository>();
             services.AddHttpClient<IRepository<Employee>, ApiEmployeeRepository>(c => c.BaseAddress = new Uri(ConnectionSettings.Instance.ApiBaseUrl))

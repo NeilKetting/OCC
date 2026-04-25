@@ -15,6 +15,7 @@ using OCC.Client.Mobile.Features.Auth.Login;
 using OCC.Shared.Models;
 using Serilog;
 using System;
+using Avalonia.Threading;
 using System.Linq;
 using LiveChartsCore; 
 using LiveChartsCore.SkiaSharpView; 
@@ -45,12 +46,14 @@ namespace OCC.Client
 
             AvaloniaXamlLoader.Load(this);
 
+            /* 
             LiveCharts.Configure(config => 
                 config
                      .AddSkiaSharp()
                      .AddDefaultMappers()
                      .AddLightTheme()
             );
+            */
         }
 
         public static void ChangeTheme(bool isDarkMode)
@@ -80,68 +83,76 @@ namespace OCC.Client
 
         public override void OnFrameworkInitializationCompleted()
         {
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-            Services = serviceCollection.BuildServiceProvider(new ServiceProviderOptions
+            try 
             {
-                ValidateOnBuild = true,
-                ValidateScopes = true
-            });
+                var serviceCollection = new ServiceCollection();
+                // ConfigureServices(serviceCollection); // BYPASS EVERYTHING
+                Services = serviceCollection.BuildServiceProvider();
 
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                DisableAvaloniaDataAnnotationValidation();
-                
-                var shellViewModel = Services.GetRequiredService<MainViewModel>(); 
-                var updateService = Services.GetRequiredService<IUpdateService>();
-                
-                SplashView? splashWindow = null;
-
-                var splashVm = new OCC.Client.Features.CoreHub.ViewModels.SplashViewModel(updateService, () =>
+                if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    var mainWindow = new MainWindow
+                    DisableAvaloniaDataAnnotationValidation();
+                    
+                    var shellViewModel = Services.GetRequiredService<MainViewModel>(); 
+                    var updateService = Services.GetRequiredService<IUpdateService>();
+                    
+                    SplashView? splashWindow = null;
+
+                    var splashVm = new OCC.Client.Features.CoreHub.ViewModels.SplashViewModel(updateService, () =>
                     {
-                        DataContext = shellViewModel
+                        var mainWindow = new MainWindow
+                        {
+                            DataContext = shellViewModel
+                        };
+                        
+                        var activityService = Services.GetRequiredService<UserActivityService>();
+                        activityService.Monitor(mainWindow);
+
+                        desktop.MainWindow = mainWindow;
+                        mainWindow.Show();
+                        
+                        splashWindow?.Close();
+                    });
+
+                    splashWindow = new SplashView
+                    {
+                        DataContext = splashVm
                     };
                     
-                    var activityService = Services.GetRequiredService<UserActivityService>();
-                    activityService.Monitor(mainWindow);
-
-                    desktop.MainWindow = mainWindow;
-                    mainWindow.Show();
-                    
-                    splashWindow?.Close();
-                });
-
-                splashWindow = new SplashView
+                    desktop.MainWindow = splashWindow;
+                }
+                else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
                 {
-                    DataContext = splashVm
-                };
-                
-                desktop.MainWindow = splashWindow;
-            }
-            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
-            {
-                // TEST: Is it the view?
-                singleViewPlatform.MainView = new Avalonia.Controls.TextBlock 
-                { 
-                    Text = "BOOT TEST SUCCESSFUL", 
-                    Foreground = Avalonia.Media.Brushes.White,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-                };
-
-                // Handle navigation to the Mobile Hub after successful login
-                WeakReferenceMessenger.Default.Register<NavigationMessage>(this, (r, m) =>
-                {
-                    if (m.Value is MobileHubViewModel mobileHubVm)
+                    // Handle navigation to the Mobile Hub after successful login
+                    WeakReferenceMessenger.Default.Register<NavigationMessage>(this, (r, m) =>
                     {
-                        singleViewPlatform.MainView = new OCC.Client.Mobile.Shell.MobileHubView
-                        {
-                            DataContext = mobileHubVm
-                        };
-                    }
-                });
+                        Dispatcher.UIThread.Post(() => {
+                            if (m.Value is MobileHubViewModel mobileHubVm)
+                            {
+                                singleViewPlatform.MainView = new OCC.Client.Mobile.Shell.MobileHubView
+                                {
+                                    DataContext = mobileHubVm
+                                };
+                            }
+                        });
+                    });
+
+                    // FORCE THE HELLO VIEW FOR TROUBLESHOOTING
+                    singleViewPlatform.MainView = new OCC.Client.Views.HelloView();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"BOOTSTRAP ERROR: {ex.Message}");
+                if (ApplicationLifetime is ISingleViewApplicationLifetime sv)
+                {
+                    sv.MainView = new Avalonia.Controls.TextBlock 
+                    { 
+                        Text = $"BOOT ERROR:\n{ex.Message}\n{ex.StackTrace}", 
+                        Foreground = Avalonia.Media.Brushes.Red,
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                    };
+                }
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -149,7 +160,7 @@ namespace OCC.Client
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(l => l.AddSerilog());
+            // services.AddLogging(l => l.AddSerilog());
 
             // Modular Service Registrations
             services.AddInfrastructureServices()

@@ -3,37 +3,23 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-android</TargetFramework>
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
-    <Nullable>enable</Nullable>
-    <ApplicationId>OrangeCircleConstruction.OCC.Client</ApplicationId>
+    <ApplicationId>OrangeCircleConstruction.Mobile.Fresh</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    <!-- Modern AOT and runtime settings -->
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidStoreUncompressedFileExtensions>.dll</AndroidStoreUncompressedFileExtensions>
-    <SkipWorkloadIntegrityCheck>true</SkipWorkloadIntegrityCheck>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="google-services.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <GoogleServicesJson Include="google-services.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </GoogleServicesJson>
-  </ItemGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
-    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
-    <PackageReference Include="Xamarin.Firebase.Messaging" />
     <PackageReference Include="Xamarin.Google.Android.Material" />
     <PackageReference Include="SkiaSharp.NativeAssets.Android" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OCC.Client\OCC.Client.csproj" />
+    <ProjectReference Include="..\OCC.Mobile\OCC.Mobile.csproj" />
   </ItemGroup>
 </Project>
