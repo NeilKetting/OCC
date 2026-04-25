@@ -14,6 +14,41 @@ namespace OCC.Shared.DTOs
         public DateTime StartDate { get; set; }
         public int TaskCount { get; set; }
         public Guid? SiteManagerId { get; set; }
+        public string SiteManagerName { get; set; } = string.Empty;
+    }
+
+    public class ProjectPersonnelDto
+    {
+        public Guid ProjectId { get; set; }
+        public Guid? SiteManagerId { get; set; }
+        public string? SiteManagerName { get; set; }
+        public string? ProjectManager { get; set; }
+        public List<EmployeeSummaryDto> TeamMembers { get; set; } = new();
+    }
+
+    public class ProjectPersonnelUpdateDto
+    {
+        public Guid? SiteManagerId { get; set; }
+        // ProjectManager is now read-only (creator)
+        public List<Guid> TeamMemberIds { get; set; } = new();
+    }
+
+    public class ProjectHistoryDto
+    {
+        public Guid ProjectId { get; set; }
+        public List<PersonnelHistoryEntryDto> Entries { get; set; } = new();
+    }
+
+    public class PersonnelHistoryEntryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Type { get; set; } = "Staff"; // Staff or Contractor
+        public int TasksAssigned { get; set; }
+        public int DaysWorked { get; set; }
+        public DateTime? FirstActive { get; set; }
+        public DateTime? LastActive { get; set; }
     }
 
     public class ProjectReportDto

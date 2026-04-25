@@ -23,7 +23,13 @@ namespace OCC.Client.Android.Services
 
             var notificationIntent = new Intent(context, typeof(MainActivity));
             notificationIntent.AddFlags(ActivityFlags.ClearTop);
-            var pendingIntent = PendingIntent.GetActivity(context, 0, notificationIntent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+            var flags = PendingIntentFlags.UpdateCurrent;
+            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.M)
+            {
+                flags |= PendingIntentFlags.Immutable;
+            }
+            
+            var pendingIntent = PendingIntent.GetActivity(context, 0, notificationIntent, flags);
 
             var builder = new NotificationCompat.Builder(context, ChannelId)
                 .SetSmallIcon(Resource.Drawable.occ_app_icon)

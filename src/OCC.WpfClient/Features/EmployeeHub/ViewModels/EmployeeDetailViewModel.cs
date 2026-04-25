@@ -241,6 +241,27 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _parent.CloseDetailView();
         }
 
+        protected override async Task<bool> ExecuteForceSaveAsync()
+        {
+            try
+            {
+                var latest = await _employeeService.GetEmployeeAsync(Employee.Id);
+                if (latest != null)
+                {
+                    // Update ONLY the RowVersion to bypass the concurrency check
+                    Employee.RowVersion = latest.RowVersion;
+                    await ExecuteSaveAsync();
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during force save");
+                NotifyError("Force Save Error", "Could not complete the force save: " + ex.Message);
+            }
+            return false;
+        }
+
         protected override async Task ExecuteReloadAsync()
         {
             var latestDto = await _employeeService.GetEmployeeAsync(Employee.Id);

@@ -89,6 +89,18 @@
                                             <TextBlock Text="Employee Number" Style="{StaticResource FormLabelText}"/>
                                             <TextBox Text="{Binding Employee.EmployeeNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. EMP001"/>
                                         </StackPanel>
+
+                                        <StackPanel Margin="0,0,0,15">
+                                            <TextBlock Text="Linked System User" Style="{StaticResource FormLabelText}"/>
+                                            <ComboBox ItemsSource="{Binding AvailableUsers}" 
+                                                      SelectedValue="{Binding Employee.LinkedUserId}" 
+                                                      SelectedValuePath="Id"
+                                                      DisplayMemberPath="DisplayName"
+                                                      Style="{StaticResource ModernComboBox}"
+                                                      ap:WatermarkProperties.Watermark="Search for user..."/>
+                                            <TextBlock Text="Link this record to a login account to enable mobile dashboard access." 
+                                                       FontSize="10" Foreground="{StaticResource TextSub}" Margin="5,4,0,0" Opacity="0.6"/>
+                                        </StackPanel>
                                         
                                         <StackPanel Margin="0,0,0,15">
                                             <TextBlock Text="First Name" Style="{StaticResource FormLabelText}"/>

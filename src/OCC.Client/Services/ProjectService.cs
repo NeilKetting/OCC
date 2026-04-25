@@ -75,5 +75,19 @@ namespace OCC.Client.Services
                 return null;
             }
         }
+
+        public async Task<int> SyncAssignmentsAsync()
+        {
+            EnsureAuthorization();
+            var response = await _httpClient.PostAsync("api/Projects/sync-assignments", null);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<SyncResult>();
+                return result?.Count ?? 0;
+            }
+            return 0;
+        }
+
+        private class SyncResult { public int Count { get; set; } }
     }
 }

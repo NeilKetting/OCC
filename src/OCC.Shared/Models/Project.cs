@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace OCC.Shared.Models
 {
@@ -135,6 +135,11 @@ namespace OCC.Shared.Models
         /// Collection of tasks associated with this project.
         /// </summary>
         public virtual ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
+
+        /// <summary>
+        /// Collection of employees assigned to this project's team.
+        /// </summary>
+        public virtual ICollection<ProjectTeamMember> TeamMembers { get; set; } = new List<ProjectTeamMember>();
         
         /// <summary>
         /// Foreign key to the <see cref="Customer"/> entity.
@@ -155,5 +160,6 @@ namespace OCC.Shared.Models
         /// Collection of variation orders for this project.
         /// </summary>
         public virtual ICollection<ProjectVariationOrder> VariationOrders { get; set; } = new List<ProjectVariationOrder>();
+
     }
 }

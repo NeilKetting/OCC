@@ -36,6 +36,9 @@ namespace OCC.Client.Features.AuthHub.ViewModels
         [ObservableProperty]
         private string? _errorMessage;
 
+        [ObservableProperty]
+        private bool _rememberMe;
+
         #endregion
 
         #region Constructors
@@ -56,7 +59,11 @@ namespace OCC.Client.Features.AuthHub.ViewModels
             _serviceProvider = serviceProvider;
 
             // Load saved settings
-            Email = _localSettings.Settings.LastEmail;
+            RememberMe = _localSettings.Settings.RememberMe;
+            if (RememberMe)
+            {
+                Email = _localSettings.Settings.LastEmail;
+            }
             _connectionSettings.CustomLocalUrl = _localSettings.Settings.CustomLocalUrl;
             
             // Ensure development settings are visible during this phase.
@@ -81,6 +88,12 @@ namespace OCC.Client.Features.AuthHub.ViewModels
 
         [ObservableProperty]
         private bool _isDevUser;
+
+        [ObservableProperty]
+        private bool _hasProjects;
+
+        [ObservableProperty]
+        private string _diagnosticInfo = "Initializing...";
 
         // [ObservableProperty]
         // private bool _useLocalDb; // Removed in favor of Enum
@@ -141,7 +154,8 @@ namespace OCC.Client.Features.AuthHub.ViewModels
                 else
                 {
                     // Save email on successful login
-                    _localSettings.Settings.LastEmail = Email;
+                    _localSettings.Settings.RememberMe = RememberMe;
+                    _localSettings.Settings.LastEmail = RememberMe ? Email : string.Empty;
                     _localSettings.Save();
 
                     ErrorMessage = null;

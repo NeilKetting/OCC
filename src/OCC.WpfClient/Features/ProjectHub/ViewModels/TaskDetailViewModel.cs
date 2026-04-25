@@ -166,24 +166,45 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private async Task LoadAssignableResources()
         {
-            var staff = await _employeeService.GetEmployeesAsync();
+            // Run all network requests in parallel
+            var staffTask = _employeeService.GetEmployeesAsync();
+            var usersTask = _userService.GetUsersAsync();
+            var projectsTask = _projectService.GetProjectsAsync();
+            var subContractorsTask = _subContractorService.GetSubContractorSummariesAsync();
+            var commentsTask = _commentService.GetCommentsAsync(_currentTaskId);
+            var assignmentsTask = _assignmentService.GetAssignmentsAsync(_currentTaskId);
+
+            await System.Threading.Tasks.Task.WhenAll(staffTask, usersTask, projectsTask, subContractorsTask, commentsTask, assignmentsTask);
+
+            // 1. Process Employees
+            var staff = await staffTask;
             AvailableStaff.Clear();
             foreach (var s in staff.Where(e => e.Status == EmployeeStatus.Active)) AvailableStaff.Add(s);
 
-            var users = await _userService.GetUsersAsync();
+            // 2. Process Users (Contractors)
+            var users = await usersTask;
             AvailableContractors.Clear();
             foreach (var u in users.Where(user => user.UserRole == UserRole.ExternalContractor)) AvailableContractors.Add(u);
 
-            var projects = await _projectService.GetProjectsAsync();
+            // 3. Process Projects
+            var projects = await projectsTask;
             AvailableProjects.Clear();
             foreach (var p in projects) AvailableProjects.Add(p);
 
-            await LoadComments();
-            await LoadAssignments();
-            await LoadPotentialAssigneesAsync();
+            // 4. Process Comments
+            Comments.Clear();
+            foreach (var c in (await commentsTask).OrderByDescending(x => x.CreatedAtUtc)) Comments.Add(c);
+            OnPropertyChanged(nameof(CommentsCount));
+
+            // 5. Process Assignments
+            Assignments.Clear();
+            foreach (var a in await assignmentsTask) Assignments.Add(a);
+
+            // 6. Load Potential Assignees using already fetched data
+            await LoadPotentialAssigneesAsync(staff, await subContractorsTask);
         }
 
-        private async Task LoadPotentialAssigneesAsync()
+        private async Task LoadPotentialAssigneesAsync(IEnumerable<EmployeeSummaryDto> employees, IEnumerable<SubContractorSummaryDto> subContractors)
         {
             AllPotentialAssignees.Clear();
 
@@ -204,9 +225,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 Type = AssigneeType.Staff,
                 Branch = "CPT"
             });
-
-            // 2. Load Employees
-            var employees = await _employeeService.GetEmployeesAsync();
             foreach (var e in employees.Where(x => x.Status == EmployeeStatus.Active))
             {
                 // Only Site Managers and Foremans as requested
@@ -224,7 +242,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
 
             // 3. Load SubContractors
-            var subContractors = await _subContractorService.GetSubContractorSummariesAsync();
             foreach (var sc in subContractors)
             {
                 AllPotentialAssignees.Add(new AssigneeSelectionViewModel
@@ -280,21 +297,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             
             OnPropertyChanged(nameof(Task)); // Refresh initials etc
             Task.RefreshAssigneeInfo();
-        }
-
-        private async Task LoadComments()
-        {
-            Comments.Clear();
-            var comments = await _commentService.GetCommentsAsync(_currentTaskId);
-            foreach (var c in comments.OrderByDescending(x => x.CreatedAtUtc)) Comments.Add(c);
-            OnPropertyChanged(nameof(CommentsCount));
-        }
-
-        private async Task LoadAssignments()
-        {
-            Assignments.Clear();
-            var assignments = await _assignmentService.GetAssignmentsAsync(_currentTaskId);
-            foreach (var a in assignments) Assignments.Add(a);
         }
 
         private void LoadTask(ProjectTask task)

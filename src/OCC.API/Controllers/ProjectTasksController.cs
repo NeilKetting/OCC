@@ -32,6 +32,7 @@ namespace OCC.API.Controllers
             try
             {
                 var query = _context.ProjectTasks
+                    .Include(t => t.Project)
                     .Include(t => t.Assignments)
                     .Include(t => t.Comments)
                     .Include(t => t.Children)
@@ -107,6 +108,7 @@ namespace OCC.API.Controllers
             try
             {
                 var task = await _context.ProjectTasks
+                    .Include(t => t.Project)
                     .Include(t => t.Assignments)
                     .Include(t => t.Comments)
                     .Include(t => t.Children)

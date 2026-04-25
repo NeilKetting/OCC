@@ -14,5 +14,6 @@ namespace OCC.Client.Services.Interfaces
         Task<bool> UpdateProjectAsync(Project project);
         Task<bool> DeleteProjectAsync(Guid id);
         Task<ProjectReportDto?> GetProjectReportAsync(Guid id);
+        Task<int> SyncAssignmentsAsync();
     }
 }

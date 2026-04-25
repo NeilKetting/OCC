@@ -98,6 +98,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         [ObservableProperty] private string? _nextOfKinPhone;
         [ObservableProperty] private string? _emergencyContactName;
         [ObservableProperty] private string? _emergencyContactPhone;
+        [ObservableProperty] private byte[]? _rowVersion;
 
         public string DisplayName => $"{FirstName} {LastName}";
 
@@ -159,6 +160,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
             NextOfKinPhone = dto.NextOfKinPhone;
             EmergencyContactName = dto.EmergencyContactName;
             EmergencyContactPhone = dto.EmergencyContactPhone;
+            RowVersion = dto.RowVersion;
         }
 
         public void Validate() => ValidateAllProperties();
@@ -202,7 +204,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
                 NextOfKinRelation = NextOfKinRelation,
                 NextOfKinPhone = NextOfKinPhone,
                 EmergencyContactName = EmergencyContactName,
-                EmergencyContactPhone = EmergencyContactPhone
+                EmergencyContactPhone = EmergencyContactPhone,
+                RowVersion = RowVersion
             };
         }
     }

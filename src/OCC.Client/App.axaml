@@ -32,8 +32,10 @@
             <conv:BranchToColorConverter x:Key="BranchToColorConverter"/>
             <conv:StringToTitleCaseConverter x:Key="StringToTitleCaseConverter"/>
             <conv:StringEqualityConverter x:Key="StringEqualityConverter"/>
+            <conv:StringEqualityConverter x:Key="StringEqualityConverter"/> <!-- Check for duplicate -->
             <conv:EqualsConverter x:Key="EqualsConverter"/>
             <conv:BoolToStarGridLengthConverter x:Key="BoolToStarGridLengthConverter"/>
+            <conv:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
 
             <!-- Font Sizes -->
             <x:Double x:Key="FontSizeXS">10</x:Double>

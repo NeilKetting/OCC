@@ -31,6 +31,7 @@ namespace OCC.API.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamMember> TeamMembers { get; set; }
+        public DbSet<ProjectTeamMember> ProjectTeamMembers { get; set; }
         public DbSet<SubContractor> SubContractors { get; set; }
 
         public DbSet<TimeRecord> TimeRecords { get; set; }
@@ -437,6 +438,19 @@ namespace OCC.API.Data
                 entity.HasMany(e => e.VariationOrders)
                     .WithOne(e => e.Project)
                     .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.TeamMembers)
+                    .WithOne(e => e.Project)
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectTeamMember>(entity =>
+            {
+                entity.HasOne(tm => tm.Employee)
+                    .WithMany()
+                    .HasForeignKey(tm => tm.EmployeeId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

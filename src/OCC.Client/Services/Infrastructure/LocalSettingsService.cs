@@ -7,6 +7,7 @@ namespace OCC.Client.Services.Infrastructure
     public class LocalSettings
     {
         public string LastEmail { get; set; } = string.Empty;
+        public bool RememberMe { get; set; } = true;
         public string? CustomLocalUrl { get; set; }
     }
 

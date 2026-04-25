@@ -122,10 +122,13 @@ namespace OCC.Client
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                // On Mobile/SingleView, we start with the Login View
-                singleViewPlatform.MainView = new MobileLoginView
-                {
-                    DataContext = Services.GetRequiredService<MobileLoginViewModel>()
+                // TEST: Is it the view?
+                singleViewPlatform.MainView = new Avalonia.Controls.TextBlock 
+                { 
+                    Text = "BOOT TEST SUCCESSFUL", 
+                    Foreground = Avalonia.Media.Brushes.White,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 };
 
                 // Handle navigation to the Mobile Hub after successful login

@@ -13,6 +13,9 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<Project?> GetProjectAsync(Guid id);
         Task CreateProjectAsync(Project project);
         Task UpdateProjectAsync(Project project);
+        Task<ProjectPersonnelDto?> GetProjectPersonnelAsync(Guid projectId);
+        Task UpdateProjectPersonnelAsync(Guid projectId, ProjectPersonnelUpdateDto update);
+        Task<ProjectHistoryDto> GetProjectHistoryAsync(Guid projectId);
         Task DeleteProjectAsync(Guid id);
         Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId);
         List<ProjectTask> BuildTaskHierarchy(IEnumerable<ProjectTask> allTasks);

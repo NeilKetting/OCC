@@ -17,6 +17,7 @@ namespace OCC.Client.Mobile.Features.Auth.Login
         private readonly IServiceProvider _serviceProvider;
         private readonly IAuthService _authService;
         private readonly IEmployeeService _employeeService;
+        private readonly LocalSettingsService _localSettings;
 
 
         public MobileLoginViewModel(
@@ -30,6 +31,7 @@ namespace OCC.Client.Mobile.Features.Auth.Login
             _authService = authService;
             _serviceProvider = serviceProvider;
             _employeeService = employeeService;
+            _localSettings = localSettings;
             Title = "Welcome Back";
         }
 
@@ -53,13 +55,15 @@ namespace OCC.Client.Mobile.Features.Auth.Login
                 {
                     // Authentication successful
                     ErrorMessage = null;
+
+                    // Save settings
+                    _localSettings.Settings.RememberMe = RememberMe;
+                    _localSettings.Settings.LastEmail = RememberMe ? Email : string.Empty;
+                    _localSettings.Save();
                     
                     // On mobile, we want to transition to the MobileHub directly.
                     // We'll set the shell to BottomNavigation as requested.
                     var mobileHubVm = _serviceProvider.GetRequiredService<MobileHubViewModel>();
-                    
-                    // In a more advanced version, we'd lookup the Employee record here
-                    // and pass it to the dashboard. For now, we'll trigger the hub.
                     
                     WeakReferenceMessenger.Default.Send(new NavigationMessage(mobileHubVm));
                 }

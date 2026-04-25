@@ -6,23 +6,23 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="700"
              x:Class="OCC.Client.Mobile.Shell.BottomNav.MobileShellBottomNavView"
              x:DataType="vm:MobileShellBottomNavViewModel">
-    <Grid RowDefinitions="*, Auto">
+    <Grid RowDefinitions="*, Auto" Background="{DynamicResource PremiumMainBackground}">
         <!-- Content -->
         <ContentControl Grid.Row="0" Content="{Binding CurrentView}"/>
         
-        <!-- Bottom Nav (Desktop-Aligned) -->
-        <Border Grid.Row="1" Background="{DynamicResource SurfaceWhite}" BorderBrush="{DynamicResource BorderGray}" BorderThickness="0,1,0,0" Padding="10,5">
+        <!-- Premium Bottom Nav -->
+        <Border Grid.Row="1" Background="#1E293B" BorderBrush="#334155" BorderThickness="0,1,0,0" Padding="15,12,15,25">
             <UniformGrid Columns="2">
-                <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" BorderThickness="0">
-                    <StackPanel Spacing="5">
-                        <PathIcon Data="{StaticResource IconDashboard}" Width="24" Height="24" Foreground="{DynamicResource PrimaryTeal}"/>
-                        <TextBlock Text="Dash" FontSize="10" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" BorderThickness="0" Padding="0">
+                    <StackPanel Spacing="6">
+                        <PathIcon Data="{StaticResource IconDashboard}" Width="24" Height="24" Foreground="#F97316"/>
+                        <TextBlock Text="DASHBOARD" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" Foreground="White" LetterSpacing="1.2"/>
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding NavigateToRollCallCommand}" Background="Transparent" BorderThickness="0">
-                    <StackPanel Spacing="5">
-                        <PathIcon Data="{StaticResource IconTeam}" Width="24" Height="24" Foreground="{DynamicResource TextSecondaryGray}"/>
-                        <TextBlock Text="Roll Call" FontSize="10" HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryGray}"/>
+                <Button Command="{Binding NavigateToRollCallCommand}" Background="Transparent" BorderThickness="0" Padding="0">
+                    <StackPanel Spacing="6">
+                        <PathIcon Data="{StaticResource IconTeam}" Width="24" Height="24" Foreground="#94A3B8"/>
+                        <TextBlock Text="ROLL CALL" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#94A3B8" LetterSpacing="1.2"/>
                     </StackPanel>
                 </Button>
             </UniformGrid>

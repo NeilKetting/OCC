@@ -131,6 +131,10 @@
         <projViews:ProjectGanttView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type projVm:ProjectHistoryViewModel}">
+        <projViews:ProjectHistoryView />
+    </DataTemplate>
+
     <!-- Partner Hub -->
     <DataTemplate DataType="{x:Type subHubVm:PerformanceDashboardViewModel}">
         <subHubViews:PerformanceDashboardView />

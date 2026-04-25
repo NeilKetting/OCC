@@ -142,6 +142,55 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        public async Task<ProjectPersonnelDto?> GetProjectPersonnelAsync(Guid projectId)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/projects/{projectId}/personnel");
+            try
+            {
+                return await client.GetFromJsonAsync<ProjectPersonnelDto>(url);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching personnel for project {ProjectId} from {Url}", projectId, url);
+                throw;
+            }
+        }
+
+        public async Task UpdateProjectPersonnelAsync(Guid projectId, ProjectPersonnelUpdateDto update)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/projects/{projectId}/personnel");
+            try
+            {
+                var response = await client.PostAsJsonAsync(url, update);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating personnel for project {ProjectId} at {Url}", projectId, url);
+                throw;
+            }
+        }
+
+        public async Task<ProjectHistoryDto> GetProjectHistoryAsync(Guid projectId)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/projects/{projectId}/history");
+            try
+            {
+                return await client.GetFromJsonAsync<ProjectHistoryDto>(url) ?? new ProjectHistoryDto { ProjectId = projectId };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching history for project {ProjectId} from {Url}", projectId, url);
+                return new ProjectHistoryDto { ProjectId = projectId };
+            }
+        }
+
         public async Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId)
         {
             var client = _httpClientFactory.CreateClient();

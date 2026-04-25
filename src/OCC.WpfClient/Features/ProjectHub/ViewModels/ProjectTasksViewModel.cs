@@ -238,13 +238,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             try
             {
                 var vm = _serviceProvider.GetRequiredService<TaskDetailViewModel>();
-                await vm.LoadTaskById(task.Id);
                 vm.CloseFinished += (s, e) => CurrentTaskDetail = null;
-                CurrentTaskDetail = vm;
+                CurrentTaskDetail = vm; // Show drawer immediately
+                
+                await vm.LoadTaskById(task.Id); // Load data in background
             }
             catch (Exception ex)
             {
                 toastService.ShowError("Error", "Could not load task details: " + ex.Message);
+                CurrentTaskDetail = null;
             }
         }
 

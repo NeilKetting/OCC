@@ -8,7 +8,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using OCC.WpfClient.Infrastructure;
 
+using System.Collections.ObjectModel;
 using OCC.WpfClient.Infrastructure.Messages;
+using OCC.Shared.DTOs;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
@@ -19,40 +21,111 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
         private readonly ProjectTasksViewModel _tasksVM;
         private readonly ProjectGanttViewModel _ganttVM;
+        private readonly ProjectHistoryViewModel _historyVM;
+        private readonly IEmployeeService _employeeService;
 
         [ObservableProperty] private Project? _project;
         [ObservableProperty] private ViewModelBase _currentView;
         [ObservableProperty] private Guid _projectId;
+        
+        [ObservableProperty] private string _siteManagerName = "Unassigned";
+        [ObservableProperty] private string _projectManagerName = "Unassigned";
+        [ObservableProperty] private string _siteManagerInitials = "??";
+        [ObservableProperty] private bool _isSiteManagerPickerOpen;
+        [ObservableProperty] private ObservableCollection<EmployeeSummaryDto> _availableSiteManagers = new();
+        [ObservableProperty] private EmployeeSummaryDto? _selectedSiteManager;
 
         public ViewModelBase? ActiveOverlay => CurrentView;
 
-        public ProjectDetailViewModel(IProjectService projectService, ProjectSpecificDashboardViewModel dashboardVM, ProjectTasksViewModel tasksVM, ProjectGanttViewModel ganttVM)
+        public ProjectDetailViewModel(
+            IProjectService projectService, 
+            IEmployeeService employeeService,
+            ProjectSpecificDashboardViewModel dashboardVM, 
+            ProjectTasksViewModel tasksVM, 
+            ProjectGanttViewModel ganttVM, 
+            ProjectHistoryViewModel historyVM)
         {
             _projectService = projectService;
+            _employeeService = employeeService;
             _dashboardVM = dashboardVM;
             _tasksVM = tasksVM;
             _ganttVM = ganttVM;
+            _historyVM = historyVM;
             _currentView = _dashboardVM;
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
+        }
+    
+        private void UpdateHeaderInfo()
+        {
+            if (Project == null) return;
+            
+            ProjectManagerName = string.IsNullOrEmpty(Project.ProjectManager) ? "Unassigned" : Project.ProjectManager;
+            SiteManagerName = Project.SiteManager?.DisplayName ?? "Unassigned";
+            
+            // Generate initials for the circle
+            if (Project.SiteManager != null)
+            {
+                var f = Project.SiteManager.FirstName.FirstOrDefault();
+                var l = Project.SiteManager.LastName.FirstOrDefault();
+                SiteManagerInitials = $"{f}{l}".ToUpper();
+            }
+            else
+            {
+                SiteManagerInitials = "SM";
+            }
         }
 
         public async Task LoadProjectAsync(Guid projectId)
         {
             ProjectId = projectId;
             UpdateStatus("Loading project details...");
-            Project = await _projectService.GetProjectAsync(projectId);
+                Project = await _projectService.GetProjectAsync(projectId);
             if (Project != null)
             {
                 Title = Project.Name;
+                UpdateHeaderInfo();
                 var tasks = await _projectService.GetProjectTasksAsync(projectId);
                 _dashboardVM.UpdateProjectData(Project, tasks);
                 _tasksVM.UpdateTasks(ProjectId, tasks);
                 _ganttVM.UpdateTasks(ProjectId, tasks.ToList());
+                _ = _historyVM.LoadHistoryAsync(ProjectId);
                 UpdateStatus("Ready");
             }
         }
 
+        [RelayCommand]
+        private async Task ToggleSiteManagerPicker()
+        {
+            if (!IsSiteManagerPickerOpen)
+            {
+                var employees = await _employeeService.GetEmployeesAsync();
+                AvailableSiteManagers.Clear();
+                foreach (var emp in employees.Where(e => e.Status == EmployeeStatus.Active && e.Role == EmployeeRole.SiteManager))
+                {
+                    AvailableSiteManagers.Add(emp);
+                }
+            }
+            IsSiteManagerPickerOpen = !IsSiteManagerPickerOpen;
+        }
+
+        [RelayCommand]
+        private async Task UpdateSiteManager(EmployeeSummaryDto? employee)
+        {
+            if (Project == null || employee == null) return;
+
+            IsSiteManagerPickerOpen = false;
+            UpdateStatus("Updating site manager...");
+
+            var update = new ProjectPersonnelUpdateDto
+            {
+                SiteManagerId = employee.Id
+            };
+
+            await _projectService.UpdateProjectPersonnelAsync(ProjectId, update);
+            await LoadProjectAsync(ProjectId);
+        }
+    
         public void Receive(TaskUpdatedMessage message)
         {
             if (ProjectId != Guid.Empty)
@@ -69,5 +142,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         [RelayCommand]
         private void ShowGantt() => CurrentView = _ganttVM;
+
+        [RelayCommand]
+        private void ShowHistory() => CurrentView = _historyVM;
     }
 }

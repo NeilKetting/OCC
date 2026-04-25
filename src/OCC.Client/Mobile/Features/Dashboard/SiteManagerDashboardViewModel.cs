@@ -39,6 +39,9 @@ namespace OCC.Client.Mobile.Features.Dashboard
         [ObservableProperty]
         private bool _hasProjects;
 
+        [ObservableProperty]
+        private string _diagnosticInfo = "Initializing...";
+
         public SiteManagerDashboardViewModel(
             IProjectService projectService,
             IAuthService authService,
@@ -97,9 +100,10 @@ namespace OCC.Client.Mobile.Features.Dashboard
                 var allProjects = await _projectService.GetProjectSummariesAsync();
                 var allMyTasks = await _taskRepository.GetMyTasksAsync();
                 
-                // 4. Filter by Site Manager ID
+                // 4. Filter by Site Manager ID (with Name fallback for robustness)
                 var filteredProjects = allProjects
-                    .Where(p => p.SiteManagerId == currentEmployee.Id)
+                    .Where(p => p.SiteManagerId == currentEmployee.Id || 
+                               (p.SiteManagerName != null && p.SiteManagerName.Equals(currentEmployee.DisplayName, StringComparison.OrdinalIgnoreCase)))
                     .OrderByDescending(p => p.StartDate)
                     .ToList();
 
@@ -134,6 +138,19 @@ namespace OCC.Client.Mobile.Features.Dashboard
                 }
 
                 HasProjects = Projects.Any();
+                
+                if (!HasProjects)
+                {
+                    var firstProject = allProjects.FirstOrDefault();
+                    DiagnosticInfo = $"Logged in as: {user.Email}\n" +
+                                     $"Employee ID: {currentEmployee?.Id.ToString() ?? "N/A"}\n" +
+                                     $"Total Projects found: {allProjects.Count()}\n" +
+                                     $"First Project SM ID: {firstProject?.SiteManagerId.ToString() ?? "NULL"}";
+                }
+                else
+                {
+                    DiagnosticInfo = string.Empty;
+                }
             }
             catch (Exception)
             {
@@ -148,8 +165,25 @@ namespace OCC.Client.Mobile.Features.Dashboard
         [RelayCommand]
         private async Task RefreshAsync()
         {
+            var count = await _projectService.SyncAssignmentsAsync();
+            if (count > 0)
+            {
+                DiagnosticInfo += $"\nSync Result: {count} projects recovered.";
+            }
             await LoadProjectsAsync();
         }
+
+        [RelayCommand]
+        private void NavigateToProject(ProjectSummaryDto project)
+        {
+            WeakReferenceMessenger.Default.Send(new OpenProjectMessage(project.Id));
+        }
+    }
+
+    public class OpenProjectMessage
+    {
+        public Guid ProjectId { get; }
+        public OpenProjectMessage(Guid projectId) => ProjectId = projectId;
     }
 
     /// <summary>
