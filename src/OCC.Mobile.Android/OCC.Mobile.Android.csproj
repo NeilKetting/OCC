@@ -9,8 +9,14 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Modern AOT and runtime settings -->
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+  </PropertyGroup>
+
+  <!-- Stable Build Settings (Reverted from Optimizations) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +24,7 @@
     <PackageReference Include="Xamarin.Google.Android.Material" />
     <PackageReference Include="SkiaSharp.NativeAssets.Android" />
   </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\OCC.Mobile\OCC.Mobile.csproj" />

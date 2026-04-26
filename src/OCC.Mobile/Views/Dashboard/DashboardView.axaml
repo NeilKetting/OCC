@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.ViewModels.Dashboard"
+             x:DataType="vm:DashboardViewModel"
+             x:Class="OCC.Mobile.Views.Dashboard.DashboardView">
+    <ScrollViewer Background="{StaticResource BrandDarkBrush}">
+        <StackPanel Spacing="20" Margin="20">
+            <TextBlock Text="Daily Overview" 
+                       Foreground="{StaticResource BrandTextBrush}" 
+                       FontSize="22" 
+                       FontWeight="Bold"/>
+            
+            <!-- Summary Card -->
+            <Border Background="#1E293B" CornerRadius="12" Padding="20">
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Active Projects" Foreground="#94A3B8" FontSize="12"/>
+                        <TextBlock Text="12 Sites" Foreground="White" FontSize="20" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="#F97316" Width="40" Height="40" CornerRadius="20">
+                        <Path Fill="White" Data="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" 
+                              Stretch="Uniform" Margin="10"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Grid of Actions -->
+            <UniformGrid Columns="2" Rows="2">
+                <Border Background="#1E293B" Margin="5" CornerRadius="12" Padding="15">
+                    <StackPanel Spacing="10" HorizontalAlignment="Center">
+                        <Border Background="#3B82F6" Width="40" Height="40" CornerRadius="20">
+                            <!-- Tasks Icon -->
+                        </Border>
+                        <TextBlock Text="My Tasks" Foreground="White" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="#1E293B" Margin="5" CornerRadius="12" Padding="15">
+                    <StackPanel Spacing="10" HorizontalAlignment="Center">
+                        <Border Background="#10B981" Width="40" Height="40" CornerRadius="20">
+                            <!-- Safety Icon -->
+                        </Border>
+                        <TextBlock Text="HSEQ" Foreground="White" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="#1E293B" Margin="5" CornerRadius="12" Padding="15">
+                    <StackPanel Spacing="10" HorizontalAlignment="Center">
+                        <Border Background="#F59E0B" Width="40" Height="40" CornerRadius="20">
+                            <!-- Inventory Icon -->
+                        </Border>
+                        <TextBlock Text="Inventory" Foreground="White" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="#1E293B" Margin="5" CornerRadius="12" Padding="15">
+                    <StackPanel Spacing="10" HorizontalAlignment="Center">
+                        <Border Background="#8B5CF6" Width="40" Height="40" CornerRadius="20">
+                            <!-- Team Icon -->
+                        </Border>
+                        <TextBlock Text="Team" Foreground="White" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Recent Activity Placeholder -->
+            <TextBlock Text="Recent Activity" 
+                       Foreground="White" 
+                       FontSize="18" 
+                       FontWeight="SemiBold"
+                       Margin="0,10,0,0"/>
+            
+            <Border Background="#1E293B" CornerRadius="12" Padding="15">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="No recent activity reported." Foreground="#64748B" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

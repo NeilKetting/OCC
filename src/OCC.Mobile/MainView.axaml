@@ -1,19 +1,35 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.ViewModels"
+             x:DataType="vm:MainViewModel"
              x:Class="OCC.Mobile.MainView">
-    <Grid Background="#1E293B">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-            <TextBlock Text="FRESH MOBILE START" 
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header Bar -->
+        <Border Grid.Row="0" Height="60" Background="#0F172A">
+            <TextBlock Text="{Binding Title}" 
                        Foreground="White" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       HorizontalAlignment="Center"/>
-            <TextBlock Text="If you can see this, the shell is working!" 
-                       Foreground="#94A3B8" 
-                       HorizontalAlignment="Center"/>
-            <Border Background="#F97316" CornerRadius="8" Padding="20,10" Margin="0,20">
-                <TextBlock Text="SYSTEM GO" Foreground="White" FontWeight="SemiBold"/>
-            </Border>
-        </StackPanel>
+                       VerticalAlignment="Center" 
+                       HorizontalAlignment="Center"
+                       FontSize="18"
+                       FontWeight="SemiBold"/>
+        </Border>
+
+        <!-- Main Content -->
+        <TransitioningContentControl Grid.Row="1" Content="{Binding CurrentView}">
+            <TransitioningContentControl.PageTransition>
+                <CrossFade Duration="00:00:00.250" />
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
+
+        <!-- Busy Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="2" 
+                Background="#80000000" 
+                IsVisible="{Binding IsBusy}"
+                ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                <ProgressBar IsIndeterminate="True" Width="200" Foreground="#F97316"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>
