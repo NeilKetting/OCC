@@ -50,9 +50,10 @@ namespace OCC.Client.Features.OrdersHub.Views
                 // Force validation on Enter
                 if (DataContext is CreateOrderViewModel vm && sender is ComboBox box)
                 {
-                    if (!string.IsNullOrWhiteSpace(box.Text))
+                    var searchText = box.SelectedItem?.ToString();
+                    if (!string.IsNullOrWhiteSpace(searchText))
                     {
-                        vm.ValidateItemSearchCommand.Execute(box.Text);
+                        vm.ValidateItemSearchCommand.Execute(searchText);
                     }
                 }
             }

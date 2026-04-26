@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace OCC.Mobile.Views.Login
+namespace OCC.Mobile.Features.Login
 {
     public partial class LoginView : UserControl
     {

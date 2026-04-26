@@ -1,29 +1,19 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:OCC.Mobile.ViewModels"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Shell"
              x:DataType="vm:MainViewModel"
-             x:Class="OCC.Mobile.MainView">
-    <Grid RowDefinitions="Auto, *">
-        <!-- Header Bar -->
-        <Border Grid.Row="0" Height="60" Background="#0F172A">
-            <TextBlock Text="{Binding Title}" 
-                       Foreground="White" 
-                       VerticalAlignment="Center" 
-                       HorizontalAlignment="Center"
-                       FontSize="18"
-                       FontWeight="SemiBold"/>
-        </Border>
-
+             x:Class="OCC.Mobile.Features.Shell.MainView">
+    <Grid>
+       
         <!-- Main Content -->
-        <TransitioningContentControl Grid.Row="1" Content="{Binding CurrentView}">
+        <TransitioningContentControl Content="{Binding CurrentView}">
             <TransitioningContentControl.PageTransition>
                 <CrossFade Duration="00:00:00.250" />
             </TransitioningContentControl.PageTransition>
         </TransitioningContentControl>
 
         <!-- Busy Overlay -->
-        <Border Grid.Row="0" Grid.RowSpan="2" 
-                Background="#80000000" 
+        <Border Background="#80000000" 
                 IsVisible="{Binding IsBusy}"
                 ZIndex="100">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">

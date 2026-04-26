@@ -1,7 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using OCC.Mobile.ViewModels;
 using OCC.Mobile.Services;
 
-namespace OCC.Mobile.ViewModels.Dashboard
+namespace OCC.Mobile.Features.Dashboard
 {
     public partial class DashboardViewModel : ViewModelBase
     {

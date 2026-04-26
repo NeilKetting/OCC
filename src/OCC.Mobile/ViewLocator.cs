@@ -12,12 +12,13 @@ namespace OCC.Mobile
             if (data is null)
                 return null;
 
-            var name = data.GetType().FullName!.Replace("ViewModel", "View");
-            var type = Type.GetType(name);
+            var type = data.GetType();
+            var name = type.FullName!.Replace("ViewModel", "View");
+            var viewType = type.Assembly.GetType(name);
 
-            if (type != null)
+            if (viewType != null)
             {
-                return (Control)Activator.CreateInstance(type)!;
+                return (Control)Activator.CreateInstance(viewType)!;
             }
 
             return new TextBlock { Text = "Not Found: " + name };

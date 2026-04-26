@@ -1,16 +1,20 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using OCC.Mobile.ViewModels.Dashboard;
+using OCC.Mobile.ViewModels;
+using OCC.Mobile.Features.Dashboard;
+using OCC.Mobile.Features.AdminDashboard;
 using OCC.Mobile.Services;
+using OCC.Shared.Models;
 using System;
 using System.Threading.Tasks;
 
-namespace OCC.Mobile.ViewModels.Login
+namespace OCC.Mobile.Features.Login
 {
     public partial class LoginViewModel : ViewModelBase
     {
         private readonly INavigationService _navigationService;
         private readonly ILocalSettingsService _settingsService;
+        private readonly IAuthService _authService;
 
         [ObservableProperty]
         private string _username = string.Empty;
@@ -29,10 +33,14 @@ namespace OCC.Mobile.ViewModels.Login
 
         public Array Environments => Enum.GetValues(typeof(AppEnvironment));
 
-        public LoginViewModel(INavigationService navigationService, ILocalSettingsService settingsService)
+        public LoginViewModel(
+            INavigationService navigationService, 
+            ILocalSettingsService settingsService,
+            IAuthService authService)
         {
             _navigationService = navigationService;
             _settingsService = settingsService;
+            _authService = authService;
             Title = "Login";
 
             // Load saved settings
@@ -51,29 +59,43 @@ namespace OCC.Mobile.ViewModels.Login
             }
 
             IsBusy = true;
-            BusyText = "Authenticating...";
+            BusyText = "Connecting to API...";
 
             try
             {
-                // Placeholder for actual login logic
-                await Task.Delay(1500); 
-
-                // Save settings on success
-                if (RememberEmail)
+                var (success, error) = await _authService.LoginAsync(Username, Password);
+                
+                if (success && _authService.CurrentUser != null)
                 {
-                    _settingsService.Settings.LastEmail = Username;
+                    // Save settings on success
+                    if (RememberEmail)
+                    {
+                        _settingsService.Settings.LastEmail = Username;
+                    }
+                    else
+                    {
+                        _settingsService.Settings.LastEmail = string.Empty;
+                    }
+                    _settingsService.Settings.RememberEmail = RememberEmail;
+                    _settingsService.Settings.SelectedEnvironment = SelectedEnvironment;
+                    _settingsService.Save();
+
+                    // Navigation based on Role
+                    ErrorMessage = string.Empty;
+                    
+                    if (_authService.CurrentUser.UserRole == UserRole.Admin)
+                    {
+                        _navigationService.NavigateTo<AdminDashboardViewModel>();
+                    }
+                    else
+                    {
+                        _navigationService.NavigateTo<DashboardViewModel>();
+                    }
                 }
                 else
                 {
-                    _settingsService.Settings.LastEmail = string.Empty;
+                    ErrorMessage = error ?? "Login failed.";
                 }
-                _settingsService.Settings.RememberEmail = RememberEmail;
-                _settingsService.Settings.SelectedEnvironment = SelectedEnvironment;
-                _settingsService.Save();
-
-                // Navigation to Dashboard
-                ErrorMessage = string.Empty;
-                _navigationService.NavigateTo<DashboardViewModel>();
             }
             catch (System.Exception ex)
             {

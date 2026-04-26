@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:OCC.WpfClient.Features.ProjectHub.Views"
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1000"
+             d:DesignHeight="480" d:DesignWidth="800"
              d:DataContext="{d:DesignInstance vm:ProjectHistoryViewModel}">
     
     <UserControl.Resources>

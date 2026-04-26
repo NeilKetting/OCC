@@ -1,5 +1,6 @@
 using System;
 using OCC.Mobile.ViewModels;
+using OCC.Mobile.Features.Shell;
 
 namespace OCC.Mobile.Services
 {

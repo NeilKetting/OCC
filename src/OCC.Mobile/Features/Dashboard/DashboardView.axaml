@@ -1,12 +1,12 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:OCC.Mobile.ViewModels.Dashboard"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Dashboard"
              x:DataType="vm:DashboardViewModel"
-             x:Class="OCC.Mobile.Views.Dashboard.DashboardView">
-    <ScrollViewer Background="{StaticResource BrandDarkBrush}">
+             x:Class="OCC.Mobile.Features.Dashboard.DashboardView">
+    <ScrollViewer Background="{DynamicResource BrandDarkBrush}">
         <StackPanel Spacing="20" Margin="20">
             <TextBlock Text="Daily Overview" 
-                       Foreground="{StaticResource BrandTextBrush}" 
+                       Foreground="{DynamicResource BrandTextBrush}" 
                        FontSize="22" 
                        FontWeight="Bold"/>
             
@@ -19,7 +19,7 @@
                     </StackPanel>
                     <Border Grid.Column="1" Background="#F97316" Width="40" Height="40" CornerRadius="20">
                         <Path Fill="White" Data="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" 
-                              Stretch="Uniform" Margin="10"/>
+                               Stretch="Uniform" Margin="10"/>
                     </Border>
                 </Grid>
             </Border>

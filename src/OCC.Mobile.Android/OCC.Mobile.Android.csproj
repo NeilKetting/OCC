@@ -2,13 +2,15 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>34</SupportedOSPlatformVersion>
     <ApplicationId>OrangeCircleConstruction.Mobile.Fresh</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
     <!-- Modern AOT and runtime settings -->
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <AndroidStoreUncompressedFileExtensions>.dll</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 
   <!-- Stable Build Settings (Reverted from Optimizations) -->
@@ -17,12 +19,18 @@
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <AndroidLinkMode>None</AndroidLinkMode>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
+    <AndroidEnableFastDeployment>false</AndroidEnableFastDeployment>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Android" />
+    <PackageReference Include="Avalonia.Android" VersionOverride="12.0.1" />
     <PackageReference Include="Xamarin.Google.Android.Material" />
     <PackageReference Include="SkiaSharp.NativeAssets.Android" />
+    <PackageReference Include="Xamarin.Firebase.Messaging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <GoogleServicesJson Include="google-services.json" />
   </ItemGroup>
 
 

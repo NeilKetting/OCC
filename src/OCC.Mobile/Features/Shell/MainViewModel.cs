@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using OCC.Mobile.ViewModels;
 
-namespace OCC.Mobile.ViewModels
+namespace OCC.Mobile.Features.Shell
 {
     public partial class MainViewModel : ViewModelBase
     {

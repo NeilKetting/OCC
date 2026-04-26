@@ -15,7 +15,7 @@
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="BrandOrangeBrush" Color="#FF8F00"/>
-                    <SolidColorBrush x:Key="BrandDarkBrush" Color="#0F172A"/>
+                    <SolidColorBrush x:Key="BrandDarkBrush" Color="#262E3F"/>
                     <SolidColorBrush x:Key="BrandDarkerBrush" Color="#080E1A"/>
                     <SolidColorBrush x:Key="BrandSlateBrush" Color="#1A1F2B"/>
                     <SolidColorBrush x:Key="BrandAccentBlueBrush" Color="#2E9DFF"/>
@@ -49,7 +49,7 @@
 
     <!-- Global Button Styles -->
     <Style Selector="Button.primary">
-        <Setter Property="Background" Value="{StaticResource BrandOrangeBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BrandOrangeBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="Padding" Value="20,10"/>
         <Setter Property="CornerRadius" Value="8"/>
@@ -86,5 +86,24 @@
         <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandOrangeBrush}"/>
         <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+    </Style>
+
+    <!-- Feature Cards -->
+    <Style Selector="Button.feature-card">
+        <Setter Property="Background" Value="#1E293B"/>
+        <Setter Property="BorderBrush" Value="#334155"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                <BrushTransition Property="Background" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.feature-card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#334155"/>
+        <Setter Property="RenderTransform" Value="scale(1.01)"/>
     </Style>
 </Styles>

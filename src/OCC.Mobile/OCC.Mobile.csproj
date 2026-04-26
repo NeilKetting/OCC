@@ -7,14 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia" VersionOverride="12.0.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" VersionOverride="12.0.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" VersionOverride="12.0.1" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <!-- Condition for diagnostics only in debug -->
-    <PackageReference Include="Avalonia.Diagnostics" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" VersionOverride="2.2.1" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,12 +1,12 @@
 using Android.App;
 using Android.Content;
 using Firebase.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using OCC.Mobile.Features.Notifications;
 using System;
-using System.Collections.Generic;
 
 namespace OCC.Mobile.Android.Services
 {
-    /*
     [Service(Name = "occ.mobile.FirebaseService", Exported = true)]
     [IntentFilter(new[] { "com.google.firebase.MESSAGING_EVENT" })]
     public class FirebaseService : FirebaseMessagingService
@@ -21,9 +21,6 @@ namespace OCC.Mobile.Android.Services
             : base(handle, transfer)
         {
         }
-    */
-    public class FirebaseService 
-    {
 
         public override void OnMessageReceived(RemoteMessage message)
         {
@@ -33,12 +30,18 @@ namespace OCC.Mobile.Android.Services
             string body = message.GetNotification()?.Body ?? (message.Data.ContainsKey("message") ? message.Data["message"] : "New field update");
 
             ShowNotification(title, body);
+
+            var pushService = ((App)Avalonia.Application.Current!).Services?.GetService<IPushNotificationService>();
+            pushService?.HandleNotification(title, body);
         }
 
         public override void OnNewToken(string token)
         {
             base.OnNewToken(token);
             System.Diagnostics.Debug.WriteLine($"New FCM Token: {token}");
+            
+            var pushService = ((App)Avalonia.Application.Current!).Services?.GetService<IPushNotificationService>();
+            pushService?.UpdateToken(token);
         }
 
         private void ShowNotification(string title, string body)
@@ -49,7 +52,7 @@ namespace OCC.Mobile.Android.Services
             intent.AddFlags(ActivityFlags.ClearTop);
             
             var flags = PendingIntentFlags.UpdateCurrent;
-            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.M)
+            if (OperatingSystem.IsAndroidVersionAtLeast(23))
             {
                 flags |= PendingIntentFlags.Immutable;
             }
@@ -70,7 +73,7 @@ namespace OCC.Mobile.Android.Services
 
         private void CreateNotificationChannel()
         {
-            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
+            if (OperatingSystem.IsAndroidVersionAtLeast(26))
             {
                 var channel = new NotificationChannel(ChannelId, "OCC Mobile Notifications", NotificationImportance.High)
                 {

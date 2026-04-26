@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace OCC.Mobile.Views.Dashboard
+namespace OCC.Mobile.Features.Dashboard
 {
     public partial class DashboardView : UserControl
     {

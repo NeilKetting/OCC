@@ -1,11 +1,15 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using OCC.Mobile.ViewModels;
-using OCC.Mobile.ViewModels.Login;
-using OCC.Mobile.ViewModels.Dashboard;
+using OCC.Mobile.Features.Shell;
+using OCC.Mobile.Features.Login;
+using OCC.Mobile.Features.Dashboard;
+using OCC.Mobile.Features.AdminDashboard;
 using OCC.Mobile.Services;
+using OCC.Mobile.Features.Notifications;
 using System;
 
 namespace OCC.Mobile
@@ -30,9 +34,34 @@ namespace OCC.Mobile
                 var mainViewModel = Services.GetRequiredService<MainViewModel>();
                 var navigationService = Services.GetRequiredService<INavigationService>();
 
-                if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
+                if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    singleViewPlatform.MainView = new MainView
+                    desktop.MainWindow = new Window
+                    {
+                        Title = "OCC Mobile (Tablet View)",
+                        Width = 1280,
+                        Height = 800,
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                        Content = new OCC.Mobile.Features.Shell.MainView
+                        {
+                            DataContext = mainViewModel
+                        }
+                    };
+
+                    navigationService.NavigateTo<LoginViewModel>();
+                }
+                else if (ApplicationLifetime is IActivityApplicationLifetime activityLifetime)
+                {
+                    activityLifetime.MainViewFactory = () => new OCC.Mobile.Features.Shell.MainView
+                    {
+                        DataContext = mainViewModel
+                    };
+                    
+                    navigationService.NavigateTo<LoginViewModel>();
+                }
+                else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
+                {
+                    singleViewPlatform.MainView = new OCC.Mobile.Features.Shell.MainView
                     {
                         DataContext = mainViewModel
                     };
@@ -57,10 +86,13 @@ namespace OCC.Mobile
             services.AddSingleton<MainViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddTransient<DashboardViewModel>();
+            services.AddTransient<AdminDashboardViewModel>();
             
             // Services
             services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
+            services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<INavigationService, NavigationService>();
+            services.AddSingleton<IPushNotificationService, PushNotificationService>();
             services.AddSingleton<Func<MainViewModel>>(s => () => s.GetRequiredService<MainViewModel>());
         }
     }

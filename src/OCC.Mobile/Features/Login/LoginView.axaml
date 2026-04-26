@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Login"
+             x:DataType="vm:LoginViewModel"
+             x:Class="OCC.Mobile.Features.Login.LoginView">
+
+    <Grid Background="{DynamicResource BrandDarkBrush}">
+        <ScrollViewer>
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Spacing="0" MaxWidth="450" Margin="5">
+                <!-- Official Logo Section -->
+                <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" Height="300" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                
+                <TextBlock Text="Welcome back. Let's keep building." 
+                           Foreground="{DynamicResource BrandSubTextBrush}" 
+                           FontSize="18" 
+                           HorizontalAlignment="Center"
+                           Margin="0,-40,0,-60"/>
+
+                <!-- Input Section -->
+                <StackPanel Spacing="15" Margin="0,20,0,0">
+                    <TextBox Text="{Binding Username}" 
+                             PlaceholderText="Username or Email" 
+                             Height="55" />
+                    
+                    <TextBox Text="{Binding Password}" 
+                             PlaceholderText="Password" 
+                             PasswordChar="*" 
+                             Height="55" />
+                    
+                    <Grid ColumnDefinitions="*, *" Margin="5,0,5,10">
+                        <!-- Environment Switcher -->
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Environment" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="12"/>
+                            <ComboBox ItemsSource="{Binding Environments}"
+                                      SelectedItem="{Binding SelectedEnvironment}"
+                                      HorizontalAlignment="Stretch"
+                                      Height="40"
+                                      Background="{DynamicResource InputBackgroundBrush}"/>
+                        </StackPanel>
+
+                        <!-- Save Email -->
+                        <CheckBox Grid.Column="1" 
+                                  Content="Remember Email" 
+                                  Foreground="{DynamicResource BrandSubTextBrush}"
+                                  IsChecked="{Binding RememberEmail}"
+                                  VerticalAlignment="Bottom"
+                                  HorizontalAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Error Message -->
+                <TextBlock Text="{Binding ErrorMessage}" 
+                           Foreground="#EF4444" 
+                           FontSize="14" 
+                           HorizontalAlignment="Center"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <!-- Login Button -->
+                <Button Command="{Binding LoginCommand}" 
+                        Classes="primary"
+                        Height="60" 
+                        HorizontalAlignment="Stretch" 
+                        Content="LOG IN"/>
+
+                <Button Background="Transparent" 
+                        BorderThickness="0" 
+                        HorizontalAlignment="Center"
+                        Margin="0,10">
+                    <TextBlock Text="Need an account? Register here" Foreground="{DynamicResource BrandOrangeBrush}" FontSize="14" FontWeight="SemiBold"/>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

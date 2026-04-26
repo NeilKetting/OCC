@@ -46,7 +46,7 @@
                         <Setter Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
                     </DataTrigger>
                     <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
-                        <Setter Property="Padding" Value="10,5,10,10"/>
+                        <Setter Property="Padding" Value="0"/>
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
