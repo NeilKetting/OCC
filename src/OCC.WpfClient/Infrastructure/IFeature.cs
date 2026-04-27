@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using OCC.WpfClient.Services.Interfaces;
-using System.Collections.Generic;
 
 namespace OCC.WpfClient.Infrastructure
 {

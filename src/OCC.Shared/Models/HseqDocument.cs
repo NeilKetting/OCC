@@ -12,6 +12,11 @@ namespace OCC.Shared.Models
     /// </remarks>
     public class HseqDocument : BaseEntity
     {
+        /// <summary> Optional link to a specific project. If null, the document is global. </summary>
+        public Guid? ProjectId { get; set; }
+
+        /// <summary> Navigation property to the project. </summary>
+        public virtual Project? Project { get; set; }
 
 
         /// <summary> Descriptive name of the document. </summary>

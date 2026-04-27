@@ -27,7 +27,7 @@ namespace OCC.API.Controllers
 
         // GET: api/ProjectTasks
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectTask>>> GetProjectTasks(Guid? projectId = null, bool assignedToMe = false)
+        public async Task<ActionResult<IEnumerable<ProjectTask>>> GetProjectTasks(Guid? projectId = null, bool assignedToMe = false, int skip = 0, int take = 100)
         {
             try
             {
@@ -46,13 +46,41 @@ namespace OCC.API.Controllers
 
                 if (assignedToMe)
                 {
-                    // 1. Get current logged-in user's ID
-                    var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                    // Use NameIdentifier which is more consistent for GUIDs
+                    var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
+                                     ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                    
                     if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId)) 
+                    {
+                        _logger.LogWarning("AssignedToMe requested but User ID not found in claims.");
                         return Unauthorized();
+                    }
+
+                    _logger.LogInformation("Filtering tasks for User ID: {UserId}", userId);
 
                     // 2. Find the linked Employee (if any)
-                    var linkedEmployee = await _context.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.LinkedUserId == userId);
+                    var linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == userId);
+                    
+                    // FALLBACK: If not linked by ID, try to link by Email
+                    if (linkedEmployee == null)
+                    {
+                        var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                        if (!string.IsNullOrEmpty(userEmail))
+                        {
+                            linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == userEmail);
+                            if (linkedEmployee != null)
+                            {
+                                linkedEmployee.LinkedUserId = userId;
+                                await _context.SaveChangesAsync();
+                                _logger.LogInformation("Auto-linked User {Email} to Employee {Id}", userEmail, linkedEmployee.Id);
+                            }
+                        }
+                    }
+
+                    if (linkedEmployee != null)
+                        _logger.LogInformation("User is linked to Employee: {EmployeeId}", linkedEmployee.Id);
+                    else
+                        _logger.LogWarning("User {UserId} is NOT linked to any Employee record.", userId);
 
                     // 3. Get Team IDs if user is an employee
                     var teamIds = linkedEmployee != null 
@@ -62,18 +90,33 @@ namespace OCC.API.Controllers
                             .ToListAsync() 
                         : new List<Guid>();
 
-                    // 4. Update the query to find any assignment matching the user's identities OR tasks owned by the user
+                    // 4. Filter query - Ensure ProjectId filter is also applied here if provided
                     query = query.Where(t => 
-                        (t.OwnerId == userId) || 
-                        (t.Assignments.Any(a => 
+                        ((t.OwnerId == userId) || 
+                         (t.Assignments.Any(a => 
                             (a.AssigneeType == AssigneeType.Staff && linkedEmployee != null && a.AssigneeId == linkedEmployee.Id) ||
                             (a.AssigneeType == AssigneeType.Contractor && a.AssigneeId == userId) ||
                             (a.AssigneeType == AssigneeType.Team && teamIds.Contains(a.AssigneeId))
-                        ))
+                         )) ||
+                         (linkedEmployee != null && t.Project != null && t.Project.SiteManagerId == linkedEmployee.Id))
                     );
+
+                    if (projectId.HasValue)
+                    {
+                        query = query.Where(t => t.ProjectId == projectId.Value);
+                    }
+                    
+                    _logger.LogInformation("Query constructed for AssignedToMe for Project: {ProjectId}", projectId);
                 }
 
-                return await query.ToListAsync();
+                var results = await query
+                    .OrderBy(t => t.OrderIndex)
+                    .Skip(skip)
+                    .Take(take)
+                    .ToListAsync();
+                
+                _logger.LogInformation("Returning {Count} tasks.", results.Count);
+                return results;
             }
             catch (Exception ex)
             {
@@ -197,7 +240,16 @@ namespace OCC.API.Controllers
                 _context.ProjectTasks.Add(task);
                 await _context.SaveChangesAsync();
 
-                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Create", task.Id);
+                // Standardize on string for ID and notify project
+                var idStr = task.Id.ToString();
+                _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: ProjectTask Create {Id}", idStr);
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Create", idStr);
+                
+                if (task.ProjectId != Guid.Empty)
+                {
+                    _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: Project Update {Id}", task.ProjectId);
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", task.ProjectId.ToString());
+                }
 
                 return CreatedAtAction("GetProjectTask", new { id = task.Id }, task);
             }
@@ -228,18 +280,7 @@ namespace OCC.API.Controllers
 
             try
             {
-                // DEBUG LOGGING TO AuditLog TABLE
-                var logEntry = new AuditLog
-                {
-                    UserId = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "System",
-                    TableName = "ProjectTasks",
-                    RecordId = id.ToString(),
-                    Action = "Update Start",
-                    Timestamp = DateTime.UtcNow,
-                    NewValues = $"Task: {task.Name} | %: {task.PercentComplete} | Status: {task.Status} | Start: {task.StartDate:u} | End: {task.FinishDate:u}"
-                };
-                _context.AuditLogs.Add(logEntry);
-                await _context.SaveChangesAsync();
+                _logger.LogInformation("Updating ProjectTask {Id}. New Status: {Status}, %: {Percent}", id, task.Status, task.PercentComplete);
 
                 // Surgical Update: Copy scalar properties only to avoid EF navigation issues
                 existingTask.Name = task.Name;
@@ -283,6 +324,7 @@ namespace OCC.API.Controllers
                 }
 
                 // Signal automated project status if progress starts
+                _context.Entry(existingTask).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
                 // 2. Perform Rollup: Update parent task progress based on child changes
@@ -293,22 +335,25 @@ namespace OCC.API.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // Explicitly save Success Log
-                _context.AuditLogs.Add(new AuditLog
-                {
-                    UserId = "System",
-                    TableName = "ProjectTasks",
-                    RecordId = id.ToString(),
-                    Action = "Update Success",
-                    Timestamp = DateTime.UtcNow
-                });
-                await _context.SaveChangesAsync();
+                _logger.LogInformation("Successfully saved ProjectTask {Id}", id);
 
                 // Wrap SignalR in try-catch to avoid 500 if broadcast fails
                 try
                 {
-                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", id);
+                    // Standardize on string for ID to ensure cross-platform SignalR compatibility
+                    var idStr = id.ToString();
+                    _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: ProjectTask Update {Id}", idStr);
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", idStr);
                     
+                    // Also notify that the project itself has changed (e.g. for rollup values)
+                    // Use existingTask.ProjectId as it is definitely populated from DB
+                    if (existingTask.ProjectId != Guid.Empty)
+                    {
+                        var projIdStr = existingTask.ProjectId.ToString();
+                        _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: Project Update {Id}", projIdStr);
+                        await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", projIdStr);
+                    }
+
                     if (existingTask.Status != task.Status)
                     {
                         var updateDto = new OCC.Shared.DTOs.DashboardUpdateDto
@@ -376,7 +421,15 @@ namespace OCC.API.Controllers
                 _context.ProjectTasks.Remove(task);
                 await _context.SaveChangesAsync();
 
-                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Delete", id);
+                // Standardize on string for ID
+                var idStr = id.ToString();
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Delete", idStr);
+                
+                // Use the projectId from the task we found before deleting
+                if (task.ProjectId != Guid.Empty)
+                {
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", task.ProjectId.ToString());
+                }
 
                 return NoContent();
             }

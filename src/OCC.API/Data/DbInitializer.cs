@@ -46,11 +46,72 @@ namespace OCC.API.Data
                 SeedEmployees(context, logger);
                 SeedAttendance(context, logger);
                 SeedProjects(context, logger);
+                SeedTasks(context, logger);
             }
             else
             {
                 logger.LogInformation("Skipped: Not in Development Environment.");
             }
+        }
+
+        private static void SeedTasks(AppDbContext context, ILogger logger)
+        {
+            if (context.ProjectTasks.Any())
+            {
+                logger.LogInformation("Tasks already exist. Skipping Task Seed.");
+                return;
+            }
+
+            logger.LogInformation("Seeding Project Tasks...");
+            var projects = context.Projects.ToList();
+            var employees = context.Employees.ToList();
+            
+            if (!projects.Any() || !employees.Any())
+            {
+                logger.LogWarning("Cannot seed tasks: Projects or Employees missing.");
+                return;
+            }
+
+            var random = new Random();
+            var taskNames = new[] { "Site Clearance", "Excavation", "Foundation Pouring", "Brickwork Level 1", "Electrical First Fix", "Plumbing Rough-in", "Roof Truss Installation", "Window Fitting", "Plastering", "Floor Screeding" };
+            
+            // 1. First, ensure EVERY employee has at least one task assigned for testing
+            int taskIndex = 0;
+            foreach (var employee in employees)
+            {
+                var project = projects[random.Next(projects.Count)];
+                var name = taskNames[taskIndex % taskNames.Length];
+                taskIndex++;
+
+                var task = new ProjectTask
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = project.Id,
+                    Name = $"{name} ({employee.FirstName})",
+                    Description = $"Assigned task for {employee.FirstName}",
+                    StartDate = DateTime.UtcNow.AddDays(-5),
+                    FinishDate = DateTime.UtcNow.AddDays(5),
+                    Status = "Started",
+                    PercentComplete = 10,
+                    Priority = "Medium",
+                    Type = TaskType.Task,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    CreatedBy = "System"
+                };
+                context.ProjectTasks.Add(task);
+
+                context.TaskAssignments.Add(new TaskAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    TaskId = task.Id,
+                    AssigneeId = employee.Id,
+                    AssigneeName = $"{employee.FirstName} {employee.LastName}",
+                    AssigneeType = AssigneeType.Staff
+                });
+            }
+
+            context.SaveChanges();
+            logger.LogInformation("Project Tasks seeded successfully.");
         }
 
         private static void SeedEmployees(AppDbContext context, ILogger logger)

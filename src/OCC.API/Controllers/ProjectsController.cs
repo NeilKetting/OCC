@@ -17,12 +17,14 @@ namespace OCC.API.Controllers
         private readonly AppDbContext _context;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<ProjectsController> _logger;
+        private readonly Services.INotificationService _notificationService;
 
-        public ProjectsController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<ProjectsController> logger)
+        public ProjectsController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<ProjectsController> logger, Services.INotificationService notificationService)
         {
             _context = context;
             _hubContext = hubContext;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         [HttpGet("summaries")]
@@ -70,42 +72,55 @@ namespace OCC.API.Controllers
                 var query = _context.Projects
                     .Include(p => p.Tasks)
                     .ThenInclude(t => t.Assignments)
-                    .Include(p => p.SiteManager) // Added
+                    .Include(p => p.SiteManager)
                     .AsNoTracking()
                     .AsQueryable();
 
                 if (assignedToMe)
                 {
-                    // 1. Get current logged-in user
-                    var userEmail = User.Identity?.Name;
-                    if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+                    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                    if (userIdClaim == null) return Unauthorized();
+                    
+                    if (!Guid.TryParse(userIdClaim.Value, out var userId))
+                        return Unauthorized();
 
-                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
                     if (user == null) return Unauthorized();
 
-                    // 2. Admin Check: Admins see EVERYTHING
                     if (user.UserRole == UserRole.Admin)
                     {
-                        // Return all projects, no filter needed
                         return await query.ToListAsync();
                     }
 
-                    // 3. Find Linked Employee
                     var linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
+                    
+                    if (linkedEmployee == null && !string.IsNullOrEmpty(user.Email))
+                    {
+                        linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == user.Email);
+                        if (linkedEmployee != null)
+                        {
+                            linkedEmployee.LinkedUserId = user.Id;
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
                     if (linkedEmployee == null)
                     {
-                        // No linked employee and not admin -> See nothing (or handle client role later)
                         return new List<Project>();
                     }
 
-                    // 4. Filter: Site Manager OR Assigned to Task
                     query = query.Where(p => 
                         p.SiteManagerId == linkedEmployee.Id || 
                         p.Tasks.Any(t => t.Assignments.Any(a => a.AssigneeId == linkedEmployee.Id))
                     );
                 }
 
-                return await query.ToListAsync();
+                var projectIds = await query.Select(p => p.Id).Distinct().ToListAsync();
+                
+                return await _context.Projects
+                    .Include(p => p.Tasks)
+                    .Where(p => projectIds.Contains(p.Id))
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -303,6 +318,27 @@ namespace OCC.API.Controllers
 
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+
+                // --- NEW: SEND PUSH NOTIFICATION ---
+                if (update.SiteManagerId.HasValue)
+                {
+                    try
+                    {
+                        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == update.SiteManagerId.Value);
+                        if (employee != null && employee.LinkedUserId.HasValue)
+                        {
+                            await _notificationService.SendPushNotificationAsync(
+                                employee.LinkedUserId.Value,
+                                "New Project Assigned",
+                                $"You have been assigned as the Site Manager for: {project.Name}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send push notification for project assignment");
+                    }
+                }
+                // ------------------------------------
 
                 return NoContent();
             }

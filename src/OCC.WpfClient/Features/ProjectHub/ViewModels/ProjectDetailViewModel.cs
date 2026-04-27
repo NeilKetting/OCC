@@ -15,7 +15,7 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectDetailViewModel : ViewModelBase, IRecipient<TaskUpdatedMessage>, IOverlayProvider
+    public partial class ProjectDetailViewModel : ViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IOverlayProvider
     {
         private readonly IProjectService _projectService;
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
@@ -54,6 +54,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _currentView = _dashboardVM;
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
+            WeakReferenceMessenger.Default.Register<ProjectUpdatedMessage>(this);
         }
     
         private void UpdateHeaderInfo()
@@ -129,6 +130,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public void Receive(TaskUpdatedMessage message)
         {
             if (ProjectId != Guid.Empty)
+            {
+                _ = LoadProjectAsync(ProjectId);
+            }
+        }
+
+        public void Receive(ProjectUpdatedMessage message)
+        {
+            if (ProjectId != Guid.Empty && (message.ProjectId == Guid.Empty || message.ProjectId == ProjectId))
             {
                 _ = LoadProjectAsync(ProjectId);
             }

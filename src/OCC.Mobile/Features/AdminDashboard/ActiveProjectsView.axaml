@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.AdminDashboard"
+             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+             x:DataType="vm:ActiveProjectsViewModel"
+             x:Class="OCC.Mobile.Features.AdminDashboard.ActiveProjectsView">
+
+    <Grid RowDefinitions="Auto, Auto, *">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource BrandDarkerBrush}" Padding="20">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Background="Transparent" Padding="5">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Fill="White" Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Stretch="Uniform" Width="20" Height="20"/>
+                        <TextBlock Text="Back" Foreground="White" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                
+                <TextBlock Grid.Column="1" Text="Active Projects" 
+                           Foreground="White" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Search Bar -->
+        <Border Grid.Row="1" Background="{DynamicResource BrandDarkBrush}" Padding="20,10">
+            <TextBox Text="{Binding SearchText}" 
+                     PlaceholderText="Search projects or managers..."
+                     Classes="search-box"/>
+        </Border>
+
+        <!-- Project List -->
+        <ScrollViewer Grid.Row="2" Background="{DynamicResource BrandDarkBrush}">
+            <ItemsControl ItemsSource="{Binding Projects}" Margin="20">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:Project">
+                        <Border Background="#1E293B" CornerRadius="12" Margin="0,0,0,15" Padding="15">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding ProjectManager}" Foreground="#94A3B8" FontSize="14"/>
+                                        <TextBlock Text="•" Foreground="#475569" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Status}" Foreground="{DynamicResource BrandOrangeBrush}" FontSize="14"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding StartDate, StringFormat='Started: {0:MMM dd, yyyy}'}" Foreground="#64748B" FontSize="12"/>
+                                </StackPanel>
+                                
+                                <Border Grid.Column="1" Background="#334155" CornerRadius="20" Padding="12,6" VerticalAlignment="Center">
+                                    <TextBlock Text="View Details" Foreground="White" FontSize="12"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

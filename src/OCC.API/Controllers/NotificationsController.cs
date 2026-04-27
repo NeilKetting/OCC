@@ -13,11 +13,13 @@ namespace OCC.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<NotificationsController> _logger;
+        private readonly Services.INotificationService _notificationService;
 
-        public NotificationsController(AppDbContext context, ILogger<NotificationsController> logger)
+        public NotificationsController(AppDbContext context, ILogger<NotificationsController> logger, Services.INotificationService notificationService)
         {
             _context = context;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         // GET: api/Notifications
@@ -212,5 +214,38 @@ namespace OCC.API.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+        [HttpPost("register-device")]
+        public async Task<IActionResult> RegisterDevice([FromBody] DeviceRegistrationRequest request)
+        {
+            try
+            {
+                var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdString, out var userId))
+                {
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Token))
+                {
+                    return BadRequest("Device token is required.");
+                }
+
+                await _notificationService.RegisterDeviceAsync(userId, request.Token, request.Platform, request.DeviceName);
+
+                return Ok(new { message = "Device registered successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error registering device");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+    }
+
+    public class DeviceRegistrationRequest
+    {
+        public string Token { get; set; } = string.Empty;
+        public string Platform { get; set; } = "Unknown";
+        public string? DeviceName { get; set; }
     }
 }

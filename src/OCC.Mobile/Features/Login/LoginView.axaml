@@ -5,16 +5,16 @@
              x:Class="OCC.Mobile.Features.Login.LoginView">
 
     <Grid Background="{DynamicResource BrandDarkBrush}">
-        <ScrollViewer>
-            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Spacing="0" MaxWidth="450" Margin="5">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Spacing="0" MaxWidth="450" Margin="20,5,20,100">
                 <!-- Official Logo Section -->
-                <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" Height="300" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" Height="200" RenderOptions.BitmapInterpolationMode="HighQuality" />
                                 
                 <TextBlock Text="Welcome back. Let's keep building." 
                            Foreground="{DynamicResource BrandSubTextBrush}" 
                            FontSize="18" 
                            HorizontalAlignment="Center"
-                           Margin="0,-40,0,-60"/>
+                           Margin="0,0,0,20"/>
 
                 <!-- Input Section -->
                 <StackPanel Spacing="15" Margin="0,20,0,0">
@@ -46,6 +46,15 @@
                                   VerticalAlignment="Bottom"
                                   HorizontalAlignment="Right"/>
                     </Grid>
+
+                    <!-- Custom IP Input (Visible only if Local is selected) -->
+                    <StackPanel Spacing="5" Margin="0,0,0,10" IsVisible="{Binding SelectedEnvironment, ConverterParameter=Local, Converter={StaticResource EnumToBoolConverter}}">
+                        <TextBlock Text="Local API IP (e.g. http://192.168.1.10:5237)" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="12"/>
+                        <TextBox Text="{Binding CustomLocalUrl}" 
+                                 PlaceholderText="http://0.0.0.0:5237"
+                                 Height="45"
+                                 Background="{DynamicResource InputBackgroundBrush}"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Error Message -->

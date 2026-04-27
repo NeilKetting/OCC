@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Dashboard"
+             x:DataType="vm:TaskDetailViewModel"
+             x:Class="OCC.Mobile.Features.Dashboard.TaskDetailView">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource BrandDarkerBrush}" Padding="20">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Background="Transparent" Padding="5">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Fill="White" Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Stretch="Uniform" Width="20" Height="20"/>
+                        <TextBlock Text="Back" Foreground="White" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                
+                <TextBlock Grid.Column="1" Text="Update Task" 
+                           Foreground="White" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Background="{DynamicResource BrandDarkBrush}">
+            <StackPanel Spacing="25" Margin="20">
+                <!-- Task Info Header -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="{Binding Task.Name}" Foreground="White" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"/>
+                    <TextBlock Text="Construction Site: Engen Bendor" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="14"/>
+                </StackPanel>
+
+                <!-- Status Selection -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="CURRENT STATUS" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                    <ComboBox ItemsSource="{Binding Statuses}" 
+                              SelectedItem="{Binding Status}"
+                              HorizontalAlignment="Stretch"
+                              Classes="modern-combo"/>
+                </StackPanel>
+
+                <!-- Progress Section -->
+                <StackPanel Spacing="10">
+                    <Grid>
+                        <TextBlock Text="PROGRESS" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}%'}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ProgressBar Value="{Binding PercentComplete}" 
+                                 Minimum="0" 
+                                 Maximum="100" 
+                                 Height="10" 
+                                 CornerRadius="5"
+                                 Background="#1E293B"
+                                 Foreground="{DynamicResource BrandOrangeBrush}"/>
+                </StackPanel>
+
+                <!-- On Hold Section -->
+                <Border Background="#1E293B" CornerRadius="12" Padding="15">
+                    <StackPanel Spacing="15">
+                        <Grid>
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="On Hold" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="Suspend work on this task temporarily" Foreground="#64748B" FontSize="12"/>
+                            </StackPanel>
+                            <ToggleSwitch IsChecked="{Binding IsOnHold}" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <StackPanel Spacing="10" IsVisible="{Binding IsOnHold}">
+                            <TextBlock Text="HOLD REASON" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                            <TextBox Text="{Binding HoldReason}" 
+                                     PlaceholderText="Explain why this task is being put on hold..."
+                                     AcceptsReturn="True"
+                                     MinHeight="100"
+                                     TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="2" Background="{DynamicResource BrandDarkerBrush}" Padding="20" BorderBrush="#1E293B" BorderThickness="0,1,0,0">
+            <Button Command="{Binding SaveChangesCommand}" 
+                    Classes="primary" 
+                    Content="Update Task Progress" 
+                    HorizontalAlignment="Stretch" 
+                    Height="50"/>
+        </Border>
+    </Grid>
+</UserControl>

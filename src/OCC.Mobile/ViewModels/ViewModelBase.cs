@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OCC.Mobile.ViewModels
 {
-    public abstract partial class ViewModelBase : ObservableObject
+    public abstract partial class ViewModelBase : ObservableObject, System.IDisposable
     {
         [ObservableProperty]
         private bool _isBusy;
@@ -12,5 +12,9 @@ namespace OCC.Mobile.ViewModels
 
         [ObservableProperty]
         private string _busyText = "Loading...";
+
+        public virtual void Dispose()
+        {
+        }
     }
 }

@@ -22,9 +22,17 @@ namespace OCC.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<HseqDocument>>> GetDocuments()
+        public async Task<ActionResult<IEnumerable<HseqDocument>>> GetDocuments(Guid? projectId = null)
         {
-            return await _context.HseqDocuments.ToListAsync();
+            var query = _context.HseqDocuments.AsNoTracking().AsQueryable();
+
+            if (projectId.HasValue)
+            {
+                // Return Global documents (ProjectId is null) OR documents for this specific project
+                query = query.Where(d => d.ProjectId == null || d.ProjectId == projectId.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
         [HttpPost]

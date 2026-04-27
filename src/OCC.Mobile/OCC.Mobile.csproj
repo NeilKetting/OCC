@@ -10,9 +10,15 @@
     <PackageReference Include="Avalonia" VersionOverride="12.0.1" />
     <PackageReference Include="Avalonia.Themes.Fluent" VersionOverride="12.0.1" />
     <PackageReference Include="Avalonia.Fonts.Inter" VersionOverride="12.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Debug" />
+    <PackageReference Include="Serilog.Sinks.File" />
     <!-- Condition for diagnostics only in debug -->
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" VersionOverride="2.2.1" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>

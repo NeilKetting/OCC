@@ -17,7 +17,7 @@ using OCC.Shared.Interfaces;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectsViewModel : OverlayHostViewModel
+    public partial class ProjectsViewModel : OverlayHostViewModel, IRecipient<ProjectUpdatedMessage>, IRecipient<TaskUpdatedMessage>
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
@@ -61,6 +61,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Projects";
             LoadLayout();
             _ = LoadDataAsync();
+            WeakReferenceMessenger.Default.Register<ProjectUpdatedMessage>(this);
+            WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
         }
 
         private void LoadLayout()
@@ -197,7 +199,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         partial void OnSearchTextChanged(string value)
         {
-            // TODO: Implement filtering logic
+        // TODO: Implement filtering logic
+        }
+
+        public void Receive(ProjectUpdatedMessage message)
+        {
+            _ = LoadDataAsync();
+        }
+
+        public void Receive(TaskUpdatedMessage message)
+        {
+            // Task updates usually trigger project progress rollups, so we refresh the whole list
+            _ = LoadDataAsync();
         }
     }
 }

@@ -37,10 +37,13 @@ namespace OCC.Mobile.Services
         {
             if (_settingsService.Settings.SelectedEnvironment == AppEnvironment.Local)
             {
-                // If running on Android Emulator, localhost is 10.0.2.2
-                // We detect platform or just use a sensible default.
-                // For now, let's use the local IP or localhost.
-                
+                if (!string.IsNullOrEmpty(_settingsService.Settings.CustomLocalUrl))
+                {
+                    var url = _settingsService.Settings.CustomLocalUrl.Trim();
+                    if (!url.EndsWith("/")) url += "/";
+                    return url;
+                }
+
                 #if ANDROID
                 return "http://10.0.2.2:5237/";
                 #else

@@ -4,7 +4,7 @@
         <Border Padding="20">
             <StackPanel Spacing="10">
                 <Button Classes="primary" Content="Primary Button" Width="200"/>
-                <TextBox Watermark="Standard TextBox" Width="200"/>
+                <TextBox PlaceholderText="Standard TextBox" Width="200"/>
             </StackPanel>
         </Border>
     </Design.PreviewWith>
@@ -77,10 +77,11 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="Padding" Value="15,12"/>
+        <Setter Property="Padding" Value="18,12"/>
         <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="CaretBrush" Value="{DynamicResource BrandOrangeBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource BrandOrangeBrush}"/>
     </Style>
     <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
         <Setter Property="BorderThickness" Value="2"/>
@@ -105,5 +106,22 @@
     <Style Selector="Button.feature-card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#334155"/>
         <Setter Property="RenderTransform" Value="scale(1.01)"/>
+    </Style>
+
+    <!-- Icon Action Buttons -->
+    <Style Selector="Button.icon-action">
+        <Setter Property="Background" Value="#1E293B"/>
+        <Setter Property="BorderBrush" Value="#334155"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Width" Value="36"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.icon-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#334155"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandOrangeBrush}"/>
     </Style>
 </Styles>

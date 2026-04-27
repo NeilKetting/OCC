@@ -15,6 +15,8 @@ namespace OCC.Mobile.Features.Login
         private readonly INavigationService _navigationService;
         private readonly ILocalSettingsService _settingsService;
         private readonly IAuthService _authService;
+        private readonly ISignalRService _signalRService;
+        private readonly Features.Notifications.IPushNotificationService _pushNotificationService;
 
         [ObservableProperty]
         private string _username = string.Empty;
@@ -31,22 +33,36 @@ namespace OCC.Mobile.Features.Login
         [ObservableProperty]
         private AppEnvironment _selectedEnvironment;
 
+        [ObservableProperty]
+        private string? _customLocalUrl;
+
         public Array Environments => Enum.GetValues(typeof(AppEnvironment));
 
         public LoginViewModel(
             INavigationService navigationService, 
             ILocalSettingsService settingsService,
-            IAuthService authService)
+            IAuthService authService,
+            ISignalRService signalRService,
+            Features.Notifications.IPushNotificationService pushNotificationService)
         {
             _navigationService = navigationService;
             _settingsService = settingsService;
             _authService = authService;
+            _signalRService = signalRService;
+            _pushNotificationService = pushNotificationService;
             Title = "Login";
 
             // Load saved settings
             Username = _settingsService.Settings.LastEmail;
             RememberEmail = _settingsService.Settings.RememberEmail;
             SelectedEnvironment = _settingsService.Settings.SelectedEnvironment;
+            CustomLocalUrl = _settingsService.Settings.CustomLocalUrl;
+            
+            // Fallback for first-time use on this IP
+            if (string.IsNullOrEmpty(CustomLocalUrl))
+            {
+                CustomLocalUrl = "http://192.168.0.191:5237";
+            }
         }
 
         [RelayCommand]
@@ -61,13 +77,18 @@ namespace OCC.Mobile.Features.Login
             IsBusy = true;
             BusyText = "Connecting to API...";
 
+            // Save environment and URL even if login fails, so user doesn't have to re-type IP
+            _settingsService.Settings.SelectedEnvironment = SelectedEnvironment;
+            _settingsService.Settings.CustomLocalUrl = CustomLocalUrl;
+            _settingsService.Save();
+
             try
             {
                 var (success, error) = await _authService.LoginAsync(Username, Password);
                 
                 if (success && _authService.CurrentUser != null)
                 {
-                    // Save settings on success
+                    // Save additional settings on success
                     if (RememberEmail)
                     {
                         _settingsService.Settings.LastEmail = Username;
@@ -77,13 +98,19 @@ namespace OCC.Mobile.Features.Login
                         _settingsService.Settings.LastEmail = string.Empty;
                     }
                     _settingsService.Settings.RememberEmail = RememberEmail;
-                    _settingsService.Settings.SelectedEnvironment = SelectedEnvironment;
                     _settingsService.Save();
+
+                    // Start SignalR
+                    _signalRService.StartAsync().FireAndForget();
+
+                    // Sync Push Token
+                    _pushNotificationService.RegisterWithApiAsync().FireAndForget();
 
                     // Navigation based on Role
                     ErrorMessage = string.Empty;
                     
-                    if (_authService.CurrentUser.UserRole == UserRole.Admin)
+                    if (_authService.CurrentUser.UserRole == UserRole.Admin || 
+                        _authService.CurrentUser.UserRole == UserRole.SiteManager)
                     {
                         _navigationService.NavigateTo<AdminDashboardViewModel>();
                     }

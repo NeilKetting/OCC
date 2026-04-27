@@ -3,14 +3,16 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using OCC.Mobile.ViewModels;
-using OCC.Mobile.Features.Shell;
-using OCC.Mobile.Features.Login;
-using OCC.Mobile.Features.Dashboard;
 using OCC.Mobile.Features.AdminDashboard;
-using OCC.Mobile.Services;
+using OCC.Mobile.Features.Dashboard;
+using OCC.Mobile.Features.Login;
 using OCC.Mobile.Features.Notifications;
+using OCC.Mobile.Features.Shell;
+using OCC.Mobile.Services;
+using OCC.Mobile.ViewModels;
 using System;
+using Serilog;
+using System.IO;
 
 namespace OCC.Mobile
 {
@@ -82,17 +84,36 @@ namespace OCC.Mobile
 
         private void ConfigureServices(IServiceCollection services)
         {
+            // Configure Serilog for file logging
+            var logPath = Path.Combine(AppContext.BaseDirectory, "logs", "mobile-log-.txt");
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Console()
+                .WriteTo.Debug()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 2)
+                .CreateLogger();
+
+            services.AddLogging(l => l.AddSerilog());
+
             // ViewModels
             services.AddSingleton<MainViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<AdminDashboardViewModel>();
+            services.AddTransient<ActiveProjectsViewModel>();
+            services.AddTransient<OverdueTasksViewModel>();
+            services.AddTransient<MyTasksViewModel>();
+            services.AddTransient<TaskDetailViewModel>();
             
             // Services
             services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
             services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<IPushNotificationService, PushNotificationService>();
+            services.AddSingleton<IProjectTaskService, ProjectTaskService>();
+            services.AddSingleton<IProjectService, ProjectService>();
+            services.AddSingleton<IHseqService, HseqService>();
+            services.AddSingleton<ISignalRService, SignalRService>();
             services.AddSingleton<Func<MainViewModel>>(s => () => s.GetRequiredService<MainViewModel>());
         }
     }

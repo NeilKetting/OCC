@@ -11,6 +11,7 @@ namespace OCC.Mobile.Features.Notifications
         
         void Initialize();
         void UpdateToken(string token);
+        Task RegisterWithApiAsync();
         void HandleNotification(string title, string body);
     }
 

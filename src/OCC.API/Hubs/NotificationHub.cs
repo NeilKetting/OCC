@@ -18,6 +18,7 @@ namespace OCC.API.Hubs
                 if (string.IsNullOrEmpty(userName)) userName = "Anonymous";
 
                 var id = Context.ConnectionId;
+                Console.WriteLine($"[SignalR-HUB] Client Connected: {userName} (ID: {id})");
                 
                 var info = new OCC.Shared.DTOs.UserConnectionInfo 
                 { 
@@ -29,9 +30,9 @@ namespace OCC.API.Hubs
                 _connectedUsers.TryAdd(id, info);
                 await BroadcastUserList();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log?
+                Console.WriteLine($"[SignalR-HUB] OnConnectedAsync ERROR: {ex.Message}");
             }
             await base.OnConnectedAsync();
         }
@@ -41,7 +42,8 @@ namespace OCC.API.Hubs
             try
             {
                 var id = Context.ConnectionId;
-                _connectedUsers.TryRemove(id, out _);
+                _connectedUsers.TryRemove(id, out var info);
+                Console.WriteLine($"[SignalR-HUB] Client Disconnected: {info?.UserName} (ID: {id})");
                 await BroadcastUserList();
             }
             catch { }

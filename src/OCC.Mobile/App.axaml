@@ -1,8 +1,19 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:OCC.Mobile"
+             xmlns:conv="clr-namespace:OCC.Mobile.Infrastructure.Converters"
              x:Class="OCC.Mobile.App"
              RequestedThemeVariant="Dark">
+    <Application.Resources>
+        <conv:IndentConverter x:Key="IndentConverter"/>
+        <conv:BoolToFontSizeConverter x:Key="BoolToFontSizeConverter"/>
+        <conv:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter"/>
+        <conv:BoolToPathDataConverter x:Key="BoolToPathDataConverter"/>
+        <conv:BoolToThicknessConverter x:Key="BoolToThicknessConverter"/>
+        <conv:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
+        <conv:EqualityConverter x:Key="EqualityConverter"/>
+        <conv:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
+    </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
