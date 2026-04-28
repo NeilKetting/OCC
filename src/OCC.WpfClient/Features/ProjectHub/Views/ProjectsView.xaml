@@ -132,9 +132,9 @@
                                 <DataTemplate>
                                     <Border Width="30" Height="30" CornerRadius="15" Margin="20,0"
                                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            Background="{Binding ProjectManager, Converter={StaticResource UserColorConverter}}"
-                                            ToolTip="{Binding ProjectManager}">
-                                        <TextBlock Text="{Binding ProjectManager, Converter={StaticResource UserInitialsConverter}}" 
+                                            Background="{Binding SiteManagerName, Converter={StaticResource UserColorConverter}}"
+                                            ToolTip="{Binding SiteManagerName}">
+                                        <TextBlock Text="{Binding SiteManagerName, Converter={StaticResource UserInitialsConverter}}" 
                                                    VerticalAlignment="Center" HorizontalAlignment="Center" 
                                                    Foreground="White" FontSize="11" FontWeight="Bold"/>
                                     </Border>

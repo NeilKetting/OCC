@@ -12,6 +12,7 @@ namespace OCC.Mobile.Features.Dashboard
     {
         private readonly INavigationService _navigationService;
         private readonly IProjectService _projectService;
+        private readonly IProjectTaskService _taskService;
         private readonly ISignalRService _signalRService;
         private readonly System.Threading.SemaphoreSlim _loadSemaphore = new(1, 1);
 
@@ -22,12 +23,16 @@ namespace OCC.Mobile.Features.Dashboard
         private System.Collections.ObjectModel.ObservableCollection<OCC.Shared.Models.Project> _activeProjects = new();
 
         [ObservableProperty]
+        private ObservableCollection<OCC.Shared.DTOs.DashboardUpdateDto> _recentActivity = new();
+
+        [ObservableProperty]
         private OCC.Shared.Models.Project? _selectedProject;
 
-        public DashboardViewModel(INavigationService navigationService, IProjectService projectService, ISignalRService signalRService)
+        public DashboardViewModel(INavigationService navigationService, IProjectService projectService, IProjectTaskService taskService, ISignalRService signalRService)
         {
             _navigationService = navigationService;
             _projectService = projectService;
+            _taskService = taskService;
             _signalRService = signalRService;
             
             _signalRService.EntityUpdated += OnEntityUpdated;
@@ -38,9 +43,9 @@ namespace OCC.Mobile.Features.Dashboard
 
         private void OnEntityUpdated(string entityType, string action, Guid id)
         {
-            if (entityType == "Project" || entityType == "ProjectTask")
+            if (entityType == "Project" || entityType == "ProjectTask" || entityType == "DashboardUpdate")
             {
-                // Refresh project list in real-time
+                // Refresh project list and activity in real-time
                 LoadData().FireAndForget();
             }
         }
@@ -56,8 +61,9 @@ namespace OCC.Mobile.Features.Dashboard
             if (!await _loadSemaphore.WaitAsync(0)) return;
             try
             {
+                // 1. Fetch Projects
                 var projects = await _projectService.GetProjectsAsync(assignedToMe: true);
-                var projectList = projects.GroupBy(p => p.Id).Select(g => g.First()).ToList(); // Paranoia: Ensure uniqueness in VM
+                var projectList = projects.GroupBy(p => p.Id).Select(g => g.First()).ToList(); 
                 
                 var newCollection = new System.Collections.ObjectModel.ObservableCollection<OCC.Shared.Models.Project>();
                 foreach (var p in projectList)
@@ -69,12 +75,22 @@ namespace OCC.Mobile.Features.Dashboard
                     newCollection.Add(p);
                 }
 
+                // 2. Fetch Recent Activity
+                var updates = await _taskService.GetRecentUpdatesAsync();
+                var activityList = updates.Take(10).ToList();
+
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => 
                 {
                     ActiveProjects = newCollection;
                     ActiveSitesCount = projectList.Count;
+                    
+                    RecentActivity.Clear();
+                    foreach (var update in activityList)
+                    {
+                        RecentActivity.Add(update);
+                    }
 
-                    // Default to first project if none selected or if selected project is no longer in list
+                    // Default to first project if none selected
                     if (SelectedProject == null || !projectList.Any(p => p.Id == SelectedProject.Id))
                     {
                         SelectedProject = projectList.FirstOrDefault();
@@ -100,10 +116,48 @@ namespace OCC.Mobile.Features.Dashboard
         }
 
         [RelayCommand]
+        private void NavigateToDueToday(OCC.Shared.Models.Project project)
+        {
+            _navigationService.NavigateTo<MyTasksViewModel>(vm => 
+            {
+                vm.ProjectId = project.Id;
+                vm.ShowDueTodayOnly = true;
+            });
+        }
+
+        [RelayCommand]
+        private void NavigateToOverdue(OCC.Shared.Models.Project project)
+        {
+            _navigationService.NavigateTo<MyTasksViewModel>(vm => 
+            {
+                vm.ProjectId = project.Id;
+                vm.ShowOverdueOnly = true;
+            });
+        }
+
+        [RelayCommand]
+        private void NavigateToInventory(OCC.Shared.Models.Project project)
+        {
+            _navigationService.NavigateTo<InventoryViewModel>(vm => 
+            {
+                vm.ProjectId = project.Id;
+                vm.LoadDataCommand.Execute(null);
+            });
+        }
+
+        [RelayCommand]
+        private void NavigateToTeam(OCC.Shared.Models.Project project)
+        {
+            _navigationService.NavigateTo<TeamViewModel>(vm => 
+            {
+                vm.ProjectId = project.Id;
+                vm.LoadDataCommand.Execute(null);
+            });
+        }
+
+        [RelayCommand]
         private void NavigateToProjectHseq(OCC.Shared.Models.Project project)
         {
-            // For now HSEQ doesn't support project filtering in its VM, 
-            // but we can pass it if we update HseqListViewModel later.
             _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
         }
 

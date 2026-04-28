@@ -26,6 +26,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _isApproved;
         [ObservableProperty] private bool _isEmailVerified;
         [ObservableProperty] private string? _password;
+        [ObservableProperty] private string? _companyName;
 
         // Module Access
         [ObservableProperty] private bool _hasChatAccess;
@@ -51,11 +52,14 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _hasAuditLogAccess;
 
         [ObservableProperty] private bool _showModuleAccess;
+        [ObservableProperty] private bool _showCompanyName;
 
         public List<UserRole> Roles => new List<UserRole>
         {
             UserRole.Admin,
             UserRole.Office,
+            UserRole.SiteManager,
+            UserRole.Foreman,
             UserRole.ExternalContractor,
             UserRole.HSEQ
         };
@@ -74,14 +78,17 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _selectedRole = user.UserRole;
             _isApproved = user.IsApproved;
             _isEmailVerified = user.IsEmailVerified;
+            _companyName = user.CompanyName;
 
             _showModuleAccess = _selectedRole == UserRole.Office;
+            _showCompanyName = _selectedRole == UserRole.ExternalContractor;
             LoadPermissions(user.Permissions);
         }
 
         partial void OnSelectedRoleChanged(UserRole value)
         {
             ShowModuleAccess = value == UserRole.Office;
+            ShowCompanyName = value == UserRole.ExternalContractor;
             if (value == UserRole.Admin)
             {
                 HasChatAccess = true;
@@ -167,6 +174,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _user.UserRole = SelectedRole;
             _user.IsApproved = IsApproved;
             _user.IsEmailVerified = IsEmailVerified;
+            _user.CompanyName = CompanyName;
             
             if (!string.IsNullOrWhiteSpace(Password))
             {
@@ -225,6 +233,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 _user.UserRole = latest.UserRole;
                 _user.IsApproved = latest.IsApproved;
                 _user.IsEmailVerified = latest.IsEmailVerified;
+                _user.CompanyName = latest.CompanyName;
                 _user.Permissions = latest.Permissions;
                 _user.RowVersion = latest.RowVersion;
 
@@ -236,6 +245,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 SelectedRole = _user.UserRole;
                 IsApproved = _user.IsApproved;
                 IsEmailVerified = _user.IsEmailVerified;
+                CompanyName = _user.CompanyName;
                 
                 LoadPermissions(_user.Permissions);
                 

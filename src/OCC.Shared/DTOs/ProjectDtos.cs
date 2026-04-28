@@ -7,7 +7,21 @@ namespace OCC.Shared.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Status { get; set; } = "Active";
+        private string _status = "Active";
+        public string Status 
+        { 
+            get 
+            {
+                if (Progress >= 100 && _status != "Archived" && _status != "OnHold" && _status != "Cancelled")
+                    return "Completed";
+                
+                if (Progress > 0 && (_status == "Planning" || _status == "Not Started"))
+                    return "In Progress";
+                    
+                return _status;
+            }
+            set => _status = value;
+        }
         public string ProjectManager { get; set; } = string.Empty;
         public int Progress { get; set; }
         public DateTime? LatestFinish { get; set; }
@@ -92,17 +106,18 @@ namespace OCC.Shared.DTOs
             get
             {
                 string userName = !string.IsNullOrEmpty(DisplayName) ? DisplayName : User;
+                string projectSuffix = !string.IsNullOrEmpty(ProjectName) ? $" at [{ProjectName}]" : "";
 
                 if (string.IsNullOrEmpty(Status))
-                    return $"{Action} '{TaskName}' by {userName}.";
+                    return $"{Action} '{TaskName}'{projectSuffix} by {userName}.";
                 
                 string formattedStatus = Status;
                 if (formattedStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
-                    return $"Task '{TaskName}' completed by {userName}.";
+                    return $"Task '{TaskName}'{projectSuffix} completed by {userName}.";
                 if (formattedStatus.Equals("Started", StringComparison.OrdinalIgnoreCase))
-                    return $"Task '{TaskName}' started by {userName}.";
+                    return $"Task '{TaskName}'{projectSuffix} started by {userName}.";
                 
-                return $"Task '{TaskName}' progress: {Status} (updated by {userName}).";
+                return $"Task '{TaskName}'{projectSuffix} progress: {Status} (updated by {userName}).";
             }
         }
 

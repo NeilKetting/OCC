@@ -75,20 +75,21 @@ namespace OCC.Mobile.Features.AdminDashboard
             IsBusy = true;
             try
             {
-                var projects = (await _projectService.GetProjectsAsync(assignedToMe: true)).ToList();
-                ActiveProjectsCount = projects.Count.ToString();
+                var allProjects = (await _projectService.GetProjectsAsync(assignedToMe: true)).ToList();
+                var activeProjects = allProjects.Where(p => p.Status != "Completed" && p.Status != "Done" && p.Status != "Cancelled").ToList();
+                ActiveProjectsCount = activeProjects.Count.ToString();
                 
                 var tasks = (await _taskService.GetTasksAsync()).ToList();
                 var overdue = tasks.Count(t => t.IsOverdue);
                 OverdueTasksCount = overdue.ToString();
 
-                if (projects.Any())
+                if (allProjects.Any())
                 {
                     // Basic progress calc: average of all project tasks if available
                     // or just use a placeholder for now if tasks are not fully loaded
                     double totalProgress = 0;
                     int projectWithTasks = 0;
-                    foreach(var p in projects)
+                    foreach(var p in allProjects)
                     {
                         if (p.Tasks.Any())
                         {

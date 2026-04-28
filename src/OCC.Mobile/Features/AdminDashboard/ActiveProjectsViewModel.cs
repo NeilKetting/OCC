@@ -55,14 +55,88 @@ namespace OCC.Mobile.Features.AdminDashboard
         private async void LoadData()
         {
             IsBusy = true;
-            var projects = await _projectService.GetProjectsAsync();
+            var projects = await _projectService.GetProjectsAsync(assignedToMe: true);
             _allProjects.Clear();
-            foreach (var project in projects.Where(p => p.Status == "Active"))
+            foreach (var project in projects.Where(p => p.Status != "Completed" && p.Status != "Done" && p.Status != "Cancelled"))
             {
+                // Calculate task counts for the card
+                project.ProjectManager = project.Tasks.Count(t => !t.IsComplete && t.FinishDate.Date == System.DateTime.Today).ToString();
+                project.Description = project.Tasks.Count(t => t.IsOverdue).ToString();
+                
                 _allProjects.Add(project);
             }
             FilterProjects();
             IsBusy = false;
+        }
+
+        [RelayCommand]
+        private void NavigateToProjectTasks(Project project)
+        {
+            if (project != null)
+            {
+                _navigationService.NavigateTo<Dashboard.MyTasksViewModel>(vm => vm.ProjectId = project.Id);
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToDueToday(Project project)
+        {
+            if (project != null)
+            {
+                _navigationService.NavigateTo<Dashboard.MyTasksViewModel>(vm => 
+                {
+                    vm.ProjectId = project.Id;
+                    vm.ShowDueTodayOnly = true;
+                });
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToOverdue(Project project)
+        {
+            if (project != null)
+            {
+                _navigationService.NavigateTo<Dashboard.MyTasksViewModel>(vm => 
+                {
+                    vm.ProjectId = project.Id;
+                    vm.ShowOverdueOnly = true;
+                });
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToInventory(Project project)
+        {
+            if (project != null)
+            {
+                _navigationService.NavigateTo<Dashboard.InventoryViewModel>(vm => 
+                {
+                    vm.ProjectId = project.Id;
+                    vm.LoadDataCommand.Execute(null);
+                });
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToTeam(Project project)
+        {
+            if (project != null)
+            {
+                _navigationService.NavigateTo<Dashboard.TeamViewModel>(vm => 
+                {
+                    vm.ProjectId = project.Id;
+                    vm.LoadDataCommand.Execute(null);
+                });
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToProjectHseq(Project project)
+        {
+            if (project != null)
+            {
+                _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
+            }
         }
     }
 }

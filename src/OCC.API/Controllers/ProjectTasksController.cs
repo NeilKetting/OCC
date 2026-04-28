@@ -46,64 +46,76 @@ namespace OCC.API.Controllers
 
                 if (assignedToMe)
                 {
-                    // Use NameIdentifier which is more consistent for GUIDs
-                    var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
-                                     ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-                    
-                    if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId)) 
+                    // 1. If Admin, bypass assignment filter and show all tasks for the project (if projectId specified)
+                    if (User.IsInRole("Admin"))
                     {
-                        _logger.LogWarning("AssignedToMe requested but User ID not found in claims.");
-                        return Unauthorized();
-                    }
-
-                    _logger.LogInformation("Filtering tasks for User ID: {UserId}", userId);
-
-                    // 2. Find the linked Employee (if any)
-                    var linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == userId);
-                    
-                    // FALLBACK: If not linked by ID, try to link by Email
-                    if (linkedEmployee == null)
-                    {
-                        var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-                        if (!string.IsNullOrEmpty(userEmail))
+                        _logger.LogInformation("Admin user bypasses assignment filter.");
+                        if (projectId.HasValue)
                         {
-                            linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == userEmail);
-                            if (linkedEmployee != null)
-                            {
-                                linkedEmployee.LinkedUserId = userId;
-                                await _context.SaveChangesAsync();
-                                _logger.LogInformation("Auto-linked User {Email} to Employee {Id}", userEmail, linkedEmployee.Id);
-                            }
+                            query = query.Where(t => t.ProjectId == projectId.Value);
                         }
                     }
-
-                    if (linkedEmployee != null)
-                        _logger.LogInformation("User is linked to Employee: {EmployeeId}", linkedEmployee.Id);
                     else
-                        _logger.LogWarning("User {UserId} is NOT linked to any Employee record.", userId);
-
-                    // 3. Get Team IDs if user is an employee
-                    var teamIds = linkedEmployee != null 
-                        ? await _context.TeamMembers.AsNoTracking()
-                            .Where(tm => tm.EmployeeId == linkedEmployee.Id)
-                            .Select(tm => tm.TeamId)
-                            .ToListAsync() 
-                        : new List<Guid>();
-
-                    // 4. Filter query - Ensure ProjectId filter is also applied here if provided
-                    query = query.Where(t => 
-                        ((t.OwnerId == userId) || 
-                         (t.Assignments.Any(a => 
-                            (a.AssigneeType == AssigneeType.Staff && linkedEmployee != null && a.AssigneeId == linkedEmployee.Id) ||
-                            (a.AssigneeType == AssigneeType.Contractor && a.AssigneeId == userId) ||
-                            (a.AssigneeType == AssigneeType.Team && teamIds.Contains(a.AssigneeId))
-                         )) ||
-                         (linkedEmployee != null && t.Project != null && t.Project.SiteManagerId == linkedEmployee.Id))
-                    );
-
-                    if (projectId.HasValue)
                     {
-                        query = query.Where(t => t.ProjectId == projectId.Value);
+                        // Standard assignment filtering for non-admins
+                        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
+                                         ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                        
+                        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId)) 
+                        {
+                            _logger.LogWarning("AssignedToMe requested but User ID not found in claims.");
+                            return Unauthorized();
+                        }
+
+                        _logger.LogInformation("Filtering tasks for User ID: {UserId}", userId);
+
+                        // 2. Find the linked Employee (if any)
+                        var linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == userId);
+                        
+                        // FALLBACK: If not linked by ID, try to link by Email
+                        if (linkedEmployee == null)
+                        {
+                            var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                            if (!string.IsNullOrEmpty(userEmail))
+                            {
+                                linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == userEmail);
+                                if (linkedEmployee != null)
+                                {
+                                    linkedEmployee.LinkedUserId = userId;
+                                    await _context.SaveChangesAsync();
+                                    _logger.LogInformation("Auto-linked User {Email} to Employee {Id}", userEmail, linkedEmployee.Id);
+                                }
+                            }
+                        }
+
+                        if (linkedEmployee != null)
+                            _logger.LogInformation("User is linked to Employee: {EmployeeId}", linkedEmployee.Id);
+                        else
+                            _logger.LogWarning("User {UserId} is NOT linked to any Employee record.", userId);
+
+                        // 3. Get Team IDs if user is an employee
+                        var teamIds = linkedEmployee != null 
+                            ? await _context.TeamMembers.AsNoTracking()
+                                .Where(tm => tm.EmployeeId == linkedEmployee.Id)
+                                .Select(tm => tm.TeamId)
+                                .ToListAsync() 
+                            : new List<Guid>();
+
+                        // 4. Filter query - Ensure ProjectId filter is also applied here if provided
+                        query = query.Where(t => 
+                            ((t.OwnerId == userId) || 
+                             (t.Assignments.Any(a => 
+                                (a.AssigneeType == AssigneeType.Staff && linkedEmployee != null && a.AssigneeId == linkedEmployee.Id) ||
+                                (a.AssigneeType == AssigneeType.Contractor && a.AssigneeId == userId) ||
+                                (a.AssigneeType == AssigneeType.Team && teamIds.Contains(a.AssigneeId))
+                             )) ||
+                             (linkedEmployee != null && t.Project != null && t.Project.SiteManagerId == linkedEmployee.Id))
+                        );
+
+                        if (projectId.HasValue)
+                        {
+                            query = query.Where(t => t.ProjectId == projectId.Value);
+                        }
                     }
                     
                     _logger.LogInformation("Query constructed for AssignedToMe for Project: {ProjectId}", projectId);
@@ -331,6 +343,11 @@ namespace OCC.API.Controllers
                 if (existingTask.ParentId.HasValue)
                 {
                     await CalculateParentRollup(existingTask.ParentId.Value);
+                }
+
+                if (existingTask.ProjectId.HasValue && existingTask.ProjectId.Value != Guid.Empty)
+                {
+                    await UpdateProjectStatusAsync(existingTask.ProjectId.Value);
                 }
 
                 await _context.SaveChangesAsync();
@@ -568,6 +585,41 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating contractor performance for task {Id}", task.Id);
+            }
+        }
+
+        private async Task UpdateProjectStatusAsync(Guid projectId)
+        {
+            try
+            {
+                var project = await _context.Projects
+                    .Include(p => p.Tasks)
+                    .FirstOrDefaultAsync(p => p.Id == projectId);
+
+                if (project != null && project.Tasks.Any())
+                {
+                    var averageProgress = project.Tasks.Average(t => (double)t.PercentComplete);
+                    var oldStatus = project.Status;
+
+                    if (averageProgress >= 100)
+                    {
+                        project.Status = "Completed";
+                    }
+                    else if (averageProgress > 0 && (project.Status == "Planning" || project.Status == "Not Started"))
+                    {
+                        project.Status = "In Progress";
+                    }
+
+                    if (oldStatus != project.Status)
+                    {
+                        _logger.LogInformation("Project {Id} status updated from {Old} to {New}", project.Id, oldStatus, project.Status);
+                        _context.Entry(project).State = EntityState.Modified;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating project status for {ProjectId}", projectId);
             }
         }
     }

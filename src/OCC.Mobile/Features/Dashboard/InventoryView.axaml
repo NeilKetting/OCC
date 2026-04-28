@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OCC.Mobile.Features.Dashboard"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="OCC.Mobile.Features.Dashboard.InventoryView"
+             x:DataType="vm:InventoryViewModel"
+             Background="#0F172A">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1E293B" Padding="20,15">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <Button Command="{Binding GoBackCommand}" Background="Transparent" Padding="5">
+                    <Path Fill="White" Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Width="24" Height="24" Stretch="Uniform"/>
+                </Button>
+                
+                <TextBlock Grid.Column="1" Text="Project Inventory" 
+                           Foreground="White" FontSize="20" FontWeight="Bold" 
+                           VerticalAlignment="Center" Margin="15,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Padding="20">
+            <StackPanel Spacing="15">
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#1E293B" CornerRadius="12" Padding="15" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="{Binding Description}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Category}" Foreground="#3B82F6" FontSize="12"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding QuantityOnHand}" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="{Binding UnitOfMeasure}" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Right"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border IsVisible="{Binding !Items.Count}" Background="#1E293B" CornerRadius="12" Padding="20">
+                    <TextBlock Text="No inventory items found for this project." 
+                               Foreground="#64748B" HorizontalAlignment="Center"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" VerticalAlignment="Top"/>
+    </Grid>
+</UserControl>

@@ -103,6 +103,11 @@
                                         <TextBox Text="{Binding Phone}" Style="{StaticResource ModernInput}"/>
                                     </StackPanel>
 
+                                    <StackPanel Margin="0,0,0,15" Visibility="{Binding ShowCompanyName, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="Company Name" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding CompanyName}" Style="{StaticResource ModernInput}"/>
+                                    </StackPanel>
+
                                     <StackPanel Margin="0,0,0,15">
                                         <TextBlock Text="Location / Branch" Style="{StaticResource FormLabelText}"/>
                                         <TextBox Text="{Binding Location}" Style="{StaticResource ModernInput}"/>

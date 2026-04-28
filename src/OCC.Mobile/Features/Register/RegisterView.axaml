@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Register"
+             x:DataType="vm:RegisterViewModel"
+             x:Class="OCC.Mobile.Features.Register.RegisterView">
+
+    <Grid Background="{DynamicResource BrandDarkBrush}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Spacing="0" MaxWidth="450" Margin="20,5,20,100">
+                <!-- Official Logo Section -->
+                <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" Height="150" RenderOptions.BitmapInterpolationMode="HighQuality" Margin="0,0,0,10" />
+                                
+                <TextBlock Text="Create Your Account" 
+                           Foreground="{DynamicResource BrandSubTextBrush}" 
+                           FontSize="18" 
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,20"/>
+
+                <!-- Input Section -->
+                <StackPanel Spacing="15" Margin="0,10,0,0">
+                    <Grid ColumnDefinitions="*, 10, *">
+                        <TextBox Grid.Column="0" Text="{Binding FirstName}" PlaceholderText="First Name" Height="55" />
+                        <TextBox Grid.Column="2" Text="{Binding LastName}" PlaceholderText="Last Name" Height="55" />
+                    </Grid>
+
+                    <TextBox Text="{Binding Email}" 
+                             PlaceholderText="Email Address" 
+                             Height="55" />
+                    
+                    <TextBox Text="{Binding Password}" 
+                             PlaceholderText="Password" 
+                             PasswordChar="*" 
+                             Height="55" />
+                    
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Requested Role" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="12"/>
+                        <ComboBox ItemsSource="{Binding Roles}"
+                                  SelectedItem="{Binding SelectedRole}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="55"
+                                  Background="{DynamicResource InputBackgroundBrush}"/>
+                    </StackPanel>
+
+                    <!-- Company Name (only if External Contractor) -->
+                    <StackPanel Spacing="5" IsVisible="{Binding SelectedRole, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ExternalContractor}">
+                        <TextBlock Text="Company Name" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="12"/>
+                        <TextBox Text="{Binding CompanyName}" 
+                                 PlaceholderText="Your Company Name"
+                                 Height="55"
+                                 Background="{DynamicResource InputBackgroundBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Error Message -->
+                <TextBlock Text="{Binding ErrorMessage}" 
+                           Foreground="#EF4444" 
+                           FontSize="14" 
+                           Margin="0,15,0,0"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <!-- Success Message -->
+                <TextBlock Text="{Binding SuccessMessage}" 
+                           Foreground="#10B981" 
+                           FontSize="14" 
+                           Margin="0,15,0,0"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SuccessMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <!-- Register Button -->
+                <Button Command="{Binding RegisterCommand}" 
+                        Classes="primary"
+                        Height="60" 
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Stretch" 
+                        Content="REGISTER"/>
+
+                <Button Command="{Binding NavigateToLoginCommand}"
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        HorizontalAlignment="Center"
+                        Margin="0,10">
+                    <TextBlock Text="Already have an account? Log in" Foreground="{DynamicResource BrandOrangeBrush}" FontSize="14" FontWeight="SemiBold"/>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Busy Overlay -->
+        <Border Background="#CC000000" CornerRadius="0" IsVisible="{Binding IsBusy}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource BrandOrangeBrush}" Background="#20FFFFFF"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace OCC.Shared.Models
 {
@@ -13,8 +14,6 @@ namespace OCC.Shared.Models
     /// </remarks>
     public class Project : BaseEntity
     {
-
-
         /// <summary>
         /// The display name of the project (e.g., "Engen Bendor").
         /// </summary>
@@ -79,7 +78,25 @@ namespace OCC.Shared.Models
         /// <summary>
         /// Current lifecycle status (e.g., "Planning", "Active", "Completed", "OnHold").
         /// </summary>
-        public string Status { get; set; } = "Planning";
+        private string _status = "Planning";
+        /// <summary>
+        /// Current lifecycle status (e.g., "Planning", "Active", "Completed", "OnHold").
+        /// Returns "Completed" automatically if all tasks are finished.
+        /// </summary>
+        public string Status 
+        { 
+            get 
+            {
+                if (Math.Round(Progress) >= 100 && _status != "Archived" && _status != "OnHold" && _status != "Cancelled")
+                    return "Completed";
+                
+                if (Progress > 0 && (_status == "Planning" || _status == "Not Started"))
+                    return "In Progress";
+                    
+                return _status;
+            }
+            set => _status = value;
+        }
         
         /// <summary>
         /// General location or branch branding for the project.
@@ -160,6 +177,25 @@ namespace OCC.Shared.Models
         /// Collection of variation orders for this project.
         /// </summary>
         public virtual ICollection<ProjectVariationOrder> VariationOrders { get; set; } = new List<ProjectVariationOrder>();
+        
+        /// <summary>
+        /// Calculated progress percentage based on task completion.
+        /// </summary>
+        public double Progress => Tasks != null && Tasks.Any() ? Tasks.Average(t => t.PercentComplete) : 0;
 
+        /// <summary>
+        /// Total number of tasks in this project.
+        /// </summary>
+        public int TotalTaskCount => Tasks?.Count ?? 0;
+
+        /// <summary>
+        /// Number of completed tasks.
+        /// </summary>
+        public int CompletedTaskCount => Tasks?.Count(t => t.IsComplete) ?? 0;
+
+        /// <summary>
+        /// Formatted task progress (e.g., "20 / 55").
+        /// </summary>
+        public string TaskProgressString => $"{CompletedTaskCount} / {TotalTaskCount}";
     }
 }

@@ -15,7 +15,7 @@ namespace OCC.Mobile.Services
         public string LastEmail { get; set; } = string.Empty;
         public bool RememberEmail { get; set; } = true;
         public AppEnvironment SelectedEnvironment { get; set; } = AppEnvironment.Local;
-        public string? CustomLocalUrl { get; set; } = "http://192.168.0.191:5237";
+        public string? CustomLocalUrl { get; set; } = string.Empty;
     }
 
     public interface ILocalSettingsService

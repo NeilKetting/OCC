@@ -12,6 +12,7 @@ namespace OCC.Mobile.Services
         User? CurrentUser { get; }
         string? CurrentToken { get; }
         Task<(bool Success, string ErrorMessage)> LoginAsync(string email, string password);
+        Task<(bool Success, User? User, string ErrorMessage)> RegisterAsync(User user);
         void Logout();
     }
 
@@ -97,6 +98,30 @@ namespace OCC.Mobile.Services
             CurrentUser = null;
             CurrentToken = null;
             _httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+
+        public async Task<(bool Success, User? User, string ErrorMessage)> RegisterAsync(User user)
+        {
+            try
+            {
+                var baseUrl = GetBaseUrl();
+                var url = $"{baseUrl}api/Auth/register";
+
+                var response = await _httpClient.PostAsJsonAsync(url, user);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var createdUser = await response.Content.ReadFromJsonAsync<User>();
+                    return (true, createdUser, string.Empty);
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                return (false, null, string.IsNullOrWhiteSpace(error) ? "Registration failed" : error.Trim('"'));
+            }
+            catch (Exception ex)
+            {
+                return (false, null, $"Connection error: {ex.Message}");
+            }
         }
 
         private class LoginResponse

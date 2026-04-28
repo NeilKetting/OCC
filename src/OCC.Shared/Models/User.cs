@@ -30,6 +30,9 @@ namespace OCC.Shared.Models
         /// <summary> Contact telephone number. </summary>
         public string? Phone { get; set; }
 
+        /// <summary> Name of the company if the user is an external contractor. </summary>
+        public string? CompanyName { get; set; }
+
         /// <summary> Physical location or office base. </summary>
         public string? Location { get; set; }
 
@@ -79,6 +82,8 @@ namespace OCC.Shared.Models
         SiteManager,
         /// <summary> Third-party access (restricted). </summary>
         ExternalContractor,
+        /// <summary> On-site supervision and reporting. </summary>
+        Foreman,
         /// <summary> Health, Safety, Environment, and Quality access. </summary>
         HSEQ,
         /// <summary> Minimal read-only or pending access. </summary>

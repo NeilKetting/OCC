@@ -34,23 +34,55 @@ namespace OCC.API.Controllers
             {
                 var query = _context.Projects
                     .Include(p => p.Tasks)
-                    .Include(p => p.SiteManager)
-                    .AsNoTracking();
+                    .Include(p => p.SiteManager);
 
                 var projects = await query.ToListAsync();
-
-                var summaries = projects.Select(p => new ProjectSummaryDto
+                bool anyChanges = false;
+                foreach (var p in projects)
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Status = p.Status,
-                    ProjectManager = p.ProjectManager,
-                    TaskCount = p.Tasks.Count,
-                    Progress = p.Tasks.Any() ? (int)Math.Round(p.Tasks.Average(t => (double)t.PercentComplete)) : 0,
-                    LatestFinish = p.Tasks.Any() ? p.Tasks.Max(t => t.FinishDate) : p.EndDate,
-                    StartDate = p.StartDate,
-                    SiteManagerId = p.SiteManagerId,
-                    SiteManagerName = p.SiteManager?.DisplayName ?? "Unassigned"
+                    var avgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.PercentComplete) : 0;
+                    var oldStatus = p.Status;
+
+                    if (Math.Round(avgProgress) >= 100 && p.Status != "Archived" && p.Status != "OnHold" && p.Status != "Cancelled")
+                        p.Status = "Completed";
+                    else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
+                        p.Status = "In Progress";
+                    
+                    if (oldStatus != p.Status)
+                    {
+                        _context.Entry(p).State = EntityState.Modified;
+                        anyChanges = true;
+                        _logger.LogInformation("Updating DB Status for Project {Name} from {Old} to {New}", p.Name, oldStatus, p.Status);
+                    }
+                }
+                if (anyChanges) await _context.SaveChangesAsync();
+
+                var summaries = projects.Select(p => 
+                {
+                    var avgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.PercentComplete) : 0;
+                    var displayStatus = p.Status;
+
+                    if (Math.Round(avgProgress) >= 100 && p.Status != "Archived" && p.Status != "OnHold" && p.Status != "Cancelled")
+                        displayStatus = "Completed";
+                    else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
+                        displayStatus = "In Progress";
+
+                    _logger.LogInformation("Project {Name}: Progress {Progress}, Raw {Raw}, DB Status {DbStatus}, Display Status {DisplayStatus}", 
+                        p.Name, Math.Round(avgProgress), avgProgress, p.Status, displayStatus);
+
+                    return new ProjectSummaryDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Status = displayStatus,
+                        ProjectManager = p.ProjectManager,
+                        TaskCount = p.Tasks.Count,
+                        Progress = (int)Math.Round(avgProgress),
+                        LatestFinish = p.Tasks.Any() ? p.Tasks.Max(t => t.FinishDate) : p.EndDate,
+                        StartDate = p.StartDate,
+                        SiteManagerId = p.SiteManagerId,
+                        SiteManagerName = p.SiteManager?.DisplayName ?? "Unassigned"
+                    };
                 }).ToList();
 
                 return Ok(summaries);
@@ -115,12 +147,16 @@ namespace OCC.API.Controllers
                     );
                 }
 
-                var projectIds = await query.Select(p => p.Id).Distinct().ToListAsync();
-                
-                return await _context.Projects
-                    .Include(p => p.Tasks)
-                    .Where(p => projectIds.Contains(p.Id))
-                    .ToListAsync();
+                var projects = await query.ToListAsync();
+                foreach (var p in projects)
+                {
+                    var avgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.PercentComplete) : 0;
+                    if (Math.Round(avgProgress) >= 100 && p.Status != "Archived" && p.Status != "OnHold" && p.Status != "Cancelled")
+                        p.Status = "Completed";
+                    else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
+                        p.Status = "In Progress";
+                }
+                return projects;
             }
             catch (Exception ex)
             {
@@ -145,6 +181,13 @@ namespace OCC.API.Controllers
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (project == null) return NotFound();
+
+                var avgProgress = project.Tasks.Any() ? project.Tasks.Average(t => (double)t.PercentComplete) : 0;
+                if (Math.Round(avgProgress) >= 100 && project.Status != "Archived" && project.Status != "OnHold" && project.Status != "Cancelled")
+                    project.Status = "Completed";
+                else if (avgProgress > 0 && (project.Status == "Planning" || project.Status == "Not Started"))
+                    project.Status = "In Progress";
+
                 return project;
             }
             catch (Exception ex)

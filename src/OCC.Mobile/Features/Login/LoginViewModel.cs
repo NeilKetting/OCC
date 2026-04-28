@@ -6,6 +6,9 @@ using OCC.Mobile.Features.AdminDashboard;
 using OCC.Mobile.Services;
 using OCC.Shared.Models;
 using System;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace OCC.Mobile.Features.Login
@@ -58,11 +61,39 @@ namespace OCC.Mobile.Features.Login
             SelectedEnvironment = _settingsService.Settings.SelectedEnvironment;
             CustomLocalUrl = _settingsService.Settings.CustomLocalUrl;
             
-            // Fallback for first-time use on this IP
+            // Fallback for first-time use to automatically pick up the PC's local IP
             if (string.IsNullOrEmpty(CustomLocalUrl))
             {
-                CustomLocalUrl = "http://192.168.0.191:5237";
+                CustomLocalUrl = $"http://{GetLocalIPAddress()}:5237";
             }
+        }
+
+        private string GetLocalIPAddress()
+        {
+            try
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        var ipStr = ip.ToString();
+                        // Prefer standard local subnets
+                        if (ipStr.StartsWith("192.168.") || ipStr.StartsWith("10.") || ipStr.StartsWith("172."))
+                        {
+                            return ipStr;
+                        }
+                    }
+                }
+                
+                var anyIp = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+                if (anyIp != null) return anyIp.ToString();
+            }
+            catch
+            {
+                // Ignore and fallback to localhost
+            }
+            return "127.0.0.1";
         }
 
         [RelayCommand]
@@ -109,10 +140,13 @@ namespace OCC.Mobile.Features.Login
                     // Navigation based on Role
                     ErrorMessage = string.Empty;
                     
-                    if (_authService.CurrentUser.UserRole == UserRole.Admin || 
-                        _authService.CurrentUser.UserRole == UserRole.SiteManager)
+                    if (_authService.CurrentUser.UserRole == UserRole.Admin)
                     {
                         _navigationService.NavigateTo<AdminDashboardViewModel>();
+                    }
+                    else if (_authService.CurrentUser.UserRole == UserRole.ExternalContractor)
+                    {
+                        _navigationService.NavigateTo<Dashboard.MyTasksViewModel>();
                     }
                     else
                     {
@@ -132,6 +166,12 @@ namespace OCC.Mobile.Features.Login
             {
                 IsBusy = false;
             }
+        }
+
+        [RelayCommand]
+        private void NavigateToRegister()
+        {
+            _navigationService.NavigateTo<Register.RegisterViewModel>();
         }
     }
 }

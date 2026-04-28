@@ -20,6 +20,7 @@ namespace OCC.WpfClient.Services
         private readonly ILogger<SignalRService> _logger;
         private readonly SemaphoreSlim _connectionLock = new(1, 1);
         private readonly string _debugLogPath;
+        private DateTime _lastTaskToastTime = DateTime.MinValue;
 
         public event Action<List<UserConnectionInfo>>? UserListUpdated;
         public event Action<string>? NotificationReceived;
@@ -119,10 +120,12 @@ namespace OCC.WpfClient.Services
 
                 App.Current.Dispatcher.Invoke(() => {
                     // Only show a toast for the main task update to avoid "double" notifications
-                    if (entityType == "ProjectTask")
+                    // Debounce by 1 second to handle parent rollups sending multiple events
+                    if (entityType == "ProjectTask" && (DateTime.Now - _lastTaskToastTime).TotalSeconds > 1)
                     {
+                        _lastTaskToastTime = DateTime.Now;
                          WeakReferenceMessenger.Default.Send(new OCC.WpfClient.Infrastructure.Messages.ToastNotificationMessage(
-                            new Models.ToastMessage("Sync", $"Task {action}d from mobile", Models.ToastType.Info)));
+                            new Models.ToastMessage("Sync", "Realtime SYNC Completed", Models.ToastType.Info)));
                     }
 
                     // Send specific messages for Desktop ViewModels that listen for them

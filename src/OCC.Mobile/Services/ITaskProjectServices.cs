@@ -19,4 +19,14 @@ namespace OCC.Mobile.Services
         Task<IEnumerable<Project>> GetProjectsAsync(bool assignedToMe = false);
         Task<Project?> GetProjectAsync(Guid id);
     }
+
+    public interface IInventoryService
+    {
+        Task<IEnumerable<InventoryItem>> GetProjectInventoryAsync(Guid projectId);
+    }
+
+    public interface ITeamService
+    {
+        Task<IEnumerable<ProjectTeamMember>> GetProjectTeamAsync(Guid projectId);
+    }
 }

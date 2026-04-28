@@ -98,12 +98,15 @@ namespace OCC.Mobile
             // ViewModels
             services.AddSingleton<MainViewModel>();
             services.AddTransient<LoginViewModel>();
+            services.AddTransient<Features.Register.RegisterViewModel>();
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<AdminDashboardViewModel>();
             services.AddTransient<ActiveProjectsViewModel>();
             services.AddTransient<OverdueTasksViewModel>();
             services.AddTransient<MyTasksViewModel>();
             services.AddTransient<TaskDetailViewModel>();
+            services.AddTransient<InventoryViewModel>();
+            services.AddTransient<TeamViewModel>();
             
             // Services
             services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
@@ -112,6 +115,8 @@ namespace OCC.Mobile
             services.AddSingleton<IPushNotificationService, PushNotificationService>();
             services.AddSingleton<IProjectTaskService, ProjectTaskService>();
             services.AddSingleton<IProjectService, ProjectService>();
+            services.AddSingleton<IInventoryService, InventoryService>();
+            services.AddSingleton<ITeamService, TeamService>();
             services.AddSingleton<IHseqService, HseqService>();
             services.AddSingleton<ISignalRService, SignalRService>();
             services.AddSingleton<Func<MainViewModel>>(s => () => s.GetRequiredService<MainViewModel>());

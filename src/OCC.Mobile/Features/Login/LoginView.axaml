@@ -71,7 +71,8 @@
                         HorizontalAlignment="Stretch" 
                         Content="LOG IN"/>
 
-                <Button Background="Transparent" 
+                <Button Command="{Binding NavigateToRegisterCommand}"
+                        Background="Transparent" 
                         BorderThickness="0" 
                         HorizontalAlignment="Center"
                         Margin="0,10">
