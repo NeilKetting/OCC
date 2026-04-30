@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Profile"
+             x:DataType="vm:ProfileViewModel"
+             x:Class="OCC.Mobile.Features.Profile.ProfileView">
+    <ScrollViewer Background="{DynamicResource BrandDarkBrush}">
+        <StackPanel Spacing="30" Margin="20">
+            <TextBlock Text="My Profile" 
+                       Foreground="White" 
+                       FontSize="28" 
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Margin="0,40,0,0"/>
+
+            <!-- Profile Avatar -->
+            <Border Background="{DynamicResource BrandOrangeBrush}" Width="120" Height="120" CornerRadius="60" HorizontalAlignment="Center">
+                <Grid>
+                    <TextBlock Text="👤" Foreground="White" FontSize="60" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="True"/>
+                </Grid>
+            </Border>
+
+            <!-- User Info Cards -->
+            <StackPanel Spacing="15">
+                <Border Background="#1E293B" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="FULL NAME" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding CurrentUser.DisplayName}" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#1E293B" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="EMAIL ADDRESS" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding CurrentUser.Email}" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#1E293B" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="ACCOUNT ROLE" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding CurrentUser.UserRole}" Foreground="{DynamicResource BrandOrangeBrush}" FontSize="18" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Actions -->
+            <StackPanel Spacing="15" Margin="0,20,0,0">
+                <Button Content="Edit Profile Information" 
+                        Classes="primary" 
+                        HorizontalAlignment="Stretch" 
+                        Height="50"/>
+                
+                <Button Command="{Binding LogoutCommand}" 
+                        Content="Log Out" 
+                        Background="#EF4444" 
+                        Foreground="White"
+                        CornerRadius="8"
+                        HorizontalAlignment="Stretch" 
+                        Height="50"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        FontWeight="Bold"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

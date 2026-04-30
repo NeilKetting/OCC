@@ -250,8 +250,67 @@ namespace OCC.Mobile.Services
         private readonly HttpClient _httpClient;
         private readonly IAuthService _authService;
         private readonly ILocalSettingsService _settingsService;
-
+ 
         public TeamService(IAuthService authService, ILocalSettingsService settingsService)
+        {
+            _authService = authService;
+            _settingsService = settingsService;
+            _httpClient = new HttpClient();
+        }
+ 
+        private string GetBaseUrl()
+        {
+            if (_settingsService.Settings.SelectedEnvironment == AppEnvironment.Local)
+            {
+                if (!string.IsNullOrEmpty(_settingsService.Settings.CustomLocalUrl))
+                {
+                    var url = _settingsService.Settings.CustomLocalUrl.Trim();
+                    if (!url.EndsWith("/")) url += "/";
+                    return url;
+                }
+ 
+                #if ANDROID
+                return "http://10.0.2.2:5237/";
+                #else
+                return "http://localhost:5237/";
+                #endif
+            }
+            return "http://102.221.36.149:8081/";
+        }
+ 
+        private void EnsureAuthorization()
+        {
+            var token = _authService.CurrentToken;
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+        }
+ 
+        public async Task<IEnumerable<ProjectTeamMember>> GetProjectTeamAsync(Guid projectId)
+        {
+            try
+            {
+                EnsureAuthorization();
+                var baseUrl = GetBaseUrl();
+                var url = $"{baseUrl}api/TeamMembers/project/{projectId}";
+                return await _httpClient.GetFromJsonAsync<IEnumerable<ProjectTeamMember>>(url) ?? new List<ProjectTeamMember>();
+            }
+            catch (Exception)
+            {
+                return new List<ProjectTeamMember>();
+            }
+        }
+    }
+    
+    public class TaskCommentService : ITaskCommentService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IAuthService _authService;
+        private readonly ILocalSettingsService _settingsService;
+
+        public TaskCommentService(IAuthService authService, ILocalSettingsService settingsService)
         {
             _authService = authService;
             _settingsService = settingsService;
@@ -288,19 +347,28 @@ namespace OCC.Mobile.Services
             }
         }
 
-        public async Task<IEnumerable<ProjectTeamMember>> GetProjectTeamAsync(Guid projectId)
+        public async Task<IEnumerable<TaskComment>> GetCommentsAsync(Guid taskId)
         {
             try
             {
                 EnsureAuthorization();
                 var baseUrl = GetBaseUrl();
-                var url = $"{baseUrl}api/TeamMembers/project/{projectId}";
-                return await _httpClient.GetFromJsonAsync<IEnumerable<ProjectTeamMember>>(url) ?? new List<ProjectTeamMember>();
+                var url = $"{baseUrl}api/TaskComments?taskId={taskId}";
+                return await _httpClient.GetFromJsonAsync<IEnumerable<TaskComment>>(url) ?? new List<TaskComment>();
             }
             catch (Exception)
             {
-                return new List<ProjectTeamMember>();
+                return new List<TaskComment>();
             }
+        }
+
+        public async Task AddCommentAsync(TaskComment comment)
+        {
+            EnsureAuthorization();
+            var baseUrl = GetBaseUrl();
+            var url = $"{baseUrl}api/TaskComments";
+            var response = await _httpClient.PostAsJsonAsync(url, comment);
+            response.EnsureSuccessStatusCode();
         }
     }
 }

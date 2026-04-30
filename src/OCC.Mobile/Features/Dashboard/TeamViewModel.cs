@@ -45,7 +45,7 @@ namespace OCC.Mobile.Features.Dashboard
         [RelayCommand]
         private void GoBack()
         {
-            _navigationService.NavigateTo<DashboardViewModel>();
+            _navigationService.GoBack();
         }
     }
 }

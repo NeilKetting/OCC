@@ -181,17 +181,17 @@ namespace OCC.Shared.Models
         /// <summary>
         /// Calculated progress percentage based on task completion.
         /// </summary>
-        public double Progress => Tasks != null && Tasks.Any() ? Tasks.Average(t => t.PercentComplete) : 0;
+        public double Progress => Tasks != null && Tasks.Any(t => t != null) ? Tasks.Where(t => t != null).Average(t => t.PercentComplete) : 0;
 
         /// <summary>
         /// Total number of tasks in this project.
         /// </summary>
-        public int TotalTaskCount => Tasks?.Count ?? 0;
+        public int TotalTaskCount => Tasks?.Count(t => t != null) ?? 0;
 
         /// <summary>
         /// Number of completed tasks.
         /// </summary>
-        public int CompletedTaskCount => Tasks?.Count(t => t.IsComplete) ?? 0;
+        public int CompletedTaskCount => Tasks?.Count(t => t != null && t.IsComplete) ?? 0;
 
         /// <summary>
         /// Formatted task progress (e.g., "20 / 55").

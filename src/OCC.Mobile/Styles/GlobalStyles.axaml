@@ -124,4 +124,55 @@
         <Setter Property="Background" Value="#334155"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandOrangeBrush}"/>
     </Style>
+    <!-- Status Selection Buttons -->
+    <Style Selector="RadioButton.status-btn">
+        <Setter Property="Background" Value="#1E293B"/>
+        <Setter Property="Foreground" Value="#94A3B8"/>
+        <Setter Property="Padding" Value="15,10"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#334155"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.status-btn:checked">
+        <Setter Property="Background" Value="{DynamicResource BrandOrangeBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandOrangeBrush}"/>
+    </Style>
+    <Style Selector="RadioButton.status-btn:pointerover">
+        <Setter Property="Background" Value="#334155"/>
+    </Style>
+    <!-- Tab Navigation Buttons -->
+    <Style Selector="Button.tab-button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.tab-button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.tab-button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.tab-button Path">
+        <Setter Property="Fill" Value="#94A3B8"/>
+    </Style>
+    <Style Selector="Button.tab-button TextBlock">
+        <Setter Property="Foreground" Value="#94A3B8"/>
+    </Style>
 </Styles>

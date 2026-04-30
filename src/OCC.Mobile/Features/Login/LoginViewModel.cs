@@ -144,10 +144,6 @@ namespace OCC.Mobile.Features.Login
                     {
                         _navigationService.NavigateTo<AdminDashboardViewModel>();
                     }
-                    else if (_authService.CurrentUser.UserRole == UserRole.ExternalContractor)
-                    {
-                        _navigationService.NavigateTo<Dashboard.MyTasksViewModel>();
-                    }
                     else
                     {
                         _navigationService.NavigateTo<DashboardViewModel>();

@@ -29,4 +29,10 @@ namespace OCC.Mobile.Services
     {
         Task<IEnumerable<ProjectTeamMember>> GetProjectTeamAsync(Guid projectId);
     }
+    
+    public interface ITaskCommentService
+    {
+        Task<IEnumerable<TaskComment>> GetCommentsAsync(Guid taskId);
+        Task AddCommentAsync(TaskComment comment);
+    }
 }

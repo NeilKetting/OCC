@@ -107,6 +107,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _authService = authService;
             
             _task = new ProjectTaskWrapper(new ProjectTask());
+ 
+            // Listen for real-time updates
+            WeakReferenceMessenger.Default.Register<OCC.WpfClient.Infrastructure.Messages.TaskUpdatedMessage>(this, (r, m) =>
+            {
+                if (m.TaskId == _currentTaskId)
+                {
+                    App.Current.Dispatcher.Invoke(async () => 
+                    {
+                        await LoadTaskById(_currentTaskId);
+                    });
+                }
+            });
         }
 
         public async Task LoadTaskById(Guid taskId)

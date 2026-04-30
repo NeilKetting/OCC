@@ -46,7 +46,7 @@
 
 	<ItemGroup>
 		<Resource Update="Assets\Images\app.ico">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
 		<Resource Update="Assets\Images\occ_bgi.jpg">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

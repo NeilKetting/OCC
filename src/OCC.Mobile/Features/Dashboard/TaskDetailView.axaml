@@ -1,8 +1,54 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:OCC.Mobile.Features.Dashboard"
+             xmlns:conv="clr-namespace:OCC.Mobile.Infrastructure.Converters"
              x:DataType="vm:TaskDetailViewModel"
              x:Class="OCC.Mobile.Features.Dashboard.TaskDetailView">
+ 
+    <UserControl.Resources>
+        <conv:EqualityConverter x:Key="EqualityConverter" />
+    </UserControl.Resources>
+ 
+    <UserControl.Styles>
+        <Style Selector="RadioButton.status-btn">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="RootBorder" 
+                            Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8" 
+                            Padding="12,8">
+                        <ContentPresenter Name="PART_ContentPresenter"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                    <BrushTransition Property="Foreground" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+ 
+        <Style Selector="RadioButton.status-btn:checked">
+            <Setter Property="Background" Value="{DynamicResource BrandOrangeBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandOrangeBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+ 
+        <Style Selector="RadioButton.status-btn:pointerover:not(:checked)">
+            <Setter Property="Background" Value="#334155" />
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto, *, Auto">
         <!-- Header -->
@@ -33,13 +79,33 @@
                     <TextBlock Text="Construction Site: Engen Bendor" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="14"/>
                 </StackPanel>
 
-                <!-- Status Selection -->
                 <StackPanel Spacing="10">
                     <TextBlock Text="CURRENT STATUS" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
-                    <ComboBox ItemsSource="{Binding Statuses}" 
-                              SelectedItem="{Binding Status}"
-                              HorizontalAlignment="Stretch"
-                              Classes="modern-combo"/>
+                    <WrapPanel>
+                        <RadioButton Content="Not Started" GroupName="StatusGroup" Classes="status-btn"
+                                     IsChecked="{Binding Status, Converter={StaticResource EqualityConverter}, ConverterParameter='Not Started', Mode=OneWay}"
+                                     Command="{Binding SetStatusCommand}" CommandParameter="Not Started" Margin="0,0,8,8"/>
+                        
+                        <RadioButton Content="Started" GroupName="StatusGroup" Classes="status-btn"
+                                     IsChecked="{Binding Status, Converter={StaticResource EqualityConverter}, ConverterParameter='Started', Mode=OneWay}"
+                                     Command="{Binding SetStatusCommand}" CommandParameter="Started" Margin="0,0,8,8"/>
+                        
+                        <RadioButton Content="Halfway" GroupName="StatusGroup" Classes="status-btn"
+                                     IsChecked="{Binding Status, Converter={StaticResource EqualityConverter}, ConverterParameter='Halfway', Mode=OneWay}"
+                                     Command="{Binding SetStatusCommand}" CommandParameter="Halfway" Margin="0,0,8,8"/>
+                        
+                        <RadioButton Content="Almost Done" GroupName="StatusGroup" Classes="status-btn"
+                                     IsChecked="{Binding Status, Converter={StaticResource EqualityConverter}, ConverterParameter='Almost Done', Mode=OneWay}"
+                                     Command="{Binding SetStatusCommand}" CommandParameter="Almost Done" Margin="0,0,8,8"/>
+                        
+                        <RadioButton Content="Completed" GroupName="StatusGroup" Classes="status-btn"
+                                     IsChecked="{Binding Status, Converter={StaticResource EqualityConverter}, ConverterParameter='Completed', Mode=OneWay}"
+                                     Command="{Binding SetStatusCommand}" CommandParameter="Completed" Margin="0,0,8,8"/>
+                        
+                        <RadioButton Content="On Hold" GroupName="StatusGroup" Classes="status-btn"
+                                     IsChecked="{Binding Status, Converter={StaticResource EqualityConverter}, ConverterParameter='On Hold', Mode=OneWay}"
+                                     Command="{Binding SetStatusCommand}" CommandParameter="On Hold" Margin="0,0,8,8"/>
+                    </WrapPanel>
                 </StackPanel>
 
                 <!-- Progress Section -->
@@ -57,37 +123,58 @@
                                  Foreground="{DynamicResource BrandOrangeBrush}"/>
                 </StackPanel>
 
-                <!-- On Hold Section -->
-                <Border Background="#1E293B" CornerRadius="12" Padding="15">
-                    <StackPanel Spacing="15">
-                        <Grid>
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="On Hold" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                                <TextBlock Text="Suspend work on this task temporarily" Foreground="#64748B" FontSize="12"/>
-                            </StackPanel>
-                            <ToggleSwitch IsChecked="{Binding IsOnHold}" HorizontalAlignment="Right"/>
-                        </Grid>
-
-                        <StackPanel Spacing="10" IsVisible="{Binding IsOnHold}">
-                            <TextBlock Text="HOLD REASON" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
-                            <TextBox Text="{Binding HoldReason}" 
-                                     PlaceholderText="Explain why this task is being put on hold..."
-                                     AcceptsReturn="True"
-                                     MinHeight="100"
-                                     TextWrapping="Wrap"/>
-                        </StackPanel>
+                <!-- On Hold Reason (Visible only when status is On Hold) -->
+                <Border Background="#1E293B" CornerRadius="12" Padding="15" IsVisible="{Binding IsOnHold}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="HOLD REASON" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                        <TextBox Text="{Binding HoldReason}" 
+                                 PlaceholderText="Explain why this task is being put on hold..."
+                                 AcceptsReturn="True"
+                                 MinHeight="100"
+                                 TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
+
+                <!-- Comments Section -->
+                <StackPanel Spacing="15">
+                    <TextBlock Text="COMMENTS" Foreground="#94A3B8" FontSize="12" FontWeight="Bold"/>
+                    
+                    <!-- Add Comment -->
+                    <Border Background="#1E293B" CornerRadius="12" Padding="15">
+                        <StackPanel Spacing="10">
+                            <TextBox Text="{Binding NewCommentContent}" 
+                                     PlaceholderText="Add a comment..."
+                                     AcceptsReturn="True"
+                                     MinHeight="60"
+                                     TextWrapping="Wrap"/>
+                            <Button Command="{Binding AddCommentCommand}" 
+                                    Content="Post Comment" 
+                                    Classes="primary" 
+                                    HorizontalAlignment="Right"
+                                    Padding="15,8"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Comments List -->
+                    <ItemsControl ItemsSource="{Binding Comments}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#1A1F2B" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                                    <StackPanel Spacing="5">
+                                        <Grid>
+                                            <TextBlock Text="{Binding AuthorName}" Foreground="{DynamicResource BrandOrangeBrush}" FontWeight="Bold" FontSize="13"/>
+                                            <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:g}'}" Foreground="#64748B" FontSize="11" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding Content}" Foreground="White" FontSize="14" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Footer Actions -->
-        <Border Grid.Row="2" Background="{DynamicResource BrandDarkerBrush}" Padding="20" BorderBrush="#1E293B" BorderThickness="0,1,0,0">
-            <Button Command="{Binding SaveChangesCommand}" 
-                    Classes="primary" 
-                    Content="Update Task Progress" 
-                    HorizontalAlignment="Stretch" 
-                    Height="50"/>
-        </Border>
+        <!-- Footer Actions Removed as we now auto-update -->
     </Grid>
 </UserControl>

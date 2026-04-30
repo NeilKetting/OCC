@@ -100,6 +100,7 @@ namespace OCC.Shared.DTOs
         public string ProjectName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string? DisplayName { get; set; }
+        public Guid? ProjectId { get; set; }
 
         public string Message
         {

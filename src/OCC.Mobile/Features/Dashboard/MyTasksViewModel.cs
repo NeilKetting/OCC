@@ -163,7 +163,7 @@ namespace OCC.Mobile.Features.Dashboard
         private void SelectTask(ProjectTask task)
         {
             if (task == null) return;
-            _navigationService.NavigateTo(new TaskDetailViewModel(_navigationService, _taskService, task));
+            _navigationService.NavigateTo<TaskDetailViewModel>(vm => vm.Task = task);
         }
 
         [RelayCommand]

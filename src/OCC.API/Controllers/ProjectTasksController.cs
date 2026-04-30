@@ -224,6 +224,7 @@ namespace OCC.API.Controllers
                         Action = "Status Changed",
                         TaskName = t.Name,
                         ProjectName = t.Project?.Name ?? string.Empty,
+                        ProjectId = t.ProjectId,
                         Status = t.Status
                     };
                 }).ToList();
@@ -309,7 +310,12 @@ namespace OCC.API.Controllers
                 
                 if (wasNotCompleted && (task.Status == "Completed" || task.Status == "Done"))
                 {
+                    existingTask.ActualCompleteDate = DateTime.UtcNow;
                     await UpdateContractorPerformance(existingTask);
+                }
+                else if (!wasNotCompleted && task.Status != "Completed" && task.Status != "Done")
+                {
+                    existingTask.ActualCompleteDate = null;
                 }
 
                 existingTask.Duration = task.Duration;
@@ -379,6 +385,7 @@ namespace OCC.API.Controllers
                             User = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "System",
                             DisplayName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value,
                             TaskName = task.Name,
+                            ProjectId = task.ProjectId,
                             Status = task.Status
                         };
                         await _hubContext.Clients.All.SendAsync("DashboardUpdate", updateDto);

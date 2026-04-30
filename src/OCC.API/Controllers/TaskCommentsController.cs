@@ -67,6 +67,7 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "TaskComment", "Create", comment.Id);
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", comment.TaskId);
 
                 return CreatedAtAction("GetTaskComment", new { id = comment.Id }, comment);
             }
@@ -84,10 +85,12 @@ namespace OCC.API.Controllers
             {
                 var comment = await _context.TaskComments.FindAsync(id);
                 if (comment == null) return NotFound();
+                var taskId = comment.TaskId;
                 _context.TaskComments.Remove(comment);
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "TaskComment", "Delete", id);
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", taskId);
 
                 return NoContent();
             }

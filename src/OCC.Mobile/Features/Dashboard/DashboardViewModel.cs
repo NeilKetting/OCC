@@ -14,38 +14,89 @@ namespace OCC.Mobile.Features.Dashboard
         private readonly IProjectService _projectService;
         private readonly IProjectTaskService _taskService;
         private readonly ISignalRService _signalRService;
+        private readonly IAuthService _authService;
         private readonly System.Threading.SemaphoreSlim _loadSemaphore = new(1, 1);
 
         [ObservableProperty]
         private int _activeSitesCount;
 
         [ObservableProperty]
-        private System.Collections.ObjectModel.ObservableCollection<OCC.Shared.Models.Project> _activeProjects = new();
-
-        [ObservableProperty]
         private ObservableCollection<OCC.Shared.DTOs.DashboardUpdateDto> _recentActivity = new();
 
         [ObservableProperty]
-        private OCC.Shared.Models.Project? _selectedProject;
+        private string _greeting = string.Empty;
 
-        public DashboardViewModel(INavigationService navigationService, IProjectService projectService, IProjectTaskService taskService, ISignalRService signalRService)
+        [ObservableProperty]
+        private int _dailyTotalTasks;
+
+        [ObservableProperty]
+        private int _dailyCompletedTasks;
+
+        [ObservableProperty]
+        private double _dailyProgress;
+
+        [ObservableProperty]
+        private double _dailyProgressAngle;
+
+        [ObservableProperty]
+        private double _dailyPendingProgressAngle;
+
+        [ObservableProperty]
+        private double _overallProgress;
+
+        [ObservableProperty]
+        private double _overallProgressAngle;
+
+        [ObservableProperty]
+        private double _overallPendingProgressAngle;
+
+        [ObservableProperty]
+        private int _overallTotalTasks;
+
+        [ObservableProperty]
+        private int _overallCompletedTasks;
+
+        [ObservableProperty]
+        private int _overdueTasksCount;
+
+        [ObservableProperty]
+        private int _pendingTasksCount;
+
+        [ObservableProperty]
+        private string _projectHealth = "On Track";
+
+        [ObservableProperty]
+        private string _projectHealthColor = "#10B981"; // Teal
+
+        [ObservableProperty]
+        private string _etaDateString = "N/A";
+
+        [ObservableProperty]
+        private string _etaStatus = "Calculating...";
+
+        public DashboardViewModel(INavigationService navigationService, IProjectService projectService, IProjectTaskService taskService, ISignalRService signalRService, IAuthService authService)
         {
             _navigationService = navigationService;
             _projectService = projectService;
             _taskService = taskService;
             _signalRService = signalRService;
+            _authService = authService;
             
             _signalRService.EntityUpdated += OnEntityUpdated;
             
-            Title = "Field Operations";
-            LoadData();
+            Title = "Daily Progress";
+            
+            // Set greeting
+            var user = _authService.CurrentUser;
+            Greeting = user != null ? $"Hi {user.FirstName}!" : "Hi there!";
+            
+            LoadData().FireAndForget();
         }
 
         private void OnEntityUpdated(string entityType, string action, Guid id)
         {
             if (entityType == "Project" || entityType == "ProjectTask" || entityType == "DashboardUpdate")
             {
-                // Refresh project list and activity in real-time
                 LoadData().FireAndForget();
             }
         }
@@ -65,35 +116,110 @@ namespace OCC.Mobile.Features.Dashboard
                 var projects = await _projectService.GetProjectsAsync(assignedToMe: true);
                 var projectList = projects.GroupBy(p => p.Id).Select(g => g.First()).ToList(); 
                 
-                var newCollection = new System.Collections.ObjectModel.ObservableCollection<OCC.Shared.Models.Project>();
+                int dailyTotal = 0;
+                int dailyCompleted = 0;
+                int overdueCount = 0;
+                int overallTotal = 0;
+                int overallCompleted = 0;
+
                 foreach (var p in projectList)
                 {
-                    // Calculate task counts for the card
-                    p.ProjectManager = p.Tasks.Count(t => !t.IsComplete && t.FinishDate.Date == DateTime.Today).ToString();
-                    p.Description = p.Tasks.Count(t => t.IsOverdue).ToString();
+                    // Daily stats: Tasks due today OR tasks actually completed today
+                    var todayTasks = p.Tasks.Where(t => 
+                        t.FinishDate.Date == DateTime.Today || 
+                        (t.ActualCompleteDate.HasValue && t.ActualCompleteDate.Value.ToLocalTime().Date == DateTime.Today) ||
+                        (t.IsComplete && t.UpdatedAtUtc?.ToLocalTime().Date == DateTime.Today)
+                    ).ToList();
+                    dailyTotal += todayTasks.Count;
+                    dailyCompleted += todayTasks.Count(t => t.IsComplete);
                     
-                    newCollection.Add(p);
+                    // Overall stats
+                    overallTotal += p.Tasks.Count;
+                    overallCompleted += p.Tasks.Count(t => t.IsComplete);
+                    
+                    overdueCount += p.Tasks.Count(t => t.IsOverdue);
+                }
+
+                var progressValue = dailyTotal > 0 ? (double)dailyCompleted / dailyTotal * 100 : 0;
+                var overallProgressValue = overallTotal > 0 ? (double)overallCompleted / overallTotal * 100 : 0;
+                var pendingCount = dailyTotal - dailyCompleted;
+ 
+                // 3. Project Health & ETA Logic (Ported from WPF)
+                string health = "On Track";
+                string healthColor = "#10B981"; // Teal
+                string etaDate = "N/A";
+                string etaStat = "Waiting for progress...";
+ 
+                if (overdueCount > 5 || (overdueCount > 0 && overallProgressValue < 20))
+                {
+                    health = "At Risk";
+                    healthColor = "#EF4444"; // Red
+                }
+                else if (overdueCount > 0)
+                {
+                    health = "Behind Schedule";
+                    healthColor = "#F59E0B"; // Amber
+                }
+ 
+                if (projectList.Any() && overallProgressValue > 0 && overallProgressValue < 100)
+                {
+                    var firstProject = projectList.First();
+                    var startDate = firstProject.StartDate;
+                    var endDate = firstProject.EndDate;
+                    var now = DateTime.Now;
+ 
+                    if (now > startDate)
+                    {
+                        var timeElapsed = now - startDate;
+                        var totalEstimatedTicks = timeElapsed.Ticks / (overallProgressValue / 100.0);
+                        var predictedEndDate = startDate.AddTicks((long)totalEstimatedTicks);
+                        etaDate = predictedEndDate.ToString("dd MMM yyyy");
+                        
+                        var varianceDays = (predictedEndDate - endDate).TotalDays;
+                        etaStat = varianceDays > 7 ? $"Expected {Math.Round(varianceDays)} days late" : "On schedule";
+                    }
+                }
+                else if (overallProgressValue >= 100)
+                {
+                    etaDate = "Finished";
+                    etaStat = "Project Complete";
                 }
 
                 // 2. Fetch Recent Activity
                 var updates = await _taskService.GetRecentUpdatesAsync();
-                var activityList = updates.Take(10).ToList();
+                var activeProjectIds = projectList.Select(p => p.Id).ToList();
+                var activityList = updates
+                    .Where(u => u.ProjectId.HasValue && activeProjectIds.Contains(u.ProjectId.Value))
+                    .Take(10)
+                    .ToList();
 
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => 
                 {
-                    ActiveProjects = newCollection;
                     ActiveSitesCount = projectList.Count;
+                    DailyTotalTasks = dailyTotal;
+                    DailyCompletedTasks = dailyCompleted;
+                    DailyProgress = progressValue;
+                    DailyProgressAngle = progressValue * 3.6;
+                    DailyPendingProgressAngle = (dailyTotal > 0 ? (double)pendingCount / dailyTotal * 100 : 0) * 3.6;
+                    
+                    OverallTotalTasks = overallTotal;
+                    OverallCompletedTasks = overallCompleted;
+                    OverallProgress = overallProgressValue;
+                    OverallProgressAngle = overallProgressValue * 3.6;
+                    OverallPendingProgressAngle = (overallTotal > 0 ? (double)(overallTotal - overallCompleted) / overallTotal * 100 : 0) * 3.6;
+                    
+                    OverdueTasksCount = overdueCount;
+                    PendingTasksCount = pendingCount;
+                    
+                    ProjectHealth = health;
+                    ProjectHealthColor = healthColor;
+                    EtaDateString = etaDate;
+                    EtaStatus = etaStat;
                     
                     RecentActivity.Clear();
                     foreach (var update in activityList)
                     {
                         RecentActivity.Add(update);
-                    }
-
-                    // Default to first project if none selected
-                    if (SelectedProject == null || !projectList.Any(p => p.Id == SelectedProject.Id))
-                    {
-                        SelectedProject = projectList.FirstOrDefault();
                     }
                 });
             }
@@ -101,64 +227,6 @@ namespace OCC.Mobile.Features.Dashboard
             {
                 _loadSemaphore.Release();
             }
-        }
-
-        [RelayCommand]
-        private void SelectProject(OCC.Shared.Models.Project project)
-        {
-            SelectedProject = project;
-        }
-
-        [RelayCommand]
-        private void NavigateToProjectTasks(OCC.Shared.Models.Project project)
-        {
-            _navigationService.NavigateTo<MyTasksViewModel>(vm => vm.ProjectId = project.Id);
-        }
-
-        [RelayCommand]
-        private void NavigateToDueToday(OCC.Shared.Models.Project project)
-        {
-            _navigationService.NavigateTo<MyTasksViewModel>(vm => 
-            {
-                vm.ProjectId = project.Id;
-                vm.ShowDueTodayOnly = true;
-            });
-        }
-
-        [RelayCommand]
-        private void NavigateToOverdue(OCC.Shared.Models.Project project)
-        {
-            _navigationService.NavigateTo<MyTasksViewModel>(vm => 
-            {
-                vm.ProjectId = project.Id;
-                vm.ShowOverdueOnly = true;
-            });
-        }
-
-        [RelayCommand]
-        private void NavigateToInventory(OCC.Shared.Models.Project project)
-        {
-            _navigationService.NavigateTo<InventoryViewModel>(vm => 
-            {
-                vm.ProjectId = project.Id;
-                vm.LoadDataCommand.Execute(null);
-            });
-        }
-
-        [RelayCommand]
-        private void NavigateToTeam(OCC.Shared.Models.Project project)
-        {
-            _navigationService.NavigateTo<TeamViewModel>(vm => 
-            {
-                vm.ProjectId = project.Id;
-                vm.LoadDataCommand.Execute(null);
-            });
-        }
-
-        [RelayCommand]
-        private void NavigateToProjectHseq(OCC.Shared.Models.Project project)
-        {
-            _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
         }
 
         [RelayCommand]
