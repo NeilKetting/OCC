@@ -1,0 +1,168 @@
+<UserControl x:Class="OCC.WpfClient.Features.HseqHub.Views.DocumentsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+    
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="350"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Main Content -->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" Style="{StaticResource ToolbarBorder}" Margin="24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel>
+                        <TextBlock Text="Document Control" Style="{StaticResource HeaderText}"/>
+                        <TextBlock Text="Policies, Templates, and Registers" Style="{StaticResource TitleText}" Opacity="0.7"/>
+                    </StackPanel>
+                    
+                    <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Command="{Binding ToggleUploadFormCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPlus}" Width="14" Height="14" Fill="White" Stretch="Uniform" Margin="0,0,8,0"/>
+                            <TextBlock Text="UPLOAD NEW"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Document Grid -->
+            <ScrollViewer Grid.Row="1" Padding="24,0,24,24" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Documents}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource ToolbarBorder}" Width="220" Margin="0,0,16,16" Background="{StaticResource BackgroundDark}">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Delete Document" 
+                                                  Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconDelete}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                         <Border CornerRadius="6" Background="#20FFFFFF" Width="40" Height="40" HorizontalAlignment="Left">
+                                             <Path Data="{StaticResource IconAttach}" Fill="{StaticResource PrimaryTeal}" Width="20" Height="20" Stretch="Uniform"/>
+                                         </Border>
+                                         <Button Grid.Column="1" Style="{StaticResource ToolbarIconButton}" 
+                                                 Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                 CommandParameter="{Binding}">
+                                             <Path Data="{StaticResource IconDelete}" Width="14" Height="14" Fill="{StaticResource TextSub}" Opacity="0.5" Stretch="Uniform"/>
+                                         </Button>
+                                    </Grid>
+                                    
+                                    <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,0,4"/>
+                                    <TextBlock Text="{Binding Category}" FontSize="12" Foreground="{StaticResource TextSub}" Margin="0,0,0,12"/>
+
+                                    <Separator Background="{StaticResource GlassBorderUltraLight}" Margin="0,0,0,12"/>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding UploadDate, StringFormat='d MMM yyyy'}" FontSize="11" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Style="{StaticResource TextButtonStyle}" Content="Download" 
+                                                Command="{Binding DataContext.DownloadDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Loading Overlay -->
+            <Border Grid.Row="1" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}" Background="#80000000">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="200" Height="4" Margin="0,0,0,16"/>
+                    <TextBlock Text="Loading Documents..." Foreground="White"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Upload Side Panel -->
+        <Border Grid.Column="1" Background="{StaticResource BackgroundDark}" 
+                BorderBrush="{StaticResource GlassBorder}" BorderThickness="1,0,0,0"
+                Visibility="{Binding ShowUploadForm, Converter={StaticResource VisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="24" BorderThickness="0,0,0,1" BorderBrush="{StaticResource GlassBorderUltraLight}">
+                     <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Upload Document" Style="{StaticResource HeaderText}"/>
+                        <Button Grid.Column="1" Style="{StaticResource ToolbarIconButton}" Command="{Binding ToggleUploadFormCommand}">
+                            <Path Data="{StaticResource IconClose}" Fill="White" Width="14" Height="14" Stretch="Uniform"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" Padding="24" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Document Title" Style="{StaticResource FormLabelText}"/>
+                        <TextBox Text="{Binding NewDocTitle}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
+
+                        <TextBlock Text="Category" Style="{StaticResource FormLabelText}"/>
+                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewDocCategory}" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20"/>
+
+                        <TextBlock Text="File" Style="{StaticResource FormLabelText}"/>
+                        <Grid Margin="0,0,0,30">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding SelectedFilePath}" IsReadOnly="True" Style="{StaticResource ModernInput}" Margin="0,0,8,0"/>
+                            <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="Browse" Command="{Binding PickFileCommand}"/>
+                        </Grid>
+
+                        <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch"
+                                Command="{Binding UploadCommand}" 
+                                IsEnabled="{Binding IsUploading, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                             <StackPanel Orientation="Horizontal">
+                                 <Path Data="{StaticResource IconUpload}" Width="14" Height="14" Fill="White" Stretch="Uniform" Margin="0,0,8,0"/>
+                                 <TextBlock Text="UPLOAD DOCUMENT"/>
+                             </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

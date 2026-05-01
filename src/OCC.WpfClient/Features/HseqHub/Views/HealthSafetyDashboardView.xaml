@@ -1,0 +1,96 @@
+<UserControl x:Class="OCC.WpfClient.Features.HseqHub.Views.HealthSafetyDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200">
+    
+    <Grid Background="{StaticResource BackgroundDark}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24">
+                
+                <!-- Header -->
+                <StackPanel Margin="0,0,0,24">
+                    <TextBlock Text="HSEQ Dashboard" Style="{StaticResource HeaderText}"/>
+                    <TextBlock Text="Health, Safety, Environment &amp; Quality Overview" Style="{StaticResource TitleText}" Opacity="0.7"/>
+                </StackPanel>
+
+                <!-- KPI Cards -->
+                <UniformGrid Columns="3" Margin="0,0,0,24">
+                    <!-- Safe Hours -->
+                    <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="0,0,12,0">
+                        <StackPanel Margin="20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Path Data="{StaticResource IconClock}" Width="16" Height="16" Fill="{StaticResource SuccessGreen}" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="Safe Hours" Style="{StaticResource TitleText}" Opacity="0.8"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding TotalSafeHours, StringFormat=\{0:N2\}}" Style="{StaticResource HeaderText}" Foreground="{StaticResource SuccessGreen}"/>
+                            <TextBlock Text="Hours without LTI" Style="{StaticResource LabelText}" Opacity="0.6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Total Incidents -->
+                    <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="6,0,6,0">
+                        <StackPanel Margin="20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Path Data="{StaticResource IconAlert}" Width="16" Height="16" Fill="{StaticResource AlertOrange}" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="Total Incidents" Style="{StaticResource TitleText}" Opacity="0.8"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding TotalIncidents}" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Text="Reported this year" Style="{StaticResource LabelText}" Opacity="0.6"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Audit Average -->
+                    <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="12,0,0,0">
+                        <StackPanel Margin="20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Path Data="{StaticResource IconShield}" Width="16" Height="16" Fill="{StaticResource PrimaryTeal}" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="Audit Average" Style="{StaticResource TitleText}" Opacity="0.8"/>
+                            </StackPanel>
+                            <TextBlock Text="94%" Style="{StaticResource HeaderText}" Foreground="{StaticResource PrimaryTeal}"/>
+                            <TextBlock Text="Compliant sites" Style="{StaticResource LabelText}" Opacity="0.6"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Charts Row -->
+                <UniformGrid Columns="2">
+                    <!-- Audit Scores -->
+                    <Border Style="{StaticResource ToolbarBorder}" Height="400" Background="{StaticResource BackgroundDark}" Margin="0,0,12,0">
+                        <Grid Margin="20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                             <TextBlock Grid.Row="0" Text="Audit Score Trends" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
+                             <lvc:CartesianChart Grid.Row="1" 
+                                                 Series="{Binding AuditScoreSeries}" 
+                                                 XAxes="{Binding AuditXAxes}"
+                                                 YAxes="{Binding AuditYAxes}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Incident Breakdown -->
+                    <Border Style="{StaticResource ToolbarBorder}" Height="400" Background="{StaticResource BackgroundDark}" Margin="12,0,0,0">
+                        <Grid Margin="20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                             <TextBlock Grid.Row="0" Text="Incident Types" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
+                             <lvc:CartesianChart Grid.Row="1" 
+                                                Series="{Binding IncidentSeries}" 
+                                                XAxes="{Binding IncidentXAxes}"
+                                                YAxes="{Binding IncidentYAxes}"/>
+                        </Grid>
+                    </Border>
+                </UniformGrid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

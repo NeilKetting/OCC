@@ -25,7 +25,9 @@
                     xmlns:splashVm="clr-namespace:OCC.WpfClient.Features.Splash.ViewModels"
                     xmlns:splashViews="clr-namespace:OCC.WpfClient.Features.Splash.Views"
                     xmlns:subHubVm="clr-namespace:OCC.WpfClient.Features.SubContractorHub.ViewModels"
-                    xmlns:subHubViews="clr-namespace:OCC.WpfClient.Features.SubContractorHub.Views">
+                    xmlns:subHubViews="clr-namespace:OCC.WpfClient.Features.SubContractorHub.Views"
+                    xmlns:hseqVm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
+                    xmlns:hseqViews="clr-namespace:OCC.WpfClient.Features.HseqHub.Views">
 
     <!-- Auth -->
     <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
@@ -148,11 +150,38 @@
         <subHubViews:SnagListView />
     </DataTemplate>
 
+    <!-- HSEQ Hub -->
+    <DataTemplate DataType="{x:Type hseqVm:HealthSafetyViewModel}">
+        <hseqViews:HealthSafetyView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:HealthSafetyDashboardViewModel}">
+        <hseqViews:HealthSafetyDashboardView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:IncidentsViewModel}">
+        <hseqViews:IncidentsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:TrainingViewModel}">
+        <hseqViews:TrainingView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:PerformanceMonitoringViewModel}">
+        <hseqViews:PerformanceMonitoringView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:DocumentsViewModel}">
+        <hseqViews:DocumentsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:AuditsViewModel}">
+        <hseqViews:AuditsView />
+    </DataTemplate>
+
     <!-- Splash -->
     <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
         <splashViews:SplashView />
     </DataTemplate>
-
-
 
 </ResourceDictionary>

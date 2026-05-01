@@ -81,6 +81,7 @@
 
     <!-- Ported from Avalonia LightMode.axaml -->
     <SolidColorBrush x:Key="PrimaryTeal" Color="#00b5ad" />
+    <Color x:Key="PrimaryTealColor">#00b5ad</Color>
     <SolidColorBrush x:Key="PrimaryTealHover" Color="#00a39c" />
     <SolidColorBrush x:Key="PrimaryTealLight" Color="#e0f2f1" />
 
@@ -98,7 +99,8 @@
         <GradientStop Color="#00FFFFFF" Offset="1" />
     </LinearGradientBrush>
 
+    <Color x:Key="AlertOrangeColor">#FF8F00</Color>
+    <SolidColorBrush x:Key="AlertOrange" Color="{StaticResource AlertOrangeColor}" />
     <SolidColorBrush x:Key="SuccessGreen" Color="{StaticResource SuccessGreenColor}" />
     <SolidColorBrush x:Key="AppBackground" Color="{StaticResource BackgroundDarkColor}" />
-
 </ResourceDictionary>

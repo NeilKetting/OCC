@@ -28,6 +28,8 @@ using OCC.WpfClient.Features.SubContractorHub;
 using OCC.Shared.Interfaces;
 using OCC.Shared.Services;
 using System.Net.Http;
+using OCC.WpfClient.Features.HseqHub;
+
 
 
 namespace OCC.WpfClient
@@ -136,8 +138,10 @@ namespace OCC.WpfClient
                 new ProcurementFeature(),
                 new ProjectFeature(),
                 new SubContractorFeature(),
-                new SettingsFeature()
+                new SettingsFeature(),
+                new HseqFeature()
             };
+
 
 
             foreach (var feature in features)

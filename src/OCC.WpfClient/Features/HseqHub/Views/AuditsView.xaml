@@ -1,0 +1,399 @@
+<UserControl x:Class="OCC.WpfClient.Features.HseqHub.Views.AuditsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
+             xmlns:dto="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200">
+
+    <UserControl.Resources>
+        <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
+    </UserControl.Resources>
+    
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" Style="{StaticResource ToolbarBorder}" Margin="20,20,20,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel>
+                        <TextBlock Text="Audits &amp; Inspections" Style="{StaticResource HeaderText}"/>
+                        <TextBlock Text="Track compliance and deviations across sites" Style="{StaticResource TitleText}" Opacity="0.7"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Column Toggles -->
+                        <Grid Margin="0,0,15,0">
+                            <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Height="28" Padding="10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                                    <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                                    <StackPanel>
+                                        <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,0,8"/>
+                                        <CheckBox Content="Site" IsChecked="{Binding IsSiteVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                        <CheckBox Content="Auditor" IsChecked="{Binding IsAuditorVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                        <CheckBox Content="Score" IsChecked="{Binding IsScoreVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                        <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding CreateNewAuditCommand}" Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconPlus}" Width="14" Height="14" Fill="White" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="NEW AUDIT"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButton}" Command="{Binding LoadAuditsCommand}" Content="Refresh"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Data Table -->
+            <Border Grid.Row="1" Style="{StaticResource ToolbarBorder}" Margin="20">
+                <DataGrid ItemsSource="{Binding Audits}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="Delete Audit" 
+                                                  Command="{Binding DataContext.DeleteAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconDelete}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#" Binding="{Binding AuditNumber}" Width="Auto"/>
+                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='d MMM yyyy'}" Width="Auto"/>
+                        <DataGridTextColumn Header="Site" Binding="{Binding SiteName}" Width="Auto" MinWidth="200" Visibility="{Binding Data.IsSiteVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="Auditor" Binding="{Binding HseqConsultant}" Width="Auto" MinWidth="180" Visibility="{Binding Data.IsAuditorVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        
+                        <DataGridTemplateColumn Header="Score" Width="150" Visibility="{Binding Data.IsScoreVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center" Margin="5,0">
+                                        <TextBlock Text="{Binding ActualScore, StringFormat='{}{0}%'}" HorizontalAlignment="Center" FontSize="11" Margin="0,0,0,4"/>
+                                        <ProgressBar Value="{Binding ActualScore}" Maximum="100" Height="6" BorderThickness="0" Background="#30FFFFFF" Foreground="{StaticResource PrimaryTeal}">
+                                        </ProgressBar>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Status" Width="100" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="8,2" Background="#20FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Style="{StaticResource ToolbarIconButton}" 
+                                                Command="{Binding DataContext.EditAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" ToolTip="Edit">
+                                            <Path Data="{StaticResource IconEdit}" Width="14" Height="14" Fill="{StaticResource TextSub}" Stretch="Uniform"/>
+                                        </Button>
+                                        <Button Style="{StaticResource ToolbarIconButton}" 
+                                                Command="{Binding DataContext.ViewDeviationsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" ToolTip="View Deviations">
+                                            <Path Data="{StaticResource IconAlert}" Width="14" Height="14" Fill="{StaticResource AlertOrange}" Stretch="Uniform"/>
+                                        </Button>
+                                        <Button Style="{StaticResource ToolbarIconButton}" 
+                                                Command="{Binding DataContext.DeleteAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" ToolTip="Delete">
+                                            <Path Data="{StaticResource IconDelete}" Width="14" Height="14" Fill="{StaticResource ErrorRed}" Stretch="Uniform"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <Border Grid.ColumnSpan="2" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}" Background="#80000000" Panel.ZIndex="1000">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Margin="0,0,0,16"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Audit Editor Panel -->
+        <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Width="650" Margin="0,20,20,20" Background="{StaticResource BackgroundDark}"
+                Visibility="{Binding IsEditorOpen, Converter={StaticResource VisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="0,0,0,20" BorderThickness="0,0,0,1" BorderBrush="{StaticResource GlassBorderUltraLight}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Editor.Title}" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Text="Capture audit details and scores" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource ToolbarIconButton}" Command="{Binding CloseEditorCommand}">
+                            <Path Data="{StaticResource IconClose}" Fill="White" Width="14" Height="14" Stretch="Uniform"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,20">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Audit No" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Editor.CurrentAudit.AuditNumber}" Style="{StaticResource ModernInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Date" Style="{StaticResource FormLabelText}"/>
+                                <DatePicker SelectedDate="{Binding Editor.CurrentAudit.Date}" Style="{StaticResource ModernDatePicker}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Site Name" Style="{StaticResource FormLabelText}"/>
+                        <TextBox Text="{Binding Editor.CurrentAudit.SiteName}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
+
+                        <TextBlock Text="Scope of Works" Style="{StaticResource FormLabelText}"/>
+                        <TextBox Text="{Binding Editor.CurrentAudit.ScopeOfWorks}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Site Manager" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Editor.CurrentAudit.SiteManager}" Style="{StaticResource ModernInput}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="HSEQ Consultant" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Editor.CurrentAudit.HseqConsultant}" Style="{StaticResource ModernInput}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Background="{StaticResource GlassBorderUltraLight}" Margin="0,10,0,20"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Findings &amp; Non-Conformances" Style="{StaticResource TitleText}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Command="{Binding Editor.AddFindingCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconPlus}" Width="12" Height="12" Fill="White" Stretch="Uniform" Margin="0,0,8,0"/>
+                                    <TextBlock Text="ADD FINDING"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding Editor.Findings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="0,0,0,12" Padding="12">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Regulation / Item Reference" Style="{StaticResource FormLabelText}"/>
+                                                    <TextBox Text="{Binding RegulationReference}" Style="{StaticResource ModernInput}"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Style="{StaticResource ToolbarIconButton}" 
+                                                        Command="{Binding DataContext.Editor.DeleteFindingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding Model}" VerticalAlignment="Top" Margin="10,0,0,0">
+                                                    <Path Data="{StaticResource IconDelete}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
+                                                </Button>
+                                            </Grid>
+                                            <TextBlock Text="Finding Description" Style="{StaticResource FormLabelText}"/>
+                                            <TextBox Text="{Binding Description}" Style="{StaticResource ModernInput}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="60"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Separator Background="{StaticResource GlassBorderUltraLight}" Margin="0,20"/>
+
+                        <TextBlock Text="Efficiency Ratings" Style="{StaticResource TitleText}" Margin="0,0,0,15"/>
+                        <ItemsControl ItemsSource="{Binding Editor.CurrentAudit.Sections}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="0,0,0,8" Padding="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <StackPanel Grid.Column="1" Margin="10,0">
+                                                <TextBlock Text="Actual" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                                <TextBox Text="{Binding ActualScore}" Style="{StaticResource ModernInput}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Possible" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                                <TextBox Text="{Binding PossibleScore}" Style="{StaticResource ModernInput}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="2" Padding="0,20,0,0" BorderThickness="0,1,0,0" BorderBrush="{StaticResource GlassBorderUltraLight}">
+                    <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Command="{Binding Editor.SaveCommand}" Content="SAVE AUDIT"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Deviations Panel (Simplified for brevity, can be expanded if needed) -->
+        <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Width="500" Margin="0,20,20,20" Background="{StaticResource BackgroundDark}"
+                Visibility="{Binding IsDeviationsOpen, Converter={StaticResource VisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="0,0,0,20" BorderThickness="0,0,0,1" BorderBrush="{StaticResource GlassBorderUltraLight}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Deviation Action Sheet" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Text="{Binding Deviations.SelectedAudit.AuditNumber, StringFormat='Audit Ref: {0}'}" Style="{StaticResource LabelText}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding Deviations.AddDeviationCommand}" Margin="0,0,10,0">
+                                <Path Data="{StaticResource IconPlus}" Fill="White" Width="14" Height="14" Stretch="Uniform"/>
+                            </Button>
+                            <Button Style="{StaticResource ToolbarIconButton}" Command="{Binding CloseDeviationsCommand}">
+                                <Path Data="{StaticResource IconClose}" Fill="White" Width="14" Height="14" Stretch="Uniform"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,20">
+                    <ItemsControl ItemsSource="{Binding Deviations.Deviations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="0,0,0,16" Padding="15">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Item / Regulation" Style="{StaticResource FormLabelText}"/>
+                                                <TextBox Text="{Binding RegulationReference}" Style="{StaticResource ModernInput}"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Background="{Binding StatusColor}" CornerRadius="4" Padding="8,4" VerticalAlignment="Top" Margin="10,0,0,0">
+                                                <TextBlock Text="{Binding Status}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <TextBlock Text="Finding / Observation" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding Description}" Style="{StaticResource ModernInput}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="60" Margin="0,0,0,15"/>
+
+                                        <Separator Background="{StaticResource GlassBorderUltraLight}" Margin="0,0,0,15"/>
+
+                                        <TextBlock Text="Corrective Action" Style="{StaticResource FormLabelText}"/>
+                                        <TextBox Text="{Binding CorrectiveAction}" Style="{StaticResource ModernInput}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="60" Margin="0,0,0,15"/>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="15"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Completion Date" Style="{StaticResource FormLabelText}"/>
+                                                <DatePicker SelectedDate="{Binding TargetDate}" Style="{StaticResource ModernDatePicker}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Status" Style="{StaticResource FormLabelText}"/>
+                                                <ComboBox SelectedItem="{Binding Status}" Style="{StaticResource ModernComboBox}">
+                                                    <ComboBoxItem Content="Open"/>
+                                                    <ComboBoxItem Content="Rectified"/>
+                                                    <ComboBoxItem Content="Closed"/>
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Button Style="{StaticResource SecondaryButton}" Content="Update Item" HorizontalAlignment="Right" Margin="0,15,0,0"
+                                                Command="{Binding DataContext.Deviations.SaveDeviationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
