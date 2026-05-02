@@ -27,9 +27,9 @@
                         <StackPanel>
                             <Grid>
                                 <TextBlock Text="ORDERS" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10"/>
-                                <Button Content="+ New PO" Style="{StaticResource GhostButton}" 
+                                <Button Content="+ New PO" Style="{StaticResource ModernPrimaryButton}"
                                         HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                        Padding="10,2" Height="25" FontSize="11"
+                                        Padding="10,2" Height="25" FontSize="14"
                                         Command="{Binding NavigateToPurchaseOrderCommand}"/>
                             </Grid>
                             <TextBlock Text="12 Active" Foreground="White" FontSize="20"/>
@@ -38,7 +38,13 @@
 
                     <Border Grid.Column="1" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="20" Margin="10,0,10,0">
                         <StackPanel>
-                            <TextBlock Text="INVENTORY" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <Grid>
+                                <TextBlock Text="INVENTORY" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10"/>
+                                <Button Content="+ Receive Stock" Style="{StaticResource ModernPrimaryButton}"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                        Padding="10,2" Height="25" FontSize="14"
+                                        Command="{Binding ReceiveStockCommand}"/>
+                            </Grid>
                             <TextBlock Text="5 Low Stock" Foreground="White" FontSize="20"/>
                         </StackPanel>
                     </Border>
@@ -52,5 +58,8 @@
                 </Grid>
             </StackPanel>
         </Border>
+
+        <!-- Modal Dialog Overlay -->
+        <ContentControl Content="{Binding OverlayViewModel}" Panel.ZIndex="1000"/>
     </Grid>
 </UserControl>

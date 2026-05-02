@@ -440,7 +440,7 @@
                         <ListBox x:Name="TabsListBox" ItemsSource="{Binding OpenHubs}" SelectedItem="{Binding ActiveHub}" 
                                  Background="Transparent" BorderThickness="0" 
                                  ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                 VerticalAlignment="Bottom" Margin="0,0,40,0"
+                                 VerticalAlignment="Bottom" Margin="0,0,40,0" Padding="0,0,0,10"
                                  PreviewMouseWheel="TabsListBox_PreviewMouseWheel">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>

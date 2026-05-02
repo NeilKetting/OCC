@@ -79,21 +79,7 @@
                             <TextBlock Text="View and search the complete database of construction projects." Foreground="{StaticResource TextSub}"/>
                         </StackPanel>
                     </Grid>
-                </Button>
-
-                <Button Style="{StaticResource ListActionButtonStyle}" Height="120">
-                    <Grid Margin="20">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource IconCalendar}" Fill="{StaticResource SuccessGreen}" Stretch="Uniform" Width="40" Height="40" VerticalAlignment="Center"/>
-                        <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="Gantt Timeline" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                            <TextBlock Text="Visualize project schedules and task dependencies." Foreground="{StaticResource TextSub}"/>
-                        </StackPanel>
-                    </Grid>
-                </Button>
+                </Button>               
             </StackPanel>
 
             <!-- Recent Activity Placeholder -->

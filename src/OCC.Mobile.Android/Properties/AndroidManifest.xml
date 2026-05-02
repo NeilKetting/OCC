@@ -4,6 +4,6 @@
           android:versionCode="1"
           android:versionName="1.0">
     <uses-permission android:name="android.permission.INTERNET" />
-    <application android:label="OCC Mobile" android:icon="@drawable/icon" android:debuggable="true" android:usesCleartextTraffic="true">
+    <application android:label="OCC Mobile" android:icon="@drawable/icon" android:debuggable="true" android:usesCleartextTraffic="true" android:networkSecurityConfig="@xml/network_security_config">
     </application>
 </manifest>

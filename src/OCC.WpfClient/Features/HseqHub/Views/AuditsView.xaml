@@ -99,10 +99,10 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="#" Binding="{Binding AuditNumber}" Width="Auto"/>
                         <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='d MMM yyyy'}" Width="Auto"/>
-                        <DataGridTextColumn Header="Site" Binding="{Binding SiteName}" Width="Auto" MinWidth="200" Visibility="{Binding Data.IsSiteVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="Auditor" Binding="{Binding HseqConsultant}" Width="Auto" MinWidth="180" Visibility="{Binding Data.IsAuditorVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        
-                        <DataGridTemplateColumn Header="Score" Width="150" Visibility="{Binding Data.IsScoreVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Header="Site" Binding="{Binding SiteName}" Width="Auto" Visibility="{Binding Data.IsSiteVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="Auditor" Binding="{Binding HseqConsultant}" Width="Auto" Visibility="{Binding Data.IsAuditorVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+
+                        <DataGridTemplateColumn Header="Score" Width="Auto" Visibility="{Binding Data.IsScoreVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center" Margin="5,0">
@@ -114,7 +114,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Status" Width="100" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTemplateColumn Header="Status" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="10" Padding="8,2" Background="#20FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -187,7 +187,7 @@
                 </Border>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,20">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,20,0">
                         <Grid Margin="0,0,0,20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

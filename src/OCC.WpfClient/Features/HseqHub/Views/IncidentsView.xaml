@@ -98,8 +98,10 @@
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd MMM yyyy'}" Width="Auto"/>
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto" Visibility="{Binding Data.IsTypeVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd MMM yyyy'}" 
+                                            Width="Auto"/>
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto" 
+                                            Visibility="{Binding Data.IsTypeVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <DataGridTemplateColumn Header="Severity" Width="Auto" Visibility="{Binding Data.IsSeverityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -110,7 +112,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="Auto" MinWidth="250"/>
+                        <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="Auto"/>
 
                         <DataGridTemplateColumn Header="Status" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
@@ -154,7 +156,7 @@
         </Border>
 
         <!-- Side Panel Editor -->
-        <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Width="400" Margin="0,20,20,20" Background="{StaticResource BackgroundDark}"
+        <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Width="500" Margin="0,20,20,20" Background="{StaticResource BackgroundDark}"
                 Visibility="{Binding Editor.IsOpen, Converter={StaticResource VisibilityConverter}}">
             <Grid>
                 <Grid.RowDefinitions>
@@ -166,7 +168,7 @@
                 <TextBlock Grid.Row="0" Text="New Incident" Style="{StaticResource HeaderText}" Margin="0,0,0,24"/>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,20,0">
                         <TextBlock Text="Date &amp; Time" Style="{StaticResource FormLabelText}"/>
                         <DatePicker SelectedDate="{Binding Editor.Incident.Date}" Style="{StaticResource ModernDatePicker}" Margin="0,0,0,16"/>
 

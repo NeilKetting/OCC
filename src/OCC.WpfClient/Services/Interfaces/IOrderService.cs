@@ -13,5 +13,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task UpdateOrderAsync(Order order);
         Task DeleteOrderAsync(Guid id);
         Task<Order> CreateNewOrderTemplateAsync(OrderType type);
+        Task<Order?> ReceiveOrderAsync(Guid orderId, List<OrderLine> updatedLines);
     }
 }

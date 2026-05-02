@@ -30,13 +30,13 @@
                       GridLinesVisibility="Horizontal"
                       Style="{StaticResource ModernDataGrid}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Month" Binding="{Binding Month, StringFormat='MMMM yyyy'}" Width="150"/>
-                    <DataGridTextColumn Header="Safe Hours" Binding="{Binding SafeWorkHours}" Width="100"/>
-                    <DataGridTextColumn Header="Incidents" Binding="{Binding IncidentReported}" Width="100"/>
-                    <DataGridTextColumn Header="Near Misses" Binding="{Binding NearMisses}" Width="100"/>
-                    <DataGridTextColumn Header="Root Cause" Binding="{Binding RootCause}" Width="*"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-                    <DataGridTextColumn Header="Reported By" Binding="{Binding ReportedBy}" Width="150"/>
+                    <DataGridTextColumn Header="Month" Binding="{Binding Month, StringFormat='MMMM yyyy'}" Width="Auto"/>
+                    <DataGridTextColumn Header="Safe Hours" Binding="{Binding SafeWorkHours}" Width="Auto"/>
+                    <DataGridTextColumn Header="Incidents" Binding="{Binding IncidentReported}" Width="Auto"/>
+                    <DataGridTextColumn Header="Near Misses" Binding="{Binding NearMisses}" Width="Auto"/>
+                    <DataGridTextColumn Header="Root Cause" Binding="{Binding RootCause}" Width="Auto"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
+                    <DataGridTextColumn Header="Reported By" Binding="{Binding ReportedBy}" Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

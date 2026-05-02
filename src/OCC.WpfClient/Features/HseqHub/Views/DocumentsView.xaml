@@ -10,7 +10,7 @@
     <Grid Background="{StaticResource BackgroundDark}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <!-- Main Content -->
@@ -114,7 +114,8 @@
         <!-- Upload Side Panel -->
         <Border Grid.Column="1" Background="{StaticResource BackgroundDark}" 
                 BorderBrush="{StaticResource GlassBorder}" BorderThickness="1,0,0,0"
-                Visibility="{Binding ShowUploadForm, Converter={StaticResource VisibilityConverter}}">
+                Visibility="{Binding ShowUploadForm, Converter={StaticResource VisibilityConverter}}"
+                Width="500">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -135,7 +136,7 @@
                 </Border>
 
                 <ScrollViewer Grid.Row="1" Padding="24" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,20,0">
                         <TextBlock Text="Document Title" Style="{StaticResource FormLabelText}"/>
                         <TextBox Text="{Binding NewDocTitle}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
 

@@ -11,7 +11,7 @@ namespace OCC.WpfClient.Features.ProcurementHub
     {
         public string Name => "Procurement";
         public string Description => "Supply Chain, Inventory and Supplier Management";
-        public string Icon => "IconSummary";
+        public string Icon => "IconCart";
         public int Order => 40;
 
         public void RegisterServices(IServiceCollection services)
@@ -20,6 +20,8 @@ namespace OCC.WpfClient.Features.ProcurementHub
             services.AddTransient<InventoryViewModel>();
             services.AddTransient<PurchaseOrderViewModel>();
             services.AddTransient<SupplierViewModel>();
+            services.AddTransient<ViewModels.Dialogs.ReceiveStockViewModel>();
+            services.AddTransient<ViewModels.Dialogs.FindOrderViewModel>();
 
             services.AddTransient<ISupplierService, SupplierService>();
             services.AddTransient<IOrderService, OrderService>();
@@ -37,11 +39,11 @@ namespace OCC.WpfClient.Features.ProcurementHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var procurement = new NavItem("Procurement", "IconSummary", string.Empty, "Operations");
+            var procurement = new NavItem("Procurement", "IconCart", string.Empty, "Operations");
 
             procurement.Children.Add(new NavItem(
                 "Procurement Dashboard",
-                "IconSummary",
+                "IconCart",
                 NavigationRoutes.Procurement,
                 "Operations"));
 

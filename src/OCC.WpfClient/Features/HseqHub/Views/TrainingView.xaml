@@ -12,7 +12,7 @@
     <UserControl.Resources>
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
     </UserControl.Resources>
-    
+
     <Grid Background="{StaticResource BackgroundDark}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -33,7 +33,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
+
             <!-- Training Records Grid -->
             <Border Grid.Column="0" Style="{StaticResource ToolbarBorder}" Margin="0,0,20,0">
                 <Grid>
@@ -44,40 +44,65 @@
 
                     <!-- Grid Toolbar -->
                     <WrapPanel Grid.Row="0" Margin="0,0,0,15">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,15,5">
-                            <TextBlock Text="Category:" Style="{StaticResource FormLabelText}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding CategoryFilter}" Width="150" Style="{StaticResource CompactComboBox}"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,15,5">
-                            <TextBlock Text="Expiry Warning:" Style="{StaticResource FormLabelText}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding ExpiryWarningDays}" Width="50" VerticalContentAlignment="Center" Style="{StaticResource CompactTextBox}"/>
-                            <TextBlock Text=" Days" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="11"/>
-                        </StackPanel>
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                        <Button Style="{StaticResource SecondaryButton}" Command="{Binding FilterExpiringCommand}" Content="Show Expiring" Height="24" Padding="10,0" FontSize="11" Margin="0,0,8,5"/>
-                        <Button Style="{StaticResource SecondaryButton}" Command="{Binding LoadDataCommand}" Content="Reload" Height="24" Padding="10,0" FontSize="11" Margin="0,0,15,5"/>
-
-                        <!-- Column Toggles -->
-                        <Grid Margin="0,0,15,5">
-                            <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Height="24" Padding="8,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource IconList}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,6,0" Opacity="0.8"/>
-                                    <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Foreground="White"/>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,15,5">
+                                    <TextBlock Text="Category:" Style="{StaticResource FormLabelText}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding CategoryFilter}" Width="150" Style="{StaticResource CompactComboBox}"/>
                                 </StackPanel>
-                            </ToggleButton>
-                            <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,5,0,0" Width="180">
-                                    <StackPanel>
-                                        <TextBlock Text="DISPLAY COLUMNS" FontSize="9" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,0,8"/>
-                                        <CheckBox Content="Role / Skill" IsChecked="{Binding IsRoleVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                        <CheckBox Content="Trainer" IsChecked="{Binding IsTrainerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                    </StackPanel>
-                                </Border>
-                            </Popup>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,15,5">
+                                    <TextBlock Text="Expiry Warning:" Style="{StaticResource FormLabelText}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding ExpiryWarningDays}" Width="50" VerticalContentAlignment="Center" Style="{StaticResource CompactTextBox}"/>
+                                    <TextBlock Text=" Days" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="11"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Command="{Binding ToggleAddCommand}" Content="+ Add Training" Height="24" Padding="10,0" FontSize="11" Margin="0,0,0,5"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0" Style="{StaticResource SecondaryButton}" Command="{Binding FilterExpiringCommand}" Content="Show Expiring" Height="24" Padding="10,0" FontSize="11" Margin="0,0,8,5"/>
+
+                                <!-- Column Toggles -->
+                                <Grid Grid.Column="1"  Margin="0,0,15,5">
+                                    <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Height="24" Padding="8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource IconList}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,6,0" Opacity="0.8"/>
+                                            <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Foreground="White"/>
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,5,0,0" Width="180">
+                                            <StackPanel>
+                                                <TextBlock Text="DISPLAY COLUMNS" FontSize="9" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,0,8"/>
+                                                <CheckBox Content="Role / Skill" IsChecked="{Binding IsRoleVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                                <CheckBox Content="Trainer" IsChecked="{Binding IsTrainerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Grid>
                         </Grid>
                         
-                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding ToggleAddCommand}" Content="+ Add Training" Height="24" Padding="10,0" FontSize="11" Margin="0,0,0,5"/>
+
                     </WrapPanel>
 
                     <!-- DataGrid -->
@@ -120,7 +145,7 @@
                             <DataGridTextColumn Header="Trainer" Binding="{Binding Trainer}" Width="Auto" Visibility="{Binding Data.IsTrainerVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
                             <DataGridTextColumn Header="Issue Date" Binding="{Binding DateCompleted, StringFormat='d MMM yyyy'}" Width="Auto"/>
                             <DataGridTextColumn Header="Expiry Date" Binding="{Binding ValidUntil, StringFormat='d MMM yyyy'}" Width="Auto"/>
-                            
+
                             <DataGridTemplateColumn Header="Validity" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -164,7 +189,7 @@
             </Border>
 
             <!-- Editor Side Panel -->
-            <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Width="350" 
+            <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Width="500"
                     Visibility="{Binding Editor.IsOpen, Converter={StaticResource VisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -176,7 +201,7 @@
                     <TextBlock Grid.Row="0" Text="Training Details" Style="{StaticResource HeaderText}" Margin="0,0,0,20"/>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
+                        <StackPanel Margin="0,0,20,0">
                             <TextBlock Text="Employee" Style="{StaticResource FormLabelText}"/>
                             <ComboBox ItemsSource="{Binding Editor.Employees}" 
                                       SelectedItem="{Binding Editor.SelectedEmployee}"
@@ -213,6 +238,8 @@
                                     Content="Select File" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
                             <TextBlock Text="{Binding Editor.CertificateFileName}" Style="{StaticResource LabelText}" Opacity="0.7" TextWrapping="Wrap" HorizontalAlignment="Center"/>
                         </StackPanel>
+                        
+                        
                     </ScrollViewer>
 
                     <StackPanel Grid.Row="2" Margin="0,20,0,0">

@@ -27,7 +27,9 @@
                     xmlns:subHubVm="clr-namespace:OCC.WpfClient.Features.SubContractorHub.ViewModels"
                     xmlns:subHubViews="clr-namespace:OCC.WpfClient.Features.SubContractorHub.Views"
                     xmlns:hseqVm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
-                    xmlns:hseqViews="clr-namespace:OCC.WpfClient.Features.HseqHub.Views">
+                    xmlns:hseqViews="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
+xmlns:procDialogVm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs"
+xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views.Dialogs">
 
     <!-- Auth -->
     <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
@@ -93,6 +95,14 @@
 
     <DataTemplate DataType="{x:Type procVm:SupplierViewModel}">
         <procViews:SupplierListView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procDialogVm:ReceiveStockViewModel}">
+        <procDialogViews:ReceiveStockDialog/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procDialogVm:FindOrderViewModel}">
+        <procDialogViews:FindOrderDialog/>
     </DataTemplate>
 
     <!-- Settings Hub -->

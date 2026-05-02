@@ -168,6 +168,41 @@ namespace OCC.WpfClient.Services
             };
         }
 
+        public async Task<Order?> ReceiveOrderAsync(Guid orderId, List<OrderLine> updatedLines)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/Orders/{orderId}/receive");
+            try
+            {
+                var dtos = updatedLines.Select(l => new OrderLineDto
+                {
+                    Id = l.Id,
+                    InventoryItemId = l.InventoryItemId,
+                    ItemCode = l.ItemCode,
+                    Description = l.Description,
+                    Category = l.Category,
+                    QuantityOrdered = l.QuantityOrdered,
+                    QuantityReceived = l.QuantityReceived,
+                    UnitOfMeasure = l.UnitOfMeasure,
+                    UnitPrice = l.UnitPrice,
+                    VatAmount = l.VatAmount,
+                    LineTotal = l.LineTotal,
+                    Remarks = l.Remarks
+                }).ToList();
+
+                var response = await client.PostAsJsonAsync(url, dtos);
+                response.EnsureSuccessStatusCode();
+                var resultDto = await response.Content.ReadFromJsonAsync<OrderDto>();
+                return resultDto != null ? ToEntity(resultDto) : null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error receiving order {Id} at {Url}", orderId, url);
+                throw;
+            }
+        }
+
         private static Order ToEntity(OrderDto dto)
         {
             var order = new Order
