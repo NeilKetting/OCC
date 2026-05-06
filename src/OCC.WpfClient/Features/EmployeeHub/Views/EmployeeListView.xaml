@@ -129,6 +129,13 @@
                                 </ControlTemplate>
                             </ToggleButton.Template>
                         </ToggleButton>
+                        
+                        <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="10,0" Grid.Column="4">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                                <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                            </StackPanel>
+                        </Button>
 
                         <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsBtn}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsBtn}" Placement="Bottom" AllowsTransparency="True">
                             <Border Background="{StaticResource BackgroundDarker}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
@@ -198,8 +205,8 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NUMBER" Binding="{Binding EmployeeNumber}" Width="Auto" Visibility="{Binding Data.IsNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" FontWeight="SemiBold" />
                         <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding DisplayName}" Width="Auto" FontWeight="Bold" />
-                        <DataGridTextColumn Header="POSITION" Binding="{Binding Role}" Width="Auto" Visibility="{Binding Data.IsPositionVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource AccentBlue}" />
-                        <DataGridTextColumn Header="TYPE" Binding="{Binding EmploymentType}" Width="Auto" Visibility="{Binding Data.IsTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="POSITION" Binding="{Binding Role, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsPositionVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource AccentBlue}" />
+                        <DataGridTextColumn Header="TYPE" Binding="{Binding EmploymentType, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource TextSub}" />
 
                         <!-- New Columns -->
@@ -207,7 +214,7 @@
                         <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="ID NUMBER" Binding="{Binding IdNumber}" Width="Auto" Visibility="{Binding Data.IsIdNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
 
-                        <DataGridTextColumn Header="RATE TYPE" Binding="{Binding RateType}" Width="Auto" Visibility="{Binding Data.IsRateTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="RATE TYPE" Binding="{Binding RateType, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsRateTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="RATE" Binding="{Binding HourlyRate, StringFormat=C}" Width="Auto" Visibility="{Binding Data.IsHourlyRateVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="TAX #" Binding="{Binding TaxNumber}" Width="Auto" Visibility="{Binding Data.IsTaxNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="BANK" Binding="{Binding BankName}" Width="Auto" Visibility="{Binding Data.IsBankNameVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
@@ -288,3 +295,5 @@
         <ContentControl Content="{Binding OverlayViewModel}" />
     </Grid>
 </UserControl>
+
+

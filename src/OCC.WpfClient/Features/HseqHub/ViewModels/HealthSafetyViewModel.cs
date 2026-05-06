@@ -91,7 +91,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                     break;
                 case "Audits":
                     CurrentView = AuditsView;
-                    AuditsView.LoadAuditsCommand.Execute(null);
+                    AuditsView.LoadDataCommand.Execute(null);
                     break;
                 case "Documents":
                     CurrentView = DocumentsView;

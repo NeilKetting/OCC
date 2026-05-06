@@ -124,6 +124,7 @@ namespace OCC.WpfClient
             services.AddSingleton<ITaskAssignmentService, TaskAssignmentService>();
             services.AddSingleton<ITaskCommentService, TaskCommentService>();
             services.AddSingleton<ITaskAttachmentService, TaskAttachmentService>();
+            services.AddSingleton<IPdfService, PdfService>();
 
             // Feature Discovery
             var features = new List<IFeature>

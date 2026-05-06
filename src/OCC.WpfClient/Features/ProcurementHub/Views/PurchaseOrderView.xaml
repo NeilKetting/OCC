@@ -446,7 +446,7 @@
                               VerticalGridLinesBrush="#33FFFFFF"
                               AlternatingRowBackground="#0AFFFFFF">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="ITEM" Width="Auto" MinWidth="100">
+                            <DataGridTemplateColumn Header="ITEM" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ComboBox ItemsSource="{Binding DataContext.InventoryItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -485,7 +485,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextSub}"/>
+                            <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="Auto" Foreground="{StaticResource TextSub}"/>
                             <DataGridTextColumn Header="REMARKS" Binding="{Binding Remarks}" Width="Auto"/>
                             <DataGridTextColumn Header="QTY" Width="60" Binding="{Binding QuantityOrdered}">
                                 <DataGridTextColumn.ElementStyle>
@@ -630,4 +630,8 @@
         <ContentControl Grid.RowSpan="4" Content="{Binding OverlayViewModel}" Panel.ZIndex="1000"/>
     </Grid>
 </UserControl>
+
+
+
+
 

@@ -26,7 +26,6 @@ namespace OCC.WpfClient.Features.ProcurementHub
             services.AddTransient<ISupplierService, SupplierService>();
             services.AddTransient<IOrderService, OrderService>();
             services.AddTransient<IProjectService, ProjectService>();
-            services.AddSingleton<IPdfService, PdfService>();
         }
 
         public void RegisterRoutes(INavigationService navigationService)

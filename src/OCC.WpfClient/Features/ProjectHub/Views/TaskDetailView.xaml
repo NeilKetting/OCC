@@ -47,7 +47,7 @@
                 <Border.RenderTransform>
                     <TranslateTransform X="600"/>
                 </Border.RenderTransform>
-                
+
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="60"/>
@@ -59,7 +59,7 @@
                         <Grid>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Task.DisplayId}" Foreground="{StaticResource TextSub}" FontSize="12" Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
-                                
+
                                 <StackPanel Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}}">
                                     <TextBlock Text="Initialize Task" Foreground="White" FontSize="18" FontWeight="Bold" 
                                                Visibility="{Binding IsSubtask, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
@@ -89,95 +89,114 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,80">
                         <Border Padding="20">
                             <StackPanel>
-                            <!-- Task Name (Edit) -->
-                            <StackPanel Margin="0,0,0,20">
-                                <TextBlock Text="TASK NAME" Style="{StaticResource LabelText}"/>
-                                <TextBox Text="{Binding Task.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" FontSize="18" FontWeight="SemiBold"/>
-                            </StackPanel>
-
-                            <!-- Description -->
-                            <StackPanel Margin="0,0,0,20">
-                                <TextBlock Text="DESCRIPTION" Style="{StaticResource LabelText}"/>
-                                <TextBox Text="{Binding Task.Description, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" AcceptsReturn="True" MinHeight="100" TextWrapping="Wrap"/>
-                            </StackPanel>
-
-                            <!-- Metadata Row -->
-                            <UniformGrid Columns="2" Margin="0,0,0,20">
-                                <StackPanel Margin="0,0,10,0">
-                                    <TextBlock Text="STATUS" Style="{StaticResource LabelText}"/>
-                                    <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding Task.Status}" Style="{StaticResource ModernComboBox}"/>
+                                <!-- Task Name (Edit) -->
+                                <StackPanel Margin="0,0,0,20">
+                                    <TextBlock Text="TASK NAME" Style="{StaticResource LabelText}"/>
+                                    <TextBox Text="{Binding Task.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" FontSize="18" FontWeight="SemiBold"/>
                                 </StackPanel>
-                                <StackPanel Margin="10,0,0,0">
-                                    <TextBlock Text="PRIORITY" Style="{StaticResource LabelText}"/>
-                                    <ComboBox SelectedValue="{Binding Task.Priority}" SelectedValuePath="Content" Style="{StaticResource ModernComboBox}">
-                                        <ComboBoxItem Content="Low"/>
-                                        <ComboBoxItem Content="Medium"/>
-                                        <ComboBoxItem Content="High"/>
-                                        <ComboBoxItem Content="Critical"/>
-                                    </ComboBox>
+
+                                <!-- Description -->
+                                <StackPanel Margin="0,0,0,20">
+                                    <TextBlock Text="DESCRIPTION" Style="{StaticResource LabelText}"/>
+                                    <TextBox Text="{Binding Task.Description, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" AcceptsReturn="True" MinHeight="100" TextWrapping="Wrap"/>
                                 </StackPanel>
-                            </UniformGrid>
 
-                            
+                                <!-- Metadata Row -->
+                                <UniformGrid Columns="2" Margin="0,0,0,20">
+                                    <StackPanel Margin="0,0,10,0">
+                                        <TextBlock Text="STATUS" Style="{StaticResource LabelText}"/>
+                                        <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding Task.Status}" Style="{StaticResource ModernComboBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="10,0,0,0">
+                                        <TextBlock Text="PRIORITY" Style="{StaticResource LabelText}"/>
+                                        <ComboBox SelectedValue="{Binding Task.Priority}" SelectedValuePath="Content" Style="{StaticResource ModernComboBox}">
+                                            <ComboBoxItem Content="Low"/>
+                                            <ComboBoxItem Content="Medium"/>
+                                            <ComboBoxItem Content="High"/>
+                                            <ComboBoxItem Content="Critical"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </UniformGrid>
 
-                            <StackPanel Margin="0,0,0,20">
-                                <TextBlock Text="HOLD" Style="{StaticResource LabelText}"/>
-                                <CheckBox Content="On Hold" IsChecked="{Binding Task.IsOnHold}" Style="{StaticResource ModernCheckBox}" Margin="0,5,0,0"/>
-                                
-                                <StackPanel Visibility="{Binding Task.IsOnHold, Converter={StaticResource VisibilityConverter}}" Margin="0,10,0,0">
-                                    <TextBlock Text="HOLD REASON (Required)" Style="{StaticResource LabelText}" Foreground="{StaticResource SecondaryGold}"/>
-                                    <TextBox Text="{Binding Task.HoldReason, UpdateSourceTrigger=PropertyChanged}" 
+
+
+                                <StackPanel Margin="0,0,0,20">
+                                    <TextBlock Text="HOLD" Style="{StaticResource LabelText}"/>
+                                    <CheckBox Content="On Hold" IsChecked="{Binding Task.IsOnHold}" Style="{StaticResource ModernCheckBox}" Margin="0,5,0,0"/>
+
+                                    <StackPanel Visibility="{Binding Task.IsOnHold, Converter={StaticResource VisibilityConverter}}" Margin="0,10,0,0">
+                                        <TextBlock Text="HOLD REASON (Required)" Style="{StaticResource LabelText}" Foreground="{StaticResource SecondaryGold}"/>
+                                        <TextBox Text="{Binding Task.HoldReason, UpdateSourceTrigger=PropertyChanged}" 
                                              Style="{StaticResource ModernInput}" 
                                              ap:WatermarkProperties.Watermark="Explain why this task is paused..."
                                              MinHeight="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
 
-                                <!-- Assignees -->
+                                 <!-- Assignees -->
                                 <StackPanel Margin="0,0,0,20">
-                                    <TextBlock Text="ASSIGNED RESOURCES" Style="{StaticResource LabelText}" Margin="0,0,0,8"/>
+                                    <Button Command="{Binding ToggleAssigneeOptionsCommand}" Style="{StaticResource ListActionButtonStyle}" HorizontalContentAlignment="Left" Margin="0,0,0,8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="ASSIGNED RESOURCES" Style="{StaticResource LabelText}"/>
+                                            <Path Fill="{StaticResource TextSub}" Width="10" Height="10" Stretch="Uniform" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <Path.Style>
+                                                    <Style TargetType="Path">
+                                                        <Setter Property="Data" Value="{StaticResource IconChevronDown}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsAssigneeOptionsVisible}" Value="True">
+                                                                <Setter Property="Data" Value="{StaticResource IconChevronUp}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Path.Style>
+                                            </Path>
+                                        </StackPanel>
+                                    </Button>
 
-                                    <Grid Margin="0,0,0,10">
-                                        <TextBox Text="{Binding AssigneeSearchText, UpdateSourceTrigger=PropertyChanged}" 
-                 Style="{StaticResource ModernInput}" 
-                 ap:WatermarkProperties.Watermark="Search staff or contractors..."/>
-                                        <Path Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" 
-              Width="14" Height="14" Stretch="Uniform" 
-              HorizontalAlignment="Right" Margin="0,0,12,0"/>
-                                    </Grid>
-
-                                    <Border Background="#0DFFFFFF" CornerRadius="12" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1" MaxHeight="250">
-                                        <ListBox ItemsSource="{Binding FilteredAssignees}" 
-                 Background="Transparent" BorderThickness="0"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button Command="{Binding DataContext.ToggleAssignmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource GhostButton}" HorizontalContentAlignment="Stretch" Padding="10,8">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <CheckBox IsChecked="{Binding IsSelected}" IsHitTestVisible="False" VerticalAlignment="Center" Margin="0,0,12,0" Style="{StaticResource ModernCheckBox}"/>
-
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
-                                                                <TextBlock Text="{Binding Role}" Foreground="{StaticResource TextSub}" FontSize="11"/>
-                                                            </StackPanel>
-
-                                                            <Border Grid.Column="2" Background="#1A3B82F6" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Branch}" Foreground="{StaticResource AccentBlue}" FontSize="10" FontWeight="Bold"/>
-                                                            </Border>
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </Border>
+                                    <StackPanel Visibility="{Binding IsAssigneeOptionsVisible, Converter={StaticResource VisibilityConverter}}">
+                                        <Grid Margin="0,0,0,10">
+                                            <TextBox Text="{Binding AssigneeSearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernInput}" 
+                                                     ap:WatermarkProperties.Watermark="Search staff or contractors..."/>
+                                            <Path Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" 
+                                                  Width="14" Height="14" Stretch="Uniform" 
+                                                  HorizontalAlignment="Right" Margin="0,0,12,0"/>
+                                        </Grid>
+    
+                                        <!-- Assignees Options -->
+                                        <Border Background="#0DFFFFFF" CornerRadius="12" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1" MaxHeight="250">
+                                            <ListBox ItemsSource="{Binding FilteredAssignees}" 
+                                                     Background="Transparent" BorderThickness="0"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Command="{Binding DataContext.ToggleAssignmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource GhostButton}" HorizontalContentAlignment="Stretch" Padding="10,8">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+    
+                                                                <CheckBox IsChecked="{Binding IsSelected}" IsHitTestVisible="False" VerticalAlignment="Center" Margin="0,0,12,0" Style="{StaticResource ModernCheckBox}"/>
+    
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{Binding Role}" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                                                                </StackPanel>
+    
+                                                                <Border Grid.Column="2" Background="#1A3B82F6" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Branch}" Foreground="{StaticResource AccentBlue}" FontSize="10" FontWeight="Bold"/>
+                                                                </Border>
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </Border>
+                                    </StackPanel>
 
                                     <TextBlock Text="Currently Assigned:" Style="{StaticResource LabelText}" FontSize="10" Margin="0,15,0,8" Visibility="{Binding Assignments.Count, Converter={StaticResource VisibilityConverter}}"/>
                                     <ItemsControl ItemsSource="{Binding Assignments}">
@@ -197,95 +216,95 @@
                                 </StackPanel>
 
                                 <!-- Progress -->
-                            <StackPanel Margin="0,0,0,20">
-                                <Grid>
-                                    <TextBlock Text="PROGRESS" Style="{StaticResource LabelText}"/>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,5">
-                                        <TextBlock Text="{Binding Task.PercentComplete, StringFormat='{}{0}%'}" Foreground="White" FontSize="12" FontWeight="Bold"/>
-                                        <TextBlock Text=" complete" Foreground="{StaticResource TextSub}" FontSize="12"/>
-                                    </StackPanel>
-                                </Grid>
-                                <ProgressBar Value="{Binding Task.PercentComplete}" Height="12" BorderThickness="0" Background="#15FFFFFF">
-                                    <ProgressBar.Foreground>
-                                        <SolidColorBrush Color="{Binding Task.StatusColor}"/>
-                                    </ProgressBar.Foreground>
-                                </ProgressBar>
-                            </StackPanel>
-
-                            <!-- Dates -->
-                            <UniformGrid Columns="2" Margin="0,0,0,20">
-                                <StackPanel Margin="0,0,10,0">
-                                    <TextBlock Text="START DATE" Style="{StaticResource LabelText}"/>
-                                    <DatePicker SelectedDate="{Binding Task.StartDate}" Style="{StaticResource ModernDatePicker}"/>
-                                </StackPanel>
-                                <StackPanel Margin="10,0,0,0">
-                                    <TextBlock Text="DUE DATE" Style="{StaticResource LabelText}"/>
-                                    <DatePicker SelectedDate="{Binding Task.FinishDate}" Style="{StaticResource ModernDatePicker}"/>
-                                </StackPanel>
-                            </UniformGrid>
-
-                            <!-- Subtasks Section -->
-                            <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,20,0,0" Visibility="{Binding IsParentTask, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,20">
-                                <StackPanel>
-                                    <TextBlock Text="SUBTASKS" Style="{StaticResource LabelText}" Margin="0,0,0,10"/>
-                                    <ItemsControl ItemsSource="{Binding Subtasks}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="#0DFFFFFF" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <CheckBox IsChecked="{Binding IsComplete}" VerticalAlignment="Center"/>
-                                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" Margin="10,0" VerticalAlignment="Center"/>
-                                                        <TextBlock Grid.Column="2" Text="{Binding PercentComplete, StringFormat='{}{0}%'}" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Comments Section -->
-                            <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,20,0,0" Margin="0,0,0,20"
-                                    Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
-                                <StackPanel>
-                                    <TextBlock Text="COMMENTS" Style="{StaticResource LabelText}" Margin="0,0,0,10"/>
-                                    
-                                    <!-- Add Comment -->
-                                    <Grid Margin="0,0,0,15">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox Text="{Binding NewCommentContent, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Type a comment..."/>
-                                        <Button Grid.Column="1" Content="Add" Command="{Binding AddCommentCommand}" Style="{StaticResource ActionButtonPrimary}" Margin="10,0,0,0"/>
+                                <StackPanel Margin="0,0,0,20">
+                                    <Grid>
+                                        <TextBlock Text="PROGRESS" Style="{StaticResource LabelText}"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,5">
+                                            <TextBlock Text="{Binding Task.PercentComplete, StringFormat='{}{0}%'}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                                            <TextBlock Text=" complete" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                                        </StackPanel>
                                     </Grid>
-
-                                    <!-- Comments List -->
-                                    <ItemsControl ItemsSource="{Binding Comments}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="#05FFFFFF" CornerRadius="8" Padding="12" Margin="0,0,0,12" BorderBrush="#10FFFFFF" BorderThickness="1">
-                                                    <StackPanel>
-                                                        <Grid>
-                                                            <TextBlock Text="{Binding AuthorName}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" FontSize="12"/>
-                                                            <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:dd MMM HH:mm}'}" Foreground="{StaticResource TextSub}" FontSize="10" HorizontalAlignment="Right"/>
-                                                        </Grid>
-                                                        <TextBlock Text="{Binding Content}" Foreground="White" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    <ProgressBar Value="{Binding Task.PercentComplete}" Height="12" BorderThickness="0" Background="#15FFFFFF">
+                                        <ProgressBar.Foreground>
+                                            <SolidColorBrush Color="{Binding Task.StatusColor}"/>
+                                        </ProgressBar.Foreground>
+                                    </ProgressBar>
                                 </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                </ScrollViewer>
+
+                                <!-- Dates -->
+                                <UniformGrid Columns="2" Margin="0,0,0,20">
+                                    <StackPanel Margin="0,0,10,0">
+                                        <TextBlock Text="START DATE" Style="{StaticResource LabelText}"/>
+                                        <DatePicker SelectedDate="{Binding Task.StartDate}" Style="{StaticResource ModernDatePicker}"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="10,0,0,0">
+                                        <TextBlock Text="DUE DATE" Style="{StaticResource LabelText}"/>
+                                        <DatePicker SelectedDate="{Binding Task.FinishDate}" Style="{StaticResource ModernDatePicker}"/>
+                                    </StackPanel>
+                                </UniformGrid>
+
+                                <!-- Subtasks Section -->
+                                <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,20,0,0" Visibility="{Binding IsParentTask, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,20">
+                                    <StackPanel>
+                                        <TextBlock Text="SUBTASKS" Style="{StaticResource LabelText}" Margin="0,0,0,10"/>
+                                        <ItemsControl ItemsSource="{Binding Subtasks}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#0DFFFFFF" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox IsChecked="{Binding IsComplete}" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" Margin="10,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding PercentComplete, StringFormat='{}{0}%'}" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Comments Section -->
+                                <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,20,0,0" Margin="0,0,0,20"
+                                    Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                                    <StackPanel>
+                                        <TextBlock Text="COMMENTS" Style="{StaticResource LabelText}" Margin="0,0,0,10"/>
+
+                                        <!-- Add Comment -->
+                                        <Grid Margin="0,0,0,15">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding NewCommentContent, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Type a comment..."/>
+                                            <Button Grid.Column="1" Content="Add" Command="{Binding AddCommentCommand}" Style="{StaticResource ActionButtonPrimary}" Margin="10,0,0,0"/>
+                                        </Grid>
+
+                                        <!-- Comments List -->
+                                        <ItemsControl ItemsSource="{Binding Comments}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#05FFFFFF" CornerRadius="8" Padding="12" Margin="0,0,0,12" BorderBrush="#10FFFFFF" BorderThickness="1">
+                                                        <StackPanel>
+                                                            <Grid>
+                                                                <TextBlock Text="{Binding AuthorName}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" FontSize="12"/>
+                                                                <TextBlock Text="{Binding CreatedAtUtc, StringFormat='{}{0:dd MMM HH:mm}'}" Foreground="{StaticResource TextSub}" FontSize="10" HorizontalAlignment="Right"/>
+                                                            </Grid>
+                                                            <TextBlock Text="{Binding Content}" Foreground="White" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
 
                     <!-- Footer -->
                     <Border Grid.Row="1" VerticalAlignment="Bottom" Background="#10000000" Padding="20,15" Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}}">

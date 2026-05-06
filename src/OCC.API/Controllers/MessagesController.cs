@@ -51,6 +51,7 @@ namespace OCC.API.Controllers
                     CreatedById = cs.CreatedById,
                     UnreadCount = cs.Messages.Count(m => m.SenderId != userId && !m.ReadReceipts.Any(r => r.UserId == userId)),
                     IsFavourite = cs.SessionUsers.Where(su => su.UserId == userId).Select(su => su.IsFavourite).FirstOrDefault(),
+                    SharedAesKey = cs.SharedAesKey,
                     Users = cs.SessionUsers.Select(su => new ChatUserDto { 
                         UserId = su.UserId, 
                         FirstName = su.User!.FirstName, 
@@ -166,14 +167,15 @@ namespace OCC.API.Controllers
             {
                 Id = Guid.NewGuid(),
                 IsGroupChat = false,
-                Name = null, // Direct chats usually don't have a name
+                Name = null,
                 CreatedById = currentUserId,
+                SharedAesKey = GenerateAesKey()
             };
-
+            
             _context.ChatSessions.Add(newSession);
 
-            _context.ChatSessionUsers.Add(new ChatSessionUser { Id = Guid.NewGuid(), ChatSessionId = newSession.Id, UserId = currentUserId, EncryptedAesKey = request.MyEncryptedAesKey });
-            _context.ChatSessionUsers.Add(new ChatSessionUser { Id = Guid.NewGuid(), ChatSessionId = newSession.Id, UserId = targetUserId, EncryptedAesKey = request.TargetEncryptedAesKey });
+            _context.ChatSessionUsers.Add(new ChatSessionUser { Id = Guid.NewGuid(), ChatSessionId = newSession.Id, UserId = currentUserId });
+            _context.ChatSessionUsers.Add(new ChatSessionUser { Id = Guid.NewGuid(), ChatSessionId = newSession.Id, UserId = targetUserId });
 
             await _context.SaveChangesAsync();
 
@@ -285,7 +287,8 @@ namespace OCC.API.Controllers
                 IsGroupChat = true,
                 Name = request.Name,
                 CreatedById = currentUserId,
-                CreatedAtUtc = DateTime.UtcNow
+                CreatedAtUtc = DateTime.UtcNow,
+                SharedAesKey = GenerateAesKey()
             };
 
             _context.ChatSessions.Add(newSession);
@@ -298,7 +301,6 @@ namespace OCC.API.Controllers
                     Id = Guid.NewGuid(),
                     ChatSessionId = newSession.Id,
                     UserId = participant.UserId,
-                    EncryptedAesKey = participant.EncryptedAesKey,
                     JoinedDate = DateTime.UtcNow
                 });
             }
@@ -380,6 +382,13 @@ namespace OCC.API.Controllers
             await _hubContext.Clients.Group($"User_{currentUserId}").SendAsync("SessionDeleted", sessionId);
 
             return NoContent();
+        }
+        private string GenerateAesKey()
+        {
+            using var aes = System.Security.Cryptography.Aes.Create();
+            aes.KeySize = 256;
+            aes.GenerateKey();
+            return Convert.ToBase64String(aes.Key);
         }
     }
 }

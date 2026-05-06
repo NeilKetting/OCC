@@ -380,20 +380,8 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                             {
                                 var model = new ChatSessionModel(dto, CurrentUserId);
 
-                                // Decrypt AES Key for this session
-                                var myUserDto = dto.Users.FirstOrDefault(u => u.UserId == _authService.CurrentUser?.Id);
-                                if (myUserDto != null && !string.IsNullOrEmpty(myUserDto.EncryptedAesKey))
-                                {
-                                    try
-                                    {
-                                        model.DecryptedAesKey = _encryptionService.DecryptAesKeyWithRsa(myUserDto.EncryptedAesKey);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogError(ex, "Failed to decrypt AES key for session {SessionId}", dto.Id);
-                                        model.LastMessagePreview = "[Encryption Error: Missing or Invalid Key]";
-                                    }
-                                }
+                                // Use Shared AES Key from server
+                                model.DecryptedAesKey = dto.SharedAesKey;
 
                                 // Decrypt LastMessagePreview if there's a key
                                 if (!string.IsNullOrEmpty(model.DecryptedAesKey) && dto.LastMessage != null && !dto.LastMessage.HasAttachment)
@@ -583,43 +571,16 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             {
                 var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
                 
-                // Step 1: Check if session exists
+                // Simple session creation (Server handles keys)
                 var checkResponse = await _httpClient.PostAsync($"{baseUrl}/api/messages/direct/{targetUserId}", null);
-                if (!checkResponse.IsSuccessStatusCode) return;
-
-                var result = await checkResponse.Content.ReadFromJsonAsync<DirectSessionResponse>();
-
-                if (result?.RequiresKeys == true)
+                if (checkResponse.IsSuccessStatusCode)
                 {
-                    // Step 2: Fetch Target Public Key
-                    var keyResponse = await _httpClient.GetFromJsonAsync<PublicKeyResponse>($"{baseUrl}/api/users/{targetUserId}/public-key");
-                    
-                    if (keyResponse != null && !string.IsNullOrEmpty(keyResponse.PublicKey))
+                    var result = await checkResponse.Content.ReadFromJsonAsync<DirectSessionResponse>();
+                    if (result?.SessionId != null)
                     {
-                        // Step 3: Generate and Encrypt AES Key
-                        var rawAesKey = _encryptionService.GenerateAesKey();
-                        var myEncryptedKey = _encryptionService.EncryptAesKeyWithRsa(rawAesKey, _encryptionService.GetPublicKey());
-                        var targetEncryptedKey = _encryptionService.EncryptAesKeyWithRsa(rawAesKey, keyResponse.PublicKey);
-
-                        // Step 4: Create Session with Keys
-                        var createRequest = new { MyEncryptedAesKey = myEncryptedKey, TargetEncryptedAesKey = targetEncryptedKey };
-                        var createResponse = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/messages/direct/{targetUserId}", createRequest);
-                        
-                        if (createResponse.IsSuccessStatusCode)
-                        {
-                            var createResult = await createResponse.Content.ReadFromJsonAsync<DirectSessionResponse>();
-                            if (createResult?.SessionId != null)
-                            {
-                                await LoadSessionsAsync();
-                                SelectedSession = ChatSessions.FirstOrDefault(s => s.Id == createResult.SessionId);
-                            }
-                        }
+                        await LoadSessionsAsync();
+                        SelectedSession = ChatSessions.FirstOrDefault(s => s.Id == result.SessionId);
                     }
-                }
-                else if (result?.SessionId != null)
-                {
-                    // Session already exists
-                    SelectedSession = ChatSessions.FirstOrDefault(s => s.Id == result.SessionId);
                 }
 
                 // Close the overlay
@@ -784,36 +745,16 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
 
             try
             {
-                // 1. Generate Session AES Key
-                var rawAesKey = _encryptionService.GenerateAesKey();
-                
-                // 2. Encrypt for all participants (including self)
+                // 1. Prepare participants (creator + selected)
                 var participants = new List<object>();
                 
                 // Add self
-                participants.Add(new { 
-                    UserId = CurrentUserId, 
-                    EncryptedAesKey = _encryptionService.EncryptAesKeyWithRsa(rawAesKey, _encryptionService.GetPublicKey()) 
-                });
+                participants.Add(new { UserId = CurrentUserId });
 
                 // Add others
                 foreach (var contact in SelectedContacts)
                 {
-                    if (string.IsNullOrEmpty(contact.PublicKey))
-                    {
-                        // Fetch public key if missing
-                        var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
-                        var keyResponse = await _httpClient.GetFromJsonAsync<PublicKeyResponse>($"{baseUrl}/api/users/{contact.UserId}/public-key");
-                        if (keyResponse != null) contact.PublicKey = keyResponse.PublicKey;
-                    }
-
-                    if (!string.IsNullOrEmpty(contact.PublicKey))
-                    {
-                        participants.Add(new { 
-                            UserId = contact.UserId, 
-                            EncryptedAesKey = _encryptionService.EncryptAesKeyWithRsa(rawAesKey, contact.PublicKey) 
-                        });
-                    }
+                    participants.Add(new { UserId = contact.UserId });
                 }
 
                 // 3. Send to API

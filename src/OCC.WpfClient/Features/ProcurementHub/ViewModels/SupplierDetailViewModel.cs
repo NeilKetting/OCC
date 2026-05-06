@@ -48,7 +48,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             Supplier model,
             ISupplierService supplierService,
             IDialogService dialogService,
-            ILogger logger) : base(dialogService, logger)
+            ILogger logger,
+            IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
             _parent = parent;
             _model = model;
@@ -212,5 +213,21 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description ?? value.ToString();
         }
+
+        protected override string GetReportTitle() => $"Supplier Profile: {Name}";
+        protected override object GetReportItem() => new
+        {
+            Name,
+            ContactPerson,
+            Email,
+            Phone,
+            Address,
+            City,
+            PostalCode,
+            VatNumber,
+            BankName = _model.BankName,
+            BankAccountNumber,
+            BranchCode
+        };
     }
 }

@@ -13,7 +13,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         
         string GenerateAesKey(); // Returns Base64 AES Key
         
-        // RSA Encryption for AES Key Distribution
+        // RSA Encryption for AES Key Distribution (DEPRECATED: Now server managed)
         string EncryptAesKeyWithRsa(string aesKeyBase64, string recipientPublicKeyXml);
         string DecryptAesKeyWithRsa(string encryptedAesKeyBase64);
 
@@ -24,54 +24,16 @@ namespace OCC.WpfClient.Services.Infrastructure
 
     public class LocalEncryptionService : ILocalEncryptionService
     {
-        private Guid _currentUserId;
-        private string _privateKeyXml = string.Empty;
-        private string _publicKeyXml = string.Empty;
-        private string _keyStoragePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OCC", "Keys", $"{_currentUserId}_rsa.xml");
-
         public void InitializeOrLoadKeys(Guid userId)
         {
-            _currentUserId = userId;
-            
-            var dir = Path.GetDirectoryName(_keyStoragePath);
-            if (!Directory.Exists(dir) && dir != null)
-                Directory.CreateDirectory(dir);
-
-            if (File.Exists(_keyStoragePath))
-            {
-                // In production, encrypt this file or use Windows DPAPI
-                _privateKeyXml = File.ReadAllText(_keyStoragePath);
-                
-                using var rsa = RSA.Create();
-                rsa.FromXmlString(_privateKeyXml);
-                _publicKeyXml = rsa.ToXmlString(false); // Export public only
-            }
-            else
-            {
-                using var rsa = RSA.Create(2048);
-                _privateKeyXml = rsa.ToXmlString(true); // Export private
-                _publicKeyXml = rsa.ToXmlString(false); // Export public
-
-                File.WriteAllText(_keyStoragePath, _privateKeyXml);
-            }
+            // No longer needed for Shared Keys
         }
 
-        public string GetPublicKey() => _publicKeyXml;
+        public string GetPublicKey() => string.Empty; // No longer needed
 
         public void InitializeWithKey(Guid userId, string privateKeyXml)
         {
-            _currentUserId = userId;
-            _privateKeyXml = privateKeyXml;
-
-            using var rsa = RSA.Create();
-            rsa.FromXmlString(_privateKeyXml);
-            _publicKeyXml = rsa.ToXmlString(false);
-
-            var dir = Path.GetDirectoryName(_keyStoragePath);
-            if (!Directory.Exists(dir) && dir != null)
-                Directory.CreateDirectory(dir);
-
-            File.WriteAllText(_keyStoragePath, _privateKeyXml);
+            // No longer needed
         }
 
         public string GenerateAesKey()
@@ -84,45 +46,43 @@ namespace OCC.WpfClient.Services.Infrastructure
 
         public string EncryptAesKeyWithRsa(string aesKeyBase64, string recipientPublicKeyXml)
         {
-            if (string.IsNullOrEmpty(recipientPublicKeyXml)) return string.Empty;
-            
-            using var rsa = RSA.Create();
-            rsa.FromXmlString(recipientPublicKeyXml);
-            var encryptedKeyBytes = rsa.Encrypt(Convert.FromBase64String(aesKeyBase64), RSAEncryptionPadding.OaepSHA256);
-            return Convert.ToBase64String(encryptedKeyBytes);
+            // Deprecated logic
+            return aesKeyBase64; 
         }
 
         public string DecryptAesKeyWithRsa(string encryptedAesKeyBase64)
         {
-            if (string.IsNullOrEmpty(_privateKeyXml) || string.IsNullOrEmpty(encryptedAesKeyBase64)) return string.Empty;
-            
-            using var rsa = RSA.Create();
-            rsa.FromXmlString(_privateKeyXml);
-            var decryptedKeyBytes = rsa.Decrypt(Convert.FromBase64String(encryptedAesKeyBase64), RSAEncryptionPadding.OaepSHA256);
-            return Convert.ToBase64String(decryptedKeyBytes);
+            // Now just returns the key since it's stored plain on server (or just handled by DTO)
+            return encryptedAesKeyBase64;
         }
 
         public string EncryptMessage(string plainText, string aesKeyBase64)
         {
             if (string.IsNullOrEmpty(plainText) || string.IsNullOrEmpty(aesKeyBase64)) return plainText;
 
-            using var aes = Aes.Create();
-            aes.Key = Convert.FromBase64String(aesKeyBase64);
-            aes.GenerateIV(); // Unique IV for every message
-
-            using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            using var ms = new MemoryStream();
-            
-            // Prepend IV to ciphertext
-            ms.Write(aes.IV, 0, aes.IV.Length);
-            
-            using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-            using (var sw = new StreamWriter(cs))
+            try 
             {
-                sw.Write(plainText);
-            }
+                using var aes = Aes.Create();
+                aes.Key = Convert.FromBase64String(aesKeyBase64);
+                aes.GenerateIV();
 
-            return Convert.ToBase64String(ms.ToArray());
+                using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+                using var ms = new MemoryStream();
+                
+                ms.Write(aes.IV, 0, aes.IV.Length);
+                
+                using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+                using (var sw = new StreamWriter(cs))
+                {
+                    sw.Write(plainText);
+                }
+
+                return Convert.ToBase64String(ms.ToArray());
+            }
+            catch (Exception)
+            {
+                return plainText;
+            }
         }
 
         public string DecryptMessage(string cipherTextBase64, string aesKeyBase64)
@@ -136,8 +96,9 @@ namespace OCC.WpfClient.Services.Infrastructure
                 using var aes = Aes.Create();
                 aes.Key = Convert.FromBase64String(aesKeyBase64);
 
-                // Extract IV
                 var iv = new byte[aes.BlockSize / 8];
+                if (fullCipherBytes.Length < iv.Length) return cipherTextBase64;
+                
                 Array.Copy(fullCipherBytes, 0, iv, 0, iv.Length);
                 aes.IV = iv;
 
@@ -150,7 +111,9 @@ namespace OCC.WpfClient.Services.Infrastructure
             }
             catch (Exception)
             {
-                return "[Error: Decryption Failed]";
+                // If it fails, maybe it wasn't encrypted or key is wrong
+                // Returning original text for resilience
+                return cipherTextBase64;
             }
         }
     }

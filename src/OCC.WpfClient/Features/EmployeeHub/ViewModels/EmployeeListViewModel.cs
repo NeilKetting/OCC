@@ -19,6 +19,17 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private readonly ILogger<EmployeeListViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
         private List<EmployeeSummaryDto> _allEmployees = new();
+        
+        public override string ReportTitle => "Employee Directory";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Emp #", PropertyName = "EmployeeNumber", Width = 1 },
+            new() { Header = "First Name", PropertyName = "FirstName", Width = 1.5 },
+            new() { Header = "Last Name", PropertyName = "LastName", Width = 1.5 },
+            new() { Header = "Position", PropertyName = "Role", Width = 2 },
+            new() { Header = "Type", PropertyName = "EmploymentType", Width = 1 },
+            new() { Header = "Branch", PropertyName = "Branch", Width = 1.5 }
+        };
 
         [ObservableProperty]
         private int _selectedFilterIndex = 0; // 0 = Everyone, 1 = Permanent, 2 = Contract
@@ -61,7 +72,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             IAuthService authService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
-            ILogger<EmployeeListViewModel> logger)
+            ILogger<EmployeeListViewModel> logger,
+            IPdfService pdfService) : base(pdfService)
         {
             _employeeService = employeeService;
             _userService = userService;
@@ -157,7 +169,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private void AddEmployee()
         {
             var employee = new Models.EmployeeModel();
-            OpenOverlay(new EmployeeDetailViewModel(this, employee, _employeeService, _userService, _authService, _dialogService, _logger));
+            OpenOverlay(new EmployeeDetailViewModel(this, employee, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
@@ -174,7 +186,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                 if (dto != null)
                 {
                     var model = new Models.EmployeeModel(dto);
-                    OpenOverlay(new EmployeeDetailViewModel(this, model, _employeeService, _userService, _authService, _dialogService, _logger));
+                    OpenOverlay(new EmployeeDetailViewModel(this, model, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService));
                 }
             }
             finally

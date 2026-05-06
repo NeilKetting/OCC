@@ -22,6 +22,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly LocalSettingsService _settingsService;
         private List<SupplierSummaryDto> _allSuppliers = new();
 
+        public override string ReportTitle => "Supplier Directory";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Supplier Name", PropertyName = "Name", Width = 3 },
+            new() { Header = "Contact", PropertyName = "ContactPerson", Width = 2 },
+            new() { Header = "Phone", PropertyName = "Phone", Width = 1.5 },
+            new() { Header = "VAT #", PropertyName = "VatNumber", Width = 1.5 }
+        };
+
         // Column Visibility
         [ObservableProperty] private bool _isBranchVisible = true;
         [ObservableProperty] private bool _isContactVisible = true;
@@ -37,7 +46,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             ISupplierService supplierService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
-            ILogger<SupplierViewModel> logger)
+            ILogger<SupplierViewModel> logger,
+            IPdfService pdfService) : base(pdfService)
         {
             _supplierService = supplierService;
             _dialogService = dialogService;
@@ -109,7 +119,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private void AddSupplier()
         {
             var supplier = new Supplier();
-            OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger));
+            OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
@@ -125,7 +135,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 var supplier = await _supplierService.GetSupplierAsync(target.Id);
                 if (supplier != null)
                 {
-                    OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger));
+                    OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger, _pdfService));
                 }
             }
             catch (Exception ex)

@@ -105,6 +105,13 @@
                             </Border>
                         </Popup>
                     </Grid>
+                    
+                    <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="10,0" Grid.Column="4">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                            <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
 
                     <!-- Stats -->
                     <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
@@ -201,4 +208,7 @@
         <ContentControl Content="{Binding OverlayViewModel}" />
     </Grid>
 </UserControl>
+
+
+
 

@@ -86,7 +86,7 @@
                             <DataGridTextColumn Header="DATE" Binding="{Binding OrderDate, StringFormat=d}" Width="100"/>
                             <DataGridTextColumn Header="TYPE" Binding="{Binding OrderType}" Width="120"/>
                             <DataGridTextColumn Header="NUM" Binding="{Binding OrderNumber}" Width="100"/>
-                            <DataGridTextColumn Header="NAME" Binding="{Binding SupplierName}" Width="*"/>
+                            <DataGridTextColumn Header="NAME" Binding="{Binding SupplierName}" Width="Auto"/>
                             <DataGridTextColumn Header="MEMO" Binding="{Binding ReferenceNo}" Width="150"/>
                             <DataGridTextColumn Header="AMOUNT" Binding="{Binding TotalAmount, StringFormat=N2}" Width="100">
                                 <DataGridTextColumn.ElementStyle>
@@ -114,3 +114,4 @@
         </Border>
     </Grid>
 </UserControl>
+

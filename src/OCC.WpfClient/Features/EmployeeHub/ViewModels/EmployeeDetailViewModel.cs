@@ -45,7 +45,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
 
-        public EmployeeDetailViewModel(EmployeeListViewModel parent, EmployeeModel employee, IEmployeeService employeeService, IUserService userService, IAuthService authService, IDialogService dialogService, ILogger logger) : base(dialogService, logger)
+        public EmployeeDetailViewModel(EmployeeListViewModel parent, EmployeeModel employee, IEmployeeService employeeService, IUserService userService, IAuthService authService, IDialogService dialogService, ILogger logger, IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
             _parent = parent;
             Employee = employee;
@@ -277,10 +277,18 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _parent.CloseDetailView();
         }
 
-        [RelayCommand]
-        private void Print()
+        protected override string GetReportTitle() => $"Employee Profile: {Employee.DisplayName}";
+        protected override object GetReportItem() => new
         {
-            _logger.LogInformation("Print Profile requested for {DisplayName}", Employee.DisplayName);
-        }
+            Employee.FirstName,
+            Employee.LastName,
+            Employee.EmployeeNumber,
+            Role = Employee.Role.ToString(),
+            Employee.Branch,
+            Employee.Email,
+            Employee.Phone,
+            Employee.EmploymentType,
+            Employee.Status
+        };
     }
 }

@@ -36,6 +36,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isCreateMode;
         [ObservableProperty] private string _parentTaskName = string.Empty;
         [ObservableProperty] private Project? _selectedProject;
+        [ObservableProperty] private bool _isAssigneeOptionsVisible;
         
         public bool IsProjectLinkVisible => IsCreateMode;
         public bool IsSubtask => Task?.Model?.ParentId != null;
@@ -318,14 +319,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Task.PropertyChanged += Task_PropertyChanged;
         }
 
-        private async void Task_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void Task_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (_isSuppressingUpdates || IsCreateMode) return;
-            await UpdateTask();
+            // Auto-save on every property change (like key presses) is disabled per user request.
+            // Changes will be saved when the drawer closes.
         }
 
         private async Task UpdateTask()
         {
+            if (Task == null || IsCreateMode) return;
+
             await _updateLock.WaitAsync();
             try
             {
@@ -334,6 +337,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 await _projectTaskService.UpdateTaskAsync(Task.Model);
                 WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(_currentTaskId));
                 UpdateStatus("Ready");
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("Error saving changes");
+                NotifyError("Save Failed", $"Error saving task: {ex.Message}");
             }
             finally { _updateLock.Release(); }
         }
@@ -364,8 +372,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             CloseInitiated?.Invoke(this, EventArgs.Empty);
         }
 
-        public void ConfirmClose()
+        public async void ConfirmClose()
         {
+            if (!IsCreateMode)
+            {
+                await UpdateTask();
+            }
             CloseFinished?.Invoke(this, EventArgs.Empty);
         }
 
@@ -385,6 +397,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 Task.IsOnHold = !Task.IsOnHold;
             }
+        }
+
+        [RelayCommand]
+        private void ToggleAssigneeOptions()
+        {
+            IsAssigneeOptionsVisible = !IsAssigneeOptionsVisible;
         }
 
         [RelayCommand]

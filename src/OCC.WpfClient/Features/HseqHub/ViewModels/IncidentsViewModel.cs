@@ -13,28 +13,28 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class IncidentsViewModel : ViewModelBase
+    public partial class IncidentsViewModel : ListViewModelBase<IncidentSummaryDto>
     {
         private readonly IHealthSafetyService _hseqService;
 
         [ObservableProperty]
-        private ObservableCollection<IncidentSummaryDto> _incidents = new();
-
-        [ObservableProperty]
-        private IncidentSummaryDto? _selectedSummary;
-
-        [ObservableProperty]
-        private bool _isTypeVisible = true;
-
-        [ObservableProperty]
-        private bool _isSeverityVisible = true;
-
-        [ObservableProperty]
         private bool _isStatusVisible = true;
+
+        private List<IncidentSummaryDto> _allIncidents = new();
+
+        public override string ReportTitle => "Health & Safety Incident Log";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Date", PropertyName = "Date", Width = 1.2 },
+            new() { Header = "Type", PropertyName = "Type", Width = 1.5 },
+            new() { Header = "Location", PropertyName = "Location", Width = 2 },
+            new() { Header = "Severity", PropertyName = "Severity", Width = 1 },
+            new() { Header = "Status", PropertyName = "Status", Width = 1 }
+        };
 
         public IncidentEditorViewModel Editor { get; }
 
-        public IncidentsViewModel(IHealthSafetyService hseqService, IncidentEditorViewModel editor)
+        public IncidentsViewModel(IHealthSafetyService hseqService, IncidentEditorViewModel editor, IPdfService pdfService) : base(pdfService)
         {
             _hseqService = hseqService;
             Editor = editor;
@@ -42,19 +42,18 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             
             Editor.OnSaved = OnIncidentSaved;
 
-            System.Diagnostics.Debug.WriteLine("IncidentsViewModel: Constructor called. Triggering LoadIncidents.");
-            _ = LoadIncidents();
+            System.Diagnostics.Debug.WriteLine("IncidentsViewModel: Constructor called. Triggering LoadDataAsync.");
+            _ = LoadDataAsync();
         }
 
         // Design-time
-        public IncidentsViewModel()
+        public IncidentsViewModel() : base(null!)
         {
             _hseqService = null!;
             Editor = new IncidentEditorViewModel();
         }
 
-        [RelayCommand]
-        public async Task LoadIncidents()
+        public override async Task LoadDataAsync()
         {
             try
             {
@@ -63,7 +62,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var data = await _hseqService.GetIncidentsAsync();
                 if (data != null)
                 {
-                    Incidents = new ObservableCollection<IncidentSummaryDto>(data.OrderByDescending(i => i.Date));
+                    _allIncidents = data.OrderByDescending(i => i.Date).ToList();
+                    FilterItems();
                 }
             }
             catch (Exception ex)
@@ -75,6 +75,25 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        protected override void FilterItems()
+        {
+            IEnumerable<IncidentSummaryDto> filtered = _allIncidents;
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var query = SearchQuery.ToLower();
+                filtered = filtered.Where(i =>
+                    (i.Location?.ToLower().Contains(query) ?? false) ||
+                    (i.Type.ToString().ToLower().Contains(query)) ||
+                    (i.Severity.ToString().ToLower().Contains(query)) ||
+                    (i.Status.ToString().ToLower().Contains(query)));
+            }
+
+            var result = filtered.ToList();
+            Items = new ObservableCollection<IncidentSummaryDto>(result);
+            TotalCount = result.Count;
         }
 
         [RelayCommand]
@@ -110,7 +129,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             else
             {
                 Editor.Initialize(new Incident { Date = DateTime.Now });
-                SelectedSummary = null;
+                SelectedItem = null;
             }
         }
 
@@ -118,22 +137,23 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         private void CancelAdd()
         {
             Editor.Clear();
-            SelectedSummary = null;
+            SelectedItem = null;
         }
 
         private async Task OnIncidentSaved(IncidentSummaryDto summary)
         {
-            var existing = Incidents.FirstOrDefault(i => i.Id == summary.Id);
+            var existing = _allIncidents.FirstOrDefault(i => i.Id == summary.Id);
             if (existing != null)
             {
-                var index = Incidents.IndexOf(existing);
-                Incidents[index] = summary;
+                var index = _allIncidents.IndexOf(existing);
+                _allIncidents[index] = summary;
             }
             else
             {
-                Incidents.Insert(0, summary);
+                _allIncidents.Insert(0, summary);
             }
             
+            FilterItems();
             await Task.CompletedTask;
         }
 
@@ -150,8 +170,9 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 if (success)
                 {
                     NotifySuccess("Success", "Incident deleted.");
-                    Incidents.Remove(summary);
-                    if (SelectedSummary?.Id == summary.Id) SelectedSummary = null;
+                    _allIncidents.Remove(summary);
+                    FilterItems();
+                    if (SelectedItem?.Id == summary.Id) SelectedItem = null;
                 }
                 else
                 {

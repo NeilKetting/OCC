@@ -64,7 +64,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             UserRole.HSEQ
         };
 
-        public UserDetailViewModel(UserListViewModel parent, User user, IUserService userService, IDialogService dialogService, ILogger logger) : base(dialogService, logger)
+        public UserDetailViewModel(UserListViewModel parent, User user, IUserService userService, IDialogService dialogService, ILogger logger, IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
             _parent = parent;
             _user = user;
@@ -258,5 +258,17 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _parent.CloseDetailView();
         }
 
+        protected override string GetReportTitle() => $"User Profile: {FirstName} {LastName}";
+        protected override object GetReportItem() => new
+        {
+            FirstName,
+            LastName,
+            Email,
+            Phone,
+            UserRole = SelectedRole.ToString(),
+            IsApproved,
+            CompanyName,
+            Location
+        };
     }
 }

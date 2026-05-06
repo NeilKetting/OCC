@@ -42,7 +42,8 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             ISubContractorService subContractorService,
             IUserService userService,
             IDialogService dialogService,
-            ILogger logger) : base(dialogService, logger)
+            ILogger logger,
+            IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
             _parent = parent;
             _model = model;
@@ -273,6 +274,17 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         {
             _parent.CloseDetailView();
         }
+
+        protected override string GetReportTitle() => $"Sub-Contractor Profile: {Name}";
+        protected override object GetReportItem() => new
+        {
+            Name,
+            Email,
+            Phone,
+            Address,
+            Branch,
+            Specialties = string.Join(", ", SpecialtyOptions.Where(x => x.IsChecked).Select(x => x.Name))
+        };
     }
 
     public partial class SpecialtyOption : ObservableObject

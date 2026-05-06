@@ -14,12 +14,13 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
-    public partial class InventoryViewModel : ViewModelBase
+    public partial class InventoryViewModel : ListViewModelBase<InventoryItem>
     {
         private readonly IInventoryService _inventoryService;
         private readonly IToastService _toastService;
         private readonly ILogger<InventoryViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
+        private List<InventoryItem> _allInventory = new();
 
         // Column Visibility
         [ObservableProperty] private bool _isSkuVisible = true;
@@ -31,17 +32,17 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         [ObservableProperty] private bool _isColumnPickerOpen;
 
-        [ObservableProperty]
-        private ObservableCollection<InventoryItem> _items = new();
+        [ObservableProperty] private int _lowStockCount;
 
-        [ObservableProperty]
-        private string? _searchText;
-
-        [ObservableProperty]
-        private int _totalCount;
-
-        [ObservableProperty]
-        private int _lowStockCount;
+        public override string ReportTitle => "Inventory Stock Report";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "SKU", PropertyName = "Sku", Width = 1.5 },
+            new() { Header = "Description", PropertyName = "Description", Width = 4 },
+            new() { Header = "Category", PropertyName = "Category", Width = 2 },
+            new() { Header = "Location", PropertyName = "Location", Width = 1.5 },
+            new() { Header = "Qty", PropertyName = "QuantityOnHand", Width = 1 }
+        };
 
         private System.ComponentModel.ICollectionView? _itemsView;
 
@@ -49,7 +50,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             IInventoryService inventoryService, 
             IToastService toastService, 
             ILogger<InventoryViewModel> logger,
-            LocalSettingsService settingsService)
+            LocalSettingsService settingsService,
+            IPdfService pdfService) : base(pdfService)
         {
             _inventoryService = inventoryService;
             _toastService = toastService;
@@ -66,16 +68,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 if (item != null)
                 {
                     _logger.LogInformation("Inventory item {ItemId} updated from message", m.Value.Id);
-                    App.Current.Dispatcher.Invoke(async () => await LoadInventoryAsync());
+                    App.Current.Dispatcher.Invoke(async () => await LoadDataAsync());
                 }
             });
 
             _logger.LogInformation("InventoryViewModel initialized");
-            System.Windows.Application.Current.Dispatcher.InvokeAsync(LoadInventoryAsync);
+            System.Windows.Application.Current.Dispatcher.InvokeAsync(LoadDataAsync);
         }
 
-        [RelayCommand]
-        private async Task LoadInventoryAsync()
+        public override async Task LoadDataAsync()
         {
             try
             {
@@ -83,22 +84,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
                 
                 var inventory = await _inventoryService.GetInventoryAsync();
-                var list = inventory.ToList();
+                _allInventory = inventory.OrderBy(i => i.Sku).ToList();
 
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Items.Clear();
-                    foreach (var item in list) Items.Add(item);
-                    
-                    // Initialize View for filtering
-                    _itemsView = System.Windows.Data.CollectionViewSource.GetDefaultView(Items);
-                    _itemsView.Filter = FilterItems;
-
-                    TotalCount = Items.Count;
-                    LowStockCount = Items.Count(i => i.IsLowStock);
+                    FilterItems();
+                    LowStockCount = _allInventory.Count(i => i.IsLowStock);
                 });
                 
-                _logger.LogInformation("Successfully loaded {Count} inventory items", list.Count);
+                _logger.LogInformation("Successfully loaded {Count} inventory items", _allInventory.Count);
             }
             catch (Exception ex)
             {
@@ -112,24 +106,23 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
         }
 
-        partial void OnSearchTextChanged(string? value)
+        protected override void FilterItems()
         {
-            _itemsView?.Refresh();
-        }
+            var filtered = _allInventory.AsEnumerable();
 
-        private bool FilterItems(object obj)
-        {
-            if (string.IsNullOrWhiteSpace(SearchText)) return true;
-
-            if (obj is InventoryItem item)
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var search = SearchText.Trim();
-                return item.Sku.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                       (item.Description != null && item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+                var query = SearchQuery.ToLower();
+                filtered = filtered.Where(i => 
+                    (i.Sku?.ToLower().Contains(query) ?? false) ||
+                    (i.Description?.ToLower().Contains(query) ?? false) ||
+                    (i.Category?.ToLower().Contains(query) ?? false));
             }
 
-            return true;
+            Items = new ObservableCollection<InventoryItem>(filtered.ToList());
+            TotalCount = Items.Count;
         }
+
 
         [RelayCommand]
         private void Search()
@@ -140,7 +133,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task Refresh()
         {
-            await LoadInventoryAsync();
+            await LoadDataAsync();
             _toastService.ShowInfo("Inventory", "Inventory refreshed.");
         }
 

@@ -20,6 +20,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IProjectTaskService _taskService;
+        private readonly ISubContractorService _subContractorService;
+        private readonly ITaskAssignmentService _assignmentService;
         private readonly LocalSettingsService _settingsService;
 
         // Column Visibility
@@ -42,6 +44,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _searchQuery = string.Empty;
         [ObservableProperty] private string _selectedStageFilter = "All Stages";
 
+        // Assignment Popup
+        [ObservableProperty] private bool _isAssignPopupOpen;
+        [ObservableProperty] private ProjectTask? _taskToAssign;
+        [ObservableProperty] private ObservableCollection<SubContractorSelectionViewModel> _availableSubContractors = new();
+        [ObservableProperty] private string _subContractorSearchQuery = string.Empty;
+        [ObservableProperty] private string _selectedSpecialtyFilter = "All Specialties";
+        [ObservableProperty] private ObservableCollection<string> _availableSpecialties = new() { "All Specialties" };
+
         public ObservableCollection<string> AvailableStages { get; } = new() 
         {
             "All Stages", "Not Started", "Started", "Halfway", "Almost Done", "Completed", "On Hold"
@@ -54,10 +64,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ProjectTasksViewModel(
             IServiceProvider serviceProvider, 
             IProjectTaskService taskService,
+            ISubContractorService subContractorService,
+            ITaskAssignmentService assignmentService,
             LocalSettingsService settingsService)
         {
             _serviceProvider = serviceProvider;
             _taskService = taskService;
+            _subContractorService = subContractorService;
+            _assignmentService = assignmentService;
             _settingsService = settingsService;
             Title = "Tasks";
             
@@ -187,6 +201,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         partial void OnSearchQueryChanged(string value) => RefreshDisplayList();
         partial void OnSelectedStageFilterChanged(string value) => RefreshDisplayList();
 
+        partial void OnSubContractorSearchQueryChanged(string value) => RefreshFilteredSubContractors();
+        partial void OnSelectedSpecialtyFilterChanged(string value) => RefreshFilteredSubContractors();
+
+        private void RefreshFilteredSubContractors()
+        {
+            // We'll use the IsVisible property on the SelectionViewModel for simplicity in the ListBox
+            foreach (var sc in AvailableSubContractors)
+            {
+                bool matchesSearch = string.IsNullOrWhiteSpace(SubContractorSearchQuery) || 
+                    sc.Name.Contains(SubContractorSearchQuery, StringComparison.OrdinalIgnoreCase);
+                
+                bool matchesSpecialty = SelectedSpecialtyFilter == "All Specialties" || 
+                    (sc.Specialty != null && sc.Specialty.Contains(SelectedSpecialtyFilter, StringComparison.OrdinalIgnoreCase));
+
+                sc.IsVisible = matchesSearch && matchesSpecialty;
+            }
+        }
+
         [RelayCommand]
         private void ToggleExpand(ProjectTask task)
         {
@@ -260,6 +292,92 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             NotifySuccess("Task Deleted", $"Task '{task.Name}' has been removed.");
         }
 
+        [RelayCommand]
+        private async Task ShowAssignTo(ProjectTask task)
+        {
+            if (task == null) return;
+            TaskToAssign = task;
+            
+            var contractors = await _subContractorService.GetSubContractorsAsync();
+            var assignments = await _assignmentService.GetAssignmentsAsync(task.Id);
+            var assignedIds = assignments.Select(a => a.AssigneeId).ToHashSet();
+
+            var list = new List<SubContractorSelectionViewModel>();
+            var specialties = new HashSet<string> { "All Specialties" };
+
+            foreach (var sc in contractors)
+            {
+                var vm = new SubContractorSelectionViewModel(sc.Id, sc.Name, sc.Specialties ?? "General", sc.ColorTheme)
+                {
+                    IsSelected = assignedIds.Contains(sc.Id)
+                };
+                list.Add(vm);
+
+                if (!string.IsNullOrEmpty(sc.Specialties))
+                {
+                    foreach (var s in sc.Specialties.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        specialties.Add(s.Trim());
+                    }
+                }
+            }
+
+            AvailableSubContractors = new ObservableCollection<SubContractorSelectionViewModel>(list.OrderBy(x => x.Name));
+            AvailableSpecialties = new ObservableCollection<string>(specialties.OrderBy(s => s));
+            
+            SubContractorSearchQuery = string.Empty;
+            SelectedSpecialtyFilter = "All Specialties";
+            RefreshFilteredSubContractors();
+            
+            IsAssignPopupOpen = true;
+        }
+
+        [RelayCommand]
+        private async Task SaveAssignments()
+        {
+            if (TaskToAssign == null) return;
+
+            var currentAssignments = await _assignmentService.GetAssignmentsAsync(TaskToAssign.Id);
+            var selectedSubbies = AvailableSubContractors.Where(x => x.IsSelected).ToList();
+
+            // Remove assignments no longer selected
+            foreach (var assignment in currentAssignments)
+            {
+                if (!selectedSubbies.Any(x => x.Id == assignment.AssigneeId))
+                {
+                    await _assignmentService.DeleteAssignmentAsync(assignment.Id);
+                }
+            }
+
+            // Add new assignments
+            foreach (var subbie in selectedSubbies)
+            {
+                if (!currentAssignments.Any(x => x.AssigneeId == subbie.Id))
+                {
+                    await _assignmentService.AddAssignmentAsync(new TaskAssignment
+                    {
+                        TaskId = TaskToAssign.Id,
+                        AssigneeId = subbie.Id,
+                        AssigneeName = subbie.Name,
+                        AssigneeType = AssigneeType.Contractor
+                    });
+                }
+            }
+
+            // Update legacy string
+            TaskToAssign.AssignedTo = string.Join(", ", selectedSubbies.Select(x => x.Name));
+            await _taskService.UpdateTaskAsync(TaskToAssign);
+            
+            TaskToAssign.NotifyPropertyChanged(nameof(ProjectTask.AssigneeInitials));
+            TaskToAssign.NotifyPropertyChanged(nameof(ProjectTask.AssignedTo));
+
+            IsAssignPopupOpen = false;
+            NotifySuccess("Assignments Saved", $"Task assignments for '{TaskToAssign.Name}' updated.");
+        }
+
+        [RelayCommand]
+        private void CloseAssignPopup() => IsAssignPopupOpen = false;
+
         public async void Receive(TaskUpdatedMessage message)
         {
             // Find the task locally and update it
@@ -290,6 +408,25 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     // But for simple updates, this is enough.
                 }
             });
+        }
+    }
+
+    public partial class SubContractorSelectionViewModel : ObservableObject
+    {
+        public Guid Id { get; }
+        public string Name { get; }
+        public string Specialty { get; }
+        public string Color { get; }
+
+        [ObservableProperty] private bool _isSelected;
+        [ObservableProperty] private bool _isVisible = true;
+
+        public SubContractorSelectionViewModel(Guid id, string name, string specialty, string color)
+        {
+            Id = id;
+            Name = name;
+            Specialty = specialty;
+            Color = color;
         }
     }
 }

@@ -12,10 +12,11 @@ using System.Collections.ObjectModel;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.Shared.DTOs;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectDetailViewModel : ViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IOverlayProvider
+    public partial class ProjectDetailViewModel : DetailViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IOverlayProvider
     {
         private readonly IProjectService _projectService;
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
@@ -43,7 +44,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ProjectSpecificDashboardViewModel dashboardVM, 
             ProjectTasksViewModel tasksVM, 
             ProjectGanttViewModel ganttVM, 
-            ProjectHistoryViewModel historyVM)
+            ProjectHistoryViewModel historyVM,
+            IDialogService dialogService,
+            ILogger<ProjectDetailViewModel> logger,
+            IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
             _projectService = projectService;
             _employeeService = employeeService;
@@ -154,5 +158,30 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         [RelayCommand]
         private void ShowHistory() => CurrentView = _historyVM;
+
+        protected override string GetReportTitle() => $"Project Profile: {Project?.Name}";
+        protected override object GetReportItem() => new
+        {
+            Project?.Name,
+            CustomerName = Project?.Customer,
+            Project?.Status,
+            Project?.Priority,
+            Project?.StartDate,
+            Project?.EndDate,
+            Project?.ProjectManager,
+            SiteManager = Project?.SiteManager?.DisplayName,
+            Project?.Progress
+        };
+
+        protected override async Task ExecuteSaveAsync()
+        {
+            if (Project == null) return;
+            await _projectService.UpdateProjectAsync(Project);
+        }
+
+        protected override async Task ExecuteReloadAsync()
+        {
+            await LoadProjectAsync(ProjectId);
+        }
     }
 }

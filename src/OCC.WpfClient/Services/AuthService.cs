@@ -71,52 +71,6 @@ namespace OCC.WpfClient.Services
                         // Add token to default headers for future requests
                         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
                         
-                        // Initialize E2EE RSA Keys
-                        _encryptionService.InitializeOrLoadKeys(_currentUser.Id);
-                        
-                        // Check for provisional keys (Seamless Onboarding)
-                        var provKeyUrl = GetFullUrl("api/users/me/provisional-key");
-                        var provKeyResponse = await _httpClient.GetAsync(provKeyUrl);
-                        if (provKeyResponse.IsSuccessStatusCode)
-                        {
-                            var provResult = await provKeyResponse.Content.ReadFromJsonAsync<ProvisionalKeyResponse>();
-                            if (provResult != null && !string.IsNullOrEmpty(provResult.ProvisionalPrivateKey))
-                            {
-                                _logger.LogInformation("Claiming provisional private key for {Email}", email);
-                                _encryptionService.InitializeWithKey(_currentUser.Id, provResult.ProvisionalPrivateKey);
-                                
-                                // Immediately rotate to new Client-Side keys for better security
-                                _logger.LogInformation("Rotating to fresh client-side keys for {Email}", email);
-                                
-                                // InitializeOrLoadKeys with a non-existent file path would generate new ones, 
-                                // but we already have a file now. We need to force a regenerate.
-                                // Let's just use the default InitializeOrLoadKeys logic but we might need a way to force.
-                                // For now, let's just generate a new one manually if we want true rotation.
-                                // Actually, if we just delete the local file and call InitializeOrLoadKeys again, it will rotate.
-                                var keyPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OCC", "Keys", $"{_currentUser.Id}_rsa.xml");
-                                if (File.Exists(keyPath)) File.Delete(keyPath);
-                                _encryptionService.InitializeOrLoadKeys(_currentUser.Id);
-                                
-                                _currentUser.PublicKey = _encryptionService.GetPublicKey();
-                                var updateUrl = GetFullUrl($"api/users/{_currentUser.Id}");
-                                await _httpClient.PutAsJsonAsync(updateUrl, _currentUser);
-                            }
-                        }
-
-                        // Ensure the server has our LATEST public key (sync local -> server)
-                        var localPublicKey = _encryptionService.GetPublicKey();
-                        if (_currentUser.PublicKey != localPublicKey)
-                        {
-                            _logger.LogInformation("Updating server-side Public Key for {Email} to match local key.", email);
-                            _currentUser.PublicKey = localPublicKey;
-                            var updateUrl = GetFullUrl($"api/users/{_currentUser.Id}");
-                            var updateResponse = await _httpClient.PutAsJsonAsync(updateUrl, _currentUser);
-                            if (!updateResponse.IsSuccessStatusCode)
-                            {
-                                _logger.LogWarning("Failed to sync Public RSA Key for {Email}", email);
-                            }
-                        }
-
                         _logger.LogInformation("Login successful for {Email}. User: {FirstName} {LastName}", email, _currentUser.FirstName, _currentUser.LastName);
                         NotifyUserChanged();
                         return (true, string.Empty);

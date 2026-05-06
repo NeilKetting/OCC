@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace OCC.WpfClient.Services
 {
@@ -81,67 +83,64 @@ namespace OCC.WpfClient.Services
                     col.Item().Text("PURCHASE ORDER")
                         .FontSize(20).ExtraBold().FontColor(Colors.Black);
                 });
-
                 // Right: Logo and Address
                 row.RelativeItem().AlignRight().Column(c =>
                 {
-                    // OCC Logo Restoration (Robust multi-stage loader)
-                    byte[]? logoBytes = null;
-                    try
-                    {
-                        // 1. Try WPF Resource Stream (Best for embedded resources)
-                        var resourceUri = new Uri("Assets/Images/occ_logo.png", UriKind.Relative);
-                        var streamInfo = System.Windows.Application.GetResourceStream(resourceUri);
-                        if (streamInfo == null)
-                        {
-                            // Try .jpg fallback
-                            resourceUri = new Uri("Assets/Images/occ_logo.jpg", UriKind.Relative);
-                            streamInfo = System.Windows.Application.GetResourceStream(resourceUri);
-                        }
-
-                        if (streamInfo != null)
-                        {
-                            using var ms = new MemoryStream();
-                            streamInfo.Stream.CopyTo(ms);
-                            logoBytes = ms.ToArray();
-                        }
-
-                        // 2. Fallback to FileSystem if Resource stream failed
-                        if (logoBytes == null)
-                        {
-                            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                            var locations = new[]
-                            {
-                                Path.Combine(baseDir, "Assets", "Images", "occ_logo.png"),
-                                Path.Combine(baseDir, "Assets", "Images", "occ_logo.jpg"),
-                                Path.Combine(baseDir, "occ_logo.png"),
-                                Path.Combine(baseDir, "occ_logo.jpg"),
-                                "Assets/Images/occ_logo.png",
-                                "Assets/Images/occ_logo.jpg"
-                            };
-
-                            foreach (var path in locations)
-                            {
-                                if (File.Exists(path))
-                                {
-                                    logoBytes = File.ReadAllBytes(path);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex) 
-                    { 
-                        Debug.WriteLine($"Logo Load Error: {ex.Message}");
-                    }
-
+                    var logoBytes = GetLogoBytes();
                     if (logoBytes != null)
                     {
                         c.Item().Height(80).AlignRight().Image(logoBytes).FitArea();
                     }
-                    // No fallback text anymore - logo MUST be an image or nothing
                 });
             });
+        }
+
+        private byte[]? GetLogoBytes()
+        {
+            try
+            {
+                // 1. Try WPF Resource Stream (Best for embedded resources)
+                var resourceUri = new Uri("Assets/Images/occ_logo.png", UriKind.Relative);
+                var streamInfo = System.Windows.Application.GetResourceStream(resourceUri);
+                if (streamInfo == null)
+                {
+                    // Try .jpg fallback
+                    resourceUri = new Uri("Assets/Images/occ_logo.jpg", UriKind.Relative);
+                    streamInfo = System.Windows.Application.GetResourceStream(resourceUri);
+                }
+
+                if (streamInfo != null)
+                {
+                    using var ms = new MemoryStream();
+                    streamInfo.Stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+
+                // 2. Fallback to FileSystem if Resource stream failed
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var locations = new[]
+                {
+                    Path.Combine(baseDir, "Assets", "Images", "occ_logo.png"),
+                    Path.Combine(baseDir, "Assets", "Images", "occ_logo.jpg"),
+                    Path.Combine(baseDir, "occ_logo.png"),
+                    Path.Combine(baseDir, "occ_logo.jpg"),
+                    "Assets/Images/occ_logo.png",
+                    "Assets/Images/occ_logo.jpg"
+                };
+
+                foreach (var path in locations)
+                {
+                    if (File.Exists(path))
+                    {
+                        return File.ReadAllBytes(path);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Logo Load Error: {ex.Message}");
+            }
+            return null;
         }
 
         private void ComposePremiumContent(IContainer container, Order order, CompanyDetails company, bool isPrint)
@@ -410,11 +409,21 @@ namespace OCC.WpfClient.Services
                 {
                     col.Item().Text(company.CompanyName).FontSize(22).ExtraBold().FontColor(ColorPrimary);
                     col.Item().Text("Staff Performance Report").FontSize(12).FontColor(Colors.Grey.Medium);
+                    
+                    col.Item().PaddingTop(5).Text(t => 
+                    {
+                        t.Span("Period: ").FontSize(9).SemiBold();
+                        t.Span($"{start:dd MMM yyyy} - {end:dd MMM yyyy}").FontSize(9);
+                    });
                 });
 
                 row.RelativeItem(2).AlignRight().Column(col =>
                 {
-                    col.Item().Text($"{start:dd MMM yyyy} - {end:dd MMM yyyy}").FontSize(14).SemiBold().FontColor(ColorSecondary);
+                    var logoBytes = GetLogoBytes();
+                    if (logoBytes != null)
+                    {
+                        col.Item().Height(50).AlignRight().Image(logoBytes).FitArea();
+                    }
                     col.Item().Text($"Generated: {DateTime.Now:g}").FontSize(9).FontColor(Colors.Grey.Medium);
                 });
             });
@@ -559,6 +568,221 @@ namespace OCC.WpfClient.Services
 
                 row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - {company.CompanyName}");
             });
+        }
+        public async Task<string> GenerateListReportPdfAsync<T>(string title, IEnumerable<T> items, List<ReportColumnDefinition> columns)
+        {
+            var company = new CompanyDetails();
+
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+                        page.Size(PageSizes.A4);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeGenericHeader(c, title, company));
+                        page.Content().PaddingVertical(20).Element(c => ComposeGenericListContent(c, items, columns));
+                        page.Footer().Element(c => ComposeGenericFooter(c, company));
+                    });
+                });
+
+                string fullPath = Path.Combine(Path.GetTempPath(), $"{title.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        public async Task<string> GenerateDetailReportPdfAsync<T>(string title, T item)
+        {
+            var company = new CompanyDetails();
+
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+                        page.Size(PageSizes.A4);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeGenericHeader(c, title, company));
+                        page.Content().PaddingVertical(20).Element(c => ComposeGenericDetailContent(c, item));
+                        page.Footer().Element(c => ComposeGenericFooter(c, company));
+                    });
+                });
+
+                string fullPath = Path.Combine(Path.GetTempPath(), $"Detail_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        private void ComposeGenericHeader(IContainer container, string title, CompanyDetails company)
+        {
+            container.PaddingTop(20).Row(row =>
+            {
+                // Left: Title and Company Name
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text(company.CompanyName).FontSize(20).ExtraBold().FontColor(ColorPrimary);
+                    col.Item().Text(title.ToUpper()).FontSize(14).SemiBold().FontColor(ColorSecondary);
+                    
+                    col.Item().PaddingTop(5).Text(t => 
+                    {
+                        t.Span("Date: ").FontSize(9).SemiBold();
+                        t.Span($"{DateTime.Now:yyyy-MM-dd}").FontSize(9);
+                        t.Span("  Time: ").FontSize(9).SemiBold();
+                        t.Span($"{DateTime.Now:HH:mm}").FontSize(9);
+                    });
+                });
+
+                // Right: Logo
+                row.RelativeItem().AlignRight().Column(c =>
+                {
+                    var logoBytes = GetLogoBytes();
+                    if (logoBytes != null)
+                    {
+                        c.Item().Height(60).AlignRight().Image(logoBytes).FitArea();
+                    }
+                });
+            });
+        }
+
+        private void ComposeGenericListContent<T>(IContainer container, IEnumerable<T> items, List<ReportColumnDefinition> columns)
+        {
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(cols =>
+                {
+                    foreach (var col in columns)
+                    {
+                        cols.RelativeColumn((float)col.Width);
+                    }
+                });
+
+                table.Header(header =>
+                {
+                    foreach (var col in columns)
+                    {
+                        header.Cell().Background(ColorPrimary).Padding(5).Text(col.Header).SemiBold().FontColor(Colors.White);
+                    }
+                });
+
+                foreach (var item in items)
+                {
+                    foreach (var col in columns)
+                    {
+                        var rawValue = GetRawPropertyValue(item, col.PropertyName);
+                        var value = FormatValue(rawValue);
+                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(5).Text(value);
+                    }
+                }
+            });
+        }
+
+        private void ComposeGenericDetailContent<T>(IContainer container, T item)
+        {
+            if (item == null) return;
+
+            container.Column(col =>
+            {
+                var properties = item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var prop in properties)
+                {
+                    // Filter out non-displayable properties
+                    var type = prop.PropertyType;
+                    var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+                    if (underlyingType.IsPrimitive || 
+                        underlyingType == typeof(string) || 
+                        underlyingType == typeof(DateTime) || 
+                        underlyingType == typeof(Guid) || 
+                        underlyingType == typeof(decimal) ||
+                        underlyingType.IsEnum)
+                    {
+                        var rawValue = prop.GetValue(item);
+                        var val = FormatValue(rawValue);
+                        if (string.IsNullOrEmpty(val)) val = "-";
+
+                        col.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten4).PaddingVertical(8).Row(row =>
+                        {
+                            row.ConstantItem(150).Text(ToFriendlyName(prop.Name)).SemiBold().FontColor(Colors.Grey.Darken2);
+                            row.RelativeItem().Text(val);
+                        });
+                    }
+                }
+            });
+        }
+
+        private void ComposeGenericFooter(IContainer container, CompanyDetails company)
+        {
+            container.PaddingTop(10).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(row =>
+            {
+                row.RelativeItem().Text(x =>
+                {
+                    x.Span("Page ");
+                    x.CurrentPageNumber();
+                    x.Span(" of ");
+                    x.TotalPages();
+                });
+
+                row.RelativeItem().AlignRight().Text($"{company.CompanyName} - Internal Report");
+            });
+        }
+
+        private string ToFriendlyName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return string.Empty;
+            
+            // Handle underscores first (e.g. "Contacts_Count" -> "Contacts Count")
+            name = name.Replace("_", " ");
+            
+            // Handle camelcase (e.g. "ContactsCount" -> "Contacts Count")
+            // We use a slightly more robust regex to handle cases like "RSAId" -> "RSA Id"
+            name = Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");
+            name = Regex.Replace(name, "([A-Z])([A-Z][a-z])", "$1 $2");
+
+            return name;
+        }
+
+        private string FormatValue(object? value)
+        {
+            if (value == null) return "-";
+
+            if (value is bool b)
+                return b ? "Yes" : "No";
+
+            if (value is DateTime dt)
+                return dt.ToString("yyyy-MM-dd");
+
+            if (value is decimal d)
+                return d.ToString("N2");
+
+            if (value is double db)
+                return db.ToString("N2");
+
+            if (value.GetType().IsEnum)
+            {
+                return ToFriendlyName(value.ToString() ?? "-");
+            }
+
+            return value.ToString() ?? "-";
+        }
+
+        private object? GetRawPropertyValue(object item, string propertyName)
+        {
+            if (item == null) return null;
+            var prop = item.GetType().GetProperty(propertyName);
+            return prop?.GetValue(item);
+        }
+
+        private string GetPropertyValue(object item, string propertyName)
+        {
+            return FormatValue(GetRawPropertyValue(item, propertyName));
         }
     }
 }

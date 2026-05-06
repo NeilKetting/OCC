@@ -1,6 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
+using OCC.WpfClient.Services.Interfaces;
+using System.Diagnostics;
+using System;
 
 namespace OCC.WpfClient.Infrastructure
 {
@@ -23,13 +28,53 @@ namespace OCC.WpfClient.Infrastructure
         [ObservableProperty]
         private T? _selectedItem;
 
-        protected ListViewModelBase()
+        protected readonly IPdfService _pdfService;
+        public abstract string ReportTitle { get; }
+        public abstract List<ReportColumnDefinition> ReportColumns { get; }
+
+        protected ListViewModelBase(IPdfService pdfService)
         {
+            _pdfService = pdfService;
+        }
+
+        [RelayCommand]
+        public async Task PrintAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating report...";
+                
+                if (_pdfService == null)
+                {
+                    Debug.WriteLine("Print Error: IPdfService is null. Ensure it is registered and injected correctly.");
+                    NotifyError("Print Error", "The PDF generation service is currently unavailable.");
+                    return;
+                }
+
+                var path = await _pdfService.GenerateListReportPdfAsync(ReportTitle, Items, ReportColumns);
+                
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Print Error: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         /// <summary>
         /// Orchestrates the data loading and filtering process.
         /// </summary>
+        [RelayCommand]
+        public async Task LoadData()
+        {
+            await LoadDataAsync();
+        }
+
         public abstract Task LoadDataAsync();
 
         /// <summary>

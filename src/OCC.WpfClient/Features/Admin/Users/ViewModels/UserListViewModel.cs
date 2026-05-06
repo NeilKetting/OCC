@@ -21,6 +21,16 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         private readonly ILogger<UserListViewModel> _logger;
         private List<User> _allUsers = new();
 
+        public override string ReportTitle => "System User Directory";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "First Name", PropertyName = "FirstName", Width = 2 },
+            new() { Header = "Last Name", PropertyName = "LastName", Width = 2 },
+            new() { Header = "Email", PropertyName = "Email", Width = 3 },
+            new() { Header = "Role", PropertyName = "UserRole", Width = 1.5 },
+            new() { Header = "Approved", PropertyName = "IsApproved", Width = 1 }
+        };
+
         [ObservableProperty] private int _pendingApprovalCount;
         [ObservableProperty] private int _adminCount;
 
@@ -38,7 +48,8 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             IAuthService authService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
-            ILogger<UserListViewModel> logger)
+            ILogger<UserListViewModel> logger,
+            IPdfService pdfService) : base(pdfService)
         {
             _userService = userService;
             _authService = authService;
@@ -111,7 +122,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         public void AddUser()
         {
             var user = new User();
-            OpenOverlay(new UserDetailViewModel(this, user, _userService, _dialogService, _logger));
+            OpenOverlay(new UserDetailViewModel(this, user, _userService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
@@ -119,7 +130,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         {
             var target = user ?? SelectedItem;
             if (target == null) return;
-            OpenOverlay(new UserDetailViewModel(this, target, _userService, _dialogService, _logger));
+            OpenOverlay(new UserDetailViewModel(this, target, _userService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]

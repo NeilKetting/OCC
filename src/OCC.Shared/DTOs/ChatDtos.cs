@@ -12,6 +12,7 @@ namespace OCC.Shared.DTOs
         public DateTime CreatedAtUtc { get; set; }
         public int UnreadCount { get; set; }
         public bool IsFavourite { get; set; }
+        public string? SharedAesKey { get; set; }
         public List<ChatUserDto> Users { get; set; } = new List<ChatUserDto>();
         public ChatMessageDto? LastMessage { get; set; }
     }

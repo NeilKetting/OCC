@@ -24,6 +24,16 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<SnagListViewModel> _logger;
 
+        public override string ReportTitle => "Snag List Report";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Project", PropertyName = "ProjectName", Width = 2 },
+            new() { Header = "Title", PropertyName = "Title", Width = 3 },
+            new() { Header = "Priority", PropertyName = "Priority", Width = 1 },
+            new() { Header = "Status", PropertyName = "Status", Width = 1.2 },
+            new() { Header = "Due Date", PropertyName = "DueDate", Width = 1.2 }
+        };
+
         [ObservableProperty] private ObservableCollection<Project> _projects = new();
         [ObservableProperty] private ObservableCollection<SubContractor> _subContractors = new();
         
@@ -48,7 +58,8 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             IDialogService dialogService,
             IProjectTaskService taskService,
             IServiceProvider serviceProvider,
-            ILogger<SnagListViewModel> logger)
+            ILogger<SnagListViewModel> logger,
+            IPdfService pdfService) : base(pdfService)
         {
             _snagService = snagService;
             _projectService = projectService;

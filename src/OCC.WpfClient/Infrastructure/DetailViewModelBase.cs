@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.WpfClient.Infrastructure.Exceptions;
 using OCC.WpfClient.Services.Interfaces;
+using System.Diagnostics;
 using System;
 using System.Threading.Tasks;
 
@@ -13,16 +14,50 @@ namespace OCC.WpfClient.Infrastructure
     {
         protected readonly IDialogService _dialogService;
         protected readonly ILogger _logger;
+        protected readonly IPdfService _pdfService;
 
         [ObservableProperty] private int _animationPulse;
         [ObservableProperty] private bool _hasErrors;
         public ObservableCollection<string> ValidationErrors { get; } = new();
 
-        protected DetailViewModelBase(IDialogService dialogService, ILogger logger)
+        protected DetailViewModelBase(IDialogService dialogService, ILogger logger, IPdfService pdfService)
         {
             _dialogService = dialogService;
             _logger = logger;
+            _pdfService = pdfService;
         }
+
+        [RelayCommand]
+        public async Task PrintAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating report...";
+                
+                if (_pdfService == null)
+                {
+                    _logger?.LogError("IPdfService is not initialized. Ensure it is registered in the DI container.");
+                    NotifyError("Print Error", "The PDF generation service is currently unavailable.");
+                    return;
+                }
+
+                var path = await _pdfService.GenerateDetailReportPdfAsync(GetReportTitle(), GetReportItem());
+                
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing detail report");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        protected abstract string GetReportTitle();
+        protected abstract object GetReportItem();
 
         [RelayCommand]
         public async Task Save()

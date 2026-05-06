@@ -404,6 +404,35 @@
         </Setter>
     </Style>
 
+    <Style x:Key="ToolbarButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" BorderBrush="Transparent" BorderThickness="1">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundPressed}"/>
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="ToolbarToggleButton" TargetType="ToggleButton">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -466,6 +495,14 @@
 
     <!-- Action Button (Primary) - Integrated into feature layout -->
     <Style x:Key="ActionButtonPrimary" TargetType="Button" BasedOn="{StaticResource ModernPrimaryButton}">
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Padding" Value="20,0"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Action Button (Secondary) - Integrated into feature layout -->
+    <Style x:Key="ActionButtonSecondary" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
         <Setter Property="Height" Value="36"/>
         <Setter Property="Padding" Value="20,0"/>
         <Setter Property="FontSize" Value="13"/>

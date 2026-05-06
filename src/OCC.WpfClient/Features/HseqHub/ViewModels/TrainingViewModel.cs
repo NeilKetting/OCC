@@ -13,7 +13,7 @@ using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class TrainingViewModel : ViewModelBase
+    public partial class TrainingViewModel : ListViewModelBase<TrainingRecordViewModel>
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IDialogService _dialogService;
@@ -21,20 +21,23 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         private readonly IExportService _exportService;
         private readonly ConnectionSettings _settings;
 
-        [ObservableProperty]
-        private ObservableCollection<TrainingRecordViewModel> _trainingRecords = new();
+        [ObservableProperty] private int _expiryWarningDays = 30;
+        [ObservableProperty] private string _categoryFilter = "All";
 
-        [ObservableProperty]
-        private int _expiryWarningDays = 30;
-
-        [ObservableProperty]
-        private string _categoryFilter = "All";
-
-        [ObservableProperty]
-        private bool _isRoleVisible = true;
+        private List<TrainingRecordViewModel> _allRecords = new();
 
         [ObservableProperty]
         private bool _isTrainerVisible = true;
+
+        public override string ReportTitle => "Employee Training & Medical Records";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Employee", PropertyName = "EmployeeName", Width = 2.5 },
+            new() { Header = "Topic", PropertyName = "TrainingTopic", Width = 2.5 },
+            new() { Header = "Date", PropertyName = "DateCompleted", Width = 1 },
+            new() { Header = "Expires", PropertyName = "ValidUntil", Width = 1 },
+            new() { Header = "Status", PropertyName = "ValidityStatus", Width = 1.5 }
+        };
 
         public ObservableCollection<string> Categories { get; } = new() { "All", "Training", "Medicals" };
 
@@ -46,7 +49,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             IEmployeeService employeeService,
             IExportService exportService,
             ConnectionSettings settings,
-            TrainingEditorViewModel editor)
+            TrainingEditorViewModel editor,
+            IPdfService pdfService) : base(pdfService)
         {
             _hseqService = hseqService;
             _dialogService = dialogService;
@@ -58,11 +62,11 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             
             Editor.OnSaved = OnTrainingSaved;
 
-            _ = LoadData();
+            _ = LoadDataAsync();
         }
 
         // Design-time
-        public TrainingViewModel()
+        public TrainingViewModel() : base(null!)
         {
             _hseqService = null!;
             _dialogService = null!;
@@ -72,8 +76,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             Editor = new TrainingEditorViewModel();
         }
 
-        [RelayCommand]
-        public async Task LoadData()
+        public override async Task LoadDataAsync()
         {
             if (_hseqService == null) return;
 
@@ -88,29 +91,14 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var summaries = summariesTask.Result;
                 var employeesDto = employeesTask.Result.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToList();
 
-                // Convert DTOs to Entities for the Editor if needed, or keep as DTOs
-                // The Editor currently expects List<Employee>. 
-                // Let's see what TrainingEditorViewModel expects. 
-
-                // Apply filtering
-                if (CategoryFilter == "Medicals")
-                {
-                    summaries = summaries.Where(r => r.CertificateType == "Medicals");
-                }
-                else if (CategoryFilter == "Training")
-                {
-                    summaries = summaries.Where(r => r.CertificateType != "Medicals");
-                }
-
-                var vms = summaries.Select(r => new TrainingRecordViewModel(r)).ToList();
-                TrainingRecords = new ObservableCollection<TrainingRecordViewModel>(vms);
+                _allRecords = summaries.Select(r => new TrainingRecordViewModel(r)).ToList();
+                FilterItems();
                 
-                var uniqueTrainers = summariesTask.Result
+                var uniqueTrainers = summaries
                     .Where(r => !string.IsNullOrWhiteSpace(r.Trainer))
                     .Select(r => r.Trainer)
                     .Distinct();
 
-                // We'll pass the DTOs to the editor and let it handle mapping or just use DTOs
                 Editor.Initialize(employeesDto, uniqueTrainers);
             }
             catch (Exception ex)
@@ -124,9 +112,37 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             }
         }
 
+        protected override void FilterItems()
+        {
+            IEnumerable<TrainingRecordViewModel> filtered = _allRecords;
+
+            if (CategoryFilter == "Medicals")
+            {
+                filtered = filtered.Where(r => r.Summary.CertificateType == "Medicals");
+            }
+            else if (CategoryFilter == "Training")
+            {
+                filtered = filtered.Where(r => r.Summary.CertificateType != "Medicals");
+            }
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var query = SearchQuery.ToLower();
+                filtered = filtered.Where(r => 
+                    (r.EmployeeName?.ToLower().Contains(query) ?? false) ||
+                    (r.TrainingTopic?.ToLower().Contains(query) ?? false) ||
+                    (r.Role?.ToLower().Contains(query) ?? false) ||
+                    (r.Trainer?.ToLower().Contains(query) ?? false));
+            }
+
+            var result = filtered.ToList();
+            Items = new ObservableCollection<TrainingRecordViewModel>(result);
+            TotalCount = result.Count;
+        }
+
         partial void OnCategoryFilterChanged(string value)
         {
-            _ = LoadData();
+            FilterItems();
         }
 
         [RelayCommand]
@@ -137,7 +153,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             {
                 var expiring = await _hseqService.GetExpiringTrainingAsync(ExpiryWarningDays);
                 var vms = expiring.Select(r => new TrainingRecordViewModel(r)).ToList();
-                TrainingRecords = new ObservableCollection<TrainingRecordViewModel>(vms);
+                Items = new ObservableCollection<TrainingRecordViewModel>(vms);
+                TotalCount = Items.Count;
                 NotifySuccess("Filter Applied", $"Found {expiring.Count()} records expiring within {ExpiryWarningDays} days.");
             }
             catch (Exception)
@@ -161,7 +178,9 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var success = await _hseqService.DeleteTrainingRecordAsync(vm.Id);
                 if (success)
                 {
-                    TrainingRecords.Remove(vm);
+                    var record = _allRecords.FirstOrDefault(r => r.Id == vm.Id);
+                    if (record != null) _allRecords.Remove(record);
+                    FilterItems();
                     NotifySuccess("Success", "Record deleted.");
                 }
             }
@@ -233,7 +252,6 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
         private async Task OnTrainingSaved(HseqTrainingRecord record)
         {
-            var existing = TrainingRecords.FirstOrDefault(r => r.Id == record.Id);
             var summary = new HseqTrainingSummaryDto
             {
                 Id = record.Id,
@@ -247,15 +265,18 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 Trainer = record.Trainer ?? string.Empty
             };
 
+            var existing = _allRecords.FirstOrDefault(r => r.Id == record.Id);
             if (existing != null)
             {
-                var index = TrainingRecords.IndexOf(existing);
-                TrainingRecords[index] = new TrainingRecordViewModel(summary);
+                var index = _allRecords.IndexOf(existing);
+                _allRecords[index] = new TrainingRecordViewModel(summary);
             }
             else
             {
-                TrainingRecords.Insert(0, new TrainingRecordViewModel(summary));
+                _allRecords.Insert(0, new TrainingRecordViewModel(summary));
             }
+            
+            FilterItems();
             await Task.CompletedTask;
         }
     }

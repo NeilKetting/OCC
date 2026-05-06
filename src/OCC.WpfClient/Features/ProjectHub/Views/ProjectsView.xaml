@@ -57,7 +57,7 @@
 
                 <!-- Search -->
                 <Path Grid.Column="0" Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" Width="14" Height="14" Margin="5,0,10,0" VerticalAlignment="Center" Stretch="Uniform"/>
-                <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                          Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
                          ap:WatermarkProperties.Watermark="Search projects..."/>
 
@@ -87,6 +87,13 @@
                         </Border>
                     </Popup>
                 </Grid>
+                
+                <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="10,0" Grid.Column="5">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                        <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                    </StackPanel>
+                </Button>
             </Grid>
         </Border>
 
@@ -95,23 +102,23 @@
             <Grid>
                 <!-- Empty State -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
-                            Visibility="{Binding Projects.Count, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}">
+                            Visibility="{Binding Items.Count, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}">
                     <Path Data="{StaticResource IconDatabase}" Fill="{StaticResource TextSub}" Opacity="0.1" Width="80" Height="80" Stretch="Uniform" Margin="0,0,0,20"/>
                     <TextBlock Text="No Projects Found" FontSize="18" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Grid -->
-                <DataGrid ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}" 
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" 
                           AutoGenerateColumns="False" IsReadOnly="True" 
                           Style="{StaticResource ModernDataGrid}" 
                           ScrollViewer.HorizontalScrollBarVisibility="Auto"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           ScrollViewer.CanContentScroll="False"
-                          Visibility="{Binding Projects.Count, Converter={StaticResource VisibilityConverter}}">
+                          Visibility="{Binding Items.Count, Converter={StaticResource VisibilityConverter}}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="1.5*" MinWidth="200" />
+                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="Auto" />
                         
-                        <DataGridTemplateColumn Header="PROGRESS" Width="*" MinWidth="120" Visibility="{Binding Data.IsProgressVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTemplateColumn Header="PROGRESS" Width="Auto" MinWidth="150" Visibility="{Binding Data.IsProgressVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid VerticalAlignment="Center" Margin="10,0">
@@ -148,7 +155,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Background="#1AFFFFFF" Padding="8,4" CornerRadius="4" HorizontalAlignment="Left" Margin="10,0">
-                                        <TextBlock Text="{Binding Status}" Foreground="White" FontSize="12"/>
+                                        <TextBlock Text="{Binding Status, Converter={StaticResource FriendlyEnumConverter}}" Foreground="White" FontSize="12"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -229,3 +236,8 @@
         </Border>
     </Grid>
 </UserControl>
+
+
+
+
+

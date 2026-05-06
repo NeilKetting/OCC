@@ -23,6 +23,16 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         private readonly LocalSettingsService _settingsService;
         private List<SubContractorSummaryDto> _allContractors = new();
 
+        public override string ReportTitle => "Sub-Contractor Directory";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Name", PropertyName = "Name", Width = 3 },
+            new() { Header = "Specialties", PropertyName = "Specialties", Width = 3 },
+            new() { Header = "Branch", PropertyName = "Branch", Width = 1.5 },
+            new() { Header = "Phone", PropertyName = "Phone", Width = 1.5 },
+            new() { Header = "Email", PropertyName = "Email", Width = 2.5 }
+        };
+
         // Column Visibility
         [ObservableProperty] private bool _isBranchVisible = true;
         [ObservableProperty] private bool _isSpecialtiesVisible = true;
@@ -42,7 +52,8 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             IUserService userService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
-            ILogger<SubContractorListViewModel> logger)
+            ILogger<SubContractorListViewModel> logger,
+            IPdfService pdfService) : base(pdfService)
         {
             _subContractorService = subContractorService;
             _userService = userService;
@@ -131,7 +142,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         private void AddSubContractor()
         {
             var contractor = new SubContractor();
-            OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger));
+            OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
@@ -147,7 +158,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 var contractor = await _subContractorService.GetSubContractorAsync(target.Id);
                 if (contractor != null)
                 {
-                    OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger));
+                    OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger, _pdfService));
                 }
             }
             finally

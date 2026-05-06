@@ -12,28 +12,28 @@ using System.Collections.Generic;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class AuditsViewModel : ViewModelBase
+    public partial class AuditsViewModel : ListViewModelBase<AuditSummaryDto>
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IToastService _toastService;
 
         [ObservableProperty]
-        private ObservableCollection<AuditSummaryDto> _audits = new();
+        private bool _isStatusVisible = true;
+
+        private List<AuditSummaryDto> _allAudits = new();
 
         [ObservableProperty]
         private bool _isDeviationsOpen;
 
-        [ObservableProperty]
-        private bool _isSiteVisible = true;
-
-        [ObservableProperty]
-        private bool _isAuditorVisible = true;
-
-        [ObservableProperty]
-        private bool _isScoreVisible = true;
-
-        [ObservableProperty]
-        private bool _isStatusVisible = true;
+        public override string ReportTitle => "Health & Safety Compliance Audits";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Date", PropertyName = "Date", Width = 1.2 },
+            new() { Header = "Audit #", PropertyName = "AuditNumber", Width = 1.5 },
+            new() { Header = "Site", PropertyName = "SiteName", Width = 2.5 },
+            new() { Header = "Score", PropertyName = "ActualScore", Width = 1 },
+            new() { Header = "Status", PropertyName = "Status", Width = 1.2 }
+        };
 
         [ObservableProperty]
         private bool _isEditorOpen;
@@ -45,7 +45,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             IHealthSafetyService hseqService, 
             IToastService toastService,
             AuditEditorViewModel editor,
-            AuditDeviationsViewModel deviations)
+            AuditDeviationsViewModel deviations,
+            IPdfService pdfService) : base(pdfService)
         {
             _hseqService = hseqService;
             _toastService = toastService;
@@ -58,18 +59,20 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             Editor.AuditSaved += (s, e) => 
             { 
                 IsEditorOpen = false; 
-                _ = LoadAuditsCommand.ExecuteAsync(null); 
+                _ = LoadDataAsync(); 
             };
 
             Deviations.RequestClose += (s, e) => IsDeviationsOpen = false;
             Deviations.DeviationsUpdated += (s, e) => 
             {
-                 _ = LoadAuditsCommand.ExecuteAsync(null);
+                 _ = LoadDataAsync();
             };
+
+            _ = LoadDataAsync();
         }
 
         // Design-time constructor
-        public AuditsViewModel()
+        public AuditsViewModel() : base(null!)
         {
             _hseqService = null!;
             _toastService = null!;
@@ -77,8 +80,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             Deviations = new AuditDeviationsViewModel();
         }
 
-        [RelayCommand]
-        public async Task LoadAudits()
+        public override async Task LoadDataAsync()
         {
             if (_hseqService == null) return;
 
@@ -90,7 +92,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var data = await _hseqService.GetAuditsAsync();
                 if (data != null)
                 {
-                    Audits = new ObservableCollection<AuditSummaryDto>(data.OrderByDescending(a => a.Date));
+                    _allAudits = data.OrderByDescending(a => a.Date).ToList();
+                    FilterItems();
                 }
             }
             catch (Exception ex)
@@ -102,6 +105,25 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        protected override void FilterItems()
+        {
+            IEnumerable<AuditSummaryDto> filtered = _allAudits;
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var query = SearchQuery.ToLower();
+                filtered = filtered.Where(a =>
+                    (a.AuditNumber?.ToLower().Contains(query) ?? false) ||
+                    (a.SiteName?.ToLower().Contains(query) ?? false) ||
+                    (a.HseqConsultant?.ToLower().Contains(query) ?? false) ||
+                    (a.Status.ToString().ToLower().Contains(query)));
+            }
+
+            var result = filtered.ToList();
+            Items = new ObservableCollection<AuditSummaryDto>(result);
+            TotalCount = result.Count;
         }
 
         [RelayCommand]
@@ -142,7 +164,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var success = await _hseqService.DeleteAuditAsync(audit.Id);
                 if (success)
                 {
-                    Audits.Remove(audit);
+                    _allAudits.Remove(audit);
+                    FilterItems();
                     NotifySuccess("Success", "Audit deleted.");
                 }
                 else

@@ -6,7 +6,7 @@ set "ProjectName=OCC-ERP"
 set "ProjectPath=..\src\OCC.WpfClient\OCC.WpfClient.csproj"
 set "PublishDir=publish_wpf"
 set "ReleaseDir=releases_wpf"
-set "IconPath=..\src\OCC.WpfClient\Assets\Images\occ_logo.ico"
+set "IconPath=..\src\OCC.WpfClient\Assets\Images\app.ico"
 
 :: Extract version from .csproj file and trim whitespace
 for /f "tokens=3 delims=><" %%a in ('findstr /i "<Version>" "%ProjectPath%"') do set VERSION=%%a

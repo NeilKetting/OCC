@@ -102,6 +102,13 @@
                         </Border>
                     </Popup>
                   </Grid>
+                  
+                  <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="10,0" Grid.Column="6">
+                      <StackPanel Orientation="Horizontal">
+                          <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                          <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                      </StackPanel>
+                  </Button>
 
                 <StackPanel Grid.Column="7" VerticalAlignment="Center">
                     <TextBlock Text="TOTAL SNAGS" FontSize="10" Foreground="{StaticResource TextSub}" FontWeight="Bold" HorizontalAlignment="Right"/>
@@ -143,7 +150,7 @@
                                 <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=0.1}" 
                                      BorderBrush="{Binding Status, Converter={StaticResource StatusToColorConverter}}"
                                      BorderThickness="1" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="5">
-                                    <TextBlock Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" 
+                                    <TextBlock Text="{Binding Status, Converter={StaticResource FriendlyEnumConverter}}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" 
                                             FontSize="11" FontWeight="Bold"/>
                                 </Border>
                             </DataTemplate>
@@ -191,3 +198,5 @@
         </ContentControl>
     </Grid>
 </UserControl>
+
+

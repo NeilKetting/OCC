@@ -15,7 +15,7 @@
 		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
 		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
 		<AssemblyName>OCC-ERP</AssemblyName>
-		<Version>1.0.7</Version>
+		<Version>1.0.8</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
 	</PropertyGroup>
 
@@ -36,9 +36,9 @@
 		<Resource Include="Assets\**" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<!--<ItemGroup>
 	  <None Remove="Assets\Images\app.ico" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<ProjectReference Include="..\OCC.Shared\OCC.Shared.csproj" />

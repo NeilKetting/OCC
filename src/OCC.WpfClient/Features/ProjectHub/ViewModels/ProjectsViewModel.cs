@@ -17,7 +17,7 @@ using OCC.Shared.Interfaces;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectsViewModel : OverlayHostViewModel, IRecipient<ProjectUpdatedMessage>, IRecipient<TaskUpdatedMessage>
+    public partial class ProjectsViewModel : ListViewModelBase<ProjectSummaryDto>, IRecipient<ProjectUpdatedMessage>, IRecipient<TaskUpdatedMessage>
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
@@ -26,6 +26,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IToastService _toastService;
         private readonly IServiceProvider _serviceProvider;
         private readonly LocalSettingsService _settingsService;
+        private List<ProjectSummaryDto> _allProjects = new();
 
         // Column Visibility
         [ObservableProperty] private bool _isProgressVisible = true;
@@ -35,9 +36,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         [ObservableProperty] private bool _isColumnPickerOpen;
 
-        [ObservableProperty] private ObservableCollection<ProjectSummaryDto> _projects = new();
-        [ObservableProperty] private ProjectSummaryDto? _selectedProject;
-        [ObservableProperty] private string _searchText = string.Empty;
+
+        public override string ReportTitle => "Project Portfolio";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Project Name", PropertyName = "Name", Width = 2.5 },
+            new() { Header = "Status", PropertyName = "Status", Width = 1 },
+            new() { Header = "Manager", PropertyName = "ProjectManager", Width = 1.5 },
+            new() { Header = "Progress", PropertyName = "Progress", Width = 1 }
+        };
 
 
 
@@ -48,7 +55,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ILogger<ProjectsViewModel> logger,
             IToastService toastService,
             IServiceProvider serviceProvider,
-            LocalSettingsService settingsService)
+            LocalSettingsService settingsService,
+            IPdfService pdfService) : base(pdfService)
         {
             _projectService = projectService;
             _customerService = customerService;
@@ -101,14 +109,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
-        [RelayCommand]
-        public async Task LoadDataAsync()
+        public override async Task LoadDataAsync()
         {
             IsBusy = true;
             try
             {
                 var projects = await _projectService.GetProjectSummariesAsync();
-                Projects = new ObservableCollection<ProjectSummaryDto>(projects);
+                _allProjects = projects.OrderBy(p => p.Name).ToList();
+                FilterItems();
             }
             catch (Exception ex)
             {
@@ -197,10 +205,23 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
         }
 
-        partial void OnSearchTextChanged(string value)
+        protected override void FilterItems()
         {
-        // TODO: Implement filtering logic
+            var filtered = _allProjects.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var query = SearchQuery.ToLower();
+                filtered = filtered.Where(p => 
+                    (p.Name?.ToLower().Contains(query) ?? false) ||
+                    (p.ProjectManager?.ToLower().Contains(query) ?? false) ||
+                    (p.SiteManagerName?.ToLower().Contains(query) ?? false));
+            }
+
+            Items = new ObservableCollection<ProjectSummaryDto>(filtered.ToList());
+            TotalCount = Items.Count;
         }
+
 
         public void Receive(ProjectUpdatedMessage message)
         {

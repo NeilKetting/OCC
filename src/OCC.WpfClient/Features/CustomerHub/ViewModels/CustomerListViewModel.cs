@@ -22,6 +22,15 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         private readonly LocalSettingsService _settingsService;
         private List<CustomerSummaryDto> _allCustomers = new();
 
+        public override string ReportTitle => "Customer Directory";
+        public override List<ReportColumnDefinition> ReportColumns => new()
+        {
+            new() { Header = "Name", PropertyName = "Name", Width = 2 },
+            new() { Header = "Email", PropertyName = "Email", Width = 2 },
+            new() { Header = "Phone", PropertyName = "Phone", Width = 1.5 },
+            new() { Header = "Contact Person", PropertyName = "ContactPerson", Width = 1.5 }
+        };
+
         [ObservableProperty] private bool _isEmailVisible = true;
         [ObservableProperty] private bool _isPhoneVisible = true;
         
@@ -31,7 +40,8 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             ICustomerService customerService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
-            ILogger<CustomerListViewModel> logger)
+            ILogger<CustomerListViewModel> logger,
+            IPdfService pdfService) : base(pdfService)
         {
             _customerService = customerService;
             _dialogService = dialogService;
@@ -99,7 +109,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         private void AddCustomer()
         {
             var customer = new Customer();
-            OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger));
+            OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
@@ -115,7 +125,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 var customer = await _customerService.GetCustomerAsync(target.Id);
                 if (customer != null)
                 {
-                    OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger));
+                    OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger, _pdfService));
                 }
             }
             finally
