@@ -21,12 +21,15 @@
 
     <Grid Background="{StaticResource AppBackground}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Header -->
-            <RowDefinition Height="Auto"/> <!-- Filters -->
-            <RowDefinition Height="*"/>    <!-- Grid -->
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Filters -->
+            <RowDefinition Height="*"/>
+            <!-- Grid -->
         </Grid.RowDefinitions>
 
-         <!-- Header Section -->
+        <!-- Header Section -->
         <Grid Grid.Row="0" Margin="20,20,20,0">
             <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
                 <TextBlock Text="Projects" FontSize="26" FontWeight="Bold" Foreground="White" />
@@ -34,9 +37,9 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <Button Command="{Binding AddProjectCommand}" Style="{StaticResource PrimaryButton}" Height="36" Padding="20,0">
+                <Button Command="{Binding AddProjectCommand}" Style="{StaticResource PrimaryButton}">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconPlus}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,10,0"/>
+                        <Path Data="{StaticResource IconPlus}" Fill="White" Width="16" Stretch="Uniform" Margin="0,0,10,0"/>
                         <TextBlock Text="Create New Project" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
@@ -47,12 +50,18 @@
         <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="20,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
-                    <ColumnDefinition Width="250" />  <!-- Search Box -->
-                    <ColumnDefinition Width="Auto" /> <!-- Divider -->
-                    <ColumnDefinition Width="Auto" /> <!-- Refresh -->
-                    <ColumnDefinition Width="Auto" /> <!-- Columns -->
-                    <ColumnDefinition Width="*" />    <!-- Spacer -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Search Icon -->
+                    <ColumnDefinition Width="*" MinWidth="180" />
+                    <!-- Search Box -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Divider -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Refresh -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Columns -->
+                    <ColumnDefinition Width="*" />
+                    <!-- Spacer -->
                 </Grid.ColumnDefinitions>
 
                 <!-- Search -->
@@ -64,36 +73,39 @@
                 <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
                 <Button Grid.Column="3" Command="{Binding LoadDataAsyncCommand}" Style="{StaticResource ToolbarIconButton}" ToolTip="Refresh Data" Margin="0,0,15,0">
-                    <Path Data="{StaticResource IconRefresh}" Fill="White" Width="18" Height="18" Stretch="Uniform" Opacity="0.6"/>
+                    <Path Data="{StaticResource IconRefresh}" Fill="White" Width="16" Stretch="Uniform" Opacity="0.6"/>
                 </Button>
 
                 <!-- Columns Selection -->
-                <Grid Grid.Column="4">
-                    <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                            <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                        </StackPanel>
-                    </ToggleButton>
-                    <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
-                            <StackPanel>
-                                <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
-                                <CheckBox Content="Progress" IsChecked="{Binding IsProgressVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Site Manager" IsChecked="{Binding IsManagerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Latest Update" IsChecked="{Binding IsUpdateVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                <StackPanel Grid.Column="4" Orientation="Horizontal">
+                    <Grid>
+                        <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                                <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                             </StackPanel>
-                        </Border>
-                    </Popup>
-                </Grid>
-                
-                <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="10,0" Grid.Column="5">
-                    <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                        <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                    </StackPanel>
-                </Button>
+                        </ToggleButton>
+                        <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                                <StackPanel>
+                                    <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                    <CheckBox Content="Progress" IsChecked="{Binding IsProgressVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Site Manager" IsChecked="{Binding IsManagerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Latest Update" IsChecked="{Binding IsUpdateVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <!-- Print -->
+                    <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}">
+                        <StackPanel Orientation="Horizontal" Margin="10,0">
+                            <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                            <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -117,7 +129,7 @@
                           Visibility="{Binding Items.Count, Converter={StaticResource VisibilityConverter}}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="Auto" />
-                        
+
                         <DataGridTemplateColumn Header="PROGRESS" Width="Auto" MinWidth="150" Visibility="{Binding Data.IsProgressVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -150,7 +162,7 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="LATEST UPDATE" Binding="{Binding LatestFinish, StringFormat='{}{0:d}'}" Width="Auto" Visibility="{Binding Data.IsUpdateVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        
+
                         <DataGridTemplateColumn Header="STATUS" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -161,67 +173,68 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Command="{Binding DataContext.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Command="{Binding DataContext.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                     CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open Project Dashboard">
-                                                <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="14" Height="14" Stretch="Uniform" Opacity="0.8"/>
-                                            </Button>
-                                            <Button Command="{Binding DataContext.EditProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="14" Height="14" Stretch="Uniform" Opacity="0.8"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.EditProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                     CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Edit">
-                                                <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="14" Height="14" Stretch="Uniform"/>
-                                            </Button>
-                                            <Button Command="{Binding DataContext.DeleteProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="14" Height="14" Stretch="Uniform"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.DeleteProjectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                     CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete">
-                                                <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                                <!-- Use Tag to bridge the ViewModel to the ContextMenu -->
-                                <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                                <Setter Property="ap:CommandProperties.DoubleClickCommand" 
+                                            <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <!-- Use Tag to bridge the ViewModel to the ContextMenu -->
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" 
                                         Value="{Binding DataContext.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                                <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
-                                <Setter Property="ContextMenu">
-                                    <Setter.Value>
-                                        <ContextMenu Style="{StaticResource ModernContextMenu}">
-                                            <MenuItem Header="Open Dashboard" 
+                            <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                        <MenuItem Header="Open Dashboard" 
                                                       Command="{Binding Path=PlacementTarget.Tag.OpenProjectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                       CommandParameter="{Binding}">
-                                                <MenuItem.Icon>
-                                                    <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="12" Height="12" Stretch="Uniform"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem Header="Edit Project" 
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="12" Height="12" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Edit Project" 
                                                       Command="{Binding Path=PlacementTarget.Tag.EditProjectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                       CommandParameter="{Binding}">
-                                                <MenuItem.Icon>
-                                                    <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="12" Height="12" Stretch="Uniform"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <Separator Style="{x:Null}" Visibility="Collapsed"/> <!-- Invisible separator placeholder -->
-                                            <MenuItem Header="Delete Project" 
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="12" Height="12" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator Style="{x:Null}" Visibility="Collapsed"/>
+                                        <!-- Invisible separator placeholder -->
+                                        <MenuItem Header="Delete Project" 
                                                       Tag="HasSeparator"
                                                       Command="{Binding Path=PlacementTarget.Tag.DeleteProjectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                       CommandParameter="{Binding}"
                                                       Foreground="{StaticResource ErrorRed}">
-                                                <MenuItem.Icon>
-                                                    <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="12" Height="12" Stretch="Uniform"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                        </ContextMenu>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </DataGrid.RowStyle>
-                    </DataGrid>
+                                            <MenuItem.Icon>
+                                                <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="12" Height="12" Stretch="Uniform"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
 
                 <!-- Loading Overlay -->
                 <Border Background="#40000000" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}" CornerRadius="15">

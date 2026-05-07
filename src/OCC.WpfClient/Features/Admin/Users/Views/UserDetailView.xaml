@@ -54,9 +54,8 @@
                         <Border Grid.Row="0" Style="{StaticResource DetailViewHeader}">
                             <Grid>
                                 <StackPanel>
-                                    <TextBlock Text="Edit User Profile" FontSize="32" FontWeight="Bold" Foreground="White"/>
-                                    <TextBlock Text="Modify user information, status and permissions." FontSize="14" 
-                                               Foreground="{StaticResource TextSub}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Edit User Profile" Style="{StaticResource HeaderText}"/>
+                                    <TextBlock Text="Modify user information, status and permissions." Style="{StaticResource LabelText}"/>
                                 </StackPanel>
 
                                 <Button HorizontalAlignment="Right" VerticalAlignment="Top" 

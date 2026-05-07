@@ -1,20 +1,14 @@
 using System.Windows.Controls;
 using OCC.WpfClient.Features.EmployeeHub.ViewModels;
+using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.EmployeeHub.Views
 {
-    public partial class EmployeeListView : UserControl
+    public partial class EmployeeListView : BaseListView
     {
         public EmployeeListView()
         {
             InitializeComponent();
-        }
-        public void DataGrid_ColumnReordered(object sender, DataGridColumnEventArgs e)
-        {
-            if (DataContext is ViewModels.EmployeeListViewModel vm)
-            {
-                vm.SaveLayoutCommand.Execute(null);
-            }
         }
     }
 }

@@ -7,6 +7,9 @@ using Android.Views;
 using Avalonia;
 using Avalonia.Android;
 using OCC.Mobile;
+using OCC.Mobile.Android.Services;
+using OCC.Mobile.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.Mobile.Android
 {
@@ -24,6 +27,12 @@ namespace OCC.Mobile.Android
             try
             {
                 base.OnCreate(savedInstanceState);
+                
+                // Register Android-specific services before the app initializes
+                OCC.Mobile.App.RegisterPlatformServices = services =>
+                {
+                    services.AddSingleton<IAppInstaller, AndroidAppInstaller>();
+                };
                 
                 if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
                 {

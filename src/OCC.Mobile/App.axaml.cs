@@ -19,6 +19,7 @@ namespace OCC.Mobile
     public partial class App : Application
     {
         public IServiceProvider? Services { get; private set; }
+        public static Action<IServiceCollection>? RegisterPlatformServices { get; set; }
 
         public override void Initialize()
         {
@@ -108,6 +109,12 @@ namespace OCC.Mobile
             services.AddTransient<InventoryViewModel>();
             services.AddTransient<TeamViewModel>();
             services.AddTransient<Features.Profile.ProfileViewModel>();
+            
+            // Add HttpClient for update service
+            services.AddHttpClient<IUpdateService, GitHubUpdateService>();
+            
+            // Allow platform-specific registrations (e.g. IAppInstaller)
+            RegisterPlatformServices?.Invoke(services);
             
             // Services
             services.AddSingleton<ILocalSettingsService, LocalSettingsService>();

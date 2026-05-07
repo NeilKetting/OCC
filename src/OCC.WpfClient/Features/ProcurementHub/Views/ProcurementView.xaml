@@ -11,9 +11,9 @@
     <Grid>
         <Border Background="{StaticResource CardBackground}" Padding="10">
             <StackPanel>
-                <TextBlock Text="{Binding Title}" FontSize="26" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}"/>
                 <TextBlock Text="This is the new Procurement Hub. Here you will manage Orders, Inventory, and Suppliers." 
-                           Style="{StaticResource FormLabelText}" TextWrapping="Wrap"/>
+                           Style="{StaticResource LabelText}" TextWrapping="Wrap"/>
                 
                 <Grid Margin="0,40,0,0">
                     <Grid.ColumnDefinitions>

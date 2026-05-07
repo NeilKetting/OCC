@@ -49,9 +49,8 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Title}" FontSize="32" FontWeight="Bold" Foreground="White" />
-                                    <TextBlock Text="Manage partner profile, specialties, and contact details." FontSize="14" 
-                                               Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}" />
+                                    <TextBlock Text="Manage partner profile, specialties, and contact details." Style="{StaticResource LabelText}"/>
                                 </StackPanel>
 
                                 <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" 

@@ -170,15 +170,15 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:IncidentsViewModel}">
-        <hseqViews:IncidentsView />
+        <hseqViews:IncidentListView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:TrainingViewModel}">
-        <hseqViews:TrainingView />
+        <hseqViews:TrainingListView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:PerformanceMonitoringViewModel}">
-        <hseqViews:PerformanceMonitoringView />
+        <hseqViews:PerformanceMonitoringListView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:DocumentsViewModel}">
@@ -186,7 +186,7 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:AuditsViewModel}">
-        <hseqViews:AuditsView />
+        <hseqViews:AuditListView />
     </DataTemplate>
 
     <!-- Splash -->

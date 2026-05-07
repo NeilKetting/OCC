@@ -40,6 +40,8 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         [ObservableProperty] private bool _isEmailVisible = true;
         
         [ObservableProperty] private bool _isColumnPickerOpen;
+        [ObservableProperty] private bool _isSpecialtyPickerOpen;
+        [ObservableProperty] private bool _isBranchPickerOpen;
 
         [ObservableProperty] private string _selectedBranch = "All Branches";
         [ObservableProperty] private string _selectedSpecialty = "All Specialties";
@@ -101,6 +103,20 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
 
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+
+        [RelayCommand]
+        private void SelectSpecialty(string specialty)
+        {
+            SelectedSpecialty = specialty;
+            IsSpecialtyPickerOpen = false;
+        }
+
+        [RelayCommand]
+        private void SelectBranch(string branch)
+        {
+            SelectedBranch = branch;
+            IsBranchPickerOpen = false;
+        }
 
         public override async Task LoadDataAsync()
         {

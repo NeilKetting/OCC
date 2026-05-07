@@ -18,7 +18,7 @@
         </ObjectDataProvider>
     </UserControl.Resources>
     
-    <Border Background="{StaticResource OverlayBackground}" CornerRadius="15" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1">
+    <Border Background="{StaticResource BackgroundDark}" CornerRadius="15" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1">
         <Grid Margin="25">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" /> <!-- Header -->
@@ -28,7 +28,7 @@
 
             <!-- Header -->
             <Grid Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White" />
+                <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}" />
                 <Button Style="{StaticResource ToolbarIconButton}" HorizontalAlignment="Right" Command="{Binding CloseCommand}">
                     <Path Data="{StaticResource IconClose}" Fill="{StaticResource TextSub}" Width="14" Height="14" Stretch="Uniform"/>
                 </Button>

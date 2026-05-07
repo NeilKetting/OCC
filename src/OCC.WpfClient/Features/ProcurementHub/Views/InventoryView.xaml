@@ -10,7 +10,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1024"
              d:DataContext="{d:DesignInstance Type=vm:InventoryViewModel}">
-    
+
     <UserControl.Resources>
         <conv:VisibilityConverter x:Key="VisibilityConverter"/>
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
@@ -18,23 +18,26 @@
 
     <Grid Margin="0"  Background="{StaticResource AppBackground}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Header -->
-            <RowDefinition Height="Auto" /> <!-- Compact Filters & Stats -->
-            <RowDefinition Height="*" />    <!-- Grid -->
+            <RowDefinition Height="Auto" />
+            <!-- Header -->
+            <RowDefinition Height="Auto" />
+            <!-- Compact Filters & Stats -->
+            <RowDefinition Height="*" />
+            <!-- Grid -->
         </Grid.RowDefinitions>
 
-         <!-- Header: Title, Subtitle, and Add Button -->
+        <!-- Header: Title, Subtitle, and Add Button -->
         <Grid Grid.Row="0" Margin="10">
             <StackPanel>
-                <TextBlock Text="Inventory Management" FontSize="26" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Inventory Management" Style="{StaticResource HeaderText}"/>
                 <TextBlock Text="Track stock levels, reorder points, and warehouse locations." 
-                           Style="{StaticResource FormLabelText}"/>
+                           Style="{StaticResource LabelText}"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddItemCommand}" Width="140" Height="36" Cursor="Hand">
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddItemCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconPlus}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <Path Data="{StaticResource IconPlus}" Fill="White" Width="16" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Add Stock Item" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
@@ -45,14 +48,24 @@
         <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
-                    <ColumnDefinition Width="200" /> <!-- Search Box -->
-                    <ColumnDefinition Width="Auto" /> <!-- Divider -->
-                    <ColumnDefinition Width="Auto" /> <!-- Category Filter -->
-                    <ColumnDefinition Width="Auto" /> <!-- Status Filter -->
-                    <ColumnDefinition Width="Auto" /> <!-- Columns -->
-                    <ColumnDefinition Width="*" />    <!-- Spacer -->
-                    <ColumnDefinition Width="Auto" /> <!-- Stats Badges -->
+                    <!-- Search Icon -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Search Box -->
+                    <ColumnDefinition Width="*" MinWidth="180" />
+                    <!-- Divider -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Category Filter -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Divider -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Status Filter -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Columns -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Spacer -->
+                    <ColumnDefinition Width="*" />
+                    <!-- Stats Badges -->
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Search -->
@@ -65,7 +78,7 @@
                 <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
                 <!-- Category Filter (Mockup for UI Consistency) -->
-                <ComboBox Grid.Column="3" Width="130" Height="32" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0" SelectedIndex="0">
+                <ComboBox Grid.Column="3" Height="30" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0" SelectedIndex="0">
                     <ComboBoxItem Content="All Categories" />
                     <ComboBoxItem Content="Tools" />
                     <ComboBoxItem Content="Electrical" />
@@ -74,45 +87,52 @@
                 </ComboBox>
 
                 <!-- Status Filter (Mockup for UI Consistency) -->
-                <ComboBox Grid.Column="4" Width="140" Height="32" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0" SelectedIndex="0">
+                <ComboBox Grid.Column="4" Height="30" Style="{StaticResource ModernComboBox}" SelectedIndex="0">
                     <ComboBoxItem Content="All Statuses" />
                     <ComboBoxItem Content="OK" />
                     <ComboBoxItem Content="Low Stock" />
                     <ComboBoxItem Content="Out of Stock" />
                 </ComboBox>
 
+                <Border Grid.Column="5" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+
                 <!-- Columns Selection -->
-                <Grid Grid.Column="5">
-                    <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="32">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                            <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                        </StackPanel>
-                    </ToggleButton>
-                    <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
-                            <StackPanel>
-                                <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
-                                <CheckBox Content="SKU" IsChecked="{Binding IsSkuVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Description" IsChecked="{Binding IsDescriptionVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Category" IsChecked="{Binding IsCategoryVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Quantity" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Location" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                <StackPanel Grid.Column="6" Orientation="Horizontal">
+                    <Grid>
+                        <ToggleButton x:Name="ColumnsToggle" 
+                                      Style="{StaticResource ToolbarToggleButton}" 
+                                      Width="100" Height="30">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                                <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                             </StackPanel>
-                        </Border>
-                    </Popup>
-                </Grid>
-                
-                <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="10,0" Grid.Column="6">
-                    <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                        <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                    </StackPanel>
-                </Button>
+                        </ToggleButton>
+                        <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                                <StackPanel>
+                                    <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                    <CheckBox Content="SKU" IsChecked="{Binding IsSkuVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Description" IsChecked="{Binding IsDescriptionVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Category" IsChecked="{Binding IsCategoryVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Quantity" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Location" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                    <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <!-- Print -->
+                    <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}">
+                        <StackPanel Orientation="Horizontal" Margin="10,0">
+                            <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
+                            <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <!-- Stats Badges -->
-                <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>

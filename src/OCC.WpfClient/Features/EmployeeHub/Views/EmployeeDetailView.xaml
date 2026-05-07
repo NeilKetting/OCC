@@ -57,9 +57,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Employee.DisplayName}" FontSize="32" FontWeight="Bold" Foreground="White"/>
-                                        <TextBlock Text="Employee Profile &amp; Management Details." FontSize="14" 
-                                                   Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding Employee.DisplayName}" Style="{StaticResource HeaderText}"/>
+                                        <TextBlock Text="Employee Profile &amp; Management Details." Style="{StaticResource LabelText}"/>
                                     </StackPanel>
 
                                     <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" 

@@ -7,15 +7,18 @@
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200">
-    
+
     <Grid Background="{StaticResource BackgroundDark}">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="24">
-                
+            <StackPanel Margin="15">
+
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,24">
-                    <TextBlock Text="HSEQ Dashboard" Style="{StaticResource HeaderText}"/>
-                    <TextBlock Text="Health, Safety, Environment &amp; Quality Overview" Style="{StaticResource TitleText}" Opacity="0.7"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource IconDashboard}" Width="24" Height="24" Fill="{StaticResource PrimaryTeal}" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="HSEQ Dashboard" Style="{StaticResource HeaderText}"/>
+                    </StackPanel>
+                    <TextBlock Text="Health, Safety, Environment &amp; Quality Overview" Style="{StaticResource LabelText}" Opacity="0.7"/>
                 </StackPanel>
 
                 <!-- KPI Cards -->
@@ -25,7 +28,7 @@
                         <StackPanel Margin="20">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                 <Path Data="{StaticResource IconClock}" Width="16" Height="16" Fill="{StaticResource SuccessGreen}" Stretch="Uniform" Margin="0,0,8,0"/>
-                                <TextBlock Text="Safe Hours" Style="{StaticResource TitleText}" Opacity="0.8"/>
+                                <TextBlock Text="Safe Hours" Style="{StaticResource HeaderText}" Opacity="0.8"/>
                             </StackPanel>
                             <TextBlock Text="{Binding TotalSafeHours, StringFormat=\{0:N2\}}" Style="{StaticResource HeaderText}" Foreground="{StaticResource SuccessGreen}"/>
                             <TextBlock Text="Hours without LTI" Style="{StaticResource LabelText}" Opacity="0.6"/>
@@ -66,8 +69,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                             <TextBlock Grid.Row="0" Text="Audit Score Trends" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
-                             <lvc:CartesianChart Grid.Row="1" 
+                            <TextBlock Grid.Row="0" Text="Audit Score Trends" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
+                            <lvc:CartesianChart Grid.Row="1" 
                                                  Series="{Binding AuditScoreSeries}" 
                                                  XAxes="{Binding AuditXAxes}"
                                                  YAxes="{Binding AuditYAxes}"/>
@@ -81,8 +84,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                             <TextBlock Grid.Row="0" Text="Incident Types" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
-                             <lvc:CartesianChart Grid.Row="1" 
+                            <TextBlock Grid.Row="0" Text="Incident Types" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
+                            <lvc:CartesianChart Grid.Row="1" 
                                                 Series="{Binding IncidentSeries}" 
                                                 XAxes="{Binding IncidentXAxes}"
                                                 YAxes="{Binding IncidentYAxes}"/>

@@ -16,7 +16,7 @@
             </Grid.RowDefinitions>
 
             <!-- HSEQ Title Section -->
-            <StackPanel Grid.Row="0" Margin="20,25,20,30">
+            <StackPanel Grid.Row="0" Margin="15,20,15,25">
                 <TextBlock Text="HSEQ" Foreground="{StaticResource OrangeBrush}" FontSize="24" FontWeight="Black"/>
                 <TextBlock Text="MANAGEMENT HUB" Foreground="White" FontSize="10" FontWeight="SemiBold" Opacity="0.5" Margin="2,-2,0,0"/>
             </StackPanel>
