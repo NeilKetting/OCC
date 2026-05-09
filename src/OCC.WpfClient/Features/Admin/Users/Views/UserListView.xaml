@@ -107,6 +107,9 @@
                                     <StackPanel>
                                         <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
                                         <CheckBox Content="Email" IsChecked="{Binding IsEmailVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                        <CheckBox Content="Phone" IsChecked="{Binding IsPhoneVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                        <CheckBox Content="Branch" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                                        <CheckBox Content="Company" IsChecked="{Binding IsCompanyVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
                                         <CheckBox Content="Role" IsChecked="{Binding IsRoleVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
                                         <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
                                     </StackPanel>
@@ -157,6 +160,9 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NAME" Binding="{Binding DisplayName}" Width="Auto" FontWeight="SemiBold" />
                         <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Location}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsLocationVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
+                        <DataGridTextColumn Header="COMPANY" Binding="{Binding CompanyName}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsCompanyVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="ROLE" Binding="{Binding UserRole}" Width="Auto" Visibility="{Binding Data.IsRoleVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />
 
                         <DataGridTemplateColumn Header="STATUS" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">

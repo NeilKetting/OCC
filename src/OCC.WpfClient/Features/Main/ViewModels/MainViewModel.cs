@@ -128,11 +128,28 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         [ObservableProperty]
         private string _userActivityStatus = "Active";
 
+        // Permission Helper Properties for Menu Bindings
+        public bool CanAccessChat => _permissionService.CanAccess(NavigationRoutes.Chat);
+        public bool CanAccessStaff => _permissionService.CanAccess(NavigationRoutes.StaffManagement);
+        public bool CanAccessProjects => _permissionService.CanAccess(NavigationRoutes.Projects);
+        public bool CanAccessCustomers => _permissionService.CanAccess(NavigationRoutes.Customers);
+        public bool CanAccessInventory => _permissionService.CanAccess(NavigationRoutes.Inventory);
+        public bool CanAccessProcurement => _permissionService.CanAccess(NavigationRoutes.Procurement);
+        public bool CanAccessPurchaseOrders => _permissionService.CanAccess(NavigationRoutes.PurchaseOrder);
+        public bool CanAccessSuppliers => _permissionService.CanAccess(NavigationRoutes.Suppliers);
+        public bool CanAccessHealthSafety => _permissionService.CanAccess(NavigationRoutes.HealthSafety);
+        public bool CanAccessUserManagement => _permissionService.CanAccess(NavigationRoutes.UserManagement);
+        public bool CanAccessAuditLog => _permissionService.CanAccess(NavigationRoutes.AuditLog);
+        public bool CanAccessCompanyProfile => _permissionService.CanAccess(NavigationRoutes.CompanyProfile);
+        public bool CanAccessSettings => _permissionService.CanAccess(NavigationRoutes.CompanySettings);
+
+        public bool CanAccessAdmin => CanAccessUserManagement || CanAccessAuditLog || CanAccessCompanyProfile || CanAccessSettings;
+
         [ObservableProperty]
         private bool _isUserInactive;
 
         [ObservableProperty]
-        private string _dbStatusText = "Connected";
+        private string _dbStatusText = "Checking...";
 
         [ObservableProperty]
         private bool _isDbConnected = true;
@@ -347,7 +364,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     catch { dbName = "Parse Error"; }
 
                     IsDbConnected = true;
-                    DbStatusText = $"Online: {dbName}";
+                    var envType = _connectionSettings.SelectedEnvironment == ConnectionSettings.AppEnvironment.Local ? "(Local)" : 
+                                 _connectionSettings.SelectedEnvironment == ConnectionSettings.AppEnvironment.Test ? "(Test)" : "";
+                    DbStatusText = $"Online: {dbName} {envType}".Trim();
                 }
                 else
                 {
@@ -523,6 +542,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         private void HandleRoute(string route)
         {
+            if (string.IsNullOrEmpty(route)) return;
+
+            // Security check to prevent bypass
+            if (route != "Support.ReportBug" && !_permissionService.CanAccess(route))
+            {
+                _logger.LogWarning("Unauthorized access attempt to route: {Route}", route);
+                WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Access Denied", "You do not have permission to access this hub.", ToastType.Error)));
+                return;
+            }
+
             if (route == "Support.ReportBug")
             {
                 ShowReportBug();

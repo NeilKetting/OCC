@@ -27,6 +27,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _isEmailVerified;
         [ObservableProperty] private string? _password;
         [ObservableProperty] private string? _companyName;
+        [ObservableProperty] private Branch _selectedBranch;
+
+        public Branch[] Branches => Enum.GetValues<Branch>();
 
         // Module Access
         [ObservableProperty] private bool _hasChatAccess;
@@ -79,6 +82,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _isApproved = user.IsApproved;
             _isEmailVerified = user.IsEmailVerified;
             _companyName = user.CompanyName;
+            _selectedBranch = user.Branch ?? Branch.JHB;
 
             _showModuleAccess = _selectedRole == UserRole.Office;
             _showCompanyName = _selectedRole == UserRole.ExternalContractor;
@@ -112,6 +116,11 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 HasHealthSafetyAccess = true;
                 HasAuditLogAccess = true;
             }
+        }
+
+        partial void OnSelectedBranchChanged(Branch value)
+        {
+            Location = value.ToString();
         }
 
         private void LoadPermissions(string? permissions)
@@ -175,6 +184,8 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _user.IsApproved = IsApproved;
             _user.IsEmailVerified = IsEmailVerified;
             _user.CompanyName = CompanyName;
+            _user.Branch = SelectedBranch;
+            _user.Location = SelectedBranch.ToString();
             
             if (!string.IsNullOrWhiteSpace(Password))
             {
@@ -246,6 +257,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 IsApproved = _user.IsApproved;
                 IsEmailVerified = _user.IsEmailVerified;
                 CompanyName = _user.CompanyName;
+                SelectedBranch = _user.Branch ?? Branch.JHB;
                 
                 LoadPermissions(_user.Permissions);
                 

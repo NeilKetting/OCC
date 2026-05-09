@@ -27,6 +27,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             new() { Header = "First Name", PropertyName = "FirstName", Width = 2 },
             new() { Header = "Last Name", PropertyName = "LastName", Width = 2 },
             new() { Header = "Email", PropertyName = "Email", Width = 3 },
+            new() { Header = "Phone", PropertyName = "Phone", Width = 1.5 },
+            new() { Header = "Branch", PropertyName = "Location", Width = 1.5 },
+            new() { Header = "Company", PropertyName = "CompanyName", Width = 2 },
             new() { Header = "Role", PropertyName = "UserRole", Width = 1.5 },
             new() { Header = "Approved", PropertyName = "IsApproved", Width = 1 }
         };
@@ -38,6 +41,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _isEmailVisible = true;
         [ObservableProperty] private bool _isRoleVisible = true;
         [ObservableProperty] private bool _isStatusVisible = true;
+        [ObservableProperty] private bool _isPhoneVisible = false;
+        [ObservableProperty] private bool _isLocationVisible = true;
+        [ObservableProperty] private bool _isCompanyVisible = false;
         
         [ObservableProperty] private bool _isColumnPickerOpen;
 
@@ -70,6 +76,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
                 IsRoleVisible = layout.Columns.FirstOrDefault(c => c.Header == "Role")?.IsVisible ?? true;
                 IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
+                IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? false;
+                IsLocationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Branch")?.IsVisible ?? true;
+                IsCompanyVisible = layout.Columns.FirstOrDefault(c => c.Header == "Company")?.IsVisible ?? false;
             }
         }
 
@@ -81,7 +90,10 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 {
                     new() { Header = "Email", IsVisible = IsEmailVisible },
                     new() { Header = "Role", IsVisible = IsRoleVisible },
-                    new() { Header = "Status", IsVisible = IsStatusVisible }
+                    new() { Header = "Status", IsVisible = IsStatusVisible },
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible },
+                    new() { Header = "Branch", IsVisible = IsLocationVisible },
+                    new() { Header = "Company", IsVisible = IsCompanyVisible }
                 }
             };
 
@@ -92,6 +104,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
         partial void OnIsRoleVisibleChanged(bool value) => SaveLayout();
         partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsLocationVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsCompanyVisibleChanged(bool value) => SaveLayout();
 
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;

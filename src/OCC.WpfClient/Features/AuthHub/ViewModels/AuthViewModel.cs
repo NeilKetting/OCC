@@ -154,8 +154,9 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
 
             if (LoginModel.HasErrors)
             {
-                _logger.LogWarning("Login validation failed. Errors: {Errors}", string.Join(", ", LoginModel.GetErrors().Select(e => e.ErrorMessage)));
-                ErrorMessage = "Please correct the errors before logging in.";
+                var errors = LoginModel.GetErrors().Select(e => e.ErrorMessage);
+                ErrorMessage = string.Join(". ", errors);
+                _logger.LogWarning("Login validation failed. Errors: {Errors}", ErrorMessage);
                 return;
             }
 
@@ -204,7 +205,8 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
 
             if (RegisterModel.HasErrors)
             {
-                ErrorMessage = "Please fill in all required fields correctly.";
+                var errors = RegisterModel.GetErrors().Select(e => e.ErrorMessage);
+                ErrorMessage = string.Join(". ", errors);
                 return;
             }
 
@@ -227,6 +229,13 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
                 {
                     ErrorMessage = "Registration successful! You can now login.";
                     passwordBox.Clear();
+                    
+                    // Small delay then flip back to login
+                    await Task.Delay(2000);
+                    if (ErrorMessage == "Registration successful! You can now login.") // Check if not replaced by another error
+                    {
+                        WeakReferenceMessenger.Default.Send(new AuthFlipMessage(AuthSide.Login));
+                    }
                 }
                 else
                 {

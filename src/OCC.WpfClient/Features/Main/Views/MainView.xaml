@@ -123,33 +123,84 @@
                     <MenuItem Header="Delete"/>
                 </MenuItem>
                 <MenuItem Header="Hubs">
-                    <MenuItem Header="Chat" Command="{Binding NavigateCommand}" CommandParameter="Chat">
+                    <MenuItem Header="Chat" Command="{Binding NavigateCommand}" CommandParameter="Chat"
+                              Visibility="{Binding CanAccessChat, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
                             <Path Data="{StaticResource IconChat}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers">
+                    
+                    <MenuItem Header="Project Portfolio" Command="{Binding NavigateCommand}" CommandParameter="Projects"
+                              Visibility="{Binding CanAccessProjects, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <MenuItem.Icon>
+                            <Path Data="{StaticResource IconSummary}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Header="Employee Hub" Command="{Binding NavigateCommand}" CommandParameter="Team"
+                              Visibility="{Binding CanAccessStaff, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <MenuItem.Icon>
+                            <Path Data="{StaticResource IconTeam}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Header="Customer Hub" Command="{Binding NavigateCommand}" CommandParameter="Customers"
+                              Visibility="{Binding CanAccessCustomers, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
                             <Path Data="{StaticResource IconAddUser}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="Procurement" Command="{Binding NavigateCommand}" CommandParameter="Procurement">
+
+                    <MenuItem Header="Health &amp; Safety" Command="{Binding NavigateCommand}" CommandParameter="HealthSafety"
+                              Visibility="{Binding CanAccessHealthSafety, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <MenuItem.Icon>
+                            <Path Data="{StaticResource IconHealthSafety}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator Visibility="{Binding CanAccessProcurement, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                    <MenuItem Header="Procurement Hub" Visibility="{Binding CanAccessProcurement, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
                             <Path Data="{StaticResource IconDatabase}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
                         </MenuItem.Icon>
+                        <MenuItem Header="Procurement Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Procurement"/>
+                        <MenuItem Header="Inventory Control" Command="{Binding NavigateCommand}" CommandParameter="Inventory"
+                                  Visibility="{Binding CanAccessInventory, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <MenuItem Header="Purchase Orders" Command="{Binding NavigateCommand}" CommandParameter="PurchaseOrder"
+                                  Visibility="{Binding CanAccessPurchaseOrders, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <MenuItem Header="Suppliers" Command="{Binding NavigateCommand}" CommandParameter="Suppliers"
+                                  Visibility="{Binding CanAccessSuppliers, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     </MenuItem>
-                    <MenuItem Header="Admin">
+
+                    <Separator Visibility="{Binding CanAccessAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                    <MenuItem Header="Admin" Visibility="{Binding CanAccessAdmin, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
                             <Path Data="{StaticResource IconGear}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
                         </MenuItem.Icon>
-                        <MenuItem Header="User Management" Command="{Binding NavigateCommand}" CommandParameter="UserManagement">
+                        <MenuItem Header="User Management" Command="{Binding NavigateCommand}" CommandParameter="UserManagement"
+                                  Visibility="{Binding CanAccessUserManagement, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <MenuItem.Icon>
                                 <Path Data="{StaticResource IconTeam}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="Employee Management" Command="{Binding NavigateCommand}" CommandParameter="Team">
+                        <MenuItem Header="Audit Logs" Command="{Binding NavigateCommand}" CommandParameter="AuditLog"
+                                  Visibility="{Binding CanAccessAuditLog, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <MenuItem.Icon>
-                                <Path Data="{StaticResource IconTeam}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                                <Path Data="{StaticResource IconHistory}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Company Profile" Command="{Binding NavigateCommand}" CommandParameter="CompanyProfile"
+                                  Visibility="{Binding CanAccessCompanyProfile, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <Path Data="{StaticResource IconCompanyProfile}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="System Settings" Command="{Binding NavigateCommand}" CommandParameter="CompanySettings"
+                                  Visibility="{Binding CanAccessSettings, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <Path Data="{StaticResource IconGear}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>

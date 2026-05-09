@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using OCC.API.Data;
+using Microsoft.Data.SqlClient;
+
 
 namespace OCC.API.Controllers
 {
@@ -44,18 +46,13 @@ namespace OCC.API.Controllers
 
             try
             {
-                var connectionString = _configuration.GetConnectionString("DefaultConnection");
+                var connectionString = _context.Database.GetDbConnection().ConnectionString;
                 var databaseName = "Unknown";
 
                 if (!string.IsNullOrEmpty(connectionString))
                 {
-                    var builder = new System.Data.Common.DbConnectionStringBuilder();
-                    builder.ConnectionString = connectionString;
-                    
-                    if (builder.TryGetValue("Initial Catalog", out var catalog))
-                        databaseName = catalog as string;
-                    else if (builder.TryGetValue("Database", out var db))
-                        databaseName = db as string;
+                    var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+                    databaseName = builder.InitialCatalog;
                 }
 
                 var canConnect = await _context.Database.CanConnectAsync();

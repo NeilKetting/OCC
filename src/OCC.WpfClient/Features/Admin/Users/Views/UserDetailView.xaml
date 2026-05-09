@@ -109,7 +109,7 @@
 
                                     <StackPanel Margin="0,0,0,15">
                                         <TextBlock Text="Location / Branch" Style="{StaticResource FormLabelText}"/>
-                                        <TextBox Text="{Binding Location}" Style="{StaticResource ModernInput}"/>
+                                        <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}" Style="{StaticResource ModernComboBox}"/>
                                     </StackPanel>
                                 </StackPanel>
 

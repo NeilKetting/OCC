@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using OCC.WpfClient.Features.AuthHub.ViewModels;
+using CommunityToolkit.Mvvm.Messaging;
+using OCC.WpfClient.Infrastructure.Messages;
 
 namespace OCC.WpfClient.Features.AuthHub.Views
 {
@@ -10,6 +12,22 @@ namespace OCC.WpfClient.Features.AuthHub.Views
         public AuthView()
         {
             InitializeComponent();
+            
+            WeakReferenceMessenger.Default.Register<AuthFlipMessage>(this, (r, m) =>
+            {
+                switch (m.Side)
+                {
+                    case AuthSide.Login:
+                        OnLoginClick(null!, null!);
+                        break;
+                    case AuthSide.Register:
+                        OnRegisterClick(null!, null!);
+                        break;
+                    case AuthSide.ForgotPassword:
+                        OnForgotPasswordClick(null!, null!);
+                        break;
+                }
+            });
         }
 
         private void OnAuthViewLoaded(object sender, RoutedEventArgs e)
