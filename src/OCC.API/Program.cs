@@ -150,27 +150,31 @@ using (var scope = app.Services.CreateScope())
 
     foreach (var connectionName in connectionNames)
     {
-        var connectionString = configuration.GetConnectionString(connectionName);
-        if (string.IsNullOrEmpty(connectionString)) continue;
-
         try
         {
-            logger.LogInformation($"Initializing Database: {connectionName}...");
+            var connectionString = configuration.GetConnectionString(connectionName);
+            if (string.IsNullOrEmpty(connectionString)) 
+            {
+                logger.LogWarning($"Skipping {connectionName}: No connection string found.");
+                continue;
+            }
+
+            logger.LogInformation($"[DB-INIT] Checking {connectionName}...");
             
-            // Create a temporary context for this specific connection string
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connectionString);
             
             using var context = new AppDbContext(optionsBuilder.Options, services.GetRequiredService<IHttpContextAccessor>());
             
-            logger.LogInformation($"Using Connection String: {connectionString.Split(';')[0]}...");
-
+            // This is the command that actually creates the tables
             DbInitializer.Initialize(context, hasher, app.Environment.IsDevelopment(), logger);
-            logger.LogInformation($"Database Initialization for {connectionName} Completed Successfully.");
+            
+            logger.LogInformation($"[DB-INIT] {connectionName} is ready.");
         }
         catch (Exception ex)
         {
-            logger.LogCritical(ex, $"FATAL ERROR: Initialization failed for {connectionName}.");
+            logger.LogError(ex, $"[DB-INIT] Failed to initialize {connectionName}. Error: {ex.Message}");
+            // Continue to the next database so we don't block the whole API
         }
     }
 }
