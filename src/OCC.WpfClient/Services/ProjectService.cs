@@ -59,11 +59,11 @@ namespace OCC.WpfClient.Services
             }
         }
 
-        public async Task<IEnumerable<ProjectSummaryDto>> GetProjectSummariesAsync()
+        public async Task<IEnumerable<ProjectSummaryDto>> GetProjectSummariesAsync(bool includeDeleted = false)
         {
             var client = _httpClientFactory.CreateClient();
             EnsureAuthorization(client);
-            var url = GetFullUrl("api/Projects/summaries");
+            var url = GetFullUrl($"api/Projects/summaries?includeDeleted={includeDeleted}");
             try
             {
                 return await client.GetFromJsonAsync<IEnumerable<ProjectSummaryDto>>(url) ?? new List<ProjectSummaryDto>();
@@ -125,11 +125,11 @@ namespace OCC.WpfClient.Services
             }
         }
 
-        public async Task DeleteProjectAsync(Guid id)
+        public async Task DeleteProjectAsync(Guid id, bool permanent = false)
         {
             var client = _httpClientFactory.CreateClient();
             EnsureAuthorization(client);
-            var url = GetFullUrl($"api/Projects/{id}");
+            var url = GetFullUrl($"api/Projects/{id}?permanent={permanent}");
             try
             {
                 var response = await client.DeleteAsync(url);
@@ -137,7 +137,24 @@ namespace OCC.WpfClient.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting project {Id} at {Url}", id, url);
+                _logger.LogError(ex, "Error deleting project {Id} (permanent={Permanent}) at {Url}", id, permanent, url);
+                throw;
+            }
+        }
+
+        public async Task RestoreProjectAsync(Guid id)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/Projects/{id}/restore");
+            try
+            {
+                var response = await client.PostAsync(url, null);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring project {Id} at {Url}", id, url);
                 throw;
             }
         }

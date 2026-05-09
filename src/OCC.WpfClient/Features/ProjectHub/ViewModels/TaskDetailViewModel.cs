@@ -26,7 +26,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IAuthService _authService;
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
-        private bool _isSuppressingUpdates = false;
         private Guid _currentTaskId;
 
         [ObservableProperty] private ProjectTaskWrapper _task;
@@ -170,11 +169,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private async Task LoadTaskModel(ProjectTask task)
         {
-            _isSuppressingUpdates = true;
             _currentTaskId = task.Id;
             LoadTask(task);
             await LoadAssignableResources();
-            _isSuppressingUpdates = false;
         }
 
         private async Task LoadAssignableResources()

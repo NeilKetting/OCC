@@ -7,6 +7,7 @@ namespace OCC.Mobile.Services
     public enum AppEnvironment
     {
         Live,
+        Test,
         Local
     }
 

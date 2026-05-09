@@ -773,7 +773,7 @@ namespace OCC.WpfClient.Services
             return value.ToString() ?? "-";
         }
 
-        private object? GetRawPropertyValue(object item, string propertyName)
+        private object? GetRawPropertyValue(object? item, string propertyName)
         {
             if (item == null) return null;
             var prop = item.GetType().GetProperty(propertyName);

@@ -13,6 +13,11 @@ namespace OCC.Shared.Models
     /// </remarks>
     public class HseqAudit : BaseEntity
     {
+        /// <summary> Optional link to a specific project. </summary>
+        public Guid? ProjectId { get; set; }
+
+        /// <summary> Navigation property to the project. </summary>
+        public virtual Project? Project { get; set; }
 
 
         /// <summary> The date the audit was conducted. </summary>

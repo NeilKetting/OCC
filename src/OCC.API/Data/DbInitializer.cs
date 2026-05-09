@@ -13,6 +13,18 @@ namespace OCC.API.Data
             logger.LogInformation("Checking for pending migrations...");
             context.Database.Migrate();
 
+            // Manual Schema Patch: Ensure new ProjectId columns exist (since EF migrations tool failed)
+            try
+            {
+                logger.LogInformation("Applying manual schema patches for HSEQ and Incidents...");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('HseqAudits') AND name = 'ProjectId') ALTER TABLE HseqAudits ADD ProjectId UNIQUEIDENTIFIER NULL;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Incidents') AND name = 'ProjectId') ALTER TABLE Incidents ADD ProjectId UNIQUEIDENTIFIER NULL;");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Manual schema patch skipped or failed: {Message}", ex.Message);
+            }
+
             var adminEmail = "neil@mdk.co.za";
             var adminUser = context.Users.FirstOrDefault(u => u.Email == adminEmail);
 
@@ -24,7 +36,7 @@ namespace OCC.API.Data
                     Email = adminEmail,
                     Password = hasher.HashPassword("ChangeMe123!"), // Default seed password - CHANGE IN PRODUCTION
                     FirstName = "Neil",
-                    LastName = "Admin",
+                    LastName = "Ketting",
                     UserRole = UserRole.Admin,
                     IsApproved = true,
                     IsEmailVerified = true
@@ -63,25 +75,35 @@ namespace OCC.API.Data
             }
 
             logger.LogInformation("Seeding Project Tasks...");
-            var projects = context.Projects.ToList();
+            var projects = context.Projects.Include(p => p.TeamMembers).ToList();
             var employees = context.Employees.ToList();
             
-            if (!projects.Any() || !employees.Any())
+            // Only assign to roles that the UI actually shows in the resource list (Managers/Foremen)
+            var managementStaff = employees.Where(e => 
+                e.Role == EmployeeRole.SiteManager || 
+                e.Role == EmployeeRole.SnrForeman || 
+                e.Role == EmployeeRole.JnrForeman || 
+                e.Role == EmployeeRole.LegacySeniorForeman ||
+                e.Role == EmployeeRole.Supervisor).ToList();
+
+            if (!projects.Any() || !managementStaff.Any())
             {
-                logger.LogWarning("Cannot seed tasks: Projects or Employees missing.");
+                logger.LogWarning("Cannot seed tasks: Projects or Management Staff missing.");
                 return;
             }
 
             var random = new Random();
             var taskNames = new[] { "Site Clearance", "Excavation", "Foundation Pouring", "Brickwork Level 1", "Electrical First Fix", "Plumbing Rough-in", "Roof Truss Installation", "Window Fitting", "Plastering", "Floor Screeding" };
             
-            // 1. First, ensure EVERY employee has at least one task assigned for testing
             int taskIndex = 0;
-            foreach (var employee in employees)
+            foreach (var employee in managementStaff)
             {
                 var project = projects[random.Next(projects.Count)];
                 var name = taskNames[taskIndex % taskNames.Length];
                 taskIndex++;
+
+                // Sync task progress with project status
+                bool isProjectCompleted = project.Status == "Completed";
 
                 var task = new ProjectTask
                 {
@@ -89,16 +111,28 @@ namespace OCC.API.Data
                     ProjectId = project.Id,
                     Name = $"{name} ({employee.FirstName})",
                     Description = $"Assigned task for {employee.FirstName}",
+                    AssignedTo = $"{employee.FirstName} {employee.LastName}",
                     StartDate = DateTime.UtcNow.AddDays(-5),
                     FinishDate = DateTime.UtcNow.AddDays(5),
-                    Status = "Started",
-                    PercentComplete = 10,
+                    Status = isProjectCompleted ? "Completed" : "Started",
+                    PercentComplete = isProjectCompleted ? 100 : 10,
                     Priority = "Medium",
                     Type = TaskType.Task,
                     CreatedAtUtc = DateTime.UtcNow,
                     CreatedBy = "System"
                 };
                 context.ProjectTasks.Add(task);
+
+                // Ensure employee is also in the project team
+                if (!project.TeamMembers.Any(tm => tm.EmployeeId == employee.Id))
+                {
+                    context.ProjectTeamMembers.Add(new ProjectTeamMember
+                    {
+                        ProjectId = project.Id,
+                        EmployeeId = employee.Id,
+                        DateAdded = DateTime.UtcNow
+                    });
+                }
 
                 context.TaskAssignments.Add(new TaskAssignment
                 {
@@ -236,11 +270,57 @@ namespace OCC.API.Data
             SeedSuppliers(context, logger);
 
             var customer = context.Customers.First();
+            var employees = context.Employees.ToList();
+            var managementPool = employees.Where(e => e.Role == EmployeeRole.SiteManager || e.Role == EmployeeRole.SnrForeman).ToList();
+            var random = new Random();
+
             var projects = new List<Project>
             {
-                new Project { Name = "Engen Bendor", Description = "Fuel station renovation", StartDate = DateTime.Today.AddDays(-30), EndDate = DateTime.Today.AddDays(60), CustomerId = customer.Id, Status = "Active", Priority = "High", StreetLine1 = "123 Bendor Drive", City = "Polokwane", Country = "South Africa" },
-                new Project { Name = "Mall of North", Description = "Expansion project", StartDate = DateTime.Today.AddDays(-10), EndDate = DateTime.Today.AddDays(180), CustomerId = customer.Id, Status = "Active", Priority = "Medium", StreetLine1 = "456 Mall St", City = "Polokwane", Country = "South Africa" },
-                new Project { Name = "Savannah Office", Description = "New office complex", StartDate = DateTime.Today.AddDays(-60), EndDate = DateTime.Today.AddDays(-5), CustomerId = customer.Id, Status = "Completed", Priority = "Low", StreetLine1 = "789 Savannah Rd", City = "Polokwane", Country = "South Africa" }
+                new Project 
+                { 
+                    Name = "Engen Bendor", 
+                    Description = "Fuel station renovation", 
+                    StartDate = DateTime.Today.AddDays(-30), 
+                    EndDate = DateTime.Today.AddDays(60), 
+                    CustomerId = customer.Id, 
+                    Status = "Active", 
+                    Priority = "High", 
+                    StreetLine1 = "123 Bendor Drive", 
+                    City = "Polokwane", 
+                    Country = "South Africa",
+                    ProjectManager = "Neil Admin",
+                    SiteManagerId = managementPool.Any() ? managementPool[0].Id : null
+                },
+                new Project 
+                { 
+                    Name = "Mall of North", 
+                    Description = "Expansion project", 
+                    StartDate = DateTime.Today.AddDays(-10), 
+                    EndDate = DateTime.Today.AddDays(180), 
+                    CustomerId = customer.Id, 
+                    Status = "Active", 
+                    Priority = "Medium", 
+                    StreetLine1 = "456 Mall St", 
+                    City = "Polokwane", 
+                    Country = "South Africa",
+                    ProjectManager = "Neil Admin",
+                    SiteManagerId = managementPool.Count > 1 ? managementPool[1].Id : (managementPool.Any() ? managementPool[0].Id : null)
+                },
+                new Project 
+                { 
+                    Name = "Savannah Office", 
+                    Description = "New office complex", 
+                    StartDate = DateTime.Today.AddDays(-60), 
+                    EndDate = DateTime.Today.AddDays(-5), 
+                    CustomerId = customer.Id, 
+                    Status = "Completed", 
+                    Priority = "Low", 
+                    StreetLine1 = "789 Savannah Rd", 
+                    City = "Polokwane", 
+                    Country = "South Africa",
+                    ProjectManager = "Office Team",
+                    SiteManagerId = managementPool.Any() ? managementPool[random.Next(managementPool.Count)].Id : null
+                }
             };
 
             foreach(var p in projects) context.Projects.Add(p);

@@ -9,7 +9,8 @@ namespace OCC.WpfClient.Services
     {
         public Task ShowAlertAsync(string title, string message)
         {
-            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+            var dialog = new CustomDialogView(title, message, "OK", null, null);
+            dialog.ShowDialog();
             return Task.CompletedTask;
         }
 

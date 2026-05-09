@@ -90,6 +90,7 @@
                              Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
                              ap:WatermarkProperties.Watermark="Search users..."/>
 
+                    <!-- Divider -->
                     <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
                     <!-- Columns Selection -->

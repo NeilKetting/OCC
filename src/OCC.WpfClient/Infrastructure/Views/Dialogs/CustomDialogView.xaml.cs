@@ -7,7 +7,7 @@ namespace OCC.WpfClient.Infrastructure.Views.Dialogs
     {
         public CustomDialogResult Result { get; private set; } = CustomDialogResult.Cancel;
 
-        public CustomDialogView(string title, string message, string primaryText, string? secondaryText = null, string cancelText = "Cancel")
+        public CustomDialogView(string title, string message, string primaryText, string? secondaryText = null, string? cancelText = "Cancel")
         {
             InitializeComponent();
             TitleText.Text = title;
@@ -25,7 +25,15 @@ namespace OCC.WpfClient.Infrastructure.Views.Dialogs
                 BtnSecondary.Visibility = Visibility.Visible;
             }
 
-            BtnCancel.Content = cancelText;
+            if (string.IsNullOrEmpty(cancelText))
+            {
+                BtnCancel.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                BtnCancel.Content = cancelText;
+                BtnCancel.Visibility = Visibility.Visible;
+            }
 
             // Make it center relative to main window
             if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)

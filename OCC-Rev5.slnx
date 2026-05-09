@@ -8,8 +8,8 @@
   <Project Path="src/OCC.Mobile.Android/OCC.Mobile.Android.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
-  <Project Path="src/OCC.Mobile/OCC.Mobile.csproj" />
   <Project Path="src/OCC.Mobile.Desktop/OCC.Mobile.Desktop.csproj" />
+  <Project Path="src/OCC.Mobile/OCC.Mobile.csproj" />
   <Project Path="src/OCC.Shared/OCC.Shared.csproj" />
   <Project Path="src/OCC.Tests/OCC.Tests.csproj" />
   <Project Path="src/OCC.WpfClient/OCC.WpfClient.csproj" />

@@ -40,16 +40,34 @@ builder.Services.AddControllers(options =>
 builder.Services.AddHttpContextAccessor();
 
 // Database
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-            sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-        }));
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+{
+    var httpContext = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext;
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    
+    // Check for environment header
+    var environmentHeader = httpContext?.Request.Headers["X-Environment"].ToString();
+    
+    string connectionString;
+    if (environmentHeader == "Test")
+    {
+        connectionString = configuration.GetConnectionString("TestConnection") 
+                           ?? configuration.GetConnectionString("DefaultConnection")!;
+    }
+    else
+    {
+        connectionString = configuration.GetConnectionString("DefaultConnection")!;
+    }
+
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+        sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+    });
+});
 
 // (Optional) Add DbInitializer if you want to use it as a service, 
 // but usually we call it in the app scope below.
@@ -135,7 +153,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation($"Using Connection String: {conn?.Split(';')[0]}... (Length: {conn?.Length})");
 
         var hasher = services.GetRequiredService<OCC.API.Services.PasswordHasher>();
-        
+
         logger.LogInformation("Calling DbInitializer.Initialize()...");
         DbInitializer.Initialize(context, hasher, app.Environment.IsDevelopment(), logger);
         logger.LogInformation("Database Initialization Completed Successfully.");

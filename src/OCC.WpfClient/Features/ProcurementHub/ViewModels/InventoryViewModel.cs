@@ -44,7 +44,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             new() { Header = "Qty", PropertyName = "QuantityOnHand", Width = 1 }
         };
 
-        private System.ComponentModel.ICollectionView? _itemsView;
 
         public InventoryViewModel(
             IInventoryService inventoryService, 
@@ -124,11 +123,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
 
-        [RelayCommand]
-        private void Search()
-        {
-            _itemsView?.Refresh();
-        }
 
         [RelayCommand]
         private async Task Refresh()

@@ -48,7 +48,7 @@ namespace OCC.WpfClient.Features.ChatHub.Models
 
         public bool IsAdmin(Guid userId) => Dto.CreatedById == userId;
 
-        public string DecryptedAesKey { get; set; } = string.Empty;
+        public string? DecryptedAesKey { get; set; }
 
         public ObservableCollection<ChatMessageModel> Messages { get; } = new ObservableCollection<ChatMessageModel>();
 

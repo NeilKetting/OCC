@@ -8,6 +8,7 @@ namespace OCC.API.Data
     public class AppDbContext : DbContext
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        public bool SupressSoftDelete { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor = null!) : base(options)
         {
@@ -131,6 +132,8 @@ namespace OCC.API.Data
                             break;
 
                         case EntityState.Deleted:
+                            if (SupressSoftDelete) break;
+
                             // Soft Delete Logic
                             entry.State = EntityState.Modified;
                             baseEntity.IsActive = false;
@@ -380,6 +383,11 @@ namespace OCC.API.Data
             {
                 entity.Property(e => e.ActualScore).HasPrecision(18, 2);
                 entity.Property(e => e.TargetScore).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<HseqAuditSection>(entity =>
@@ -388,15 +396,21 @@ namespace OCC.API.Data
                 entity.Property(e => e.PossibleScore).HasPrecision(18, 2);
             });
 
-            modelBuilder.Entity<Incident>()
-                .HasMany(i => i.Photos)
-                .WithOne().HasForeignKey(p => p.IncidentId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            modelBuilder.Entity<Incident>()
-                .HasMany(i => i.Documents)
-                .WithOne().HasForeignKey(d => d.IncidentId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Incident>(entity =>
+            {
+                entity.HasMany(i => i.Photos)
+                    .WithOne().HasForeignKey(p => p.IncidentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasMany(i => i.Documents)
+                    .WithOne().HasForeignKey(d => d.IncidentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(i => i.Project)
+                    .WithMany()
+                    .HasForeignKey(i => i.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder.Entity<ProjectTask>(entity =>
             {
@@ -442,6 +456,11 @@ namespace OCC.API.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(e => e.TeamMembers)
+                    .WithOne(e => e.Project)
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany<HseqDocument>()
                     .WithOne(e => e.Project)
                     .HasForeignKey(e => e.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);

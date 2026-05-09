@@ -9,14 +9,15 @@ namespace OCC.WpfClient.Services.Interfaces
     public interface IProjectService
     {
         Task<IEnumerable<Project>> GetProjectsAsync();
-        Task<IEnumerable<ProjectSummaryDto>> GetProjectSummariesAsync();
+        Task<IEnumerable<ProjectSummaryDto>> GetProjectSummariesAsync(bool includeDeleted = false);
         Task<Project?> GetProjectAsync(Guid id);
         Task CreateProjectAsync(Project project);
         Task UpdateProjectAsync(Project project);
         Task<ProjectPersonnelDto?> GetProjectPersonnelAsync(Guid projectId);
         Task UpdateProjectPersonnelAsync(Guid projectId, ProjectPersonnelUpdateDto update);
         Task<ProjectHistoryDto> GetProjectHistoryAsync(Guid projectId);
-        Task DeleteProjectAsync(Guid id);
+        Task DeleteProjectAsync(Guid id, bool permanent = false);
+        Task RestoreProjectAsync(Guid id);
         Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId);
         List<ProjectTask> BuildTaskHierarchy(IEnumerable<ProjectTask> allTasks);
         List<ProjectTask> FlattenHierarchy(IEnumerable<ProjectTask> rootTasks);

@@ -36,6 +36,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
         private readonly HttpClient _httpClient;
         private readonly ILocalEncryptionService _encryptionService;
         private readonly ILogger<ChatViewModel> _logger;
+        private readonly IDialogService _dialogService;
         private HubConnection? _hubConnection;
 
         [ObservableProperty]
@@ -141,13 +142,15 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                              ConnectionSettings connectionSettings,
                              IHttpClientFactory httpClientFactory,
                              ILocalEncryptionService encryptionService,
-                             ILogger<ChatViewModel> logger)
+                             ILogger<ChatViewModel> logger,
+                             IDialogService dialogService)
         {
             _authService = authService;
             _connectionSettings = connectionSettings;
             _httpClient = httpClientFactory.CreateClient();
             _encryptionService = encryptionService;
             _logger = logger;
+            _dialogService = dialogService;
 
             // Add authorization header for HTTP requests
             if (!string.IsNullOrEmpty(_authService.CurrentToken))
@@ -589,7 +592,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error starting direct chat: {ex.Message}");
-                System.Windows.MessageBox.Show("Failed to initiate chat session. Please try again or check your connection.", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", "Failed to initiate chat session. Please try again or check your connection.");
             }
         }
 
@@ -669,32 +672,43 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             if (session == null) return;
 
             // Confirm delete
-            if (session.IsGroupChat && !session.IsAdmin(_authService.CurrentUser?.Id ?? Guid.Empty))
+            bool isAdmin = session.IsAdmin(_authService.CurrentUser?.Id ?? Guid.Empty);
+            
+            if (session.IsGroupChat && !isAdmin)
             {
-                // Should not happen as UI should hide it, but just in case
+                await _dialogService.ShowAlertAsync("Permission Denied", "Only the group creator can delete this group.");
                 return;
             }
 
-            var confirm = System.Windows.MessageBox.Show(
-                session.IsGroupChat ? "Are you sure you want to delete this group for everyone?" : "Are you sure you want to delete this chat?",
-                "Confirm Delete",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Warning);
+            string title = session.IsGroupChat ? "Delete Group" : "Delete Chat";
+            string message = session.IsGroupChat 
+                ? $"Are you sure you want to delete the group \"{session.Name}\" for everyone?\n\nThis action cannot be undone." 
+                : $"Are you sure you want to delete your chat with \"{session.Name}\"?";
 
-            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+
+            if (!confirmed) return;
 
             try
             {
                 var response = await _httpClient.DeleteAsync($"{_connectionSettings.ApiBaseUrl.TrimEnd('/')}/api/messages/sessions/{session.Id}");
                 if (response.IsSuccessStatusCode)
                 {
-                    ChatSessions.Remove(session);
-                    if (SelectedSession == session) SelectedSession = null;
+                    App.Current.Dispatcher.Invoke(() => {
+                        ChatSessions.Remove(session);
+                        if (SelectedSession == session) SelectedSession = null;
+                        SessionsView.Refresh();
+                    });
+                }
+                else
+                {
+                    await _dialogService.ShowAlertAsync("Error", $"Failed to delete { (session.IsGroupChat ? "group" : "chat") }.\n\nServer returned: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to delete session: {ex.Message}");
+                _logger.LogError(ex, "Failed to delete session {SessionId}", session.Id);
+                await _dialogService.ShowAlertAsync("Error", $"An error occurred while deleting the { (session.IsGroupChat ? "group" : "chat") }.\n\n{ex.Message}");
             }
         }
 
@@ -703,8 +717,8 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
         {
             if (session == null || !session.IsGroupChat) return;
 
-            var confirm = System.Windows.MessageBox.Show("Are you sure you want to exit this group?", "Exit Group", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
-            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+            var confirmed = await _dialogService.ShowConfirmationAsync("Exit Group", "Are you sure you want to exit this group?");
+            if (!confirmed) return;
 
             try
             {
@@ -778,7 +792,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to create group: {ex.Message}");
-                System.Windows.MessageBox.Show("Failed to create group. Please try again.", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", "Failed to create group. Please try again.");
             }
         }
 

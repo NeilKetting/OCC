@@ -35,6 +35,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isStatusVisible = true;
 
         [ObservableProperty] private bool _isColumnPickerOpen;
+        [ObservableProperty] private bool _showDeleted;
+
+        partial void OnShowDeletedChanged(bool value) => _ = LoadDataAsync();
 
 
         public override string ReportTitle => "Project Portfolio";
@@ -114,7 +117,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IsBusy = true;
             try
             {
-                var projects = await _projectService.GetProjectSummariesAsync();
+                var projects = await _projectService.GetProjectSummariesAsync(ShowDeleted);
                 _allProjects = projects.OrderBy(p => p.Name).ToList();
                 FilterItems();
             }
@@ -164,27 +167,48 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [RelayCommand]
-        private void EditProject(ProjectSummaryDto project)
+        private async Task EditProject(ProjectSummaryDto project)
         {
             if (project == null) return;
-            // TODO: Open EditProjectDialog
-            _toastService.ShowInfo("Upcoming", $"Editing {project.Name} is coming soon.");
+
+            var vm = _serviceProvider.GetRequiredService<ProjectEditorViewModel>();
+            await vm.InitializeAsync(project.Id);
+
+            vm.CloseRequested += (s, e) => CloseOverlay();
+            vm.ProjectUpdated += (s, e) => {
+                CloseOverlay();
+                _ = LoadDataAsync();
+            };
+
+            OpenOverlay(vm);
         }
 
         [RelayCommand]
         private async Task DeleteProject(ProjectSummaryDto project)
         {
             if (project == null) return;
-            var confirm = await _dialogService.ShowConfirmationAsync("Delete Project", 
-                $"Are you sure you want to delete '{project.Name}'? This action cannot be undone.");
-            
+
+            string title = project.IsActive ? "Delete Project" : "Permanently Delete Project";
+            string message = project.IsActive
+                ? $"Are you sure you want to delete '{project.Name}'? It can be restored from the archive later."
+                : $"Are you sure you want to PERMANENTLY delete '{project.Name}'?\n\n" +
+                  "This will delete EVERYTHING linked to this project, including:\n" +
+                  "• All Tasks and Task Comments\n" +
+                  "• All Team Member Assignments\n" +
+                  "• All HSEQ Documents and Audits\n" +
+                  "• All Incidents and Snag Jobs\n" +
+                  "• All Variation Orders\n\n" +
+                  "THIS ACTION CANNOT BE UNDONE.";
+
+            var confirm = await _dialogService.ShowConfirmationAsync(title, message);
+
             if (confirm)
             {
                 IsBusy = true;
                 try
                 {
-                    await _projectService.DeleteProjectAsync(project.Id);
-                    _toastService.ShowSuccess("Deleted", "Project deleted successfully.");
+                    await _projectService.DeleteProjectAsync(project.Id, !project.IsActive);
+                    _toastService.ShowSuccess("Success", project.IsActive ? "Project deleted (Archived)." : "Project permanently removed.");
                     await LoadDataAsync();
                 }
                 catch (Exception ex)
@@ -196,6 +220,29 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 {
                     IsBusy = false;
                 }
+            }
+        }
+
+        [RelayCommand]
+        private async Task RestoreProject(ProjectSummaryDto project)
+        {
+            if (project == null) return;
+
+            IsBusy = true;
+            try
+            {
+                await _projectService.RestoreProjectAsync(project.Id);
+                _toastService.ShowSuccess("Restored", $"Project '{project.Name}' has been restored.");
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring project {Id}", project.Id);
+                _toastService.ShowError("Error", "Failed to restore project.");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

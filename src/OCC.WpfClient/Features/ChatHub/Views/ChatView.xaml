@@ -5,11 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ChatHub.ViewModels"
              xmlns:converters="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1024"
              Background="#0f172a"> <!-- Dark slate blue (Tailwind slate-900) -->
 
     <UserControl.Resources>
+        <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
         <converters:UserInitialsConverter x:Key="UserInitialsConverter"/>
         <converters:CollectionContainsConverter x:Key="CollectionContainsConverter"/>
         <converters:UserColorConverter x:Key="UserColorConverter"/>
@@ -347,8 +349,9 @@
                                         <Setter.Value>
                                             <ContextMenu>
                                                 <!-- Global MenuItem style applies automatically -->
+                                                <!-- Using BindingProxy for command bindings in ContextMenu -->
                                                 <MenuItem Header="Archive chat" 
-                                                          Command="{Binding DataContext.ArchiveSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.ArchiveSessionCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconArchive}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -356,7 +359,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="Mute notifications" 
-                                                          Command="{Binding DataContext.MuteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.MuteSessionCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconMute}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -364,7 +367,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="Pin chat" 
-                                                          Command="{Binding DataContext.PinSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.PinSessionCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconPin}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -372,7 +375,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="Mark as read" 
-                                                          Command="{Binding DataContext.MarkAsReadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.MarkAsReadCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconMarkAllAsRead}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -380,7 +383,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="Add to favourites" 
-                                                          Command="{Binding DataContext.ToggleFavouriteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.ToggleFavouriteCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconStar}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -388,7 +391,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="Add to list" 
-                                                          Command="{Binding DataContext.AddToListCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.AddToListCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconAddToList}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -398,7 +401,7 @@
                                                 <Separator Background="#3b4a54" Margin="0,5"/>
 
                                                 <MenuItem Header="Clear chat" 
-                                                          Command="{Binding DataContext.ClearSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.ClearSessionCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}">
                                                     <MenuItem.Icon>
                                                         <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
@@ -406,7 +409,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="Delete Chat" 
-                                                          Command="{Binding DataContext.DeleteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.DeleteSessionCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}"
                                                           Visibility="{Binding IsGroupChat, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
                                                     <MenuItem.Icon>
@@ -415,7 +418,7 @@
                                                 </MenuItem>
                                                 
                                                 <MenuItem Header="Delete Group" 
-                                                          Command="{Binding DataContext.DeleteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.DeleteSessionCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}"
                                                           Visibility="{Binding IsGroupChat, Converter={StaticResource VisibilityConverter}}"
                                                           IsEnabled="{Binding IsCurrentUserAdmin}">
@@ -425,7 +428,7 @@
                                                 </MenuItem>
         
                                                 <MenuItem Header="Exit Group" 
-                                                          Command="{Binding DataContext.ExitGroupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          Command="{Binding Data.ExitGroupCommand, Source={StaticResource Proxy}}"
                                                           CommandParameter="{Binding}"
                                                           Visibility="{Binding IsGroupChat, Converter={StaticResource VisibilityConverter}}">
                                                     <MenuItem.Icon>
@@ -927,6 +930,75 @@
                         </StackPanel>
                         <TextBlock Text="{Binding SelectedSession.Users.Count, StringFormat='{}{0} participants'}" Foreground="#10b981" FontSize="12" Margin="0,2,0,0"/>
                     </StackPanel>
+
+                    <!-- Active Chat Header Menu -->
+                    <Button Grid.Column="2" x:Name="ChatHeaderMenuButton" Click="MenuButton_Click" Background="Transparent" BorderThickness="0" Padding="5" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconEllipseVertical}" Fill="#94a3b8" Width="20" Height="20" Stretch="Uniform"/>
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Group info" 
+                                          Visibility="{Binding SelectedSession.IsGroupChat, Converter={StaticResource VisibilityConverter}}">
+                                    <MenuItem.Icon>
+                                        <Path Data="{StaticResource IconNewGroup}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                
+                                <MenuItem Header="Exit group" 
+                                          Command="{Binding ExitGroupCommand}" 
+                                          CommandParameter="{Binding SelectedSession}"
+                                          Visibility="{Binding SelectedSession.IsGroupChat, Converter={StaticResource VisibilityConverter}}">
+                                    <MenuItem.Icon>
+                                        <Path Data="{StaticResource IconExitChat}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <MenuItem Header="Delete Group" 
+                                          Command="{Binding DeleteSessionCommand}" 
+                                          CommandParameter="{Binding SelectedSession}"
+                                          Visibility="{Binding SelectedSession.IsGroupChat, Converter={StaticResource VisibilityConverter}}"
+                                          IsEnabled="{Binding SelectedSession.IsCurrentUserAdmin}">
+                                    <MenuItem.Icon>
+                                        <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <MenuItem Header="Clear messages" 
+                                          Command="{Binding ClearSessionCommand}" 
+                                          CommandParameter="{Binding SelectedSession}">
+                                    <MenuItem.Icon>
+                                        <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+
+                                <MenuItem Header="Delete chat" 
+                                          Command="{Binding DeleteSessionCommand}" 
+                                          CommandParameter="{Binding SelectedSession}"
+                                          Visibility="{Binding SelectedSession.IsGroupChat, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                                    <MenuItem.Icon>
+                                        <Path Data="{StaticResource IconClear}" Fill="#8696a0" Width="16" Height="16" Stretch="Uniform"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="5">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#334155"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </Grid>
             </Border>
             

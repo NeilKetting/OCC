@@ -46,7 +46,7 @@ namespace OCC.WpfClient.Features.ProjectHub.Views
         private void OpenDrawer()
         {
             Storyboard? sb = this.Resources["OpenDrawer"] as Storyboard;
-            sb?.Begin();
+            sb?.Begin(this);
         }
 
         private void CloseDrawer()
@@ -61,7 +61,7 @@ namespace OCC.WpfClient.Features.ProjectHub.Views
                         vm.ConfirmClose();
                     }
                 };
-                sb.Begin();
+                sb.Begin(this);
             }
         }
 

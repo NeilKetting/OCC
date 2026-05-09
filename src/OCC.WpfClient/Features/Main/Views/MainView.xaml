@@ -13,7 +13,8 @@
              xmlns:shViews="clr-namespace:OCC.WpfClient.Features.SupportHub.Views"
              xmlns:shVm="clr-namespace:OCC.WpfClient.Features.SupportHub.ViewModels"
              mc:Ignorable="d"
-             d:Height="700" d:Width="1024">
+             d:Height="700" d:Width="1024"
+             MinWidth="1024" MinHeight="700">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -614,29 +615,32 @@
                             <Ellipse Width="8" Height="8" Margin="0,0,10,0">
                                 <Ellipse.Style>
                                     <Style TargetType="Ellipse">
-                                        <Setter Property="Fill" Value="#3B82F6"/> <!-- Blue Default -->
+                                        <Setter Property="Fill" Value="#3B82F6"/>
+                                        <!-- Blue Default -->
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsAppBusy}" Value="True">
-                                                <Setter Property="Fill" Value="{StaticResource SecondaryGold}"/> <!-- Orange when busy -->
+                                                <Setter Property="Fill" Value="{StaticResource SecondaryGold}"/>
+                                                <!-- Orange when busy -->
                                             </DataTrigger>
                                             <MultiDataTrigger>
                                                 <MultiDataTrigger.Conditions>
                                                     <Condition Binding="{Binding IsAppBusy}" Value="False"/>
                                                     <Condition Binding="{Binding StatusMessage}" Value="Ready"/>
                                                 </MultiDataTrigger.Conditions>
-                                                <Setter Property="Fill" Value="#10B981"/> <!-- Green when Ready -->
+                                                <Setter Property="Fill" Value="#10B981"/>
+                                                <!-- Green when Ready -->
                                             </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Ellipse.Style>
                             </Ellipse>
-                            
+
                             <!-- Action Text Logic -->
                             <Grid VerticalAlignment="Center">
                                 <!-- Busy Message -->
                                 <TextBlock Text="{Binding BusyMessage}" Foreground="White" FontSize="12" VerticalAlignment="Center" FontWeight="SemiBold"
                                            Visibility="{Binding IsAppBusy, Converter={StaticResource VisibilityConverter}}"/>
-                                
+
                                 <!-- Status Message (Ready, Saved, etc.) -->
                                 <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"
                                            Visibility="{Binding IsAppBusy, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>

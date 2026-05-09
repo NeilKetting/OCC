@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="15,20,20,10">
+        <StackPanel Grid.Row="0" Margin="15">
             <StackPanel Orientation="Horizontal">
                 <Path Data="{StaticResource IconLiveView}" Width="24" Height="24" Fill="{StaticResource PrimaryTeal}" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center"/>
                 <TextBlock Text="Performance Monitoring" Style="{StaticResource HeaderText}"/>
@@ -26,17 +26,19 @@
         </StackPanel>
 
         <!-- Toolbar -->
-        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="20,0,20,10">
+        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="15,0,20,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
                     <!-- Search Icon -->
-                    <ColumnDefinition Width="250" />
-                    <!-- Search Box -->
-                    <ColumnDefinition Width="*" />
-                    <!-- Spacer -->
                     <ColumnDefinition Width="Auto" />
+                    <!-- Search Box -->
+                    <ColumnDefinition Width="*" MinWidth="180" />
+                    <!-- Divider -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Spacer -->
+                    <ColumnDefinition Width="*" />
                     <!-- Actions -->
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Search -->
@@ -44,6 +46,9 @@
                 <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                          Style="{StaticResource ToolbarTextBox}"
                          ap:WatermarkProperties.Watermark="Search records..."/>
+
+                <!-- Divider -->
+                <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
                 <!-- Actions -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
@@ -58,7 +63,7 @@
         </Border>
 
         <!-- Data Table -->
-        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="0" Margin="15,0,20,20">
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="0" Margin="15,0,20,20" CornerRadius="0">
             <DataGrid ItemsSource="{Binding SafeHours}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
@@ -70,7 +75,7 @@
                     <DataGridTextColumn Header="Safe Hours" Binding="{Binding SafeWorkHours}" Width="Auto"/>
                     <DataGridTextColumn Header="Incidents" Binding="{Binding IncidentReported}" Width="Auto"/>
                     <DataGridTextColumn Header="Near Misses" Binding="{Binding NearMisses}" Width="Auto"/>
-                    <DataGridTextColumn Header="Root Cause" Binding="{Binding RootCause}" Width="*"/>
+                    <DataGridTextColumn Header="Root Cause" Binding="{Binding RootCause}" Width="Auto"/>
                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
                     <DataGridTextColumn Header="Reported By" Binding="{Binding ReportedBy}" Width="Auto"/>
                 </DataGrid.Columns>

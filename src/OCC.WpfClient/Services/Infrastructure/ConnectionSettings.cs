@@ -14,21 +14,26 @@ namespace OCC.WpfClient.Services.Infrastructure
         [ObservableProperty]
         private AppEnvironment _selectedEnvironment;
 
+        private const string LiveUrl = "http://102.221.36.149:8081/";
+        private const string TestUrl = "http://102.221.36.149:8081/"; // Same port, different database via header
+        private const string LocalUrl = "http://localhost:5237/";
+
         public ConnectionSettings()
         {
             _googleApiKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY") ?? "";
 #if DEBUG
             _selectedEnvironment = AppEnvironment.Local;
-            _apiBaseUrl = "http://localhost:5237/";
+            _apiBaseUrl = LocalUrl;
 #else
             _selectedEnvironment = AppEnvironment.Live;
-            _apiBaseUrl = "http://102.221.36.149:8081/";
+            _apiBaseUrl = LiveUrl;
 #endif
         }
 
         public enum AppEnvironment
         {
             Live,
+            Test,
             Local
         }
 
@@ -36,8 +41,9 @@ namespace OCC.WpfClient.Services.Infrastructure
         {
             ApiBaseUrl = value switch
             {
-                AppEnvironment.Live => "http://102.221.36.149:8081/",
-                AppEnvironment.Local => "http://localhost:5237/",
+                AppEnvironment.Live => LiveUrl,
+                AppEnvironment.Test => TestUrl,
+                AppEnvironment.Local => LocalUrl,
                 _ => ApiBaseUrl
             };
         }

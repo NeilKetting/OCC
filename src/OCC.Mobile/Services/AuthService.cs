@@ -51,6 +51,11 @@ namespace OCC.Mobile.Services
                 return "http://localhost:5237/";
                 #endif
             }
+
+            if (_settingsService.Settings.SelectedEnvironment == AppEnvironment.Test)
+            {
+                return "http://102.221.36.149:8081/";
+            }
             
             return "http://102.221.36.149:8081/";
         }
@@ -62,6 +67,9 @@ namespace OCC.Mobile.Services
                 var baseUrl = GetBaseUrl();
                 var url = $"{baseUrl}api/Auth/login";
                 
+                _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+                _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
+
                 var response = await _httpClient.PostAsJsonAsync(url, new LoginRequest 
                 { 
                     Email = email, 
@@ -106,6 +114,9 @@ namespace OCC.Mobile.Services
             {
                 var baseUrl = GetBaseUrl();
                 var url = $"{baseUrl}api/Auth/register";
+
+                _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+                _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
 
                 var response = await _httpClient.PostAsJsonAsync(url, user);
 

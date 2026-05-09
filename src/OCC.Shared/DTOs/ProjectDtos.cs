@@ -29,6 +29,7 @@ namespace OCC.Shared.DTOs
         public int TaskCount { get; set; }
         public Guid? SiteManagerId { get; set; }
         public string SiteManagerName { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
     }
 
     public class ProjectPersonnelDto

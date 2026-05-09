@@ -28,11 +28,18 @@ namespace OCC.API.Controllers
         }
 
         [HttpGet("summaries")]
-        public async Task<ActionResult<IEnumerable<ProjectSummaryDto>>> GetProjectSummaries()
+        public async Task<ActionResult<IEnumerable<ProjectSummaryDto>>> GetProjectSummaries([FromQuery] bool includeDeleted = false)
         {
             try
             {
-                var query = _context.Projects
+                var query = _context.Projects.AsQueryable();
+                
+                if (includeDeleted)
+                {
+                    query = query.IgnoreQueryFilters();
+                }
+
+                query = query
                     .Include(p => p.Tasks)
                     .Include(p => p.SiteManager);
 
@@ -81,7 +88,8 @@ namespace OCC.API.Controllers
                         LatestFinish = p.Tasks.Any() ? p.Tasks.Max(t => t.FinishDate) : p.EndDate,
                         StartDate = p.StartDate,
                         SiteManagerId = p.SiteManagerId,
-                        SiteManagerName = p.SiteManager?.DisplayName ?? "Unassigned"
+                        SiteManagerName = p.SiteManager?.DisplayName ?? "Unassigned",
+                        IsActive = p.IsActive
                     };
                 }).ToList();
 
@@ -260,21 +268,83 @@ namespace OCC.API.Controllers
         // DELETE: api/Projects/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteProject(Guid id)
+        public async Task<IActionResult> DeleteProject(Guid id, [FromQuery] bool permanent = false)
         {
             try
             {
-                var project = await _context.Projects.FindAsync(id);
-                if (project == null) return NotFound();
-                _context.Projects.Remove(project);
-                await _context.SaveChangesAsync();
-        await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Delete", id);
+                if (permanent)
+                {
+                    // Hard Delete
+                    var project = await _context.Projects
+                        .Include(p => p.Tasks)
+                            .ThenInclude(t => t.Comments)
+                        .Include(p => p.TeamMembers)
+                        .Include(p => p.VariationOrders)
+                        .IgnoreQueryFilters()
+                        .FirstOrDefaultAsync(p => p.Id == id);
 
+                    if (project == null) return NotFound();
+
+                    // Manual deletion for things not in the Project navigation collections but linked via ProjectId
+                    var hseqDocs = await _context.Set<HseqDocument>().Where(d => d.ProjectId == id).ToListAsync();
+                    var hseqAudits = await _context.Set<HseqAudit>().Where(a => a.ProjectId == id).ToListAsync();
+                    var incidents = await _context.Set<Incident>().Where(i => i.ProjectId == id).ToListAsync();
+                    var snagJobs = await _context.Set<SnagJob>().Where(s => s.ProjectId == id).ToListAsync();
+
+                    _context.SupressSoftDelete = true;
+                    
+                    if (hseqDocs.Any()) _context.RemoveRange(hseqDocs);
+                    if (hseqAudits.Any()) _context.RemoveRange(hseqAudits);
+                    if (incidents.Any()) _context.RemoveRange(incidents);
+                    if (snagJobs.Any()) _context.RemoveRange(snagJobs);
+
+                    _context.Projects.Remove(project);
+                    await _context.SaveChangesAsync();
+                    
+                    _logger.LogWarning("Project {Name} ({Id}) PERMANENTLY deleted by Admin including all related tasks and members", project.Name, id);
+                }
+                else
+                {
+                    // Soft Delete
+                    var project = await _context.Projects.FindAsync(id);
+                    if (project == null) return NotFound();
+                    _context.Projects.Remove(project);
+                    await _context.SaveChangesAsync();
+                }
+
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Delete", id);
                 return NoContent();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting project {Id}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPost("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestoreProject(Guid id)
+        {
+            try
+            {
+                var project = await _context.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id);
+                if (project == null) return NotFound();
+
+                if (project.IsActive) return BadRequest("Project is already active.");
+
+                project.IsActive = true;
+                project.UpdatedAtUtc = DateTime.UtcNow;
+                project.UpdatedBy = User.Identity?.Name ?? "System";
+
+                await _context.SaveChangesAsync();
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+
+                return Ok(project);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring project {Id}", id);
                 return StatusCode(500, "Internal server error");
             }
         }

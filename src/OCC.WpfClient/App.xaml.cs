@@ -105,7 +105,10 @@ namespace OCC.WpfClient
             services.AddSingleton<UserActivityService>();
 
             // Services
-            services.AddHttpClient();
+            // Services
+            services.AddTransient<EnvironmentHeaderHandler>();
+            services.AddHttpClient("")
+                .AddHttpMessageHandler<EnvironmentHeaderHandler>();
             services.AddTransient<IGoogleMapsService>(sp => 
             {
                 var factory = sp.GetRequiredService<IHttpClientFactory>();

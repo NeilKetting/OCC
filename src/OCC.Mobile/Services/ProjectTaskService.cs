@@ -50,6 +50,10 @@ namespace OCC.Mobile.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
+
+            // Add environment header
+            _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+            _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
         }
 
         public async Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false, int skip = 0, int take = 100)
@@ -153,6 +157,10 @@ namespace OCC.Mobile.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
+
+            // Add environment header
+            _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+            _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
         }
 
         public async Task<IEnumerable<Project>> GetProjectsAsync(bool assignedToMe = false)
@@ -227,6 +235,10 @@ namespace OCC.Mobile.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
+
+            // Add environment header
+            _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+            _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
         }
 
         public async Task<IEnumerable<InventoryItem>> GetProjectInventoryAsync(Guid projectId)
@@ -286,6 +298,10 @@ namespace OCC.Mobile.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
+
+            // Add environment header
+            _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+            _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
         }
  
         public async Task<IEnumerable<ProjectTeamMember>> GetProjectTeamAsync(Guid projectId)

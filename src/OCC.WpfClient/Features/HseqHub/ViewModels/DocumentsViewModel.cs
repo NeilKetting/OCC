@@ -34,14 +34,37 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         [ObservableProperty]
         private string _selectedFilePath = string.Empty;
 
+        [ObservableProperty]
+        private Project? _selectedProject;
+
+        public ObservableCollection<Project> AvailableProjects { get; } = new();
+
         public DocumentCategory[] Categories { get; } = 
             (DocumentCategory[])Enum.GetValues(typeof(DocumentCategory));
 
-        public DocumentsViewModel(IHealthSafetyService hseqService)
+        public DocumentsViewModel(IHealthSafetyService hseqService, IProjectService projectService)
         {
             _hseqService = hseqService;
             Title = "Documents";
             _ = LoadDocuments();
+            _ = LoadProjects(projectService);
+        }
+
+        private async Task LoadProjects(IProjectService projectService)
+        {
+            try
+            {
+                var projects = await projectService.GetProjectsAsync();
+                if (projects != null)
+                {
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        AvailableProjects.Clear();
+                        foreach (var p in projects.OrderBy(x => x.Name)) AvailableProjects.Add(p);
+                    });
+                }
+            }
+            catch { /* Silent fail for projects */ }
         }
 
         // Design-time
@@ -82,6 +105,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 NewDocTitle = "";
                 NewDocCategory = DocumentCategory.Policy;
                 SelectedFilePath = "";
+                SelectedProject = null;
             }
         }
 
@@ -131,7 +155,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                     Category = NewDocCategory,
                     UploadedBy = "Current User",
                     UploadDate = DateTime.UtcNow,
-                    Version = "1.0"
+                    Version = "1.0",
+                    ProjectId = SelectedProject?.Id
                 };
 
                 var created = await _hseqService.UploadDocumentAsync(metadata, stream, fileName);

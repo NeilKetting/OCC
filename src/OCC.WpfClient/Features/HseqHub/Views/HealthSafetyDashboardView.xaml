@@ -13,7 +13,7 @@
             <StackPanel Margin="15">
 
                 <!-- Header -->
-                <StackPanel Margin="0,0,0,24">
+                <StackPanel Margin="0,0,0,15">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="{StaticResource IconDashboard}" Width="24" Height="24" Fill="{StaticResource PrimaryTeal}" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center"/>
                         <TextBlock Text="HSEQ Dashboard" Style="{StaticResource HeaderText}"/>
@@ -28,7 +28,7 @@
                         <StackPanel Margin="20">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                 <Path Data="{StaticResource IconClock}" Width="16" Height="16" Fill="{StaticResource SuccessGreen}" Stretch="Uniform" Margin="0,0,8,0"/>
-                                <TextBlock Text="Safe Hours" Style="{StaticResource HeaderText}" Opacity="0.8"/>
+                                <TextBlock Text="Safe Hours" Style="{StaticResource TitleText}" Opacity="0.8"/>
                             </StackPanel>
                             <TextBlock Text="{Binding TotalSafeHours, StringFormat=\{0:N2\}}" Style="{StaticResource HeaderText}" Foreground="{StaticResource SuccessGreen}"/>
                             <TextBlock Text="Hours without LTI" Style="{StaticResource LabelText}" Opacity="0.6"/>

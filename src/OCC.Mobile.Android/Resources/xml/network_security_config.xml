@@ -3,13 +3,11 @@
   <domain-config cleartextTrafficPermitted="true">
     <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android Emulator -->
     <domain includeSubdomains="true">102.221.36.149</domain> <!-- Live API -->
-    <!-- Allow local network IPs -->
-    <domain includeSubdomains="true">192.168.0.1</domain>
-    <domain includeSubdomains="true">192.168.1.1</domain>
-    <!-- Wildcard for entire 192.168.x.x range if supported by device, 
-         otherwise specific PC IP is needed. Most modern Androids require specific IPs. -->
+    <domain includeSubdomains="true">192.168.0.191</domain> <!-- Local Host PC -->
+    <domain includeSubdomains="true">192.168.0.*</domain>
+    <domain includeSubdomains="true">192.168.1.*</domain>
   </domain-config>
-  <base-config cleartextTrafficPermitted="false">
+  <base-config cleartextTrafficPermitted="true">
     <trust-anchors>
       <certificates src="system" />
     </trust-anchors>
