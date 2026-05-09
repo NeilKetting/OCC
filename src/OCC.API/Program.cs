@@ -138,32 +138,39 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 // Configure the HTTP request pipeline.
-// Seed Database
+// Seed Databases
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
-    try
-    {
-        logger.LogInformation("Starting Database Initialization...");
-        var context = services.GetRequiredService<AppDbContext>();
-        
-        // Log connection string (masked)
-        var conn = context.Database.GetConnectionString();
-        logger.LogInformation($"Using Connection String: {conn?.Split(';')[0]}... (Length: {conn?.Length})");
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var hasher = services.GetRequiredService<OCC.API.Services.PasswordHasher>();
 
-        var hasher = services.GetRequiredService<OCC.API.Services.PasswordHasher>();
+    var connectionNames = new[] { "DefaultConnection", "TestConnection" };
 
-        logger.LogInformation("Calling DbInitializer.Initialize()...");
-        DbInitializer.Initialize(context, hasher, app.Environment.IsDevelopment(), logger);
-        logger.LogInformation("Database Initialization Completed Successfully.");
-    }
-    catch (Exception ex)
+    foreach (var connectionName in connectionNames)
     {
-        logger.LogCritical(ex, "FATAL ERROR: Parsing Database Migration failed.");
-        if (ex.InnerException != null)
+        var connectionString = configuration.GetConnectionString(connectionName);
+        if (string.IsNullOrEmpty(connectionString)) continue;
+
+        try
         {
-             logger.LogCritical(ex.InnerException, "Inner Exception detected.");
+            logger.LogInformation($"Initializing Database: {connectionName}...");
+            
+            // Create a temporary context for this specific connection string
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+            
+            using var context = new AppDbContext(optionsBuilder.Options, services.GetRequiredService<IHttpContextAccessor>());
+            
+            logger.LogInformation($"Using Connection String: {connectionString.Split(';')[0]}...");
+
+            DbInitializer.Initialize(context, hasher, app.Environment.IsDevelopment(), logger);
+            logger.LogInformation($"Database Initialization for {connectionName} Completed Successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, $"FATAL ERROR: Initialization failed for {connectionName}.");
         }
     }
 }
