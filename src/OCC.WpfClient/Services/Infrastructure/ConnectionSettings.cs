@@ -25,8 +25,8 @@ namespace OCC.WpfClient.Services.Infrastructure
             _selectedEnvironment = AppEnvironment.Local;
             _apiBaseUrl = LocalUrl;
 #else
-            _selectedEnvironment = AppEnvironment.Live;
-            _apiBaseUrl = LiveUrl;
+            _selectedEnvironment = AppEnvironment.Test;
+            _apiBaseUrl = TestUrl;
 #endif
         }
 

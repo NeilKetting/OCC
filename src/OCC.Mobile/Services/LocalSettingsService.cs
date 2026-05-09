@@ -15,7 +15,7 @@ namespace OCC.Mobile.Services
     {
         public string LastEmail { get; set; } = string.Empty;
         public bool RememberEmail { get; set; } = true;
-        public AppEnvironment SelectedEnvironment { get; set; } = AppEnvironment.Local;
+        public AppEnvironment SelectedEnvironment { get; set; } = AppEnvironment.Test;
         public string? CustomLocalUrl { get; set; } = string.Empty;
     }
 
@@ -59,7 +59,7 @@ namespace OCC.Mobile.Services
             {
                 // Ignore errors, start fresh
             }
-            return new LocalSettings { SelectedEnvironment = AppEnvironment.Local };
+            return new LocalSettings { SelectedEnvironment = AppEnvironment.Test };
         }
 
         public void Save()
