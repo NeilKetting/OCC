@@ -18,6 +18,7 @@
     <conv:UserInitialsConverter x:Key="UserInitialsConverter" />
     <conv:UserColorConverter x:Key="UserColorConverter" />
     <conv:CollectionToBooleanConverter x:Key="CollectionToBooleanConverter" />
+    <conv:BrightnessToOverlayBrushConverter x:Key="BrightnessToOverlayBrushConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
 </ResourceDictionary>

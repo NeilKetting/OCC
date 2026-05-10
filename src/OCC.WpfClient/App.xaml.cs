@@ -128,6 +128,7 @@ namespace OCC.WpfClient
             services.AddSingleton<ITaskCommentService, TaskCommentService>();
             services.AddSingleton<ITaskAttachmentService, TaskAttachmentService>();
             services.AddSingleton<IPdfService, PdfService>();
+            services.AddSingleton<IExportService, ExportService>();
 
             // Feature Discovery
             var features = new List<IFeature>
@@ -145,8 +146,6 @@ namespace OCC.WpfClient
                 new SettingsFeature(),
                 new HseqFeature()
             };
-
-
 
             foreach (var feature in features)
             {

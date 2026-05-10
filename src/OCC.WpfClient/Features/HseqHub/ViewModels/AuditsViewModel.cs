@@ -9,21 +9,19 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
     public partial class AuditsViewModel : ListViewModelBase<AuditSummaryDto>
     {
         private readonly IHealthSafetyService _hseqService;
-        private readonly IToastService _toastService;
+        private readonly IServiceProvider _serviceProvider;
 
         [ObservableProperty]
         private bool _isStatusVisible = true;
 
         private List<AuditSummaryDto> _allAudits = new();
-
-        [ObservableProperty]
-        private bool _isDeviationsOpen;
 
         public override string ReportTitle => "Health & Safety Compliance Audits";
         public override List<ReportColumnDefinition> ReportColumns => new()
@@ -35,49 +33,16 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             new() { Header = "Status", PropertyName = "Status", Width = 1.2 }
         };
 
-        [ObservableProperty]
-        private bool _isEditorOpen;
-
-        public AuditEditorViewModel Editor { get; }
-        public AuditDeviationsViewModel Deviations { get; }
-
         public AuditsViewModel(
             IHealthSafetyService hseqService, 
-            IToastService toastService,
-            AuditEditorViewModel editor,
-            AuditDeviationsViewModel deviations,
+            IServiceProvider serviceProvider,
             IPdfService pdfService) : base(pdfService)
         {
             _hseqService = hseqService;
-            _toastService = toastService;
-            Editor = editor;
-            Deviations = deviations;
+            _serviceProvider = serviceProvider;
             Title = "Audits";
 
-            // Wire up events
-            Editor.RequestClose += (s, e) => IsEditorOpen = false;
-            Editor.AuditSaved += (s, e) => 
-            { 
-                IsEditorOpen = false; 
-                _ = LoadDataAsync(); 
-            };
-
-            Deviations.RequestClose += (s, e) => IsDeviationsOpen = false;
-            Deviations.DeviationsUpdated += (s, e) => 
-            {
-                 _ = LoadDataAsync();
-            };
-
             _ = LoadDataAsync();
-        }
-
-        // Design-time constructor
-        public AuditsViewModel() : base(null!)
-        {
-            _hseqService = null!;
-            _toastService = null!;
-            Editor = new AuditEditorViewModel();
-            Deviations = new AuditDeviationsViewModel();
         }
 
         public override async Task LoadDataAsync()
@@ -127,29 +92,31 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task ViewDeviations(AuditSummaryDto summary)
+        private async Task OpenDeviations(AuditSummaryDto summary)
         {
             if (summary == null) return;
-            IsEditorOpen = false; // Ensure editor is closed
-            await Deviations.Initialize(summary.Id);
-            IsDeviationsOpen = true;
+            
+            var vm = _serviceProvider.GetRequiredService<DeviationDetailViewModel>();
+            await vm.Initialize(summary.Id);
+            OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
         [RelayCommand]
         public void CreateNewAudit()
         {
-            IsDeviationsOpen = false;
-            Editor.InitializeForNew();
-            IsEditorOpen = true;
+            var vm = _serviceProvider.GetRequiredService<AuditDetailViewModel>();
+            vm.InitializeForNew();
+            OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
         [RelayCommand]
         public async Task EditAudit(AuditSummaryDto summary)
         {
             if (summary == null) return;
-            IsDeviationsOpen = false;
-            await Editor.InitializeForEdit(summary.Id);
-            IsEditorOpen = true;
+            
+            var vm = _serviceProvider.GetRequiredService<AuditDetailViewModel>();
+            await vm.InitializeForEdit(summary.Id);
+            OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
         [RelayCommand]
@@ -182,18 +149,6 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             {
                 IsBusy = false;
             }
-        }
-
-        [RelayCommand]
-        public void CloseEditor()
-        {
-            IsEditorOpen = false;
-        }
-
-        [RelayCommand]
-        private void CloseDeviations()
-        {
-            IsDeviationsOpen = false;
         }
     }
 }

@@ -10,9 +10,27 @@
              xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
-             d:DataContext="{d:DesignInstance Type=vm:SubContractorListViewModel}">
+             d:DataContext="{d:DesignInstance Type=vm:SubContractorListViewModel}" IsDrawerOpen="{Binding IsOverlayActive}">
 
     <UserControl.Resources>
+        <!-- Standard Drawer Animations -->
+        <Storyboard x:Key="OpenDrawer">
+            <DoubleAnimation Storyboard.TargetName="DrawerContent" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" From="600" To="0" Duration="0:0:0.6">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BackgroundDimmer" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+        </Storyboard>
+        <Storyboard x:Key="CloseDrawer">
+            <DoubleAnimation Storyboard.TargetName="DrawerContent" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" To="600" Duration="0:0:0.4">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BackgroundDimmer" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+
         <DataTemplate DataType="{x:Type vm:SubContractorDetailViewModel}">
             <views:SubContractorDetailView />
         </DataTemplate>
@@ -21,46 +39,31 @@
     </UserControl.Resources>
 
     <Grid Margin="0" Background="{StaticResource AppBackground}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <!-- Main Background Content -->
+        <!-- Main Content -->
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsOverlayActive}" Value="True">
-                            <Setter Property="Effect">
-                                <Setter.Value>
-                                    <BlurEffect Radius="15"/>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="Opacity" Value="0.4"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-            
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" /> <!-- Header -->
-                <RowDefinition Height="Auto" /> <!-- Stats & Search -->
-                <RowDefinition Height="*" />    <!-- Grid -->
+                <RowDefinition Height="Auto" />
+                <!-- Header -->
+                <RowDefinition Height="Auto" />
+                <!-- Stats & Search -->
+                <RowDefinition Height="*" />
+                <!-- Grid -->
             </Grid.RowDefinitions>
 
-             <!-- Header -->
+            <!-- Header -->
             <Grid Grid.Row="0" Margin="15">
                 <StackPanel>
-                    <TextBlock Text="Partners" FontSize="28" Style="{StaticResource HeaderText}"/>
-                <TextBlock Text="Manage specialized service providers and trades." Style="{StaticResource LabelText}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="24" Margin="0,0,12,0"/>
+                        <TextBlock Text="Partners" FontSize="28" Style="{StaticResource HeaderText}"/>
+                    </StackPanel>
+                    <TextBlock Text="Manage specialized service providers and trades." Style="{StaticResource LabelText}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddSubContractorCommand}" Width="180" Height="36" Cursor="Hand">
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddSubContractorCommand}" Width="180" Height="36">
                         <StackPanel Orientation="Horizontal">
-                            <Path Data="{StaticResource IconPlus}" Fill="White" Width="12" Height="12" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,8,0"/>
                             <TextBlock Text="Add Partner" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
@@ -71,65 +74,56 @@
             <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
-                        <ColumnDefinition Width="*" MinWidth="180" />  <!-- Search Box -->
-                        <ColumnDefinition Width="Auto" /> <!-- Divider -->
-                        <ColumnDefinition Width="Auto" /> <!-- Filters -->
-                        <ColumnDefinition Width="Auto" /> <!-- Divider -->
-                        <ColumnDefinition Width="Auto" /> <!-- Columns -->
-                        <ColumnDefinition Width="*" />    <!-- Spacer -->
-                        <ColumnDefinition Width="Auto" /> <!-- Stats -->
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="180" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <!-- Search -->
-                    <Path Grid.Column="0" Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" Width="14" Height="14" Margin="5,0,10,0" VerticalAlignment="Center" Stretch="Uniform"/>
+                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
                     <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                              Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
                              ap:WatermarkProperties.Watermark="Search partners..."/>
 
                     <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
-                    <!-- Filters -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal">
-                    <Grid>
+                    <!-- Branch Filter -->
+                    <Grid Grid.Column="3">
                         <ToggleButton x:Name="BranchToggle" IsChecked="{Binding IsBranchPickerOpen}" 
                                       Style="{StaticResource ToolbarToggleButton}" Height="34">
                             <StackPanel Orientation="Horizontal" Margin="10,0">
-                                <Path Data="{StaticResource IconPortfolio}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                                <TextBlock Text="{Binding SelectedBranch}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" MaxWidth="90"/>
-                                <Path Data="{StaticResource IconChevronDown}" Fill="White" Width="8" Height="8" Stretch="Uniform" Margin="8,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding SelectedBranch}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White" MaxWidth="90" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.6" FontSize="8" Margin="8,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsBranchPickerOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=BranchToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="5" Margin="0,5,0,0" Width="180" MaxHeight="300">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding Branches}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Button Content="{Binding}" 
-                                                        Command="{Binding DataContext.SelectBranchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ToolbarButton}" 
-                                                        HorizontalContentAlignment="Left" 
-                                                        Padding="12,8" 
-                                                        Margin="2"
-                                                        Height="Auto"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
+                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="5" Margin="0,5,0,0" Width="180">
+                                <ItemsControl ItemsSource="{Binding Branches}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding}" Command="{Binding DataContext.SelectBranchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarButton}" HorizontalContentAlignment="Left" Padding="12,8" Margin="2"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </Border>
                         </Popup>
                     </Grid>
- 
-                    <!-- Filters -->
-                    <Grid>
+
+                    <!-- Specialty Filter -->
+                    <Grid Grid.Column="4" Margin="10,0,0,0">
                         <ToggleButton x:Name="SpecialtyToggle" IsChecked="{Binding IsSpecialtyPickerOpen}" 
                                       Style="{StaticResource ToolbarToggleButton}" Height="34">
                             <StackPanel Orientation="Horizontal" Margin="10,0">
-                                <Path Data="{StaticResource IconMedal}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                                <TextBlock Text="{Binding SelectedSpecialty}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" MaxWidth="120"/>
-                                <Path Data="{StaticResource IconChevronDown}" Fill="White" Width="8" Height="8" Stretch="Uniform" Margin="8,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding SelectedSpecialty}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White" MaxWidth="120" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.6" FontSize="8" Margin="8,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsSpecialtyPickerOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=SpecialtyToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
@@ -138,14 +132,7 @@
                                     <ItemsControl ItemsSource="{Binding Specialties}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Button Content="{Binding}" 
-                                                        Command="{Binding DataContext.SelectSpecialtyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ToolbarButton}" 
-                                                        HorizontalContentAlignment="Left" 
-                                                        Padding="12,8" 
-                                                        Margin="2"
-                                                        Height="Auto"/>
+                                                <Button Content="{Binding}" Command="{Binding DataContext.SelectSpecialtyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarButton}" HorizontalContentAlignment="Left" Padding="12,8" Margin="2"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -153,18 +140,15 @@
                             </Border>
                         </Popup>
                     </Grid>
-                    </StackPanel>
                     
-                    <!-- Divider -->
-                    <Border Grid.Column="4" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                    <Border Grid.Column="5" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
-                    <!-- Columns Selection -->
-                    <StackPanel Grid.Column="5" Orientation="Horizontal">
-                    <Grid>
+                    <!-- Column Options -->
+                    <Grid Grid.Column="6" Margin="10,0,0,0">
                         <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="34">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconList}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                                <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="COLUMNS" Foreground="White" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
                             </StackPanel>
                         </ToggleButton>
                         <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
@@ -179,70 +163,38 @@
                             </Border>
                         </Popup>
                     </Grid>
-                    
-                    <!-- Print -->
-                    <Button Command="{Binding PrintCommand}" 
-                            Style="{StaticResource ToolbarButton}">
-                        <StackPanel Orientation="Horizontal" Margin="10,0">
-                            <Path Data="{StaticResource IconPrint}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" Opacity="0.8"/>
-                            <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                        </StackPanel>
-                    </Button>
-                    </StackPanel>
 
                     <!-- Stats -->
-                    <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Center">
-                        <StackPanel Margin="20,0,10,0">
-                            <TextBlock Text="MATCHED" FontSize="10" Foreground="{StaticResource TextSub}" FontWeight="Bold" HorizontalAlignment="Right"/>
-                            <TextBlock Text="{Binding TotalCount}" FontSize="18" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                        </StackPanel>
+                    <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Grid -->
-            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,5,10,10" HorizontalAlignment="Stretch" CornerRadius="0">
-                <DataGrid ItemsSource="{Binding Items}" 
-                          SelectedItem="{Binding SelectedItem}"
-                          AutoGenerateColumns="False" 
-                          IsReadOnly="True"
-                          HeadersVisibility="Column"
-                          GridLinesVisibility="None"
-                          CanUserAddRows="False"
-                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          ScrollViewer.CanContentScroll="False"
-                          Style="{StaticResource ModernDataGrid}">
+            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" CornerRadius="0">
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="Auto" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="10,0"/>
-                                    <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Header="SPECIALTIES" Binding="{Binding Specialties}" Width="Auto" Foreground="{StaticResource AccentBlue}" Visibility="{Binding Data.IsSpecialtiesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        
-                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="120" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="SPECIALTIES" Binding="{Binding Specialties}" Width="200" Foreground="{StaticResource AccentBlue}" Visibility="{Binding Data.IsSpecialtiesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="180" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="120" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+
+                        <DataGridTemplateColumn Header="ACTIONS" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Command="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open Details">
-                                            <Path Data="{StaticResource IconExternalLink}" Fill="White" Width="14" Height="14" Stretch="Uniform" Opacity="0.8"/>
+                                        <Button Command="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" ToolTip="Edit">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
                                         </Button>
-                                        <Button Command="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Edit">
-                                            <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="14" Height="14" Stretch="Uniform"/>
-                                        </Button>
-                                        <Button Command="{Binding DataContext.DeleteSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete">
-                                            <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="14" Height="14" Stretch="Uniform"/>
+                                        <Button Command="{Binding DataContext.DeleteSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="8,0,0,0" ToolTip="Delete">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="14"/>
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>
@@ -251,49 +203,37 @@
                     </DataGrid.Columns>
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                            <Setter Property="ap:CommandProperties.DoubleClickCommand" 
-                                    Value="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
                             <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
-                            <Setter Property="ContextMenu">
-                                <Setter.Value>
-                                    <ContextMenu Style="{StaticResource ModernContextMenu}">
-                                        <MenuItem Header="Edit Partner" 
-                                                  Command="{Binding Path=PlacementTarget.Tag.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{Binding}">
-                                            <MenuItem.Icon>
-                                                <Path Data="{StaticResource IconEdit}" Fill="{StaticResource AccentBlue}" Width="12" Height="12" Stretch="Uniform"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <Separator Style="{x:Null}" Visibility="Collapsed"/>
-                                        <MenuItem Header="Delete Partner" 
-                                                  Command="{Binding Path=PlacementTarget.Tag.DeleteSubContractorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{Binding}"
-                                                  Foreground="{StaticResource ErrorRed}">
-                                            <MenuItem.Icon>
-                                                <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Width="12" Height="12" Stretch="Uniform"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                    </ContextMenu>
-                                </Setter.Value>
-                            </Setter>
                         </Style>
                     </DataGrid.RowStyle>
                 </DataGrid>
             </Border>
 
             <!-- Loading Overlay -->
-            <Border Grid.Row="2" Background="#80000000" CornerRadius="0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource AccentBlue}" Background="#20FFFFFF"/>
-                    <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+            <ContentControl Grid.Row="2" Style="{StaticResource StandardLoadingOverlay}" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
         </Grid>
 
-        <!-- Detail View Overlay -->
-        <ContentControl Content="{Binding OverlayViewModel}" />
+        <!-- DRAWER OVERLAY -->
+        <Grid x:Name="DrawerOverlay" Grid.RowSpan="3" Visibility="Collapsed">
+            <Border x:Name="BackgroundDimmer" Background="#80000000" Opacity="0">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding CloseOverlayCommand}"/>
+                </Border.InputBindings>
+            </Border>
+
+            <Border x:Name="DrawerContent" HorizontalAlignment="Right" Width="550" 
+                    Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1,0,0,0">
+                <Border.RenderTransform>
+                    <TranslateTransform X="550" />
+                </Border.RenderTransform>
+                <Grid>
+                    <ContentControl Content="{Binding OverlayViewModel}"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </infra:BaseListView>
+
 
 

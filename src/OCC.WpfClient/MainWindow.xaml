@@ -84,6 +84,12 @@
                         <ProgressBar IsIndeterminate="True" Width="200" Height="4" Background="#33FFFFFF" Foreground="{StaticResource AccentBlue}"/>
                     </StackPanel>
                 </Border>
+
+                <!-- Global Brightness/Lightness Overlay -->
+                <Border Grid.RowSpan="2" 
+                        Background="{Binding ThemeBrightness, Converter={StaticResource BrightnessToOverlayBrushConverter}}"
+                        IsHitTestVisible="False" 
+                        Panel.ZIndex="9999"/>
             </Grid>
         </Grid>
     </Border>

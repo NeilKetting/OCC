@@ -97,7 +97,7 @@ namespace OCC.WpfClient
         {
             const int WM_GETMINMAXINFO = 0x0024;
 
-            if (msg == WM_GETMINMAXINFO && !_settingsService.Settings.MaximizeOverTaskbar)
+            if (msg == WM_GETMINMAXINFO)
             {
                 WmGetMinMaxInfo(hwnd, lParam);
                 handled = true;
@@ -110,24 +110,39 @@ namespace OCC.WpfClient
         {
             MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO))!;
 
-            IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-            if (monitor != IntPtr.Zero)
+            // 1. Enforce Minimum Size (Account for DPI)
+            double dpiX = 1.0, dpiY = 1.0;
+            var source = HwndSource.FromHwnd(hwnd);
+            if (source?.CompositionTarget != null)
             {
-                MONITORINFO monitorInfo = new MONITORINFO();
-                monitorInfo.cbSize = (uint)Marshal.SizeOf(typeof(MONITORINFO));
-                if (GetMonitorInfo(monitor, ref monitorInfo))
-                {
-                    RECT rcWorkArea = monitorInfo.rcWork;
-                    RECT rcMonitorArea = monitorInfo.rcMonitor;
-                    
-                    mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
-                    mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
-                    mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
-                    mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top);
+                dpiX = source.CompositionTarget.TransformToDevice.M11;
+                dpiY = source.CompositionTarget.TransformToDevice.M22;
+            }
 
-                    // Crucial: Set track sizes to prevent window from growing beyond bounds
-                    mmi.ptMaxTrackSize.X = mmi.ptMaxSize.X;
-                    mmi.ptMaxTrackSize.Y = mmi.ptMaxSize.Y;
+            mmi.ptMinTrackSize.X = (int)(MinWidth * dpiX);
+            mmi.ptMinTrackSize.Y = (int)(MinHeight * dpiY);
+
+            // 2. Handle Maximization Logic
+            if (!_settingsService.Settings.MaximizeOverTaskbar)
+            {
+                IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                if (monitor != IntPtr.Zero)
+                {
+                    MONITORINFO monitorInfo = new MONITORINFO();
+                    monitorInfo.cbSize = (uint)Marshal.SizeOf(typeof(MONITORINFO));
+                    if (GetMonitorInfo(monitor, ref monitorInfo))
+                    {
+                        RECT rcWorkArea = monitorInfo.rcWork;
+                        RECT rcMonitorArea = monitorInfo.rcMonitor;
+
+                        mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
+                        mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
+                        mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
+                        mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top);
+
+                        mmi.ptMaxTrackSize.X = mmi.ptMaxSize.X;
+                        mmi.ptMaxTrackSize.Y = mmi.ptMaxSize.Y;
+                    }
                 }
             }
 

@@ -79,7 +79,7 @@
 
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                 <Button Style="{StaticResource IconButtonMedium}" Command="{Binding RequestCloseCommand}" Margin="10,0,0,0">
-                                    <Path Data="{StaticResource IconX}" Fill="White" Width="16" Height="16" Stretch="Uniform"/>
+                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="16"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
@@ -138,18 +138,18 @@
                                     <Button Command="{Binding ToggleAssigneeOptionsCommand}" Style="{StaticResource ListActionButtonStyle}" HorizontalContentAlignment="Left" Margin="0,0,0,8">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="ASSIGNED RESOURCES" Style="{StaticResource LabelText}"/>
-                                            <Path Fill="{StaticResource TextSub}" Width="10" Height="10" Stretch="Uniform" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                <Path.Style>
-                                                    <Style TargetType="Path">
-                                                        <Setter Property="Data" Value="{StaticResource IconChevronDown}"/>
+                                            <TextBlock Foreground="{StaticResource TextSub}" FontSize="10" Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource SymbolIcon}">
+                                                <TextBlock.Resources>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
+                                                        <Setter Property="Text" Value=""/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsAssigneeOptionsVisible}" Value="True">
-                                                                <Setter Property="Data" Value="{StaticResource IconChevronUp}"/>
+                                                                <Setter Property="Text" Value=""/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                </Path.Style>
-                                            </Path>
+                                                </TextBlock.Resources>
+                                            </TextBlock>
                                         </StackPanel>
                                     </Button>
 
@@ -158,9 +158,8 @@
                                             <TextBox Text="{Binding AssigneeSearchText, UpdateSourceTrigger=PropertyChanged}" 
                                                      Style="{StaticResource ModernInput}" 
                                                      ap:WatermarkProperties.Watermark="Search staff or contractors..."/>
-                                            <Path Data="{StaticResource IconSearch}" Fill="{StaticResource TextSub}" 
-                                                  Width="14" Height="14" Stretch="Uniform" 
-                                                  HorizontalAlignment="Right" Margin="0,0,12,0"/>
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" 
+                                                       FontSize="14" HorizontalAlignment="Right" Margin="0,0,12,0"/>
                                         </Grid>
     
                                         <!-- Assignees Options -->

@@ -24,7 +24,7 @@
                     <TextBlock Text="Find Transaction" FontSize="20" FontWeight="Bold" Foreground="White"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                          <Button Style="{StaticResource GhostButton}" Command="{Binding CloseCommand}" Padding="5">
-                            <Path Data="{StaticResource IconClose}" Fill="White" Width="12" Height="12" Stretch="Uniform"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12"/>
                         </Button>
                     </StackPanel>
                 </Grid>

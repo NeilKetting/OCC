@@ -15,11 +15,13 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using OCC.WpfClient.Features.ProjectHub.ViewModels;
 using OCC.WpfClient.Services.Infrastructure;
+using Microsoft.Extensions.Logging;
 
 namespace OCC.WpfClient.Features.Main.ViewModels
 {
-    public partial class MainViewModel : ViewModelBase, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>
     {
+        private readonly ILogger<MainViewModel> _logger;
         private readonly IPermissionService _permissionService;
         private readonly IAuthService _authService;
         private readonly ISignalRService _signalRService;
@@ -28,6 +30,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private readonly UserActivityService _userActivityService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ConnectionSettings _connectionSettings;
+        private readonly LocalSettingsService _localSettings;
 
         [ObservableProperty]
         private INavigationService _navigation;
@@ -138,6 +141,13 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         public bool CanAccessPurchaseOrders => _permissionService.CanAccess(NavigationRoutes.PurchaseOrder);
         public bool CanAccessSuppliers => _permissionService.CanAccess(NavigationRoutes.Suppliers);
         public bool CanAccessHealthSafety => _permissionService.CanAccess(NavigationRoutes.HealthSafety);
+        
+        // Partner Hub permissions
+        public bool CanAccessPartnerHub => _permissionService.CanAccess("Partners") || CanAccessSubContractors || CanAccessSnagList || CanAccessPerformanceDashboard;
+        public bool CanAccessSubContractors => _permissionService.CanAccess(NavigationRoutes.SubContractors);
+        public bool CanAccessSnagList => _permissionService.CanAccess(NavigationRoutes.SnagList);
+        public bool CanAccessPerformanceDashboard => _permissionService.CanAccess(NavigationRoutes.PerformanceDashboard);
+
         public bool CanAccessUserManagement => _permissionService.CanAccess(NavigationRoutes.UserManagement);
         public bool CanAccessAuditLog => _permissionService.CanAccess(NavigationRoutes.AuditLog);
         public bool CanAccessCompanyProfile => _permissionService.CanAccess(NavigationRoutes.CompanyProfile);
@@ -150,6 +160,12 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         [ObservableProperty]
         private string _dbStatusText = "Checking...";
+
+        [ObservableProperty]
+        private string _environmentName = "PRODUCTION";
+
+        [ObservableProperty]
+        private string _databaseName = "LIVE";
 
         [ObservableProperty]
         private bool _isDbConnected = true;
@@ -174,6 +190,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         
         [ObservableProperty]
         private string _statusMessage = "Ready";
+
 
         [RelayCommand]
         private void ToggleUserList()
@@ -229,6 +246,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         }
 
         public MainViewModel(
+            ILogger<MainViewModel> logger,
             INavigationService navigation, 
             IPermissionService permissionService, 
             IAuthService authService, 
@@ -239,6 +257,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             IHttpClientFactory httpClientFactory,
             ConnectionSettings connectionSettings)
         {
+            _logger = logger;
             _navigation = navigation;
             _permissionService = permissionService;
             _authService = authService;
@@ -248,6 +267,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _userActivityService = userActivityService;
             _httpClientFactory = httpClientFactory;
             _connectionSettings = connectionSettings;
+            _localSettings = _serviceProvider.GetRequiredService<LocalSettingsService>();
+
 
             if (_authService.CurrentUser != null)
             {
@@ -262,7 +283,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             Title = "Main Shell";
             AppVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
             
-            // Start minimized as requested
+            // Start minimized
             IsSidebarMinimized = true;
 
             InitializeNavigation();
@@ -294,37 +315,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             UserActivityStatus = _userActivityService.StatusText;
             IsUserInactive = _userActivityService.IsAway;
             
-            _userActivityService.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(UserActivityService.StatusText))
-                    UserActivityStatus = _userActivityService.StatusText;
-                
-                if (e.PropertyName == nameof(UserActivityService.IsAway))
-                    IsUserInactive = _userActivityService.IsAway;
-            };
+            _userActivityService.PropertyChanged += OnUserActivityPropertyChanged;
+            _userActivityService.SessionExpired += OnSessionExpired;
+            _userActivityService.SessionWarning += OnSessionWarning;
 
-            _userActivityService.SessionExpired += async (s, e) => 
-            {
-                await App.Current.Dispatcher.Invoke(async () => 
-                {
-                    WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Session Expired", "You have been logged out due to inactivity.", ToastType.Warning)));
-                    await Logout();
-                });
-            };
-
-            _userActivityService.SessionWarning += (s, e) => 
-            {
-                App.Current.Dispatcher.Invoke(() => 
-                {
-                    WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Inactivity Warning", "Your session will expire in 1 minute. Move the mouse to stay logged in.", ToastType.Info)));
-                });
-            };
+            // Initialize Environment Info
+            EnvironmentName = _connectionSettings.SelectedEnvironment.ToString().ToUpper();
+            DatabaseName = "CONNECTING...";
 
             // Start DB Polling
             StartDbPolling();
-            
-            // Open Dashboard by default - Removed to start blank as requested
-            // OpenHub<DashboardViewModel>();
         }
 
         private async void StartDbPolling()
@@ -367,6 +367,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     var envType = _connectionSettings.SelectedEnvironment == ConnectionSettings.AppEnvironment.Local ? "(Local)" : 
                                  _connectionSettings.SelectedEnvironment == ConnectionSettings.AppEnvironment.Test ? "(Test)" : "";
                     DbStatusText = $"Online: {dbName} {envType}".Trim();
+                    DatabaseName = dbName.ToUpper();
                 }
                 else
                 {
@@ -436,7 +437,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
             foreach (var item in items)
             {
-                // Top-level permission check or just add directly if route is empty/parent
+                // Top-level permission check
                 if (string.IsNullOrEmpty(item.Route) || _permissionService.CanAccess(item.Route))
                 {
                     // Filter children by permissions
@@ -448,10 +449,26 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                         item.Children.Add(child);
                     }
 
-                    // Only add parent if it has children, or if it's a standalone endpoint
+                    // Only process if it has children, or if it's a standalone endpoint
                     if (item.IsParent || !string.IsNullOrEmpty(item.Route))
                     {
-                        NavigationItems.Add(item);
+                        // Check if we already have a parent with this name
+                        var existingParent = NavigationItems.FirstOrDefault(i => i.Label == item.Label && i.IsParent);
+                        if (existingParent != null)
+                        {
+                            // Merge children into existing parent
+                            foreach (var child in item.Children)
+                            {
+                                if (!existingParent.Children.Any(c => c.Label == child.Label))
+                                {
+                                    existingParent.Children.Add(child);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            NavigationItems.Add(item);
+                        }
                     }
                 }
             }
@@ -674,7 +691,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 if (parentMatches || matchedChildren.Any())
                 {
                     // Create a result item that includes the matches
-                    var resultItem = new NavItem(item.Label, "IconSummary", item.Route, item.Category)
+                    var resultItem = new NavItem(item.Label, item.Route, item.Category, iconCode: item.IconCode)
                     {
                         IsExpanded = true
                     };
@@ -761,6 +778,62 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     });
                 });
             }
+        }
+
+        public void Dispose()
+        {
+            _logger.LogInformation("Disposing MainViewModel");
+            
+            // Unsubscribe from global services to prevent memory leaks and duplicate event triggers
+            if (_signalRService != null)
+            {
+                _signalRService.UserListUpdated -= OnUserListUpdated;
+            }
+
+            if (_userActivityService != null)
+            {
+                _userActivityService.PropertyChanged -= OnUserActivityPropertyChanged;
+                _userActivityService.SessionExpired -= OnSessionExpired;
+                _userActivityService.SessionWarning -= OnSessionWarning;
+            }
+
+            if (_clockTimer != null)
+            {
+                _clockTimer.Stop();
+            }
+
+            // Unregister from Messenger
+            WeakReferenceMessenger.Default.UnregisterAll(this);
+        }
+
+        // Move event handlers to named methods for easier unsubscription
+        private void OnUserActivityPropertyChanged(object? s, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(UserActivityService.StatusText))
+                UserActivityStatus = _userActivityService.StatusText;
+            
+            if (e.PropertyName == nameof(UserActivityService.IsAway))
+                IsUserInactive = _userActivityService.IsAway;
+        }
+
+        private async void OnSessionExpired(object? s, EventArgs e)
+        {
+            await App.Current.Dispatcher.Invoke(async () => 
+            {
+                WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Session Expired", "You have been logged out due to inactivity.", ToastType.Warning)));
+                await Logout();
+            });
+        }
+
+        private void OnSessionWarning(object? s, EventArgs e)
+        {
+            App.Current.Dispatcher.Invoke(() => 
+            {
+                // Prevent duplicate inactivity warnings
+                if (Toasts.Any(t => t.Title == "Inactivity Warning")) return;
+
+                WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Inactivity Warning", "Your session will expire in 1 minute. Move the mouse to stay logged in.", ToastType.Info)));
+            });
         }
     }
 }

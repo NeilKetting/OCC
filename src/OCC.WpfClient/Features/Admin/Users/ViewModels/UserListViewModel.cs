@@ -44,6 +44,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _isPhoneVisible = false;
         [ObservableProperty] private bool _isLocationVisible = true;
         [ObservableProperty] private bool _isCompanyVisible = false;
+        [ObservableProperty] private bool _isCreatedDateVisible = false;
         
         [ObservableProperty] private bool _isColumnPickerOpen;
 
@@ -79,6 +80,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? false;
                 IsLocationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Branch")?.IsVisible ?? true;
                 IsCompanyVisible = layout.Columns.FirstOrDefault(c => c.Header == "Company")?.IsVisible ?? false;
+                IsCreatedDateVisible = layout.Columns.FirstOrDefault(c => c.Header == "Created")?.IsVisible ?? false;
             }
         }
 
@@ -93,7 +95,8 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                     new() { Header = "Status", IsVisible = IsStatusVisible },
                     new() { Header = "Phone", IsVisible = IsPhoneVisible },
                     new() { Header = "Branch", IsVisible = IsLocationVisible },
-                    new() { Header = "Company", IsVisible = IsCompanyVisible }
+                    new() { Header = "Company", IsVisible = IsCompanyVisible },
+                    new() { Header = "Created", IsVisible = IsCreatedDateVisible }
                 }
             };
 
@@ -107,6 +110,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
         partial void OnIsLocationVisibleChanged(bool value) => SaveLayout();
         partial void OnIsCompanyVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsCreatedDateVisibleChanged(bool value) => SaveLayout();
 
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;

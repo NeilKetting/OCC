@@ -11,7 +11,7 @@ namespace OCC.WpfClient.Features.ProcurementHub
     {
         public string Name => "Procurement";
         public string Description => "Supply Chain, Inventory and Supplier Management";
-        public string Icon => "IconCart";
+        public string Icon => "ProcurementIcon";
         public int Order => 40;
 
         public void RegisterServices(IServiceCollection services)
@@ -38,31 +38,35 @@ namespace OCC.WpfClient.Features.ProcurementHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var procurement = new NavItem("Procurement", "IconCart", string.Empty, "Operations");
+            var procurement = new NavItem("Procurement", string.Empty, "Operations", iconColor: "#008000", iconCode: "\uE7BF");
 
             procurement.Children.Add(new NavItem(
                 "Procurement Dashboard",
-                "IconCart",
                 NavigationRoutes.Procurement,
-                "Operations"));
+                "Operations",
+                iconColor: "#004B50",
+                iconCode: "\uE9D9"));
 
             procurement.Children.Add(new NavItem(
                 "Suppliers",
-                "IconTeam",
                 NavigationRoutes.Suppliers,
-                "Operations"));
+                "Operations",
+                iconColor: "#498205",
+                iconCode: "\uE716"));
 
             procurement.Children.Add(new NavItem(
                 "Inventory Management",
-                "IconList",
                 NavigationRoutes.Inventory,
-                "Operations"));
+                "Operations",
+                iconColor: "#001064",
+                iconCode: "\uE950"));
 
             procurement.Children.Add(new NavItem(
                 "Purchase Order",
-                "IconFile",
                 NavigationRoutes.PurchaseOrder,
-                "Operations"));
+                "Operations",
+                iconColor: "#0078D4",
+                iconCode: "\uE8A1"));
 
             yield return procurement;
         }

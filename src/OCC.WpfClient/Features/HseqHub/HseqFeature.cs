@@ -21,14 +21,15 @@ namespace OCC.WpfClient.Features.HseqHub
             services.AddTransient<HealthSafetyMenuViewModel>();
             services.AddTransient<HealthSafetyDashboardViewModel>();
             services.AddTransient<IncidentsViewModel>();
-            services.AddTransient<IncidentEditorViewModel>();
+            services.AddTransient<IncidentDetailViewModel>();
             services.AddTransient<TrainingViewModel>();
-            services.AddTransient<TrainingEditorViewModel>();
+            services.AddTransient<TrainingDetailViewModel>();
             services.AddTransient<AuditsViewModel>();
-            services.AddTransient<AuditEditorViewModel>();
-            services.AddTransient<AuditDeviationsViewModel>();
+            services.AddTransient<AuditDetailViewModel>();
+            services.AddTransient<DeviationDetailViewModel>();
             services.AddTransient<PerformanceMonitoringViewModel>();
             services.AddTransient<DocumentsViewModel>();
+            services.AddTransient<DocumentDetailViewModel>();
             services.AddTransient<HealthSafetyViewModel>();
         }
 
@@ -39,7 +40,10 @@ namespace OCC.WpfClient.Features.HseqHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            yield return new NavItem("HSEQ Hub", "IconHealthSafety", NavigationRoutes.HealthSafety, "HSEQ");
+            var hseq = new NavItem("HSEQ Hub", NavigationRoutes.HealthSafety, "HSEQ", iconColor: "#00FFFF", iconCode: "\uEA18");
+
+
+            yield return hseq;
         }
     }
 }

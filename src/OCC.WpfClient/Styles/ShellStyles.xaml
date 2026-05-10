@@ -24,7 +24,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BackgroundDarker}"/>
                             <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
@@ -49,7 +49,7 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
         <Setter Property="Height" Value="45"/>
-        <Setter Property="Margin" Value="10,2,10,2"/>
+        <Setter Property="Margin" Value="10,0"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="Cursor" Value="Hand"/>
@@ -63,7 +63,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BackgroundDarker}"/>
                             <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
@@ -104,7 +104,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BackgroundDarker}"/>
                             <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
@@ -165,7 +165,7 @@
                                 <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
                                 <!-- Optional Close Button -->
                                 <Button x:Name="CloseButton" 
-                                        Content="" FontFamily="Segoe MDL2 Assets" 
+                                        Content="" FontFamily="pack://application:,,,/Assets/Fonts/#Segoe MDL2 Assets" 
                                         FontSize="10" Margin="10,1,0,0" 
                                         Background="Transparent" BorderThickness="0" 
                                         Foreground="{TemplateBinding Foreground}" Opacity="0.5"
@@ -254,7 +254,7 @@
                                 
                                 <ContentPresenter x:Name="HeaderHost" Grid.Column="1" ContentSource="Header" Margin="10,5,15,5" VerticalAlignment="Center" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" IsHitTestVisible="False"/>
                                 
-                                <TextBlock x:Name="SubMenuArrow" Grid.Column="3" Text="" FontFamily="Segoe MDL2 Assets" FontSize="8" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                <TextBlock x:Name="SubMenuArrow" Grid.Column="3" Text="" FontFamily="pack://application:,,,/Assets/Fonts/#Segoe MDL2 Assets" FontSize="8" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                             </Grid>
                         </Border>
                         

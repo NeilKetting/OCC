@@ -6,21 +6,20 @@ using System.Windows.Media;
 
 namespace OCC.WpfClient.Infrastructure.Converters
 {
-    public class TierToIconConverter : IValueConverter
+
+    public class TierToSymbolConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var tier = value?.ToString() ?? "Silver";
-            var resourceName = tier switch
+            return tier switch
             {
-                "Diamond" => "IconDiamond",
-                "Gold" => "IconMedal",
-                "Silver" => "IconMedal",
-                "Bronze" => "IconMedal",
-                _ => "IconMedal"
+                "Diamond" => "\uE75D", // Diamond
+                "Gold" => "\uE766",    // Medal
+                "Silver" => "\uE766",  // Medal
+                "Bronze" => "\uE766",  // Medal
+                _ => "\uE766"
             };
-
-            return Application.Current.TryFindResource(resourceName) ?? Geometry.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();

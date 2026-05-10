@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using OCC.WpfClient.Services.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
@@ -19,12 +20,14 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IEmployeeService _employeeService;
         private readonly IExportService _exportService;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ConnectionSettings _settings;
 
         [ObservableProperty] private int _expiryWarningDays = 30;
         [ObservableProperty] private string _categoryFilter = "All";
 
         private List<TrainingRecordViewModel> _allRecords = new();
+        private List<EmployeeSummaryDto> _allEmployees = new();
 
         [ObservableProperty]
         private bool _isTrainerVisible = true;
@@ -41,39 +44,24 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
         public ObservableCollection<string> Categories { get; } = new() { "All", "Training", "Medicals" };
 
-        public TrainingEditorViewModel Editor { get; }
-
         public TrainingViewModel(
             IHealthSafetyService hseqService, 
             IDialogService dialogService, 
             IEmployeeService employeeService,
             IExportService exportService,
+            IServiceProvider serviceProvider,
             ConnectionSettings settings,
-            TrainingEditorViewModel editor,
             IPdfService pdfService) : base(pdfService)
         {
             _hseqService = hseqService;
             _dialogService = dialogService;
             _employeeService = employeeService;
             _exportService = exportService;
+            _serviceProvider = serviceProvider;
             _settings = settings;
-            Editor = editor;
             Title = "Training";
             
-            Editor.OnSaved = OnTrainingSaved;
-
             _ = LoadDataAsync();
-        }
-
-        // Design-time
-        public TrainingViewModel() : base(null!)
-        {
-            _hseqService = null!;
-            _dialogService = null!;
-            _employeeService = null!;
-            _exportService = null!;
-            _settings = null!;
-            Editor = new TrainingEditorViewModel();
         }
 
         public override async Task LoadDataAsync()
@@ -89,17 +77,10 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 await Task.WhenAll(summariesTask, employeesTask);
 
                 var summaries = summariesTask.Result;
-                var employeesDto = employeesTask.Result.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToList();
+                _allEmployees = employeesTask.Result.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToList();
 
                 _allRecords = summaries.Select(r => new TrainingRecordViewModel(r)).ToList();
                 FilterItems();
-                
-                var uniqueTrainers = summaries
-                    .Where(r => !string.IsNullOrWhiteSpace(r.Trainer))
-                    .Select(r => r.Trainer)
-                    .Distinct();
-
-                Editor.Initialize(employeesDto, uniqueTrainers);
             }
             catch (Exception ex)
             {
@@ -159,7 +140,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             }
             catch (Exception)
             {
-                 NotifyError("Error", "Failed to filter records.");
+                NotifyError("Error", "Failed to filter records.");
             }
             finally
             {
@@ -187,22 +168,16 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         [RelayCommand]
-        private void ToggleAdd()
+        private void AddTraining()
         {
-            if (Editor.IsOpen)
-            {
-                Editor.ClearForm();
-            }
-            else
-            {
-                Editor.OpenForAdd();
-            }
-        }
+            var vm = _serviceProvider.GetRequiredService<TrainingDetailViewModel>();
+            var uniqueTrainers = _allRecords
+                .Where(r => !string.IsNullOrWhiteSpace(r.Trainer))
+                .Select(r => r.Trainer)
+                .Distinct();
 
-        [RelayCommand]
-        private void CancelAdd()
-        {
-            Editor.ClearForm();
+            vm.Initialize(_allEmployees, uniqueTrainers);
+            OpenOverlay(vm, OnTrainingSaved);
         }
 
         [RelayCommand]
@@ -217,8 +192,14 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
             if (full != null)
             {
-                Editor.OpenForEdit(full, Editor.Employees);
-                NotifySuccess("Editing", $"Modifying record for {vm.EmployeeName}");
+                var detailVm = _serviceProvider.GetRequiredService<TrainingDetailViewModel>();
+                var uniqueTrainers = _allRecords
+                    .Where(r => !string.IsNullOrWhiteSpace(r.Trainer))
+                    .Select(r => r.Trainer)
+                    .Distinct();
+
+                detailVm.Initialize(_allEmployees, uniqueTrainers, full);
+                OpenOverlay(detailVm, OnTrainingSaved);
             }
             else
             {
@@ -250,34 +231,36 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             }
         }
 
-        private async Task OnTrainingSaved(HseqTrainingRecord record)
+        private void OnTrainingSaved(object? result)
         {
-            var summary = new HseqTrainingSummaryDto
+            if (result is HseqTrainingRecord record)
             {
-                Id = record.Id,
-                EmployeeName = record.EmployeeName,
-                TrainingTopic = record.TrainingTopic,
-                CertificateType = record.CertificateType,
-                DateCompleted = record.DateCompleted,
-                ValidUntil = record.ValidUntil,
-                Role = record.Role,
-                CertificateUrl = record.CertificateUrl,
-                Trainer = record.Trainer ?? string.Empty
-            };
+                var summary = new HseqTrainingSummaryDto
+                {
+                    Id = record.Id,
+                    EmployeeName = record.EmployeeName,
+                    TrainingTopic = record.TrainingTopic,
+                    CertificateType = record.CertificateType,
+                    DateCompleted = record.DateCompleted,
+                    ValidUntil = record.ValidUntil,
+                    Role = record.Role,
+                    CertificateUrl = record.CertificateUrl,
+                    Trainer = record.Trainer ?? string.Empty
+                };
 
-            var existing = _allRecords.FirstOrDefault(r => r.Id == record.Id);
-            if (existing != null)
-            {
-                var index = _allRecords.IndexOf(existing);
-                _allRecords[index] = new TrainingRecordViewModel(summary);
+                var existing = _allRecords.FirstOrDefault(r => r.Id == record.Id);
+                if (existing != null)
+                {
+                    var index = _allRecords.IndexOf(existing);
+                    _allRecords[index] = new TrainingRecordViewModel(summary);
+                }
+                else
+                {
+                    _allRecords.Insert(0, new TrainingRecordViewModel(summary));
+                }
+                
+                FilterItems();
             }
-            else
-            {
-                _allRecords.Insert(0, new TrainingRecordViewModel(summary));
-            }
-            
-            FilterItems();
-            await Task.CompletedTask;
         }
     }
 

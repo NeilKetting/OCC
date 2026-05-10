@@ -12,8 +12,19 @@ namespace OCC.WpfClient.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly Dictionary<string, Type> _routeRegistry = new();
 
-        [ObservableProperty]
         private ViewModelBase _currentView = null!;
+        public ViewModelBase CurrentView
+        {
+            get => _currentView;
+            set
+            {
+                if (_currentView is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+                SetProperty(ref _currentView, value);
+            }
+        }
 
         public NavigationService(IServiceProvider serviceProvider)
         {

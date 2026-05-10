@@ -1,8 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using OCC.WpfClient.Features.ChatHub.ViewModels;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
-using OCC.WpfClient.Features.ChatHub.ViewModels;
-using System.Collections.Generic;
 
 namespace OCC.WpfClient.Features.ChatHub
 {
@@ -23,7 +22,7 @@ namespace OCC.WpfClient.Features.ChatHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            yield return new NavItem("Chat", "IconChat", NavigationRoutes.Chat, "Main");
+            yield return new NavItem("Chat", NavigationRoutes.Chat, "Main", iconColor: "#00FF00", iconCode: "\uE8BD");
         }
     }
 }

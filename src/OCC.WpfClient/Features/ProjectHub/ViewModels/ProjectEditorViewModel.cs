@@ -13,20 +13,16 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectEditorViewModel : ViewModelBase
+    public partial class ProjectEditorViewModel : OverlayViewModel
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
         private readonly IEmployeeService _employeeService;
-        private readonly IToastService _toastService;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
 
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
-
-        public event EventHandler? CloseRequested;
-        public event EventHandler? ProjectUpdated;
 
         [ObservableProperty] private ProjectWrapper? _project;
         [ObservableProperty] private Employee? _selectedSiteManager;
@@ -45,16 +41,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IProjectService projectService,
             ICustomerService customerService,
             IEmployeeService employeeService,
-            IToastService toastService,
             IGoogleMapsService googleMapsService,
             OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings)
         {
             _projectService = projectService;
             _customerService = customerService;
             _employeeService = employeeService;
-            _toastService = toastService;
             _googleMapsService = googleMapsService;
             _connectionSettings = connectionSettings;
+
+            Title = "Edit Project";
         }
 
         public async Task InitializeAsync(Guid projectId)
@@ -64,10 +60,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsBusy = true;
                 BusyText = "Loading project details...";
 
-                // Load Lookup Data
                 await LoadLookupDataAsync();
 
-                // Load Project
                 var model = await _projectService.GetProjectAsync(projectId);
                 if (model != null)
                 {
@@ -80,7 +74,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception)
             {
-                _toastService.ShowError("Error", "Failed to load project details.");
+                NotifyError("Error", "Failed to load project details.");
             }
             finally
             {
@@ -90,12 +84,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private async Task LoadLookupDataAsync()
         {
+            Customers.Clear();
             var customers = await _customerService.GetCustomerSummariesAsync();
             foreach (var c in customers.OrderBy(x => x.Name))
             {
                 Customers.Add(new Customer { Id = c.Id, Name = c.Name });
             }
 
+            SiteManagers.Clear();
             var employees = await _employeeService.GetEmployeesAsync();
             foreach (var e in employees.Where(x => x.Role == EmployeeRole.SiteManager).OrderBy(x => x.FirstName))
             {
@@ -181,7 +177,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             if (Project.HasValidationErrors)
             {
-                _toastService.ShowWarning("Validation", Project.Errors.FirstOrDefault() ?? "Please fix errors.");
+                NotifyWarning("Validation", Project.Errors.FirstOrDefault() ?? "Please fix errors.");
                 return;
             }
 
@@ -189,21 +185,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 IsBusy = true;
                 await _projectService.UpdateProjectAsync(Project.Model);
-                _toastService.ShowSuccess("Success", "Project updated successfully.");
-                ProjectUpdated?.Invoke(this, EventArgs.Empty);
-                CloseRequested?.Invoke(this, EventArgs.Empty);
+                NotifySuccess("Success", "Project updated successfully.");
+                Close(true);
             }
             catch (Exception)
             {
-                _toastService.ShowError("Error", "Failed to update project.");
+                NotifyError("Error", "Failed to update project.");
             }
             finally { IsBusy = false; }
-        }
-
-        [RelayCommand]
-        private void Close()
-        {
-            CloseRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 }

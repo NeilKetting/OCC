@@ -19,6 +19,18 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
             _maximizeOverTaskbar = _localSettings.Settings.MaximizeOverTaskbar;
             _sessionTimeoutMinutes = _localSettings.Settings.SessionTimeoutMinutes;
+            _themeBrightness = _localSettings.Settings.ThemeBrightness;
+        }
+
+        [ObservableProperty]
+        private double _themeBrightness;
+
+        partial void OnThemeBrightnessChanged(double value)
+        {
+            _localSettings.Settings.ThemeBrightness = value;
+            _localSettings.Save();
+
+            WeakReferenceMessenger.Default.Send(new PreferenceChangedMessage(nameof(LocalSettings.ThemeBrightness)));
         }
 
         [ObservableProperty]

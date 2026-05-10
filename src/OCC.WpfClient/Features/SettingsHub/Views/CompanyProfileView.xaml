@@ -40,7 +40,7 @@
                                 Command="{Binding CloseCommand}" 
                                 Style="{StaticResource GhostButton}">
 
-                            <Path Data="{StaticResource IconClose}" Fill="{StaticResource TextSub}" Stretch="Uniform" Width="12" Height="12"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </Button>
                     </Grid>
                 </Border>
@@ -57,7 +57,7 @@
                         <!-- Left Column: General Info -->
                         <StackPanel Grid.Column="0" Margin="0,0,12,0">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <Path Data="{StaticResource IconInformation}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
                                 <TextBlock Text="General Information" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -87,7 +87,7 @@
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <Path Data="{StaticResource IconBank}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
                                 <TextBlock Text="Banking Details" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -128,7 +128,7 @@
                         <!-- Middle Column: Location Settings -->
                         <StackPanel Grid.Column="1" Margin="12,0,12,0">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <Path Data="{StaticResource IconHome}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
                                 <TextBlock Text="Location Details" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -205,12 +205,12 @@
                                 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Branch Phone" Style="{StaticResource FormLabelText}"/>
-                                    <TextBox Text="{Binding CurrentBranchDetails.Phone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Phone Number"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.Phone}" Style="{StaticResource ModernInput}" FontSize="{StaticResource FontSizeSmall}" ap:WatermarkProperties.Watermark="Phone Number"/>
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Branch Fax" Style="{StaticResource FormLabelText}"/>
-                                    <TextBox Text="{Binding CurrentBranchDetails.Fax}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Fax Number"/>
+                                    <TextBox Text="{Binding CurrentBranchDetails.Fax}" Style="{StaticResource ModernInput}" FontSize="{StaticResource FontSizeSmall}" ap:WatermarkProperties.Watermark="Fax Number"/>
                                 </StackPanel>
                             </Grid>
 
@@ -246,7 +246,7 @@
                         <!-- Right Column: Departments -->
                         <StackPanel Grid.Column="2" Margin="12,0,0,0">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <Path Data="{StaticResource IconEnvelope}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="20" Height="20"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
                                 <TextBlock Text="Department Emails" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -275,7 +275,7 @@
                                                             Command="{Binding DataContext.RemoveDepartmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                             CommandParameter="{Binding}"
                                                             ToolTip="Remove Department">
-                                                        <Path Data="{StaticResource IconTrash}" Fill="{StaticResource ErrorRed}" Stretch="Uniform" Width="14" Height="14"/>
+                                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="14"/>
                                                     </Button>
 
                                                 </Grid>

@@ -18,11 +18,19 @@
         <!-- Header Section -->
         <Border Grid.Row="0" Margin="10">
             <Grid>
-                <StackPanel>
-                    <TextBlock Text="Project Dashboard" FontSize="26" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Monitor construction progress, budgets and timelines across your portfolio." 
-                               Style="{StaticResource FormLabelText}"/>
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="&#xE9D9;" Style="{StaticResource SymbolIcon}" FontSize="26" Foreground="#107C10" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Project Dashboard" FontSize="26" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="Monitor construction progress, budgets and timelines across your portfolio." Style="{StaticResource LabelText}"/>
+                </Grid>
 
                 <Button HorizontalAlignment="Right" VerticalAlignment="Top" 
                         Command="{Binding CloseCommand}" Style="{StaticResource WindowCloseButton}"/>
@@ -35,7 +43,6 @@
                 <StackPanel>
                     <TextBlock Text="Active Projects" Foreground="{StaticResource TextSub}" FontSize="12" FontWeight="Bold"/>
                     <TextBlock Text="{Binding ActiveProjectCount}" Foreground="White" FontSize="42" FontWeight="Bold" Margin="0,10,0,5"/>
-                    <ProgressBar Value="75" Height="4" Margin="0,15,0,0" Foreground="{StaticResource AccentBlue}" Background="#20FFFFFF"/>
                 </StackPanel>
             </Border>
 
@@ -51,6 +58,7 @@
                 <StackPanel>
                     <TextBlock Text="Avg. Completion" Foreground="{StaticResource TextSub}" FontSize="12" FontWeight="Bold"/>
                     <TextBlock Text="{Binding CompletionRate, StringFormat='{}{0:P0}'}" Foreground="{StaticResource SuccessGreen}" FontSize="42" FontWeight="Bold" Margin="0,10,0,5"/>
+                    <ProgressBar Value="{Binding CompletionRate}" Minimum="0" Maximum="1" Height="4" Margin="0,15,0,0" Foreground="{StaticResource SuccessGreen}" Background="#20FFFFFF"/>
                     <TextBlock Text="Overall portfolio health" FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,5,0,0"/>
                 </StackPanel>
             </Border>
@@ -66,20 +74,20 @@
             <!-- Navigation / Quick Actions -->
             <StackPanel Grid.Column="0" Margin="0,0,20,0">
                 <TextBlock Text="Explore Portfolio" FontSize="20" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,20"/>
-                
+
                 <Button Command="{Binding GoToRegistryCommand}" Style="{StaticResource ListActionButtonStyle}" Height="120" Margin="0,0,0,20">
                     <Grid Margin="20">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource IconList}" Fill="{StaticResource AccentBlue}" Stretch="Uniform" Width="40" Height="40" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="32" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="Projects" FontSize="20" FontWeight="Bold" Foreground="White"/>
                             <TextBlock Text="View and search the complete database of construction projects." Foreground="{StaticResource TextSub}"/>
                         </StackPanel>
                     </Grid>
-                </Button>               
+                </Button>
             </StackPanel>
 
             <!-- Recent Activity Placeholder -->

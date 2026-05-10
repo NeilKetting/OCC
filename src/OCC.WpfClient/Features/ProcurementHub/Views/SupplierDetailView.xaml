@@ -13,256 +13,174 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </UserControl.Resources>
 
-    <Grid>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid Margin="20">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto"/> <!-- Header -->
+                <RowDefinition Height="*"/>    <!-- Content -->
+                <RowDefinition Height="Auto"/> <!-- Footer -->
             </Grid.RowDefinitions>
 
-            <!-- Detail Modal -->
-            <Border Grid.Column="1" Grid.Row="1" Style="{StaticResource DetailViewModalBorder}" Margin="0,20">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.5"/>
-                </Border.Effect>
-
+            <!-- Header -->
+            <Border Grid.Row="0" Margin="0,0,0,20">
                 <Grid>
-                    <!-- Background Decoration -->
-                    <Path Data="{StaticResource IconPersonal}" Fill="White" Opacity="0.02" 
-                          Stretch="Uniform" Margin="40" HorizontalAlignment="Right" 
-                          VerticalAlignment="Bottom" Width="300" Height="300"/>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}" FontSize="20"/>
+                        <TextBlock Text="Manage supplier profile and banking" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                    </StackPanel>
 
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Header -->
-                        <Border Grid.Row="0" Style="{StaticResource DetailViewHeader}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}"/>
-                                    <TextBlock Text="Manage supplier contact information and banking details for procurement." Style="{StaticResource LabelText}"/>
-                                </StackPanel>
-
-                                <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                        Style="{StaticResource WindowCloseButton}" Command="{Binding CancelCommand}"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Content -->
-                        <ScrollViewer x:Name="MainScrollViewer" Grid.Row="1" Style="{StaticResource DetailViewContentScroll}" Padding="20,20,20,20">
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="20" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Left Column: Core Info -->
-                                    <StackPanel Grid.Column="0">
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <Path Data="{StaticResource IconSummary}" Style="{StaticResource SectionIcon}"/>
-                                            <TextBlock Text="General Information" Style="{StaticResource SectionHeaderText}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Margin="0,0,0,15">
-                                            <TextBlock Text="Supplier Name" Style="{StaticResource FormLabelText}"/>
-                                            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Enter supplier name..."/>
-                                        </StackPanel>
-                                        
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="15" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="0,0,0,15">
-                                                <TextBlock Text="VAT Number" Style="{StaticResource FormLabelText}"/>
-                                                <TextBox Text="{Binding VatNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="4XXXXXXXXX"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2" Margin="0,0,0,15">
-                                                <TextBlock Text="Supplier Acc #" Style="{StaticResource FormLabelText}"/>
-                                                <TextBox Text="{Binding SupplierAccountNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Optional..."/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <StackPanel Margin="0,0,0,15">
-                                            <TextBlock Text="Physical Address" Style="{StaticResource FormLabelText}"/>
-                                            <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="123 Street Name..."/>
-                                        </StackPanel>
-                                        
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="15" />
-                                                <ColumnDefinition Width="120" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="0,0,0,15">
-                                                <TextBlock Text="City" Style="{StaticResource FormLabelText}"/>
-                                                <TextBox Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="City..."/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2" Margin="0,0,0,15">
-                                                <TextBlock Text="Postal Code" Style="{StaticResource FormLabelText}"/>
-                                                <TextBox Text="{Binding PostalCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code..."/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <StackPanel Margin="0,0,0,25">
-                                            <TextBlock Text="Assigned Branch" Style="{StaticResource FormLabelText}"/>
-                                            <ComboBox ItemsSource="{Binding AvailableBranches}" SelectedItem="{Binding SelectedBranch}" Style="{StaticResource ModernComboBox}" Height="36"/>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <!-- Right Column: Contact & Bank Info -->
-                                    <StackPanel Grid.Column="2">
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <Path Data="{StaticResource IconPersonal}" Style="{StaticResource SectionIcon}"/>
-                                            <TextBlock Text="Contact Details" Style="{StaticResource SectionHeaderText}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Margin="0,0,0,15">
-                                            <TextBlock Text="Contact Person" Style="{StaticResource FormLabelText}"/>
-                                            <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Name..."/>
-                                        </StackPanel>
-
-                                        <StackPanel Margin="0,0,0,15">
-                                            <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
-                                            <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="supplier@email.com"/>
-                                        </StackPanel>
-
-                                        <StackPanel Margin="0,0,0,25">
-                                            <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
-                                            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="+27 ..."/>
-                                        </StackPanel>
-
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <Path Data="{StaticResource IconFile}" Style="{StaticResource SectionIcon}"/>
-                                            <TextBlock Text="Banking Information" Style="{StaticResource SectionHeaderText}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Margin="0,0,0,15">
-                                            <TextBlock Text="Bank Name" Style="{StaticResource FormLabelText}"/>
-                                            <ComboBox ItemsSource="{Binding AvailableBanks}" SelectedItem="{Binding SelectedBank}" Style="{StaticResource ModernComboBox}" Height="36"/>
-                                        </StackPanel>
-
-                                        <StackPanel Margin="0,0,0,15" Visibility="{Binding IsOtherBankSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <TextBlock Text="Custom Bank Name" Style="{StaticResource FormLabelText}"/>
-                                            <TextBox Text="{Binding CustomBankName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Enter bank name..."/>
-                                        </StackPanel>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="15" />
-                                                <ColumnDefinition Width="120" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="0,0,0,15">
-                                                <TextBlock Text="Account Number" Style="{StaticResource FormLabelText}"/>
-                                                <TextBox Text="{Binding BankAccountNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Account #..."/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2" Margin="0,0,0,15">
-                                                <TextBlock Text="Branch Code" Style="{StaticResource FormLabelText}"/>
-                                                <TextBox Text="{Binding BranchCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code..."/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </ScrollViewer>
-
-                        <!-- Footer Actions -->
-                        <Border Grid.Row="2" Style="{StaticResource DetailViewFooter}">
-                            <StackPanel>
-                                <!-- Premium Validation Summary Card -->
-                                <Border Margin="0,0,0,15"
-                                        Background="#1AEE4444" BorderBrush="{StaticResource ErrorRed}" 
-                                        BorderThickness="1" CornerRadius="12" Padding="15,10">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Setter Property="Opacity" Value="0"/>
-                                            <Style.Triggers>
-                                                <!-- TRIGGER: Signal received from ViewModel pulse (0 -> 1) -->
-                                                <DataTrigger Binding="{Binding AnimationPulse}" Value="1">
-                                                    <DataTrigger.EnterActions>
-                                                        <StopStoryboard BeginStoryboardName="PremiumErrorAnim"/>
-                                                        <BeginStoryboard x:Name="PremiumErrorAnim">
-                                                            <Storyboard>
-                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
-                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                                                                </ObjectAnimationUsingKeyFrames>
-                                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
-                                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" BeginTime="0:0:2.5" Duration="0:0:0.5"/>
-                                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" BeginTime="0:0:3.1">
-                                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
-                                                                </ObjectAnimationUsingKeyFrames>
-                                                            </Storyboard>
-                                                        </BeginStoryboard>
-                                                    </DataTrigger.EnterActions>
-                                                </DataTrigger>
-
-                                                <!-- Safety: Ensure it hides immediately if form becomes valid -->
-                                                <DataTrigger Binding="{Binding HasErrors}" Value="False">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Setter Property="Opacity" Value="0"/>
-                                                    <DataTrigger.EnterActions>
-                                                        <StopStoryboard BeginStoryboardName="PremiumErrorAnim"/>
-                                                    </DataTrigger.EnterActions>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <Border.Effect>
-                                        <DropShadowEffect BlurRadius="15" ShadowDepth="0" Color="{StaticResource ErrorRedColor}" Opacity="0.2"/>
-                                    </Border.Effect>
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <Path Data="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M13,17h-2v-2h2V17z M13,13h-2V7h2V13z"
-                                                  Fill="{StaticResource ErrorRed}" Width="16" Height="16" Stretch="Uniform" Margin="0,0,10,0"/>
-                                            <TextBlock Text="VALIDATION ERRORS" Foreground="{StaticResource ErrorRed}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                        <ItemsControl ItemsSource="{Binding ValidationErrors}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding}" Foreground="White" FontSize="13" Margin="26,2,0,2" Opacity="0.9"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </Border>
-
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Width="110" Height="40" Margin="0,0,15,0"/>
-                                    <Button Content="Save Supplier" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}" Width="150" Height="40"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Top" 
+                            Style="{StaticResource WindowCloseButton}" Command="{Binding CancelCommand}"/>
                 </Grid>
+            </Border>
+
+            <!-- Scrollable Content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-5,0" Padding="0">
+                <StackPanel Margin="0,0,20,0">
+                    <!-- Section: General Info -->
+                    <StackPanel Margin="0,0,0,25">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AccentBlue}"/>
+                            <TextBlock Text="General Information" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AccentBlue}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Supplier Name" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Enter supplier name..."/>
+                        </StackPanel>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="VAT Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding VatNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="VAT..."/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Acc #" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding SupplierAccountNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Acc..."/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Margin="0,12,0,12">
+                            <TextBlock Text="Physical Address" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="123 Street..."/>
+                        </StackPanel>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="City" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="City..."/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Code" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding PostalCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code..."/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Assigned Branch" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding AvailableBranches}" SelectedItem="{Binding SelectedBranch}" Style="{StaticResource ModernComboBox}" Height="36"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Section: Contact Details -->
+                    <StackPanel Margin="0,0,0,25">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource SuccessGreen}"/>
+                            <TextBlock Text="Contact Details" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource SuccessGreen}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Contact Person" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Name..."/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="email@supplier.com"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="+27..."/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Section: Banking Info -->
+                    <StackPanel Margin="0,0,0,25">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AlertOrange}"/>
+                            <TextBlock Text="Banking Information" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AlertOrange}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Bank Name" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding AvailableBanks}" SelectedItem="{Binding SelectedBank}" Style="{StaticResource ModernComboBox}" Height="36"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12" Visibility="{Binding IsOtherBankSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="Custom Bank Name" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding CustomBankName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Enter bank name..."/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="120" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Account Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding BankAccountNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Account #..."/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Branch Code" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding BranchCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code..."/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" Padding="0,20,0,0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0">
+                <StackPanel>
+                    <!-- Validation Summary -->
+                    <Border Margin="0,0,0,15" Background="#1AEE4444" BorderBrush="{StaticResource ErrorRed}" 
+                            BorderThickness="1" CornerRadius="8" Padding="12"
+                            Visibility="{Binding HasErrors, Converter={StaticResource VisibilityConverter}}">
+                        <ItemsControl ItemsSource="{Binding ValidationErrors}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Foreground="{StaticResource ErrorRed}" FontSize="12" Margin="0,2"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Width="100" Height="40" Margin="0,0,8,0"/>
+                        <Button Content="Save Supplier" Style="{StaticResource ActionButtonPrimary}" Command="{Binding SaveCommand}" Width="140" Height="40"/>
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </Grid>
 
         <!-- Busy Overlay -->
-        <Grid Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=False}" Panel.ZIndex="100">
-            <Border Background="{StaticResource BackgroundDark}" Opacity="0.7"/>
+        <Border Background="#CC000000" CornerRadius="12" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Background="#33FFFFFF" Foreground="{StaticResource AccentBlue}"/>
-                <TextBlock Text="{Binding BusyText}" Margin="0,10" Foreground="White" HorizontalAlignment="Center"/>
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource AccentBlue}" Background="#20FFFFFF"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
             </StackPanel>
-        </Grid>
+        </Border>
     </Grid>
 </UserControl>

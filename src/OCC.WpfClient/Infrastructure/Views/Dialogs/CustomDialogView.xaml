@@ -18,7 +18,7 @@
             </Grid.RowDefinitions>
             
             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                <Path Data="{StaticResource IconAlert}" Fill="#ffb020" Width="24" Height="24" Stretch="Uniform" Margin="0,0,10,0"/>
+                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#ffb020" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
                 <TextBlock x:Name="TitleText" Text="Conflict Detected" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
             

@@ -8,9 +8,10 @@ namespace OCC.WpfClient.Infrastructure
     public partial class NavItem : ObservableObject
     {
         public string Label { get; }
-        public System.Windows.Media.Geometry? Icon { get; }
         public string Route { get; }
         public string Category { get; }
+        public string? IconColor { get; }
+        public string? IconCode { get; }
 
         public ObservableCollection<NavItem> Children { get; } = new();
         public bool IsParent => Children.Any();
@@ -21,13 +22,14 @@ namespace OCC.WpfClient.Infrastructure
         [ObservableProperty]
         private bool _isExpanded;
 
-        public NavItem(string label, string iconKey, string route, string category, bool isActive = false)
+        public NavItem(string label, string route, string category, bool isActive = false, string? iconColor = null, string? iconCode = null)
         {
             Label = label;
-            Icon = System.Windows.Application.Current?.TryFindResource(iconKey) as System.Windows.Media.Geometry;
             Route = route;
             Category = category;
             IsActive = isActive;
+            IconColor = iconColor;
+            IconCode = iconCode;
         }
     }
 }

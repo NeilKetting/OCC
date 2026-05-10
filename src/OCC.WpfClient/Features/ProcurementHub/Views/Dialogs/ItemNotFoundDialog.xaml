@@ -19,10 +19,7 @@
                     </Grid.ColumnDefinitions>
                     
                     <!-- Question Icon -->
-                    <Path Data="{StaticResource IconHelp}" 
-                          Fill="{StaticResource AccentBlue}" 
-                          Width="48" Height="48" 
-                          Stretch="Uniform" Margin="0,0,25,0"/>
+                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="48" Margin="0,0,25,0" VerticalAlignment="Center"/>
                     
                     <StackPanel Grid.Column="1">
                         <TextBlock Text="Item Not Found" 

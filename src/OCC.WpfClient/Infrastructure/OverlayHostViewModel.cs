@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
+using System;
 
 namespace OCC.WpfClient.Infrastructure
 {
@@ -13,10 +14,13 @@ namespace OCC.WpfClient.Infrastructure
         public ViewModelBase? ActiveOverlay => IsOverlayVisible ? OverlayViewModel : null;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsOverlayActive))]
+        [NotifyPropertyChangedFor(nameof(ActiveOverlay))]
         private ViewModelBase? _overlayViewModel;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsOverlayActive))]
+        [NotifyPropertyChangedFor(nameof(ActiveOverlay))]
         private bool _isOverlayVisible;
 
         /// <summary>
@@ -35,12 +39,28 @@ namespace OCC.WpfClient.Infrastructure
         }
 
         /// <summary>
+        /// Standardized method to open an OverlayViewModel with a callback for the result.
+        /// </summary>
+        public virtual void OpenOverlay(OverlayViewModel viewModel, Action<object?>? callback = null)
+        {
+            void OnClose(object? sender, object? result)
+            {
+                viewModel.CloseRequested -= OnClose;
+                CloseOverlay();
+                callback?.Invoke(result);
+            }
+
+            viewModel.CloseRequested += OnClose;
+            OpenOverlay((ViewModelBase)viewModel);
+        }
+
+        /// <summary>
         /// Standardized method to close the current overlay.
         /// </summary>
+        [RelayCommand]
         public virtual void CloseOverlay()
         {
             IsOverlayVisible = false;
-            OverlayViewModel = null;
         }
 
         /// <summary>

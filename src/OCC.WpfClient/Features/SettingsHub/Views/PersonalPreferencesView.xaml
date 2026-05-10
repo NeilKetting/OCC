@@ -25,6 +25,32 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
+                <!-- Section: Display Brightness -->
+                <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="10">
+                    <StackPanel>
+                        <TextBlock Text="Display Brightness" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>
+                        <Separator Background="{StaticResource GlassBorderLight}" Margin="0,0,0,15"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Adjust Application Brightness" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                <TextBlock Text="Compensate for different monitor calibrations by nudging the overall theme brightness." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,0,10,0" Opacity="0.5"/>
+                                <Slider Width="200" Minimum="0" Maximum="1" TickFrequency="0.05" IsSnapToTickEnabled="True" 
+                                        Value="{Binding ThemeBrightness}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="18"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section: Window Behavior -->
                 <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="10">
                     <StackPanel>
                         <TextBlock Text="Window Behavior" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>
@@ -46,6 +72,7 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Section: Security -->
                 <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="10">
                     <StackPanel>
                         <TextBlock Text="Security" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>

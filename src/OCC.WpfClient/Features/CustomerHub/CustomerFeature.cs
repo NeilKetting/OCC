@@ -25,7 +25,7 @@ namespace OCC.WpfClient.Features.CustomerHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            yield return new NavItem("Customers", "IconAddUser", NavigationRoutes.Customers, "Main");
+            yield return new NavItem("Customers", NavigationRoutes.Customers, "Main", iconColor: "#7FFFD4", iconCode: "\uE716");
         }
     }
 }

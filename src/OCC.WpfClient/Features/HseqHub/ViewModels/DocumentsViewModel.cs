@@ -8,69 +8,43 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IO;
+using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class DocumentsViewModel : ViewModelBase
+    public partial class DocumentsViewModel : OverlayHostViewModel
     {
         private readonly IHealthSafetyService _hseqService;
+        private readonly IProjectService _projectService;
+        private readonly IServiceProvider _serviceProvider;
         
         [ObservableProperty]
         private ObservableCollection<HseqDocument> _documents = new();
 
-        [ObservableProperty]
-        private bool _isUploading;
+        private List<Project> _allProjects = new();
 
-        [ObservableProperty]
-        private bool _showUploadForm;
-
-        [ObservableProperty]
-        private string _newDocTitle = string.Empty;
-
-        [ObservableProperty]
-        private DocumentCategory _newDocCategory = DocumentCategory.Other;
-        
-        [ObservableProperty]
-        private string _selectedFilePath = string.Empty;
-
-        [ObservableProperty]
-        private Project? _selectedProject;
-
-        public ObservableCollection<Project> AvailableProjects { get; } = new();
-
-        public DocumentCategory[] Categories { get; } = 
-            (DocumentCategory[])Enum.GetValues(typeof(DocumentCategory));
-
-        public DocumentsViewModel(IHealthSafetyService hseqService, IProjectService projectService)
+        public DocumentsViewModel(IHealthSafetyService hseqService, IProjectService projectService, IServiceProvider serviceProvider)
         {
             _hseqService = hseqService;
+            _projectService = projectService;
+            _serviceProvider = serviceProvider;
             Title = "Documents";
             _ = LoadDocuments();
-            _ = LoadProjects(projectService);
+            _ = LoadProjects();
         }
 
-        private async Task LoadProjects(IProjectService projectService)
+        private async Task LoadProjects()
         {
             try
             {
-                var projects = await projectService.GetProjectsAsync();
+                var projects = await _projectService.GetProjectsAsync();
                 if (projects != null)
                 {
-                    App.Current.Dispatcher.Invoke(() =>
-                    {
-                        AvailableProjects.Clear();
-                        foreach (var p in projects.OrderBy(x => x.Name)) AvailableProjects.Add(p);
-                    });
+                    _allProjects = projects.OrderBy(x => x.Name).ToList();
                 }
             }
             catch { /* Silent fail for projects */ }
-        }
-
-        // Design-time
-        public DocumentsViewModel()
-        {
-             _hseqService = null!;
         }
 
         [RelayCommand]
@@ -97,87 +71,18 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         [RelayCommand]
-        private void ToggleUploadForm()
+        private void OpenUpload()
         {
-            ShowUploadForm = !ShowUploadForm;
-            if (ShowUploadForm)
-            {
-                NewDocTitle = "";
-                NewDocCategory = DocumentCategory.Policy;
-                SelectedFilePath = "";
-                SelectedProject = null;
-            }
+            var vm = _serviceProvider.GetRequiredService<DocumentDetailViewModel>();
+            vm.Initialize(_allProjects);
+            OpenOverlay(vm, OnDocumentUploaded);
         }
 
-        [RelayCommand]
-        private void PickFile()
+        private void OnDocumentUploaded(object? result)
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            if (result is HseqDocument doc)
             {
-                Title = "Select Document",
-                Filter = "Documents|*.pdf;*.docx;*.xlsx;*.jpg;*.png"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                SelectedFilePath = dialog.FileName;
-                if (string.IsNullOrEmpty(NewDocTitle))
-                {
-                    NewDocTitle = Path.GetFileNameWithoutExtension(dialog.FileName);
-                }
-            }
-        }
-
-        [RelayCommand]
-        private async Task Upload()
-        {
-            if (string.IsNullOrWhiteSpace(NewDocTitle) || string.IsNullOrWhiteSpace(SelectedFilePath))
-            {
-                NotifyError("Validation", "Title and File are required.");
-                return;
-            }
-
-            if (!File.Exists(SelectedFilePath))
-            {
-                 NotifyError("Validation", "Selected file does not exist.");
-                 return;
-            }
-
-            IsUploading = true;
-            try
-            {
-                using var stream = File.OpenRead(SelectedFilePath);
-                var fileName = Path.GetFileName(SelectedFilePath);
-
-                var metadata = new HseqDocument
-                {
-                    Title = NewDocTitle,
-                    Category = NewDocCategory,
-                    UploadedBy = "Current User",
-                    UploadDate = DateTime.UtcNow,
-                    Version = "1.0",
-                    ProjectId = SelectedProject?.Id
-                };
-
-                var created = await _hseqService.UploadDocumentAsync(metadata, stream, fileName);
-                if (created != null)
-                {
-                    Documents.Insert(0, created);
-                    NotifySuccess("Success", "Document uploaded.");
-                    ShowUploadForm = false;
-                }
-                else
-                {
-                     NotifyError("Error", "Upload failed.");
-                }
-            }
-            catch (Exception ex)
-            {
-                NotifyError("Error", $"Failed to upload: {ex.Message}");
-            }
-            finally
-            {
-                IsUploading = false;
+                Documents.Insert(0, doc);
             }
         }
 
@@ -196,7 +101,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             }
             catch (Exception)
             {
-                 NotifyError("Error", "Failed to delete document.");
+                NotifyError("Error", "Failed to delete document.");
             }
         }
         

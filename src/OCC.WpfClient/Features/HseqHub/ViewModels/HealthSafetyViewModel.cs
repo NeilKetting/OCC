@@ -29,19 +29,6 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         [ObservableProperty]
         private DocumentsViewModel _documentsView;
 
-        public HealthSafetyViewModel()
-        {
-            // Design-time
-            _menuViewModel = null!;
-            _dashboardView = null!;
-            _performanceView = null!;
-            _incidentsView = null!;
-            _trainingView = null!;
-            _auditsView = null!;
-            _documentsView = null!;
-            _currentView = null!;
-        }
-
         public HealthSafetyViewModel(
             HealthSafetyMenuViewModel menuViewModel,
             HealthSafetyDashboardViewModel dashboardView,

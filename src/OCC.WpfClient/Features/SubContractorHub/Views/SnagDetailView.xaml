@@ -8,7 +8,8 @@
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="500">
+             d:DesignHeight="700" d:DesignWidth="550"
+             d:DataContext="{d:DesignInstance Type=vm:SnagDetailViewModel}">
 
     <UserControl.Resources>
         <ObjectDataProvider x:Key="SnagStatusEnum" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
@@ -18,91 +19,116 @@
         </ObjectDataProvider>
     </UserControl.Resources>
     
-    <Border Background="{StaticResource BackgroundDark}" CornerRadius="15" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1">
-        <Grid Margin="25">
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid Margin="20">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" /> <!-- Header -->
-                <RowDefinition Height="*" />    <!-- Content -->
-                <RowDefinition Height="Auto" /> <!-- Footer -->
+                <RowDefinition Height="Auto"/> <!-- Header -->
+                <RowDefinition Height="*"/>    <!-- Content -->
+                <RowDefinition Height="Auto"/> <!-- Footer -->
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}" />
-                <Button Style="{StaticResource ToolbarIconButton}" HorizontalAlignment="Right" Command="{Binding CloseCommand}">
-                    <Path Data="{StaticResource IconClose}" Fill="{StaticResource TextSub}" Width="14" Height="14" Stretch="Uniform"/>
-                </Button>
-            </Grid>
+            <Border Grid.Row="0" Margin="0,0,0,20">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}" FontSize="20"/>
+                        <TextBlock Text="Log and track project snags and defects" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                    </StackPanel>
 
-            <!-- Content -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <!-- Project Selection -->
-                    <TextBlock Text="PROJECT" Style="{StaticResource FormLabelText}"/>
-                    <ComboBox ItemsSource="{Binding Projects}" 
-                              SelectedItem="{Binding SelectedProject}" 
-                              DisplayMemberPath="Name"
-                              Style="{StaticResource ModernComboBox}" 
-                              Margin="0,5,0,20" Height="40"/>
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Top" 
+                            Style="{StaticResource WindowCloseButton}" Command="{Binding CloseCommand}"/>
+                </Grid>
+            </Border>
 
-                    <!-- Sub-Contractor Selection -->
-                    <TextBlock Text="PARTNER" Style="{StaticResource FormLabelText}"/>
-                    <ComboBox ItemsSource="{Binding SubContractors}" 
-                              SelectedItem="{Binding SelectedSubContractor}" 
-                              DisplayMemberPath="Name"
-                              Style="{StaticResource ModernComboBox}" 
-                              Margin="0,5,0,20" Height="40"/>
-
-                    <!-- Original Task (Optional) -->
-                    <TextBlock Text="ASSOCIATED TASK (Optional)" Style="{StaticResource FormLabelText}"/>
-                    <ComboBox ItemsSource="{Binding PossibleTasks}" 
-                              SelectedItem="{Binding SelectedTask}" 
-                              DisplayMemberPath="Name"
-                              Style="{StaticResource ModernComboBox}" 
-                              Margin="0,5,0,20" Height="40"
-                              ap:WatermarkProperties.Watermark="Select the original task where snag occurred"/>
-
-                    <!-- Snag Title -->
-                    <TextBlock Text="SNAG DESCRIPTION TITLE" Style="{StaticResource FormLabelText}"/>
-                    <TextBox Text="{Binding Snag.Title, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" 
-                             Margin="0,5,0,20" Height="40"
-                             ap:WatermarkProperties.Watermark="e.g. Paint finish uneven on north wall"/>
-
-                    <!-- Detailed Notes -->
-                    <TextBlock Text="DETAILED NOTES" Style="{StaticResource FormLabelText}"/>
-                    <TextBox Text="{Binding Snag.Description, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" 
-                             Margin="0,5,0,20" Height="100" 
-                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="10"
-                             ap:WatermarkProperties.Watermark="Provide specific details or instructions for fixing..."/>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="DUE DATE" Style="{StaticResource FormLabelText}"/>
-                            <DatePicker SelectedDate="{Binding Snag.DueDate}" Style="{StaticResource ModernDatePicker}" Margin="0,5,0,0"/>
+            <!-- Scrollable Content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-5,0" Padding="0">
+                <StackPanel Margin="0,0,20,0">
+                    <!-- Core Information -->
+                    <StackPanel Margin="0,0,0,25">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Snag Details" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AccentBlue}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock Text="STATUS" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding Source={StaticResource SnagStatusEnum}}" 
-                                      SelectedItem="{Binding Snag.Status}" 
-                                      Style="{StaticResource ModernComboBox}" Margin="0,5,0,0"/>
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Project" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding Projects}" 
+                                      SelectedItem="{Binding SelectedProject}" 
+                                      DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}" 
+                                      Height="36"/>
                         </StackPanel>
-                    </Grid>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Partner" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding SubContractors}" 
+                                      SelectedItem="{Binding SelectedSubContractor}" 
+                                      DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}" 
+                                      Height="36"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Associated Task (Optional)" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding PossibleTasks}" 
+                                      SelectedItem="{Binding SelectedTask}" 
+                                      DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}" 
+                                      Height="36"
+                                      ap:WatermarkProperties.Watermark="Select the original task..."/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Description Title" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Snag.Title, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernInput}" 
+                                     ap:WatermarkProperties.Watermark="e.g. Paint finish uneven..."/>
+                        </StackPanel>
+                        
+                        <StackPanel Margin="0,0,0,12">
+                             <TextBlock Text="Detailed Notes" Style="{StaticResource FormLabelText}"/>
+                             <TextBox Text="{Binding Snag.Description, UpdateSourceTrigger=PropertyChanged}" 
+                                      Style="{StaticResource ModernInput}" 
+                                      MinHeight="100" Height="Auto" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"
+                                      ap:WatermarkProperties.Watermark="Provide specific details for fixing..."/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="15" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Due Date" Style="{StaticResource FormLabelText}"/>
+                                <DatePicker SelectedDate="{Binding Snag.DueDate}" Style="{StaticResource ModernDatePicker}" Height="36"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Status" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding Source={StaticResource SnagStatusEnum}}" 
+                                          SelectedItem="{Binding Snag.Status}" 
+                                          Style="{StaticResource ModernComboBox}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- Footer -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                <Button Content="Cancel" Style="{StaticResource SecondaryButton}" Width="100" Height="40" Margin="0,0,15,0" Command="{Binding CloseCommand}"/>
-                <Button Content="Save Snag" Style="{StaticResource PrimaryButton}" Width="140" Height="40" Command="{Binding SaveAsyncCommand}"/>
-            </StackPanel>
+            <!-- Footer Actions -->
+            <Border Grid.Row="2" Padding="0,20,0,0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CloseCommand}" Width="100" Height="40" Margin="0,0,8,0"/>
+                    <Button Content="Save Snag" Style="{StaticResource ActionButtonPrimary}" Command="{Binding SaveAsyncCommand}" Width="140" Height="40"/>
+                </StackPanel>
+            </Border>
         </Grid>
-    </Border>
+
+        <!-- Busy Overlay -->
+        <Border Background="#CC000000" CornerRadius="12" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource AccentBlue}" Background="#20FFFFFF"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

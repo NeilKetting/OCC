@@ -135,26 +135,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void AddProject()
         {
-            if (OverlayViewModel != null) return;
-
-            var vm = new CreateProjectViewModel(
-                _projectService,
-                _customerService,
-                _serviceProvider.GetRequiredService<IEmployeeService>(),
-                _serviceProvider.GetRequiredService<IUserService>(),
-                _serviceProvider.GetRequiredService<IGoogleMapsService>(),
-                _serviceProvider.GetRequiredService<ISubContractorService>(),
-                _serviceProvider.GetRequiredService<ISettingsService>(),
-                _toastService,
-                _serviceProvider.GetRequiredService<OCC.WpfClient.Services.Infrastructure.ConnectionSettings>());
-
-            vm.CloseRequested += (s, e) => CloseOverlay();
-            vm.ProjectCreated += (s, id) => { 
-                CloseOverlay();
-                _ = LoadDataAsync();
-            };
-
-            OpenOverlay(vm);
+            var vm = _serviceProvider.GetRequiredService<CreateProjectViewModel>();
+            OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
 
@@ -173,14 +155,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             var vm = _serviceProvider.GetRequiredService<ProjectEditorViewModel>();
             await vm.InitializeAsync(project.Id);
-
-            vm.CloseRequested += (s, e) => CloseOverlay();
-            vm.ProjectUpdated += (s, e) => {
-                CloseOverlay();
-                _ = LoadDataAsync();
-            };
-
-            OpenOverlay(vm);
+            OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
         [RelayCommand]

@@ -10,6 +10,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         public bool RememberMe { get; set; } = false;
         public int SessionTimeoutMinutes { get; set; } = 5;
         public bool MaximizeOverTaskbar { get; set; } = false;
+        public double ThemeBrightness { get; set; } = 0.5;
         public Features.EmployeeHub.Models.EmployeeListLayout? EmployeeListLayout { get; set; }
 
         // Layouts for other List Views

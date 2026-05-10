@@ -1,9 +1,8 @@
-using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Services.Interfaces;
-using OCC.WpfClient.Services;
 using Microsoft.Extensions.DependencyInjection;
 using OCC.WpfClient.Features.Admin.Users.ViewModels;
-using System.Collections.Generic;
+using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Services;
+using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.Admin
 {
@@ -26,8 +25,8 @@ namespace OCC.WpfClient.Features.Admin
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var admin = new NavItem("Admin", "IconGear", string.Empty, "Administration");
-            admin.Children.Add(new NavItem("User Management", "IconTeam", NavigationRoutes.UserManagement, "Administration"));
+            var admin = new NavItem("Admin", string.Empty, "Administration", iconColor: "#FFA500", iconCode: "\uE72E");
+            admin.Children.Add(new NavItem("User Management", NavigationRoutes.UserManagement, "Administration", iconColor: "#FFA500", iconCode: "\uE77B"));
             
             yield return admin;
         }

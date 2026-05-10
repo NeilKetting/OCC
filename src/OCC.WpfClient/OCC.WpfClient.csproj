@@ -15,7 +15,7 @@
 		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
 		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
 		<AssemblyName>OCC-ERP</AssemblyName>
-		<Version>1.0.12</Version>
+		<Version>1.0.13</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
 	</PropertyGroup>
 
@@ -45,6 +45,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Resource Update="Assets\Fonts\segmdl2.ttf">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
 		<Resource Update="Assets\Images\app.ico">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>

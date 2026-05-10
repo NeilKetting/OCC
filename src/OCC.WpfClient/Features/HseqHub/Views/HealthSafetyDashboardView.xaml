@@ -15,7 +15,7 @@
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,15">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconDashboard}" Width="24" Height="24" Fill="{StaticResource PrimaryTeal}" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource PrimaryTeal}" FontSize="24" Margin="0,0,12,0"/>
                         <TextBlock Text="HSEQ Dashboard" Style="{StaticResource HeaderText}"/>
                     </StackPanel>
                     <TextBlock Text="Health, Safety, Environment &amp; Quality Overview" Style="{StaticResource LabelText}" Opacity="0.7"/>
@@ -27,7 +27,7 @@
                     <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="0,0,12,0">
                         <StackPanel Margin="20">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <Path Data="{StaticResource IconClock}" Width="16" Height="16" Fill="{StaticResource SuccessGreen}" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SuccessGreen}" FontSize="16" Margin="0,0,8,0"/>
                                 <TextBlock Text="Safe Hours" Style="{StaticResource TitleText}" Opacity="0.8"/>
                             </StackPanel>
                             <TextBlock Text="{Binding TotalSafeHours, StringFormat=\{0:N2\}}" Style="{StaticResource HeaderText}" Foreground="{StaticResource SuccessGreen}"/>
@@ -39,7 +39,7 @@
                     <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="6,0,6,0">
                         <StackPanel Margin="20">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <Path Data="{StaticResource IconAlert}" Width="16" Height="16" Fill="{StaticResource AlertOrange}" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AlertOrange}" FontSize="16" Margin="0,0,8,0"/>
                                 <TextBlock Text="Total Incidents" Style="{StaticResource TitleText}" Opacity="0.8"/>
                             </StackPanel>
                             <TextBlock Text="{Binding TotalIncidents}" Style="{StaticResource HeaderText}"/>
@@ -51,7 +51,7 @@
                     <Border Style="{StaticResource ToolbarBorder}" Background="{StaticResource BackgroundDark}" Margin="12,0,0,0">
                         <StackPanel Margin="20">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <Path Data="{StaticResource IconShield}" Width="16" Height="16" Fill="{StaticResource PrimaryTeal}" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource PrimaryTeal}" FontSize="16" Margin="0,0,8,0"/>
                                 <TextBlock Text="Audit Average" Style="{StaticResource TitleText}" Opacity="0.8"/>
                             </StackPanel>
                             <TextBlock Text="94%" Style="{StaticResource HeaderText}" Foreground="{StaticResource PrimaryTeal}"/>

@@ -135,7 +135,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private void AddItem()
         {
             _logger.LogInformation("Add Item command triggered");
-            _toastService.ShowInfo("Coming Soon", "The Add Item feature is currently under development.");
+            // Open the detail view in a drawer
+            OpenOverlay(new InventoryDetailViewModel(_inventoryService, _toastService, _logger));
         }
 
         private void LoadLayout()

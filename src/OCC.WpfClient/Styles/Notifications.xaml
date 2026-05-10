@@ -57,9 +57,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Icon -->
-                <Viewbox Width="24" Height="24" Margin="0,0,15,0" VerticalAlignment="Top">
-                    <Path x:Name="IconPath" Fill="White" Stretch="Uniform"/>
-                </Viewbox>
+                <TextBlock x:Name="IconText" Style="{StaticResource SymbolIcon}" FontSize="24" Margin="0,0,15,0" VerticalAlignment="Top"/>
 
                 <!-- Content -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -77,29 +75,29 @@
 
             <!-- Success Type -->
             <DataTrigger Binding="{Binding Type}" Value="Success">
-                <Setter TargetName="IconPath" Property="Data" Value="{StaticResource IconSummary}"/>
-                <Setter TargetName="IconPath" Property="Fill" Value="#10B981"/>
+                <Setter TargetName="IconText" Property="Text" Value=""/>
+                <Setter TargetName="IconText" Property="Foreground" Value="#10B981"/>
                 <Setter TargetName="ToastBorder" Property="BorderBrush" Value="#4010B981"/>
             </DataTrigger>
             
             <!-- Error Type -->
             <DataTrigger Binding="{Binding Type}" Value="Error">
-                <Setter TargetName="IconPath" Property="Data" Value="{StaticResource IconAlert}"/>
-                <Setter TargetName="IconPath" Property="Fill" Value="{StaticResource ErrorRed}"/>
+                <Setter TargetName="IconText" Property="Text" Value=""/>
+                <Setter TargetName="IconText" Property="Foreground" Value="{StaticResource ErrorRed}"/>
                 <Setter TargetName="ToastBorder" Property="BorderBrush" Value="#40FF3B30"/>
             </DataTrigger>
             
             <!-- Warning Type -->
             <DataTrigger Binding="{Binding Type}" Value="Warning">
-                <Setter TargetName="IconPath" Property="Data" Value="{StaticResource IconAlert}"/>
-                <Setter TargetName="IconPath" Property="Fill" Value="{StaticResource SecondaryGold}"/>
+                <Setter TargetName="IconText" Property="Text" Value=""/>
+                <Setter TargetName="IconText" Property="Foreground" Value="{StaticResource SecondaryGold}"/>
                 <Setter TargetName="ToastBorder" Property="BorderBrush" Value="#40F59E0B"/>
             </DataTrigger>
             
             <!-- Info Type -->
             <DataTrigger Binding="{Binding Type}" Value="Info">
-                <Setter TargetName="IconPath" Property="Data" Value="{StaticResource IconSummary}"/>
-                <Setter TargetName="IconPath" Property="Fill" Value="{StaticResource AccentBlue}"/>
+                <Setter TargetName="IconText" Property="Text" Value=""/>
+                <Setter TargetName="IconText" Property="Foreground" Value="{StaticResource AccentBlue}"/>
                 <Setter TargetName="ToastBorder" Property="BorderBrush" Value="#403B82F6"/>
             </DataTrigger>
         </DataTemplate.Triggers>

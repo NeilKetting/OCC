@@ -31,25 +31,28 @@ namespace OCC.WpfClient.Features.SettingsHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var settings = new NavItem("Settings", "IconGear", string.Empty, "Administration");
+            var settings = new NavItem("Settings", string.Empty, "Administration", iconColor: "#FFFF00", iconCode: "\uE713");
 
             settings.Children.Add(new NavItem(
                 "Company Profile",
-                "IconHome",
                 NavigationRoutes.CompanyProfile,
-                "Administration"));
+                "Administration",
+                iconColor: "#0078D4",
+                iconCode: "\uE80F"));
 
             settings.Children.Add(new NavItem(
                 "Personal Preferences",
-                "IconUser",
                 NavigationRoutes.PersonalPreferences,
-                "Personal"));
+                "Personal",
+                iconColor: "#E81123",
+                iconCode: "\uE779"));
 
             settings.Children.Add(new NavItem(
                 "System Settings",
-                "IconSettings",
                 NavigationRoutes.CompanySettings,
-                "Administration"));
+                "Administration",
+                iconColor: "#797775",
+                iconCode: "\uE115"));
 
             yield return settings;
         }

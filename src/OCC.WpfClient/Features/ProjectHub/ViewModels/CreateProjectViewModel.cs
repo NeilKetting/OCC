@@ -15,9 +15,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    // Enum moved to Models namespace to avoid circular dependencies
-
-    public partial class CreateProjectViewModel : ViewModelBase
+    public partial class CreateProjectViewModel : OverlayViewModel
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
@@ -26,13 +24,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IUserService _userService;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly ISettingsService _settingsService;
-        private readonly IToastService _toastService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
-
-        public event EventHandler? CloseRequested;
-        public event EventHandler<Guid>? ProjectCreated;
 
         [ObservableProperty] private ProjectWrapper _project;
         
@@ -70,7 +64,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IGoogleMapsService googleMapsService,
             ISubContractorService subContractorService,
             ISettingsService settingsService,
-            IToastService toastService,
             OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings)
         {
             _projectService = projectService;
@@ -80,8 +73,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _userService = userService;
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
-            _toastService = toastService;
             _connectionSettings = connectionSettings;
+
+            Title = "Create New Project";
 
             Project = new ProjectWrapper(new Project 
             { 
@@ -133,7 +127,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception)
             {
-                _toastService.ShowError("Error", "Failed to load lookup data.");
+                NotifyError("Error", "Failed to load lookup data.");
             }
         }
 
@@ -167,7 +161,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             if (string.IsNullOrWhiteSpace(_connectionSettings.GoogleApiKey))
             {
-                _toastService.ShowWarning("Setup Required", "Google Maps API Key is missing. Suggestions will not work.");
+                NotifyWarning("Setup Required", "Google Maps API Key is missing. Suggestions will not work.");
                 return;
             }
 
@@ -184,17 +178,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 
                 if (token.IsCancellationRequested) return;
 
-                if (suggestions == null || !suggestions.Any())
-                {
-                    System.Diagnostics.Debug.WriteLine("[CreateProjectViewModel] No suggestions returned. Verify API Key.");
-                }
-
                 AddressSuggestions.Clear();
                 foreach (var s in suggestions ?? Array.Empty<AddressSuggestion>()) AddressSuggestions.Add(s);
             }
             catch (OperationCanceledException)
             {
-                // Ignore cancellation
             }
             catch (Exception)
             {
@@ -238,8 +226,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception)
             {
-                _toastService.ShowError("Google Maps", "Failed to retrieve address details.");
-                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Place Details Error");
+                NotifyError("Google Maps", "Failed to retrieve address details.");
             }
             finally
             {
@@ -248,7 +235,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [ObservableProperty] private int _animationPulse;
-        [ObservableProperty] private bool _showValidationSummary;
 
         [RelayCommand]
         private async Task CreateProject()
@@ -262,13 +248,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             if (Project.HasValidationErrors)
             {
-                // Pulse the animation signal
                 AnimationPulse = 0;
-                await Task.Delay(100); // Give dispatcher time to process the reset
+                await Task.Delay(100);
                 AnimationPulse = 1;
                 
                 var firstError = Project.Errors.FirstOrDefault() ?? "Please correct the errors before saving.";
-                _toastService.ShowWarning("Validation", firstError);
+                NotifyWarning("Validation", firstError);
                 return;
             }
 
@@ -277,13 +262,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsBusy = true;
                 await _projectService.CreateProjectAsync(Project.Model);
 
-                _toastService.ShowSuccess("Success", $"Project '{Project.Name}' created successfully.");
-                ProjectCreated?.Invoke(this, Project.Id);
-                CloseRequested?.Invoke(this, EventArgs.Empty);
+                NotifySuccess("Success", $"Project '{Project.Name}' created successfully.");
+                Close(Project.Id);
             }
             catch (Exception)
             {
-                _toastService.ShowError("Error", "Failed to create project.");
+                NotifyError("Error", "Failed to create project.");
             }
             finally
             {
@@ -341,16 +325,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             foreach (var rName in resourceNames)
             {
-                // Exact Match check
                 var exact = potentialMatches.FirstOrDefault(m => string.Equals(m.Name, rName, StringComparison.OrdinalIgnoreCase));
                 if (exact != null)
                 {
-                    // Update imported tasks directly
                     ResolveAssignee(rName, exact.Id, exact.Name, exact.Type);
                     continue;
                 }
 
-                // Fuzzy Match check
                 var fuzzyMatches = potentialMatches
                     .Select(m => new { Match = m, Score = SimilarityHelper.GetSimilarity(rName, m.Name) })
                     .Where(x => x.Score >= 0.8)
@@ -430,7 +411,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception ex)
             {
-                _toastService.ShowError("Reconciliation", $"Error during reconciliation: {ex.Message}");
+                NotifyError("Reconciliation", $"Error during reconciliation: {ex.Message}");
             }
             finally
             {
@@ -442,7 +423,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private void ConfirmImportSave()
         {
             ShowImportComplete = false;
-            CreateProjectCommand.Execute(null);
+            _ = CreateProject();
         }
 
         [RelayCommand]
@@ -452,16 +433,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [RelayCommand]
-        private void Close()
-        {
-            CloseRequested?.Invoke(this, EventArgs.Empty);
-        }
-
-        [RelayCommand]
         private void BrowseImport()
         {
-            // TODO: Use DialogService to open file picker for XML
-            _toastService.ShowInfo("Import", "Please select an MS Project XML file.");
+            NotifyInfo("Import", "Please select an MS Project XML file.");
         }
     }
 }

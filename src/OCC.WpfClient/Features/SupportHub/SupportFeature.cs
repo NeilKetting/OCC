@@ -27,7 +27,7 @@ namespace OCC.WpfClient.Features.SupportHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            yield break;
+            yield return new NavItem("Support", "Support.SupportHub", "System", iconColor: "#00BCF2", iconCode: "\uE897");
         }
     }
 }

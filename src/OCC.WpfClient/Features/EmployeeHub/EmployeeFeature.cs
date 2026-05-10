@@ -1,9 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Services.Interfaces;
-using OCC.WpfClient.Services;
 using OCC.WpfClient.Features.EmployeeHub.ViewModels;
-using System.Collections.Generic;
+using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Services;
+using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.EmployeeHub
 {
@@ -25,8 +24,8 @@ namespace OCC.WpfClient.Features.EmployeeHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var admin = new NavItem("Admin", "IconGear", string.Empty, "Administration");
-            admin.Children.Add(new NavItem("Employee Management", "IconTeam", NavigationRoutes.StaffManagement, "Administration"));
+            var admin = new NavItem("Admin", string.Empty, "Administration", iconColor: "#FFA500", iconCode: "\uE72E");
+            admin.Children.Add(new NavItem("Employee Management", NavigationRoutes.StaffManagement, "Administration", iconColor: "#FFFF00", iconCode: "\uE77B"));
             yield return admin;
         }
     }

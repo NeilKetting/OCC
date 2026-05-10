@@ -37,19 +37,21 @@ namespace OCC.WpfClient.Features.ProjectHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var projects = new NavItem("Projects", "IconPortfolio", string.Empty, "Operations");
+            var projects = new NavItem("Projects", string.Empty, "Operations", iconColor: "#800080", iconCode: "\uE838");
 
             projects.Children.Add(new NavItem(
                 "Project Dashboard",
-                "IconSummary",
                 NavigationRoutes.ProjectDashboard,
-                "Operations"));
+                "Operations",
+                iconColor: "#107C10",
+                iconCode: "\uE9D9"));
 
             projects.Children.Add(new NavItem(
                 "Projects",
-                "IconList",
                 NavigationRoutes.Projects,
-                "Operations"));
+                "Operations",
+                iconColor: "#5C2D91",
+                iconCode: "\uEA37"));
 
             yield return projects;
         }

@@ -60,26 +60,38 @@ namespace OCC.WpfClient.Infrastructure
 
         private void HandleDrawerTransition(bool isOpen)
         {
-            // Try to find the drawer overlay grid. 
-            // We expect a Grid named "DrawerOverlay" or just the first Grid with Grid.RowSpan > 1
-            var overlay = this.FindName("DrawerOverlay") as Grid ?? FindVisualChild<Grid>(this, g => Grid.GetRowSpan(g) > 1);
+            // Try to find the drawer overlay grid by name, or fall back to finding the parent of "DrawerContent"
+            var overlay = this.FindName("DrawerOverlay") as Grid;
+            
+            if (overlay == null)
+            {
+                var content = this.FindName("DrawerContent") as FrameworkElement;
+                if (content != null)
+                {
+                    overlay = System.Windows.Media.VisualTreeHelper.GetParent(content) as Grid;
+                }
+            }
+
             if (overlay == null) return;
 
             if (isOpen)
             {
                 overlay.Visibility = Visibility.Visible;
                 var sb = this.Resources["OpenDrawer"] as Storyboard;
-                sb?.Begin(this);
+                if (sb != null)
+                {
+                    sb.Begin(this);
+                }
             }
             else
             {
                 var sb = this.Resources["CloseDrawer"] as Storyboard;
                 if (sb != null)
                 {
-                    sb = sb.Clone(); // Clone to avoid sharing issues
+                    sb = sb.Clone();
                     sb.Completed += (s, args) =>
                     {
-                        if (!IsDrawerOpen) // Re-check in case it was opened during animation
+                        if (!IsDrawerOpen)
                             overlay.Visibility = Visibility.Collapsed;
                     };
                     sb.Begin(this);

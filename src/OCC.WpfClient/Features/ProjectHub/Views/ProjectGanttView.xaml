@@ -130,10 +130,10 @@
                                             Margin="5,0,5,0"
                                             Visibility="{Binding HasChildren, Converter={StaticResource VisibilityConverter}}">
                                         <Grid>
-                                            <Path Data="{StaticResource IconChevronDown}" Width="10" Height="10" Fill="White" Stretch="Uniform" Opacity="0.5"
-                                                  Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}}"/>
-                                            <Path Data="{StaticResource IconChevronRight}" Width="10" Height="10" Fill="White" Stretch="Uniform" Opacity="0.5"
-                                                  Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Opacity="0.5"
+                                                       Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}}"/>
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Opacity="0.5"
+                                                       Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
                                         </Grid>
                                     </Button>
                                     <!-- Spacer if no children -->

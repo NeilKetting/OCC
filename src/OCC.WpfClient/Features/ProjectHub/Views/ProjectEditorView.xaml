@@ -6,160 +6,122 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="1100"
+             d:DesignHeight="800" d:DesignWidth="900"
              d:DataContext="{d:DesignInstance Type=vm:ProjectEditorViewModel}">
 
-    <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource PrimaryTealBrush}"
-            BorderThickness="1"
-            CornerRadius="20" Margin="-20,-70,-20,-20">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.5"/>
-        </Border.Effect>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="500"/>
-            </Grid.ColumnDefinitions>
+    <Grid Margin="30">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
 
-            <!-- Left Panel: Main Info -->
-            <Grid Grid.Column="0" Margin="30">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- Main Form Panel -->
+        <Grid Grid.Column="0" Margin="0,0,30,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                    <TextBlock Text="Edit Project" FontSize="28" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Update site details, location and management." FontSize="14" Foreground="{StaticResource TextSub}"/>
-                </StackPanel>
+            <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Update site details, location and management." FontSize="14" Foreground="{StaticResource TextSub}"/>
+            </StackPanel>
 
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
-                    <StackPanel>
-                        <StackPanel Margin="0,0,0,25">
-                            <TextBlock Text="PROJECT NAME" Style="{StaticResource LabelText}"/>
-                            <TextBox Text="{Binding Project.Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
-                                     Style="{StaticResource ModernInput}"/>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
+                <StackPanel>
+                    <TextBlock Text="PROJECT NAME" Style="{StaticResource FormLabelText}"/>
+                    <TextBox Text="{Binding Project.Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                             Style="{StaticResource ModernInput}" Margin="0,0,0,25"/>
+
+                    <Grid Margin="0,0,0,25">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="CUSTOMER" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" Style="{StaticResource ModernComboBox}" DisplayMemberPath="Name"/>
                         </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="SITE MANAGER" Style="{StaticResource FormLabelText}"/>
+                            <ComboBox ItemsSource="{Binding SiteManagers}" SelectedItem="{Binding SelectedSiteManager}" Style="{StaticResource ModernComboBox}" DisplayMemberPath="DisplayName"/>
+                        </StackPanel>
+                    </Grid>
 
-                        <Grid Margin="0,0,0,25">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                <TextBlock Text="CUSTOMER" Style="{StaticResource LabelText}"/>
-                                <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" Style="{StaticResource ModernComboBox}" DisplayMemberPath="Name"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                <TextBlock Text="SITE MANAGER" Style="{StaticResource LabelText}"/>
-                                <ComboBox ItemsSource="{Binding SiteManagers}" SelectedItem="{Binding SelectedSiteManager}" Style="{StaticResource ModernComboBox}" DisplayMemberPath="DisplayName"/>
-                            </StackPanel>
+                    <TextBlock Text="DESCRIPTION" Style="{StaticResource FormLabelText}"/>
+                    <TextBox Text="{Binding Project.Description}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource ModernInput}" Margin="0,0,0,25"/>
+
+                    <Border BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="0,1,0,0" Padding="0,20,0,15" Margin="0,10,0,15">
+                        <TextBlock Text="SITE ADDRESS" Style="{StaticResource FormLabelText}" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}"/>
+                    </Border>
+
+                    <StackPanel Margin="0,0,0,10">
+                        <Grid>
+                            <TextBox x:Name="AddressBox" Text="{Binding Project.StreetLine1, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Search for site address..."/>
+                            <Popup IsOpen="{Binding AddressSuggestions.Count, Converter={StaticResource CollectionToBooleanConverter}, Mode=OneWay}" PlacementTarget="{Binding ElementName=AddressBox}" StaysOpen="False" AllowsTransparency="True">
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Width="400" MaxHeight="250">
+                                    <ListBox ItemsSource="{Binding AddressSuggestions}" SelectedItem="{Binding SelectedAddressSuggestion}" Background="Transparent" BorderThickness="0">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Description}" Foreground="White" Padding="12,8"/>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+                            </Popup>
                         </Grid>
-
-                        <StackPanel Margin="0,0,0,25">
-                            <TextBlock Text="DESCRIPTION" Style="{StaticResource LabelText}"/>
-                            <TextBox Text="{Binding Project.Description}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource ModernInput}"/>
-                        </StackPanel>
-
-                        <Border BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="0,0,0,1" Padding="0,5" Margin="0,10,0,15">
-                            <TextBlock Text="SITE ADDRESS" Style="{StaticResource LabelText}" FontWeight="SemiBold"/>
-                        </Border>
-
-                        <StackPanel Margin="0,0,0,10">
-                            <Grid>
-                                <TextBox x:Name="AddressBox" Text="{Binding Project.StreetLine1, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Search for site address..."/>
-                                <Popup IsOpen="{Binding AddressSuggestions.Count, Converter={StaticResource CollectionToBooleanConverter}, Mode=OneWay}" PlacementTarget="{Binding ElementName=AddressBox}" StaysOpen="False" AllowsTransparency="True">
-                                    <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1" CornerRadius="8" Width="400" MaxHeight="250">
-                                        <ListBox ItemsSource="{Binding AddressSuggestions}" SelectedItem="{Binding SelectedAddressSuggestion}" Background="Transparent" BorderThickness="0">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Description}" Foreground="White" Padding="12,8"/>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </Border>
-                                </Popup>
-                            </Grid>
-                        </StackPanel>
                     </StackPanel>
-                </ScrollViewer>
-
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                    <Button Command="{Binding CloseCommand}" Content="Cancel" Style="{StaticResource SecondaryButton}" Padding="25,12"/>
-                    <Button Command="{Binding SaveProjectCommand}" Content="Save Changes" Style="{StaticResource PrimaryButton}" Padding="35,12" FontWeight="Bold" Margin="15,0,0,0"/>
                 </StackPanel>
-            </Grid>
+            </ScrollViewer>
 
-            <!-- Right Panel: Advanced Settings -->
-            <Border Grid.Column="1" Background="#0AFFFFFF" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0" Padding="30">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="Advanced Settings" FontSize="20" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,30"/>
-
-                        <Grid Margin="0,0,0,30">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                <TextBlock Text="STATUS" Style="{StaticResource LabelText}"/>
-                                <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Project.Status}" Style="{StaticResource ModernComboBox}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                <TextBlock Text="PRIORITY" Style="{StaticResource LabelText}"/>
-                                <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Project.Priority}" Style="{StaticResource ModernComboBox}"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <StackPanel Margin="0,0,0,30">
-                            <TextBlock Text="TIMELINE" Style="{StaticResource LabelText}"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <DatePicker Grid.Column="0" SelectedDate="{Binding Project.StartDate}" Margin="0,0,10,0"/>
-                                <DatePicker Grid.Column="1" SelectedDate="{Binding Project.EndDate}" Margin="10,0,0,0"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,30">
-                            <TextBlock Text="LOCATION DETAILS" Style="{StaticResource LabelText}"/>
-                            <TextBox Text="{Binding Project.StreetLine2}" Style="{StaticResource ModernInput}" Margin="0,0,0,15" ap:WatermarkProperties.Watermark="Suite / Building..."/>
-                            <Grid Margin="0,0,0,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding Project.City}" Style="{StaticResource ModernInput}" Margin="0,0,10,0" ap:WatermarkProperties.Watermark="City"/>
-                                <TextBox Grid.Column="1" Text="{Binding Project.StateOrProvince}" Style="{StaticResource ModernInput}" Margin="10,0,0,0" ap:WatermarkProperties.Watermark="Province"/>
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding Project.PostalCode}" Style="{StaticResource ModernInput}" Margin="0,0,10,0" ap:WatermarkProperties.Watermark="Postal Code"/>
-                                <TextBox Grid.Column="1" Text="{Binding Project.Country}" Style="{StaticResource ModernInput}" Margin="10,0,0,0" ap:WatermarkProperties.Watermark="Country"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <StackPanel>
-                            <TextBlock Text="PROJECT CODE" Style="{StaticResource LabelText}"/>
-                            <TextBox Text="{Binding Project.ShortName}" Style="{StaticResource ModernInput}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
-
-            <!-- Loading Overlay -->
-            <Border Grid.ColumnSpan="2" Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}" CornerRadius="20">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource PrimaryTeal}"/>
-                    <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+            <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,20,0,0">
+                <Button Command="{Binding SaveProjectCommand}" Content="SAVE CHANGES" Style="{StaticResource ActionButtonPrimary}" Height="45" Margin="0,0,0,10"/>
+                <Button Command="{Binding CloseCommand}" Content="CANCEL" Style="{StaticResource CancelButton}" Height="45"/>
+            </StackPanel>
         </Grid>
-    </Border>
+
+        <!-- Right Panel: Side Settings -->
+        <Border Grid.Column="1" Width="350" Background="#05FFFFFF" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0" Padding="30">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="Project Control" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,30"/>
+
+                    <TextBlock Text="STATUS" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Project.Status}" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="PRIORITY" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Project.Priority}" Style="{StaticResource ModernComboBox}" Margin="0,0,0,25"/>
+
+                    <TextBlock Text="TIMELINE" Style="{StaticResource FormLabelText}"/>
+                    <Grid Margin="0,0,0,25">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <DatePicker SelectedDate="{Binding Project.StartDate}" Style="{StaticResource ModernDatePicker}"/>
+                        <DatePicker Grid.Column="2" SelectedDate="{Binding Project.EndDate}" Style="{StaticResource ModernDatePicker}"/>
+                    </Grid>
+
+                    <TextBlock Text="LOCATION DETAILS" Style="{StaticResource FormLabelText}"/>
+                    <TextBox Text="{Binding Project.StreetLine2}" Style="{StaticResource ModernInput}" Margin="0,0,0,10" ap:WatermarkProperties.Watermark="Unit / Suite"/>
+                    <TextBox Text="{Binding Project.City}" Style="{StaticResource ModernInput}" Margin="0,0,0,10" ap:WatermarkProperties.Watermark="City"/>
+                    <TextBox Text="{Binding Project.PostalCode}" Style="{StaticResource ModernInput}" Margin="0,0,0,25" ap:WatermarkProperties.Watermark="Postal Code"/>
+
+                    <TextBlock Text="PROJECT CODE" Style="{StaticResource FormLabelText}"/>
+                    <TextBox Text="{Binding Project.ShortName}" Style="{StaticResource ModernInput}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Loading Overlay -->
+        <Border Grid.ColumnSpan="2" Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}" CornerRadius="10">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource PrimaryTeal}"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

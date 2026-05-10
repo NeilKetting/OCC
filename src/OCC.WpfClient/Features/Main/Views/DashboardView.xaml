@@ -36,7 +36,7 @@
                         <TextBlock Text="Total Active" Foreground="{StaticResource TextSub}" FontSize="13"/>
                     </StackPanel>
                     <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="40" CornerRadius="12" Background="#1A2E9DFF">
-                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource AccentBlue}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
                     </Border>
                 </Grid>
             </Border>
@@ -50,7 +50,7 @@
                         <TextBlock Text="Pending Review" Foreground="{StaticResource TextSub}" FontSize="13"/>
                     </StackPanel>
                     <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="40" CornerRadius="12" Background="#1AFF8F00">
-                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource OrangeBrush}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="20"/>
                     </Border>
                 </Grid>
             </Border>
@@ -64,7 +64,7 @@
                         <TextBlock Text="Total Registered" Foreground="{StaticResource TextSub}" FontSize="13"/>
                     </StackPanel>
                     <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="40" CornerRadius="12" Background="#1A6B39FF">
-                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" Foreground="#BE9DFF" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#BE9DFF" FontSize="20"/>
                     </Border>
                 </Grid>
             </Border>
@@ -78,7 +78,7 @@
                         <TextBlock Text="Trend: +12%" Foreground="#49FF8F00" FontSize="13" FontWeight="SemiBold"/>
                     </StackPanel>
                     <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="40" CornerRadius="12" Background="#1A00FF88">
-                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" Foreground="#00FF88" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="20"/>
                     </Border>
                 </Grid>
             </Border>

@@ -34,6 +34,17 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         
         public ObservableCollection<SpecialtyOption> SpecialtyOptions { get; } = new();
 
+        public string[] PredefinedColors { get; } = new[] 
+        { 
+            "#F97637", "#2E9DFF", "#00C853", "#FF4B4B", 
+            "#66529E", "#EAB308", "#EC4899", "#06B6D4",
+            "#10B981", "#8B5CF6", "#F43F5E", "#3B82F6",
+            "#14B8A6", "#F59E0B", "#D946EF", "#6366F1"
+        };
+
+        [RelayCommand]
+        private void SelectColor(string color) => ColorTheme = color;
+
         public bool IsNew => _model.Id == Guid.Empty;
 
         public SubContractorDetailViewModel(

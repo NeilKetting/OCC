@@ -112,7 +112,7 @@
                 <MenuItem Header="File">
                     <MenuItem Header="Exit" Command="{Binding ExitAppCommand}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconLogout}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuItem>
@@ -126,35 +126,35 @@
                     <MenuItem Header="Chat" Command="{Binding NavigateCommand}" CommandParameter="Chat"
                               Visibility="{Binding CanAccessChat, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconChat}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    
+
                     <MenuItem Header="Project Portfolio" Command="{Binding NavigateCommand}" CommandParameter="Projects"
                               Visibility="{Binding CanAccessProjects, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconSummary}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
 
                     <MenuItem Header="Employee Hub" Command="{Binding NavigateCommand}" CommandParameter="Team"
                               Visibility="{Binding CanAccessStaff, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconTeam}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
 
                     <MenuItem Header="Customer Hub" Command="{Binding NavigateCommand}" CommandParameter="Customers"
                               Visibility="{Binding CanAccessCustomers, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconAddUser}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
 
                     <MenuItem Header="Health &amp; Safety" Command="{Binding NavigateCommand}" CommandParameter="HealthSafety"
                               Visibility="{Binding CanAccessHealthSafety, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconHealthSafety}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
 
@@ -162,45 +162,87 @@
 
                     <MenuItem Header="Procurement Hub" Visibility="{Binding CanAccessProcurement, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconDatabase}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
-                        <MenuItem Header="Procurement Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Procurement"/>
+                        <MenuItem Header="Procurement Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Procurement"
+                                  Visibility="{Binding CanAccessProcurement, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem Header="Inventory Control" Command="{Binding NavigateCommand}" CommandParameter="Inventory"
-                                  Visibility="{Binding CanAccessInventory, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                  Visibility="{Binding CanAccessInventory, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem Header="Purchase Orders" Command="{Binding NavigateCommand}" CommandParameter="PurchaseOrder"
-                                  Visibility="{Binding CanAccessPurchaseOrders, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                  Visibility="{Binding CanAccessPurchaseOrders, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem Header="Suppliers" Command="{Binding NavigateCommand}" CommandParameter="Suppliers"
-                                  Visibility="{Binding CanAccessSuppliers, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                  Visibility="{Binding CanAccessSuppliers, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+
+                    <Separator Visibility="{Binding CanAccessPartnerHub, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <MenuItem Header="Partner Hub" Visibility="{Binding CanAccessPartnerHub, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                        </MenuItem.Icon>
+                        <MenuItem Header="Performance Hub" Command="{Binding NavigateCommand}" CommandParameter="PerformanceDashboard"
+                                  Visibility="{Binding CanAccessPerformanceDashboard, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Sub-Contractors" Command="{Binding NavigateCommand}" CommandParameter="SubContractors"
+                                  Visibility="{Binding CanAccessSubContractors, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Snag List" Command="{Binding NavigateCommand}" CommandParameter="SnagList"
+                                  Visibility="{Binding CanAccessSnagList, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
                     </MenuItem>
 
                     <Separator Visibility="{Binding CanAccessAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                     <MenuItem Header="Admin" Visibility="{Binding CanAccessAdmin, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconGear}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                         <MenuItem Header="User Management" Command="{Binding NavigateCommand}" CommandParameter="UserManagement"
                                   Visibility="{Binding CanAccessUserManagement, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <MenuItem.Icon>
-                                <Path Data="{StaticResource IconTeam}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="Audit Logs" Command="{Binding NavigateCommand}" CommandParameter="AuditLog"
                                   Visibility="{Binding CanAccessAuditLog, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <MenuItem.Icon>
-                                <Path Data="{StaticResource IconHistory}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="Company Profile" Command="{Binding NavigateCommand}" CommandParameter="CompanyProfile"
                                   Visibility="{Binding CanAccessCompanyProfile, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <MenuItem.Icon>
-                                <Path Data="{StaticResource IconCompanyProfile}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="System Settings" Command="{Binding NavigateCommand}" CommandParameter="CompanySettings"
                                   Visibility="{Binding CanAccessSettings, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <MenuItem.Icon>
-                                <Path Data="{StaticResource IconGear}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
@@ -213,7 +255,7 @@
                 <MenuItem Header="Help">
                     <MenuItem Header="Support Hub" Command="{Binding ShowSupportHubCommand}">
                         <MenuItem.Icon>
-                            <Path Data="{StaticResource IconBug}" Fill="White" Stretch="Uniform" Width="14" Height="14"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator Background="{StaticResource GlassBorderUltraLight}"/>
@@ -292,7 +334,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Search Icon -->
-                                    <Path Data="{StaticResource IconSearch}" Fill="#00FF88" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8"/>
+                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="14" Opacity="0.8" HorizontalAlignment="Center"/>
 
                                     <!-- Search Input -->
                                     <TextBox x:Name="SearchTextBox" Grid.Column="1" Background="Transparent" BorderThickness="0" Foreground="White" 
@@ -331,24 +373,26 @@
                                                       Visibility="{Binding IsParent, Converter={StaticResource VisibilityConverter}}">
                                             <Grid HorizontalAlignment="Stretch">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="52" />
+                                                    <ColumnDefinition Width="48" />
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <Grid Grid.Column="0" Width="40" Height="40" HorizontalAlignment="Center">
-                                                    <Path Data="{Binding Icon, FallbackValue={StaticResource IconSummary}}" Fill="White" Opacity="0.6" Width="18" Height="18" Stretch="Uniform"/>
+                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="18"
+                                                               Foreground="{Binding IconColor, FallbackValue=White}" 
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                                 </Grid>
 
                                                 <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" FontSize="15" Margin="0,0,0,0"
                                                            Visibility="{Binding DataContext.IsSidebarMinimized, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
 
                                                 <!-- Expand/Collapse Chevron -->
-                                                <Path Grid.Column="2" Data="M0.5,0.5 L4.5,4.5 L8.5,0.5" Stroke="White" StrokeThickness="1.5"
-                                                      Opacity="0.5" VerticalAlignment="Center" Margin="0,0,15,0"
-                                                      RenderTransformOrigin="0.5,0.5" Width="9" Height="5" Stretch="Uniform"
-                                                      Visibility="{Binding DataContext.IsSidebarMinimized, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
-                                                    <Path.Style>
-                                                        <Style TargetType="Path">
+                                                <TextBlock Grid.Column="2" Text="" FontSize="8"
+                                                           Foreground="White" Opacity="1" VerticalAlignment="Center" Margin="5,0,15,0"
+                                                           RenderTransformOrigin="0.5,0.5"
+                                                           Visibility="{Binding DataContext.IsSidebarMinimized, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
                                                             <Setter Property="RenderTransform">
                                                                 <Setter.Value>
                                                                     <RotateTransform Angle="0" />
@@ -364,8 +408,8 @@
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
-                                                    </Path.Style>
-                                                </Path>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
                                             </Grid>
                                         </ToggleButton>
 
@@ -385,10 +429,12 @@
                                                 <Grid Grid.Column="0" Width="40" Height="40" HorizontalAlignment="Center">
                                                     <Ellipse Fill="{DynamicResource AccentBlue}" Opacity="0" Margin="-2" x:Name="ActiveIndicator">
                                                         <Ellipse.Effect>
-                                                            <DropShadowEffect BlurRadius="10" Color="{StaticResource AccentBlueColor}" ShadowDepth="0" Opacity="0.5"/>
+                                                            <DropShadowEffect BlurRadius="10" Color="{StaticResource AccentBlueColor}" ShadowDepth="0" Opacity="1"/>
                                                         </Ellipse.Effect>
                                                     </Ellipse>
-                                                    <Path Data="{Binding Icon, FallbackValue={StaticResource IconSummary}}" Fill="White" Opacity="0.6" Width="18" Height="18" Stretch="Uniform"/>
+                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="18"
+                                                               Foreground="{Binding IconColor, FallbackValue=White}" 
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                                 </Grid>
 
                                                 <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" FontSize="15" Margin="0,0,0,0"
@@ -433,16 +479,19 @@
                                                                     <ColumnDefinition Width="*" />
                                                                 </Grid.ColumnDefinitions>
                                                                 <Grid Grid.Column="1" Width="16" Height="16" HorizontalAlignment="Center">
-                                                                    <Path Data="{Binding Icon, FallbackValue={StaticResource IconSummary}}" Fill="White" Opacity="0.4" Stretch="Uniform"/>
+                                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="16" FontWeight="Bold"
+                                                                               Foreground="{Binding IconColor, FallbackValue=White}" 
+                                                                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                                               Opacity="1"/>
                                                                 </Grid>
-                                                                <TextBlock Grid.Column="2" Text="{Binding Label}" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0" Opacity="0.8"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding Label}" VerticalAlignment="Center" 
+                                                                           FontSize="13" Margin="10,0,0,0" Opacity="1"/>
                                                             </Grid>
                                                         </RadioButton>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
                                         </Border>
-
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -460,11 +509,11 @@
                             <!-- NK Circle -->
                             <Border Grid.Column="0" x:Name="ProfileCircle" Width="42" Height="42" 
                                     HorizontalAlignment="Center" CornerRadius="21" Background="{StaticResource AccentBlue}"
-                                    Cursor="Hand" MouseLeftButtonDown="OnProfileCircleClick">
+                                    Cursor="Hand" MouseLeftButtonDown="OnProfileCircleClick" RenderOptions.BitmapScalingMode="HighQuality">
                                 <TextBlock Text="{Binding UserInitials}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold" FontSize="14" IsHitTestVisible="False"/>
                             </Border>
 
-                            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="5,0,0,0"
+                            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="10,0,0,0"
                                           Visibility="{Binding IsSidebarMinimized, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
                                 <TextBlock Text="{Binding UserName}" Foreground="White" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
                                 <TextBlock Text="{Binding UserEmail}" Foreground="{StaticResource TextSub}" FontSize="11" TextTrimming="CharacterEllipsis"/>
@@ -486,14 +535,65 @@
                 </Grid.RowDefinitions>
 
                 <!-- Top Bar -->
-                <Border Grid.Row="0" Height="70" Padding="30,0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+                <Border Grid.Row="0" Height="70" Padding="10,0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
                     <Grid>
                         <!-- Workspace Tabs -->
                         <ListBox x:Name="TabsListBox" ItemsSource="{Binding OpenHubs}" SelectedItem="{Binding ActiveHub}" 
                                  Background="Transparent" BorderThickness="0" 
                                  ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                 VerticalAlignment="Bottom" Margin="0,0,40,0" Padding="0,0,0,10"
+                                 VerticalAlignment="Bottom" Margin="0,0,0,0" Padding="0,0,0,10"
                                  PreviewMouseWheel="TabsListBox_PreviewMouseWheel">
+                            <ListBox.Resources>
+                                <Style TargetType="ScrollViewer">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ScrollViewer">
+                                                <Grid>
+                                                    <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"/>
+                                                    <!-- You would place your custom ScrollBars here -->
+                                                    <ScrollBar x:Name="PART_HorizontalScrollBar" 
+                                                               Orientation="Horizontal"
+                                                               VerticalAlignment="Bottom"                                                               
+                                                               Value="{TemplateBinding HorizontalOffset}"
+                                                               Maximum="{TemplateBinding ScrollableWidth}"
+                                                               ViewportSize="{TemplateBinding ViewportWidth}"
+                                                               Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                                               Margin="0,55,0,0">
+                                                        <ScrollBar.Style>
+                                                            <Style TargetType="ScrollBar">
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="ScrollBar">
+                                                                            <Grid Background="Transparent">
+                                                                                <!-- This is your track background -->
+                                                                                <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                                                                    <Track.Thumb>
+                                                                                        <Thumb>
+                                                                                            <Thumb.Template>
+                                                                                                <ControlTemplate TargetType="Thumb">
+                                                                                                    <!-- This is the actual draggable bar color -->
+                                                                                                    <Border Background="{StaticResource WorkspaceScrollViewer}" 
+                                                                                                            CornerRadius="4" 
+                                                                                                            Height="6" 
+                                                                                                            VerticalAlignment="Center"/>
+                                                                                                </ControlTemplate>
+                                                                                            </Thumb.Template>
+                                                                                        </Thumb>
+                                                                                    </Track.Thumb>
+                                                                                </Track>
+                                                                            </Grid>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </ScrollBar.Style>
+                                                    </ScrollBar>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.Resources>
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal"/>
@@ -521,8 +621,8 @@
                                                         <Button Grid.Column="1" Command="{Binding DataContext.CloseHubCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                 CommandParameter="{Binding}"
                                                                 Width="20" Height="20" Background="Transparent" BorderThickness="0" VerticalAlignment="Center" x:Name="CloseButton">
-                                                            <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="White" StrokeThickness="1.5" Opacity="0.3" x:Name="CloseIcon"
-                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="8" Opacity="0.3" x:Name="CloseIcon"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                             <Button.Style>
                                                                 <Style TargetType="Button">
                                                                     <Setter Property="Template">
@@ -554,7 +654,7 @@
                                                     </Trigger>
                                                     <Trigger SourceName="CloseButton" Property="IsMouseOver" Value="True">
                                                         <Setter TargetName="CloseIcon" Property="Opacity" Value="1.0" />
-                                                        <Setter TargetName="CloseIcon" Property="Stroke" Value="#FF3b30" />
+                                                        <Setter TargetName="CloseIcon" Property="Foreground" Value="#FF3b30" />
                                                     </Trigger>
                                                     <MultiTrigger>
                                                         <MultiTrigger.Conditions>
@@ -593,18 +693,18 @@
                         <!-- Left Section (Activity) -->
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
-                                <Path Data="{DynamicResource IconClock}" Width="14" Height="14" Margin="0,0,8,0" VerticalAlignment="Center" Stretch="Uniform">
-                                    <Path.Style>
-                                        <Style TargetType="Path">
-                                            <Setter Property="Fill" Value="{StaticResource TextSub}"/>
+                                <TextBlock Text="" FontSize="14" Margin="0,0,8,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
+                                            <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsUserInactive}" Value="True">
-                                                    <Setter Property="Fill" Value="{StaticResource SecondaryGold}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource SecondaryGold}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </Path.Style>
-                                </Path>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Text="{Binding UserActivityStatus}" FontSize="12" VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -619,39 +719,42 @@
                                 </TextBlock>
                             </StackPanel>
 
-                            <Border Width="1" Height="12" Background="{StaticResource GlassBorderUltraLight}" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                            <Border Width="2" Height="12" Background="{StaticResource GlassBorder}" VerticalAlignment="Center" Margin="0,0,20,0"/>
                         </StackPanel>
 
                         <!-- Database -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Path Data="{StaticResource IconDatabase}" Width="14" Height="14" Margin="0,0,8,0" VerticalAlignment="Center" Stretch="Uniform">
-                                <Path.Style>
-                                    <Style TargetType="Path">
-                                        <Setter Property="Fill" Value="{StaticResource ErrorRed}"/>
+                            <TextBlock Text="" FontSize="14" Margin="0,0,8,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
+                                        <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsDbConnected}" Value="True">
-                                                <Setter Property="Fill" Value="#10B981"/>
+                                                <Setter Property="Foreground" Value="#10B981"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Path.Style>
-                            </Path>
-                            <TextBlock Text="{Binding DbStatusText}" Foreground="{StaticResource TextSub}" FontSize="11" VerticalAlignment="Center"/>
-                            <Border Width="1" Height="12" Background="{StaticResource GlassBorderUltraLight}" VerticalAlignment="Center" Margin="20,0,0,0"/>
-
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Text="DATABASE: " Foreground="{StaticResource TextSub}" FontSize="10" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding DatabaseName}" Foreground="{StaticResource AccentBlue}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Border Width="2" Height="12" Background="{StaticResource GlassBorder}" VerticalAlignment="Center" Margin="15,0"/>
+                            <TextBlock Text="ENVIRONMENT: " Foreground="{StaticResource TextSub}" FontSize="10" VerticalAlignment="Center" Opacity="0.6" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding EnvironmentName}" Foreground="White" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Border Width="2" Height="12" Background="{StaticResource GlassBorder}" VerticalAlignment="Center" Margin="15,0"/>
                         </StackPanel>
 
                         <!-- Display Action -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
                             <!-- Busy Spinner (Moved from Col 0) -->
-                            <Path Data="{StaticResource IconClock}" Fill="{StaticResource SecondaryGold}" Width="14" Height="14" Margin="0,0,10,0" 
-                                  VerticalAlignment="Center" Stretch="Uniform" RenderTransformOrigin="0.5,0.5"
-                                  Visibility="{Binding IsAppBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <Path.RenderTransform>
+                            <TextBlock Text="" Foreground="{StaticResource SecondaryGold}" FontSize="14" Margin="0,0,10,0" 
+                                       VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5"
+                                       Visibility="{Binding IsAppBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock.RenderTransform>
                                     <RotateTransform x:Name="BusySpinnerTransform" Angle="0" />
-                                </Path.RenderTransform>
-                                <Path.Style>
-                                    <Style TargetType="Path">
+                                </TextBlock.RenderTransform>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsAppBusy}" Value="True">
                                                 <DataTrigger.EnterActions>
@@ -660,8 +763,8 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Path.Style>
-                            </Path>
+                                </TextBlock.Style>
+                            </TextBlock>
 
                             <Ellipse Width="8" Height="8" Margin="0,0,10,0">
                                 <Ellipse.Style>
@@ -727,17 +830,17 @@
                                     </Style>
                                 </Button.Style>
                                 <StackPanel Orientation="Horizontal">
-                                    <Path Data="{DynamicResource IconBug}" Fill="{DynamicResource SecondaryGold}" Width="12" Height="12" Margin="0,1,8,0" VerticalAlignment="Center" Stretch="Uniform"/>
+                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{DynamicResource SecondaryGold}" FontSize="12" Margin="0,1,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="Report Bug" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
-                            <Border Width="1" Height="12" Background="{StaticResource GlassBorderUltraLight}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                            <Border Width="2" Height="12" Background="{StaticResource GlassBorder}" VerticalAlignment="Center" Margin="0,0,15,0"/>
 
                             <!-- Online Users -->
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Cursor="Hand" 
                                         Background="Transparent" MouseLeftButtonDown="OnOnlineStatusClick">
-                                <Path Data="{DynamicResource IconUserOnline}" Fill="{DynamicResource AccentBlue}" Width="14" Height="14" Margin="0,0,8,0" VerticalAlignment="Center" Stretch="Uniform"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{DynamicResource AccentBlue}" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Online: " Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding OnlineCount}" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -784,7 +887,7 @@
                 <Grid Margin="0,0,0,10">
                     <TextBlock Text="Active Users" FontWeight="Bold" Foreground="White" FontSize="13"/>
                     <Button HorizontalAlignment="Right" Command="{Binding ToggleUserListCommand}" Style="{StaticResource OverlayCloseButtonStyle}" Width="24" Height="24">
-                        <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="{StaticResource TextSub}" StrokeThickness="1.5" Width="8" Height="8" Stretch="Uniform"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </Grid>
                 <ItemsControl ItemsSource="{Binding ConnectedUsers}">
@@ -836,14 +939,14 @@
             <StackPanel Margin="5">
                 <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ShowProfileCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconProfile}" Fill="White" Width="14" Height="14" Margin="0,0,12,0" Stretch="Uniform" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,12,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Profile"/>
                     </StackPanel>
                 </Button>
                 <Border Height="1" Background="{StaticResource GlassBorderUltraLight}" Margin="10,2"/>
                 <Button Style="{StaticResource ModernMenuButton}" Command="{Binding LogoutCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource IconLogout}" Fill="White" Width="14" Height="14" Margin="0,0,12,0" Stretch="Uniform" VerticalAlignment="Center"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,12,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Log out" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
@@ -924,7 +1027,7 @@
                     <Grid Margin="0,0,0,15">
                         <TextBlock Text="About" FontFamily="{StaticResource MichromaFont}" FontSize="18" Foreground="White" FontWeight="SemiBold"/>
                         <Button HorizontalAlignment="Right" Command="{Binding CloseAboutCommand}" Style="{StaticResource OverlayCloseButtonStyle}" Width="28" Height="28">
-                            <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="{StaticResource TextSub}" StrokeThickness="2" Width="10" Height="10" Stretch="Uniform"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                     </Grid>
 

@@ -11,7 +11,7 @@ namespace OCC.WpfClient.Features.SubContractorHub
     {
         public string Name => "Partners";
         public string Description => "Sub-Contractor Performance and Snag Management";
-        public string Icon => "IconTeam"; 
+        public string Icon => "PartnerIcon"; 
         public int Order => 40;
 
         public void RegisterServices(IServiceCollection services)
@@ -35,25 +35,28 @@ namespace OCC.WpfClient.Features.SubContractorHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var hub = new NavItem("Partner Hub", "IconTeam", string.Empty, "Operations");
+            var hub = new NavItem("Partner Hub", string.Empty, "Operations", iconColor: "#C0C0C0", iconCode: "\uE8D7");
 
             hub.Children.Add(new NavItem(
                 "Performance Hub",
-                "IconActivity",
                 NavigationRoutes.PerformanceDashboard,
-                "Operations"));
+                "Operations",
+                iconColor: "#FF8C00",
+                iconCode: "\uE9D2"));
 
             hub.Children.Add(new NavItem(
                 "Sub-Contractors",
-                "IconTeam",
                 NavigationRoutes.SubContractors,
-                "Operations"));
+                "Operations",
+                iconColor: "#0078D4",
+                iconCode: "\uE77B"));
 
             hub.Children.Add(new NavItem(
                 "Snag List",
-                "IconList",
                 NavigationRoutes.SnagList,
-                "Operations"));
+                "Operations",
+                iconColor: "#D83B01",
+                iconCode: "\uEA37"));
 
             yield return hub;
         }

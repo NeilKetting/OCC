@@ -205,8 +205,9 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
 
             if (RegisterModel.HasErrors)
             {
-                var errors = RegisterModel.GetErrors().Select(e => e.ErrorMessage);
-                ErrorMessage = string.Join(". ", errors);
+                var errors = RegisterModel.GetErrors().Select(e => e.ErrorMessage).ToList();
+                ErrorMessage = string.Join("\n", errors);
+                _logger.LogWarning("Registration validation failed: {Errors}", ErrorMessage);
                 return;
             }
 

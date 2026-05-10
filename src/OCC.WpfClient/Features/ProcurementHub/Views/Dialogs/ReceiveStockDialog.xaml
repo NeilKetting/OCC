@@ -28,7 +28,7 @@
                     
                     <Button Style="{StaticResource GhostButton}" Command="{Binding CloseCommand}" 
                             HorizontalAlignment="Right" VerticalAlignment="Top" Padding="5">
-                        <Path Data="{StaticResource IconClose}" Fill="White" Width="14" Height="14" Stretch="Uniform"/>
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
                     </Button>
                 </Grid>
 
@@ -47,7 +47,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Path Data="{StaticResource IconInfo}" Fill="#00FF88" Width="20" Height="20" Stretch="Uniform" VerticalAlignment="Center"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="20" VerticalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="Enter the quantity received for each item. This will update inventory levels immediately." 
                                        Foreground="White" VerticalAlignment="Center" Margin="15,0" TextWrapping="Wrap"/>
                             <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="Receive All Remaining" 

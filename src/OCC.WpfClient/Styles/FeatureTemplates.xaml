@@ -147,6 +147,14 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
         <projViews:ProjectHistoryView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type projVm:CreateProjectViewModel}">
+        <projViews:CreateProjectView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectEditorViewModel}">
+        <projViews:ProjectEditorView />
+    </DataTemplate>
+
     <!-- Partner Hub -->
     <DataTemplate DataType="{x:Type subHubVm:PerformanceDashboardViewModel}">
         <subHubViews:PerformanceDashboardView />
@@ -187,6 +195,26 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
 
     <DataTemplate DataType="{x:Type hseqVm:AuditsViewModel}">
         <hseqViews:AuditListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:IncidentDetailViewModel}">
+        <hseqViews:IncidentDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:TrainingDetailViewModel}">
+        <hseqViews:TrainingDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:DocumentDetailViewModel}">
+        <hseqViews:DocumentDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:AuditDetailViewModel}">
+        <hseqViews:AuditDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:DeviationDetailViewModel}">
+        <hseqViews:DeviationDetailView />
     </DataTemplate>
 
     <!-- Splash -->

@@ -23,7 +23,7 @@ namespace OCC.WpfClient.Infrastructure
             
             foreach (var item in allItems)
             {
-                var existing = merged.FirstOrDefault(m => m.Label == item.Label);
+                var existing = merged.FirstOrDefault(m => string.Equals(m.Label?.Trim(), item.Label?.Trim(), System.StringComparison.OrdinalIgnoreCase));
                 if (existing != null)
                 {
                     foreach (var child in item.Children)
