@@ -1,5 +1,7 @@
 <infra:BaseListView x:Class="OCC.WpfClient.Features.HseqHub.Views.AuditListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
+                OverlayContent="{Binding ActiveOverlay}"
+                DrawerWidth="700"
                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -14,35 +16,13 @@
 
     <UserControl.Resources>
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
+
         <DataTemplate DataType="{x:Type vm:AuditDetailViewModel}">
             <views:AuditDetailView />
         </DataTemplate>
-        
-        <!-- Drawer Animations -->
-        <Storyboard x:Key="OpenDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             From="750" To="0" Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Dimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0" To="1" Duration="0:0:0.3"/>
-        </Storyboard>
-        <Storyboard x:Key="CloseDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             To="750" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Dimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             To="0" Duration="0:0:0.3"/>
-        </Storyboard>
+        <DataTemplate DataType="{x:Type vm:DeviationDetailViewModel}">
+            <views:DeviationDetailView />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BackgroundDark}">
@@ -100,10 +80,10 @@
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="0" Margin="15,0,20,20" CornerRadius="0">
                 <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd MMM yyyy'}" Width="120"/>
-                        <DataGridTextColumn Header="Audit #" Binding="{Binding AuditNumber}" Width="150" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="Site Name" Binding="{Binding SiteName}" Width="*"/>
-                        <DataGridTemplateColumn Header="Score" Width="100">
+                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd MMM yyyy'}" Width="Auto"/>
+                        <DataGridTextColumn Header="Audit #" Binding="{Binding AuditNumber}" Width="Auto" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="Site Name" Binding="{Binding SiteName}" Width="Auto"/>
+                        <DataGridTemplateColumn Header="Score" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="4" Padding="8,2" Background="{Binding ActualScore, Converter={StaticResource AuditScoreColorConverter}}" Margin="5">
@@ -112,7 +92,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
                         <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -135,24 +115,6 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-            </Border>
-        </Grid>
-
-        <!-- DRAWER OVERLAY -->
-        <Grid x:Name="DrawerOverlay" Grid.RowSpan="3" Visibility="Collapsed">
-            <Border x:Name="Dimmer" Background="#80000000" Opacity="0">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ActiveOverlay.CloseCommand}"/>
-                </Border.InputBindings>
-            </Border>
-
-            <Border x:Name="DrawerContent" HorizontalAlignment="Right" Width="700" 
-                    Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0">
-                <Border.RenderTransform>
-                    <TranslateTransform X="750"/>
-                </Border.RenderTransform>
-                
-                <ContentControl Content="{Binding ActiveOverlay}" />
             </Border>
         </Grid>
 

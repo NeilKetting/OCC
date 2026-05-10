@@ -25,13 +25,13 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <!-- Section: Display Brightness -->
+                <!-- Section: Appearance -->
                 <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="10">
                     <StackPanel>
-                        <TextBlock Text="Display Brightness" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>
+                        <TextBlock Text="Appearance" Style="{StaticResource TitleText}" Margin="0,0,0,10"/>
                         <Separator Background="{StaticResource GlassBorderLight}" Margin="0,0,0,15"/>
 
-                        <Grid>
+                        <Grid Margin="0,0,0,15">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -41,11 +41,25 @@
                                 <TextBlock Text="Compensate for different monitor calibrations by nudging the overall theme brightness." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,0,10,0" Opacity="0.5"/>
+                                <TextBlock Text="&#xE706;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,0,10,0" Opacity="0.5"/>
                                 <Slider Width="200" Minimum="0" Maximum="1" TickFrequency="0.05" IsSnapToTickEnabled="True" 
                                         Value="{Binding ThemeBrightness}" VerticalAlignment="Center" Margin="0,0,15,0"/>
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="18"/>
+                                <TextBlock Text="&#xE706;" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="18"/>
                             </StackPanel>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Plain Menu Icons" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                <TextBlock Text="Use plain white icons in the main sidebar instead of colored icons." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" VerticalAlignment="Center"
+                                      IsChecked="{Binding UsePlainMenuIcons}" 
+                                      Style="{StaticResource ModernToggleSwitch}"/>
                         </Grid>
                     </StackPanel>
                 </Border>

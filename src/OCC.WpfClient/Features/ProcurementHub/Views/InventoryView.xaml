@@ -11,27 +11,11 @@
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1024"
              d:DataContext="{d:DesignInstance Type=vm:InventoryViewModel}"
-             IsDrawerOpen="{Binding IsOverlayActive}">
+             IsDrawerOpen="{Binding IsOverlayActive}"
+             OverlayContent="{Binding OverlayViewModel}"
+             DrawerWidth="550">
 
     <UserControl.Resources>
-        <!-- Standard Drawer Animations -->
-        <Storyboard x:Key="OpenDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" From="600" To="0" Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackgroundDimmer" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
-        </Storyboard>
-        <Storyboard x:Key="CloseDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" To="600" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackgroundDimmer" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
-        </Storyboard>
-
         <DataTemplate DataType="{x:Type vm:InventoryDetailViewModel}">
             <views:InventoryDetailView />
         </DataTemplate>
@@ -183,26 +167,5 @@
             <ContentControl Grid.RowSpan="3" Style="{StaticResource StandardLoadingOverlay}" 
                             Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
         </Grid>
-
-        <!-- DRAWER OVERLAY -->
-        <Grid x:Name="DrawerOverlay" Grid.RowSpan="3" Visibility="Collapsed">
-            <Border x:Name="BackgroundDimmer" Background="#80000000" Opacity="0">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding CloseOverlayCommand}"/>
-                </Border.InputBindings>
-            </Border>
-
-            <Border x:Name="DrawerContent" HorizontalAlignment="Right" Width="550" 
-                    Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0">
-                <Border.RenderTransform>
-                    <TranslateTransform X="550"/>
-                </Border.RenderTransform>
-                
-                <ContentControl Content="{Binding OverlayViewModel}" Margin="0"/>
-            </Border>
-        </Grid>
     </Grid>
 </infra:BaseListView>
-
-
-

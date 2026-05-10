@@ -1,5 +1,7 @@
 <infra:BaseListView x:Class="OCC.WpfClient.Features.HseqHub.Views.IncidentListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
+                OverlayContent="{Binding ActiveOverlay}"
+                DrawerWidth="550"
                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -15,35 +17,10 @@
 
     <UserControl.Resources>
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
+
         <DataTemplate DataType="{x:Type vm:IncidentDetailViewModel}">
             <views:IncidentDetailView />
         </DataTemplate>
-
-        <!-- Drawer Animations -->
-        <Storyboard x:Key="OpenDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             From="600" To="0" Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Dimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0" To="1" Duration="0:0:0.3"/>
-        </Storyboard>
-        <Storyboard x:Key="CloseDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             To="600" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Dimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             To="0" Duration="0:0:0.3"/>
-        </Storyboard>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BackgroundDark}">
@@ -103,7 +80,7 @@
                 <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectedItem="{Binding SelectedItem}" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='d MMM yyyy'}" Width="Auto"/>
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type, Converter={StaticResource FriendlyEnumConverter}}" Width="*"/>
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto"/>
                         <DataGridTemplateColumn Header="Severity" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -113,7 +90,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*"/>
+                        <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="Auto"/>
                         <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -130,24 +107,6 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-            </Border>
-        </Grid>
-
-        <!-- DRAWER OVERLAY -->
-        <Grid x:Name="DrawerOverlay" Grid.RowSpan="3" Visibility="Collapsed">
-            <Border x:Name="Dimmer" Background="#80000000" Opacity="0">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ActiveOverlay.CloseCommand}"/>
-                </Border.InputBindings>
-            </Border>
-
-            <Border x:Name="DrawerContent" HorizontalAlignment="Right" Width="550" 
-                    Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0">
-                <Border.RenderTransform>
-                    <TranslateTransform X="600"/>
-                </Border.RenderTransform>
-                
-                <ContentControl Content="{Binding ActiveOverlay}" />
             </Border>
         </Grid>
 

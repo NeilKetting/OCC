@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OCC.WpfClient.Features.Main.ViewModels
 {
-    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>
     {
         private readonly ILogger<MainViewModel> _logger;
         private readonly IPermissionService _permissionService;
@@ -73,6 +73,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         [ObservableProperty]
         private string _appVersion = string.Empty;
+
+        public bool UsePlainMenuIcons => _localSettings.Settings.UsePlainMenuIcons;
 
         public ObservableCollection<ToastMessage> Toasts { get; } = new();
 
@@ -307,6 +309,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             WeakReferenceMessenger.Default.Register<OpenHubMessage>(this);
             WeakReferenceMessenger.Default.Register<OpenProjectMessage>(this);
             WeakReferenceMessenger.Default.Register<StatusUpdateMessage>(this);
+            WeakReferenceMessenger.Default.Register<PreferenceChangedMessage>(this);
             
             _signalRService.UserListUpdated += OnUserListUpdated;
             _ = _signalRService.StartAsync();
@@ -777,6 +780,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                         if (StatusMessage == message.Value) StatusMessage = "Ready";
                     });
                 });
+            }
+        }
+
+        public void Receive(PreferenceChangedMessage message)
+        {
+            if (message.PreferenceName == nameof(LocalSettings.UsePlainMenuIcons))
+            {
+                OnPropertyChanged(nameof(UsePlainMenuIcons));
             }
         }
 

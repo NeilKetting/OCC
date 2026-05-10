@@ -11,7 +11,9 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:ProjectsViewModel}"
-             IsDrawerOpen="{Binding IsOverlayActive}">
+             IsDrawerOpen="{Binding IsOverlayActive}"
+             OverlayContent="{Binding ActiveOverlay}"
+             DrawerWidth="900">
     <UserControl.Resources>
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
         <DataTemplate DataType="{x:Type vm:ProjectDetailViewModel}">
@@ -20,32 +22,6 @@
         <DataTemplate DataType="{x:Type vm:CreateProjectViewModel}">
             <views:CreateProjectView />
         </DataTemplate>
-        
-        <!-- Drawer Animations -->
-        <Storyboard x:Key="OpenDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             From="900" To="0" Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Dimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0" To="1" Duration="0:0:0.3"/>
-        </Storyboard>
-        <Storyboard x:Key="CloseDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             To="900" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Dimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             To="0" Duration="0:0:0.3"/>
-        </Storyboard>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource AppBackground}">
@@ -254,24 +230,6 @@
                         <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource AccentBlue}"/>
                     </Border>
                 </Grid>
-            </Border>
-        </Grid>
-
-        <!-- DRAWER OVERLAY -->
-        <Grid x:Name="DrawerOverlay" Grid.RowSpan="3" Visibility="Collapsed">
-            <Border x:Name="Dimmer" Background="#80000000" Opacity="0">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ActiveOverlay.CloseCommand}"/>
-                </Border.InputBindings>
-            </Border>
-
-            <Border x:Name="DrawerContent" HorizontalAlignment="Right" Width="900" 
-                    Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0">
-                <Border.RenderTransform>
-                    <TranslateTransform X="900"/>
-                </Border.RenderTransform>
-                
-                <ContentControl Content="{Binding ActiveOverlay}" />
             </Border>
         </Grid>
     </Grid>

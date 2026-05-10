@@ -1,45 +1,21 @@
 <utils:BaseListView x:Class="OCC.WpfClient.Features.EmployeeHub.Views.EmployeeListView"
-              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-              xmlns:vm="clr-namespace:OCC.WpfClient.Features.EmployeeHub.ViewModels"
-              xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
-              xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
-              xmlns:views="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
-              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
-              mc:Ignorable="d" 
-              d:DesignHeight="800" d:DesignWidth="1200"
-              d:DataContext="{d:DesignInstance Type=vm:EmployeeListViewModel}"
-              IsDrawerOpen="{Binding IsOverlayActive}">
+                IsDrawerOpen="{Binding IsOverlayActive}"
+                OverlayContent="{Binding OverlayViewModel}"
+                DrawerWidth="550"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+               xmlns:vm="clr-namespace:OCC.WpfClient.Features.EmployeeHub.ViewModels"
+               xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+               xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
+               xmlns:views="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
+               xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+               mc:Ignorable="d" 
+               d:DesignHeight="800" d:DesignWidth="1200"
+               d:DataContext="{d:DesignInstance Type=vm:EmployeeListViewModel}">
 
     <UserControl.Resources>
-        <!-- Drawer Animations -->
-        <Storyboard x:Key="OpenDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             From="600" To="0" Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackgroundDimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             From="0" To="1" Duration="0:0:0.3"/>
-        </Storyboard>
-        <Storyboard x:Key="CloseDrawer">
-            <DoubleAnimation Storyboard.TargetName="DrawerContent"
-                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                             To="600" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackgroundDimmer"
-                             Storyboard.TargetProperty="Opacity"
-                             To="0" Duration="0:0:0.3"/>
-        </Storyboard>
-
         <infra:VisibilityConverter x:Key="VisibilityConverter" />
         <utils:BindingProxy x:Key="BindingProxy" Data="{Binding}" />
 
@@ -192,21 +168,17 @@
                         <DataGridTextColumn Header="POSITION" Binding="{Binding Role, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsPositionVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource AccentBlue}" />
                         <DataGridTextColumn Header="TYPE" Binding="{Binding EmploymentType, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" Foreground="{StaticResource TextSub}" />
-
                         <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="ID NUMBER" Binding="{Binding IdNumber}" Width="Auto" Visibility="{Binding Data.IsIdNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
-
                         <DataGridTextColumn Header="RATE TYPE" Binding="{Binding RateType, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsRateTypeVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="RATE" Binding="{Binding HourlyRate, StringFormat=C}" Width="Auto" Visibility="{Binding Data.IsHourlyRateVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="TAX #" Binding="{Binding TaxNumber}" Width="Auto" Visibility="{Binding Data.IsTaxNumberVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="BANK" Binding="{Binding BankName}" Width="Auto" Visibility="{Binding Data.IsBankNameVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
-
                         <DataGridTextColumn Header="LEAVE" Binding="{Binding LeaveBalance, StringFormat=\{0:N1\}}" Width="Auto" Visibility="{Binding Data.IsLeaveBalanceVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="START DATE" Binding="{Binding EmploymentDate, StringFormat=d}" Width="Auto" Visibility="{Binding Data.IsEmploymentDateVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="SHIFT START" Binding="{Binding ShiftStartTime, StringFormat={}{0:hh\:mm}}" Width="Auto" Visibility="{Binding Data.IsShiftStartVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
                         <DataGridTextColumn Header="SHIFT END" Binding="{Binding ShiftEndTime, StringFormat={}{0:hh\:mm}}" Width="Auto" Visibility="{Binding Data.IsShiftEndVisible, Source={StaticResource BindingProxy}, Converter={StaticResource VisibilityConverter}}" />
-
                         <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -263,24 +235,6 @@
                     <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{StaticResource AccentBlue}" Background="#20FFFFFF"/>
                     <TextBlock Text="{Binding BusyText}" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
-            </Border>
-        </Grid>
-
-        <!-- DRAWER OVERLAY -->
-        <Grid x:Name="DrawerOverlay" Grid.RowSpan="3" Visibility="Collapsed">
-            <Border x:Name="BackgroundDimmer" Background="#80000000" Opacity="0">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding CloseOverlayCommand}"/>
-                </Border.InputBindings>
-            </Border>
-
-            <Border x:Name="DrawerContent" HorizontalAlignment="Right" Width="550" 
-                    Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0">
-                <Border.RenderTransform>
-                    <TranslateTransform X="550"/>
-                </Border.RenderTransform>
-
-                <ContentControl Content="{Binding OverlayViewModel}" Margin="0"/>
             </Border>
         </Grid>
     </Grid>

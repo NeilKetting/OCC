@@ -20,6 +20,7 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             _maximizeOverTaskbar = _localSettings.Settings.MaximizeOverTaskbar;
             _sessionTimeoutMinutes = _localSettings.Settings.SessionTimeoutMinutes;
             _themeBrightness = _localSettings.Settings.ThemeBrightness;
+            _usePlainMenuIcons = _localSettings.Settings.UsePlainMenuIcons;
         }
 
         [ObservableProperty]
@@ -31,6 +32,17 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             _localSettings.Save();
 
             WeakReferenceMessenger.Default.Send(new PreferenceChangedMessage(nameof(LocalSettings.ThemeBrightness)));
+        }
+
+        [ObservableProperty]
+        private bool _usePlainMenuIcons;
+
+        partial void OnUsePlainMenuIconsChanged(bool value)
+        {
+            _localSettings.Settings.UsePlainMenuIcons = value;
+            _localSettings.Save();
+            
+            WeakReferenceMessenger.Default.Send(new PreferenceChangedMessage(nameof(LocalSettings.UsePlainMenuIcons)));
         }
 
         [ObservableProperty]

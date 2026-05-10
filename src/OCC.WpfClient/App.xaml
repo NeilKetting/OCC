@@ -25,6 +25,7 @@
                 <ResourceDictionary Source="/Styles/ContextMenus.xaml"/>
                 <ResourceDictionary Source="/Styles/Notifications.xaml"/>
                 <ResourceDictionary Source="/Styles/FeatureTemplates.xaml"/>
+                <ResourceDictionary Source="/Styles/BaseListView.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

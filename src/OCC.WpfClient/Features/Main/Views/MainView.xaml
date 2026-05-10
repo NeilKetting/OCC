@@ -12,6 +12,7 @@
              xmlns:chatVm="clr-namespace:OCC.WpfClient.Features.ChatHub.ViewModels"
              xmlns:shViews="clr-namespace:OCC.WpfClient.Features.SupportHub.Views"
              xmlns:shVm="clr-namespace:OCC.WpfClient.Features.SupportHub.ViewModels"
+             xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
              mc:Ignorable="d"
              d:Height="700" d:Width="1024"
              MinWidth="1024" MinHeight="700">
@@ -21,6 +22,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Styles/FeatureTemplates.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <utils:BindingProxy x:Key="MainProxy" Data="{Binding}" />
 
             <Storyboard x:Key="ExpandSidebar" Timeline.DesiredFrameRate="60">
                 <DoubleAnimation Storyboard.TargetName="SidebarBorder" 
@@ -70,6 +73,14 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+            </Style>
+            <Style x:Key="SidebarIconStyle" TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
+                <Setter Property="Foreground" Value="{Binding IconColor, FallbackValue=White}"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Data.UsePlainMenuIcons, Source={StaticResource MainProxy}}" Value="True">
+                        <Setter Property="Foreground" Value="White"/>
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -378,8 +389,7 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <Grid Grid.Column="0" Width="40" Height="40" HorizontalAlignment="Center">
-                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="18"
-                                                               Foreground="{Binding IconColor, FallbackValue=White}" 
+                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SidebarIconStyle}" FontSize="18"
                                                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                                 </Grid>
 
@@ -432,8 +442,7 @@
                                                             <DropShadowEffect BlurRadius="10" Color="{StaticResource AccentBlueColor}" ShadowDepth="0" Opacity="1"/>
                                                         </Ellipse.Effect>
                                                     </Ellipse>
-                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="18"
-                                                               Foreground="{Binding IconColor, FallbackValue=White}" 
+                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SidebarIconStyle}" FontSize="18"
                                                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                                 </Grid>
 
@@ -479,8 +488,7 @@
                                                                     <ColumnDefinition Width="*" />
                                                                 </Grid.ColumnDefinitions>
                                                                 <Grid Grid.Column="1" Width="16" Height="16" HorizontalAlignment="Center">
-                                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="16" FontWeight="Bold"
-                                                                               Foreground="{Binding IconColor, FallbackValue=White}" 
+                                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SidebarIconStyle}" FontSize="16" FontWeight="Bold"
                                                                                VerticalAlignment="Center" HorizontalAlignment="Center"
                                                                                Opacity="1"/>
                                                                 </Grid>

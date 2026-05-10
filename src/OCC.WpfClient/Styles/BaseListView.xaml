@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure">
+
+    <Style TargetType="{x:Type infra:BaseListView}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type infra:BaseListView}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <!-- Main Content -->
+                        <ContentPresenter Content="{TemplateBinding Content}" />
+
+                        <!-- Centralized Drawer Overlay -->
+                        <Grid x:Name="DrawerOverlay" Visibility="Collapsed">
+                            <Grid.Resources>
+                                <!-- Storyboards moved here for centralization -->
+                                <Storyboard x:Key="OpenDrawer">
+                                    <DoubleAnimation Storyboard.TargetName="DrawerContent"
+                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                     From="{Binding DrawerWidth, RelativeSource={RelativeSource TemplatedParent}}" To="0" Duration="0:0:0.6">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="Dimmer"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     From="0" To="1" Duration="0:0:0.3"/>
+                                </Storyboard>
+                                <Storyboard x:Key="CloseDrawer">
+                                    <DoubleAnimation Storyboard.TargetName="DrawerContent"
+                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                     To="{Binding DrawerWidth, RelativeSource={RelativeSource TemplatedParent}}" Duration="0:0:0.4">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseIn"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="Dimmer"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="0" Duration="0:0:0.3"/>
+                                </Storyboard>
+                            </Grid.Resources>
+
+                            <Border x:Name="Dimmer" Background="#80000000" Opacity="0">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.CloseOverlayCommand, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    <!-- Fallback for HSEQ style CloseCommand if present -->
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding OverlayContent.CloseCommand, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                </Border.InputBindings>
+                            </Border>
+
+                            <Border x:Name="DrawerContent" HorizontalAlignment="Right" 
+                                    Width="{TemplateBinding DrawerWidth}" 
+                                    Background="{StaticResource BackgroundDark}" 
+                                    BorderBrush="{StaticResource GlassBorderMedium}" 
+                                    BorderThickness="1,0,0,0">
+                                <Border.RenderTransform>
+                                    <TranslateTransform X="{Binding DrawerWidth, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                </Border.RenderTransform>
+
+                                <ContentControl Content="{TemplateBinding OverlayContent}" />
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
