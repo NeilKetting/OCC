@@ -7,6 +7,7 @@ using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 {
@@ -65,6 +66,10 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 
         [ObservableProperty]
         private bool _isColumnPickerOpen;
+
+        public override IRelayCommand<object>? OpenCommand => OpenEmployeeCommand;
+        public override IRelayCommand<object>? EditCommand => EditEmployeeCommand;
+        public override IRelayCommand<object>? DeleteCommand => DeleteSelectedEmployeesCommand;
 
         public EmployeeListViewModel(
             IEmployeeService employeeService, 
@@ -173,9 +178,15 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task EditEmployee(EmployeeSummaryDto? summary)
+        private async Task OpenEmployee(object? parameter)
         {
-            var target = summary ?? SelectedItem;
+            await EditEmployee(parameter);
+        }
+
+        [RelayCommand]
+        private async Task EditEmployee(object? parameter)
+        {
+            var target = parameter as EmployeeSummaryDto ?? SelectedItem;
             if (target == null) return;
             
             try
@@ -196,25 +207,44 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task DeleteEmployee(EmployeeSummaryDto? summary)
+        private async Task DeleteSelectedEmployees(object? parameter)
         {
-            var target = summary ?? SelectedItem;
-            if (target == null) return;
-            
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Employee", 
-                $"Are you sure you want to delete '{target.FirstName} {target.LastName}'? This action cannot be undone.");
+            List<EmployeeSummaryDto> targets = new();
+            if (parameter is System.Collections.IList list)
+            {
+                targets = list.Cast<EmployeeSummaryDto>().ToList();
+            }
+            else if (parameter is EmployeeSummaryDto summary)
+            {
+                targets.Add(summary);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
 
+            if (!targets.Any()) return;
+
+            string message = targets.Count > 1 
+                ? $"Are you sure you want to delete {targets.Count} selected employees? This action cannot be undone."
+                : $"Are you sure you want to delete '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Employee", message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting employee...";
-                var success = await _employeeService.DeleteEmployeeAsync(target.Id);
-                if (success)
+                BusyText = "Deleting...";
+                foreach (var t in targets)
                 {
-                    await LoadDataAsync();
+                    await _employeeService.DeleteEmployeeAsync(t.Id);
                 }
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bulk delete failed");
             }
             finally
             {

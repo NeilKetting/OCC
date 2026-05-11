@@ -1,6 +1,7 @@
 <infra:BaseListView x:Class="OCC.WpfClient.Features.SubContractorHub.Views.SubContractorListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding OverlayViewModel}"
+                SelectedItems="{Binding SelectedItems, Mode=OneWayToSource}"
                 DrawerWidth="550"
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -36,10 +37,10 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="15">
+            <Grid Grid.Row="0" Margin="10">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="24" Margin="0,0,12,0"/>
+                        <TextBlock Text="&#xE8D7;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="24" Margin="0,0,12,0"/>
                         <TextBlock Text="Partners" FontSize="28" Style="{StaticResource HeaderText}"/>
                     </StackPanel>
                     <TextBlock Text="Manage specialized service providers and trades." Style="{StaticResource LabelText}"/>
@@ -165,17 +166,20 @@
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" CornerRadius="0">
                 <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="*" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="120" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="SPECIALTIES" Binding="{Binding Specialties}" Width="200" Foreground="{StaticResource AccentBlue}" Visibility="{Binding Data.IsSpecialtiesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="180" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="120" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="Auto" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="SPECIALTIES" Binding="{Binding Specialties}" Width="Auto" Foreground="{StaticResource AccentBlue}" Visibility="{Binding Data.IsSpecialtiesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
 
-                        <DataGridTemplateColumn Header="ACTIONS" Width="120">
+                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Command="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" ToolTip="Edit">
+                                        <Button Command="{Binding DataContext.OpenSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" ToolTip="Open">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SuccessGreen}" FontSize="14"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="8,0,0,0" ToolTip="Edit">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
                                         </Button>
                                         <Button Command="{Binding DataContext.DeleteSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="8,0,0,0" ToolTip="Delete">
@@ -188,7 +192,7 @@
                     </DataGrid.Columns>
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenSubContractorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
                             <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
                         </Style>
                     </DataGrid.RowStyle>

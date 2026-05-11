@@ -50,6 +50,11 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 
         private readonly LocalSettingsService _settingsService;
 
+        // Standard commands for centralized UI
+        public override IRelayCommand<object>? OpenCommand => OpenUserCommand;
+        public override IRelayCommand<object>? EditCommand => EditUserCommand;
+        public override IRelayCommand<object>? DeleteCommand => DeleteSelectedUsersCommand;
+
         public UserListViewModel(
             IUserService userService, 
             IAuthService authService,
@@ -145,33 +150,58 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         }
 
         [RelayCommand]
-        public void EditUser(User? user)
+        private void OpenUser(object? parameter)
         {
-            var target = user ?? SelectedItem;
+            _ = EditUser(parameter);
+        }
+
+        [RelayCommand]
+        private async Task EditUser(object? parameter)
+        {
+            var target = parameter as User ?? SelectedItem;
             if (target == null) return;
             OpenOverlay(new UserDetailViewModel(this, target, _userService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
-        private async Task DeleteUser(User? user)
+        private async Task DeleteSelectedUsers(object? parameter)
         {
-            var target = user ?? SelectedItem;
-            if (target == null) return;
-            
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete User", 
-                $"Are you sure you want to delete user '{target.FirstName} {target.LastName}'?");
+            List<User> targets = new();
+            if (parameter is System.Collections.IList list)
+            {
+                targets = list.Cast<User>().ToList();
+            }
+            else if (parameter is User user)
+            {
+                targets.Add(user);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
 
+            if (!targets.Any()) return;
+
+            string message = targets.Count > 1 
+                ? $"Are you sure you want to delete {targets.Count} selected users? This action cannot be undone."
+                : $"Are you sure you want to delete user '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete User", message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting user...";
-                var success = await _userService.DeleteUserAsync(target.Id);
-                if (success)
+                BusyText = "Deleting...";
+                foreach (var t in targets)
                 {
-                    await LoadDataAsync();
+                    await _userService.DeleteUserAsync(t.Id);
                 }
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bulk delete failed");
             }
             finally
             {

@@ -20,8 +20,8 @@ namespace OCC.WpfClient.Services.Infrastructure
         public Features.EmployeeHub.Models.EmployeeListLayout? InventoryListLayout { get; set; }
         public Features.EmployeeHub.Models.EmployeeListLayout? PurchaseOrderListLayout { get; set; }
         public Features.EmployeeHub.Models.EmployeeListLayout? SupplierListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectsListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectTasksListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectListLayout { get; set; }
+        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectTaskListLayout { get; set; }
         public Features.EmployeeHub.Models.EmployeeListLayout? SubContractorListLayout { get; set; }
     }
 

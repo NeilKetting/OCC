@@ -20,10 +20,19 @@
             <StackPanel Margin="30">
                 <!-- Header -->
                 <Grid Margin="0,0,0,30">
-                    <StackPanel>
-                        <TextBlock Text="Partner Performance Hub" FontSize="32" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="Tiered ranking system based on quality, reliability, and on-time delivery." Style="{StaticResource FormLabelText}"/>
-                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="&#xE9D2;" Style="{StaticResource SymbolIcon}" FontSize="28" Foreground="#FF8C00" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1" Grid.Row="0" Text="Partner Performance Hub" Style="{StaticResource HeaderText}" FontSize="28"/>
+                        <TextBlock Grid.Column="1" Grid.Row="1" Text="Tiered ranking system based on quality, reliability, and on-time delivery." Style="{StaticResource LabelText}"/>
+                    </Grid>                    
                     
                     <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#10FFFFFF" CornerRadius="8" Padding="15,8">
                         <StackPanel Orientation="Horizontal">

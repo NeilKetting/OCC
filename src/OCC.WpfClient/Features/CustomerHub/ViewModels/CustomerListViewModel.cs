@@ -36,6 +36,11 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         
         [ObservableProperty] private bool _isColumnPickerOpen;
 
+        // Standard commands for centralized UI
+        public override IRelayCommand<object>? OpenCommand => OpenCustomerCommand;
+        public override IRelayCommand<object>? EditCommand => EditCustomerCommand;
+        public override IRelayCommand<object>? DeleteCommand => DeleteSelectedCustomersCommand;
+
         public CustomerListViewModel(
             ICustomerService customerService,
             IDialogService dialogService,
@@ -113,9 +118,15 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task EditCustomer(CustomerSummaryDto? summary)
+        private void OpenCustomer(object? parameter)
         {
-            var target = summary ?? SelectedItem;
+            _ = EditCustomer(parameter);
+        }
+
+        [RelayCommand]
+        private async Task EditCustomer(object? parameter)
+        {
+            var target = parameter as CustomerSummaryDto ?? SelectedItem;
             if (target == null) return;
             
             try
@@ -135,25 +146,44 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task DeleteCustomer(CustomerSummaryDto? summary)
+        private async Task DeleteSelectedCustomers(object? parameter)
         {
-            var target = summary ?? SelectedItem;
-            if (target == null) return;
-            
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Customer", 
-                $"Are you sure you want to delete '{target.Name}'? This action cannot be undone.");
+            List<CustomerSummaryDto> targets = new();
+            if (parameter is System.Collections.IList list)
+            {
+                targets = list.Cast<CustomerSummaryDto>().ToList();
+            }
+            else if (parameter is CustomerSummaryDto summary)
+            {
+                targets.Add(summary);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
 
+            if (!targets.Any()) return;
+
+            string message = targets.Count > 1 
+                ? $"Are you sure you want to delete {targets.Count} selected customers? This action cannot be undone."
+                : $"Are you sure you want to delete '{targets[0].Name}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Customer", message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting customer...";
-                var success = await _customerService.DeleteCustomerAsync(target.Id);
-                if (success)
+                BusyText = "Deleting...";
+                foreach (var t in targets)
                 {
-                    await LoadDataAsync();
+                    await _customerService.DeleteCustomerAsync(t.Id);
                 }
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bulk delete failed");
             }
             finally
             {

@@ -16,7 +16,7 @@ using OCC.WpfClient.Infrastructure.Messages;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectTasksViewModel : ViewModelBase, IOverlayProvider, IRecipient<TaskUpdatedMessage>
+    public partial class ProjectTaskListViewModel : ViewModelBase, IOverlayProvider, IRecipient<TaskUpdatedMessage>
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IProjectTaskService _taskService;
@@ -61,7 +61,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public ViewModelBase? ActiveOverlay => CurrentTaskDetail;
 
-        public ProjectTasksViewModel(
+        public ProjectTaskListViewModel(
             IServiceProvider serviceProvider, 
             IProjectTaskService taskService,
             ISubContractorService subContractorService,
@@ -81,7 +81,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private void LoadLayout()
         {
-            var layout = _settingsService.Settings.ProjectTasksListLayout;
+            var layout = _settingsService.Settings.ProjectTaskListLayout;
             if (layout?.Columns != null && layout.Columns.Any())
             {
                 IsStartVisible = layout.Columns.FirstOrDefault(c => c.Header == "Start")?.IsVisible ?? true;
@@ -107,7 +107,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     new() { Header = "Assigned", IsVisible = IsAssignedVisible }
                 }
             };
-            _settingsService.Settings.ProjectTasksListLayout = layout;
+            _settingsService.Settings.ProjectTaskListLayout = layout;
             _settingsService.Save();
         }
 

@@ -17,10 +17,10 @@ namespace OCC.WpfClient.Features.ProjectHub
         public void RegisterServices(IServiceCollection services)
         {
             services.AddTransient<ProjectDashboardViewModel>();
-            services.AddTransient<ProjectsViewModel>();
+            services.AddTransient<ProjectListViewModel>();
             services.AddTransient<ProjectDetailViewModel>();
             services.AddTransient<ProjectSpecificDashboardViewModel>();
-            services.AddTransient<ProjectTasksViewModel>();
+            services.AddTransient<ProjectTaskListViewModel>();
             services.AddTransient<TaskDetailViewModel>();
             services.AddTransient<CreateProjectViewModel>();
             services.AddTransient<ProjectEditorViewModel>();
@@ -31,7 +31,7 @@ namespace OCC.WpfClient.Features.ProjectHub
         public void RegisterRoutes(INavigationService navigationService)
         {
             navigationService.RegisterRoute(NavigationRoutes.ProjectDashboard, typeof(ProjectDashboardViewModel));
-            navigationService.RegisterRoute(NavigationRoutes.Projects, typeof(ProjectsViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.Projects, typeof(ProjectListViewModel));
             navigationService.RegisterRoute(NavigationRoutes.ProjectDetail, typeof(ProjectDetailViewModel));
         }
 

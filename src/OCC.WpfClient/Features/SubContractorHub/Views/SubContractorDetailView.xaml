@@ -36,7 +36,7 @@
                     <!-- Section: Partner Info -->
                     <StackPanel Margin="0,0,0,25">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE8D7;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Partner Information" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AccentBlue}"/>
                         </StackPanel>
 

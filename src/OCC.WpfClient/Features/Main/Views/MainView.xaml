@@ -270,7 +270,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator Background="{StaticResource GlassBorderUltraLight}"/>
-                    <MenuItem Header="Check for Updates"/>
+                    <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}"/>
                     <MenuItem Header="Release Notes"/>
                     <MenuItem Header="About" Command="{Binding ShowAboutCommand}"/>
                 </MenuItem>

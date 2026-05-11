@@ -19,6 +19,12 @@ namespace OCC.WpfClient.Features.ProjectHub.Models
         [ObservableProperty] private ReconciliationAction _action = ReconciliationAction.MapToExisting;
         [ObservableProperty] private AssigneeSelectionViewModel? _selectedMatch;
         
+        [ObservableProperty] private string _email = string.Empty;
+        [ObservableProperty] private string _phone = string.Empty;
+        [ObservableProperty] private string _branch = string.Empty;
+        [ObservableProperty] private string _address = string.Empty;
+        [ObservableProperty] private string _specialties = string.Empty;
+
         public ObservableCollection<AssigneeSelectionViewModel> SuggestedMatches { get; } = new();
 
         public bool IsNew => Action == ReconciliationAction.CreateNew;

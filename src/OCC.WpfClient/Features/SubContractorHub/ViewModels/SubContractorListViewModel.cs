@@ -48,6 +48,11 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         
         [ObservableProperty] private ObservableCollection<string> _branches = new();
         [ObservableProperty] private ObservableCollection<string> _specialties = new();
+        
+        // Link standard commands for centralized UI
+        public override IRelayCommand<object> OpenCommand => OpenSubContractorCommand;
+        public override IRelayCommand<object> EditCommand => EditSubContractorCommand;
+        public override IRelayCommand<object> DeleteCommand => DeleteSubContractorCommand;
 
         public SubContractorListViewModel(
             ISubContractorService subContractorService,
@@ -162,9 +167,15 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task EditSubContractor(SubContractorSummaryDto? summary)
+        private async Task OpenSubContractor(object? parameter)
         {
-            var target = summary ?? SelectedItem;
+            await EditSubContractor(parameter);
+        }
+
+        [RelayCommand]
+        private async Task EditSubContractor(object? parameter)
+        {
+            var target = parameter as SubContractorSummaryDto ?? SelectedItem;
             if (target == null) return;
             
             try
@@ -184,25 +195,43 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task DeleteSubContractor(SubContractorSummaryDto? summary)
+        private async Task DeleteSubContractor(object? parameter)
         {
-            var target = summary ?? SelectedItem;
-            if (target == null) return;
-            
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Sub-Contractor", 
-                $"Are you sure you want to delete '{target.Name}'? This action cannot be undone.");
+            List<SubContractorSummaryDto> targets = new();
+            if (parameter is System.Collections.IList list)
+            {
+                targets = list.Cast<SubContractorSummaryDto>().ToList();
+            }
+            else if (parameter is SubContractorSummaryDto summary)
+            {
+                targets.Add(summary);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
 
+            if (!targets.Any()) return;
+
+            string title = targets.Count > 1 ? "Delete Multiple Sub-Contractors" : "Delete Sub-Contractor";
+            string message = targets.Count > 1 
+                ? $"Are you sure you want to delete {targets.Count} selected sub-contractors? This action cannot be undone."
+                : $"Are you sure you want to delete '{targets[0].Name}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting sub-contractor...";
-                var success = await _subContractorService.DeleteSubContractorAsync(target.Id);
-                if (success)
+                BusyText = targets.Count > 1 ? "Deleting records..." : "Deleting sub-contractor...";
+                
+                foreach (var target in targets)
                 {
-                    await LoadDataAsync();
+                    await _subContractorService.DeleteSubContractorAsync(target.Id);
                 }
+                
+                await LoadDataAsync();
             }
             finally
             {

@@ -17,12 +17,12 @@ using OCC.Shared.Interfaces;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectsViewModel : ListViewModelBase<ProjectSummaryDto>, IRecipient<ProjectUpdatedMessage>, IRecipient<TaskUpdatedMessage>
+    public partial class ProjectListViewModel : ListViewModelBase<ProjectSummaryDto>, IRecipient<ProjectUpdatedMessage>, IRecipient<TaskUpdatedMessage>
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
         private readonly IDialogService _dialogService;
-        private readonly ILogger<ProjectsViewModel> _logger;
+        private readonly ILogger<ProjectListViewModel> _logger;
         private readonly IToastService _toastService;
         private readonly IServiceProvider _serviceProvider;
         private readonly LocalSettingsService _settingsService;
@@ -38,6 +38,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _showDeleted;
 
         partial void OnShowDeletedChanged(bool value) => _ = LoadDataAsync();
+        
+        // Link standard commands for centralized UI
+        public override IRelayCommand<object> OpenCommand => OpenProjectCommand;
+        public override IRelayCommand<object> EditCommand => EditProjectCommand;
+        public override IRelayCommand<object> DeleteCommand => DeleteProjectCommand;
 
 
         public override string ReportTitle => "Project Portfolio";
@@ -51,11 +56,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
 
 
-        public ProjectsViewModel(
+        public ProjectListViewModel(
             IProjectService projectService,
             ICustomerService customerService,
             IDialogService dialogService,
-            ILogger<ProjectsViewModel> logger,
+            ILogger<ProjectListViewModel> logger,
             IToastService toastService,
             IServiceProvider serviceProvider,
             LocalSettingsService settingsService,
@@ -78,7 +83,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private void LoadLayout()
         {
-            var layout = _settingsService.Settings.ProjectsListLayout;
+            var layout = _settingsService.Settings.ProjectListLayout;
             if (layout?.Columns != null && layout.Columns.Any())
             {
                 IsProgressVisible = layout.Columns.FirstOrDefault(c => c.Header == "Progress")?.IsVisible ?? true;
@@ -100,7 +105,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     new() { Header = "Status", IsVisible = IsStatusVisible }
                 }
             };
-            _settingsService.Settings.ProjectsListLayout = layout;
+            _settingsService.Settings.ProjectListLayout = layout;
             _settingsService.Save();
         }
 
@@ -142,43 +147,62 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
 
         [RelayCommand]
-        private void OpenProject(ProjectSummaryDto project)
+        private void OpenProject(object? parameter)
         {
-            if (project == null) return;
-            WeakReferenceMessenger.Default.Send(new OpenProjectMessage(project.Id));
+            var target = parameter as ProjectSummaryDto ?? SelectedItem;
+            if (target == null) return;
+            WeakReferenceMessenger.Default.Send(new OpenProjectMessage(target.Id));
         }
 
         [RelayCommand]
-        private async Task EditProject(ProjectSummaryDto project)
+        private async Task EditProject(object? parameter)
         {
-            if (project == null) return;
+                        var target = parameter as ProjectSummaryDto ?? SelectedItem;
+            if (target == null) return;
+
 
             var vm = _serviceProvider.GetRequiredService<ProjectEditorViewModel>();
-            await vm.InitializeAsync(project.Id);
+            await vm.InitializeAsync(target.Id);
             OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
         [RelayCommand]
-        private async Task DeleteProject(ProjectSummaryDto project)
+        private async Task DeleteProject(object? parameter)
         {
-            if (project == null) return;
-
-            string title = project.IsActive ? "Delete Project" : "Permanently Delete Project";
-            string message = project.IsActive
-                ? $"Are you sure you want to delete '{project.Name}'? It can be restored from the archive later."
-                : $"Are you sure you want to PERMANENTLY delete '{project.Name}'?\n\n" +
-                  "This will delete EVERYTHING linked to this project, including:\n" +
-                  "• All Tasks and Task Comments\n" +
-                  "• All Team Member Assignments\n" +
-                  "• All HSEQ Documents and Audits\n" +
-                  "• All Incidents and Snag Jobs\n" +
-                  "• All Variation Orders\n\n" +
-                  "THIS ACTION CANNOT BE UNDONE.";
-
-            var confirm = await _dialogService.ShowConfirmationAsync(title, message);
-
-            if (confirm)
+            List<ProjectSummaryDto> targets = new();
+            if (parameter is System.Collections.IList list)
             {
+                targets = list.Cast<ProjectSummaryDto>().ToList();
+            }
+            else if (parameter is ProjectSummaryDto summary)
+            {
+                targets.Add(summary);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
+
+            if (!targets.Any()) return;
+
+            if (targets.Count == 1)
+            {
+                var project = targets[0];
+                string title = project.IsActive ? "Delete Project" : "Permanently Delete Project";
+                string message = project.IsActive
+                    ? $"Are you sure you want to delete '{project.Name}'? It can be restored from the archive later."
+                    : $"Are you sure you want to PERMANENTLY delete '{project.Name}'?\n\n" +
+                      "This will delete EVERYTHING linked to this project, including:\n" +
+                      "• All Tasks and Task Comments\n" +
+                      "• All Team Member Assignments\n" +
+                      "• All HSEQ Documents and Audits\n" +
+                      "• All Incidents and Snag Jobs\n" +
+                      "• All Variation Orders\n\n" +
+                      "THIS ACTION CANNOT BE UNDONE.";
+
+                var confirm = await _dialogService.ShowConfirmationAsync(title, message);
+                if (!confirm) return;
+
                 IsBusy = true;
                 try
                 {
@@ -194,6 +218,34 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 finally
                 {
                     IsBusy = false;
+                }
+            }
+            else
+            {
+                string message = $"Are you sure you want to archive {targets.Count} selected projects?";
+                var confirm = await _dialogService.ShowConfirmationAsync("Bulk Delete", message);
+
+                if (confirm)
+                {
+                    IsBusy = true;
+                    try
+                    {
+                        foreach (var p in targets)
+                        {
+                            await _projectService.DeleteProjectAsync(p.Id, false);
+                        }
+                        _toastService.ShowSuccess("Success", $"{targets.Count} projects archived.");
+                        await LoadDataAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during bulk delete");
+                        _toastService.ShowError("Error", "Some projects could not be deleted.");
+                    }
+                    finally
+                    {
+                        IsBusy = false;
+                    }
                 }
             }
         }

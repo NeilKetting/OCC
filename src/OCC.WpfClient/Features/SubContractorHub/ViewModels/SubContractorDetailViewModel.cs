@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
+using System.Collections.ObjectModel;
 
 namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
 {
@@ -277,7 +272,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 SpecialtyOptions.Clear();
                 InitializeSpecialties(_model.Specialties);
                 
-                Title = $"Edit {Name} (Reloaded)";
+                Title = $"Edit: {Name} (Reloaded)";
             }
         }
 

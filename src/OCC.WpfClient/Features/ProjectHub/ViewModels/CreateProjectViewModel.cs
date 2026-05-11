@@ -395,7 +395,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                     if (row.Action == ReconciliationAction.CreateNew)
                     {
-                        var newSub = new SubContractor { Name = row.ImportedName, Branch = Project.Location ?? "Jhb" };
+                        var newSub = new SubContractor 
+                        { 
+                            Name = row.ImportedName, 
+                            Branch = string.IsNullOrWhiteSpace(row.Branch) ? (Project.Location ?? "Jhb") : row.Branch,
+                            Email = row.Email,
+                            Phone = row.Phone,
+                            Address = row.Address,
+                            Specialties = row.Specialties
+                        };
                         var created = await _subContractorService.CreateSubContractorAsync(newSub);
                         ResolveAssignee(row.ImportedName, created.Id, created.Name, AssigneeType.Contractor);
                     }
@@ -433,9 +441,26 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [RelayCommand]
-        private void BrowseImport()
+        private async Task BrowseImport()
         {
-            NotifyInfo("Import", "Please select an MS Project XML file.");
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "MS Project XML (*.xml)|*.xml",
+                Title = "Import from MS Project"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    using var stream = System.IO.File.OpenRead(dialog.FileName);
+                    await ImportProjectAsync(stream);
+                }
+                catch (Exception ex)
+                {
+                    NotifyError("Import Error", $"Failed to read file: {ex.Message}");
+                }
+            }
         }
     }
 }

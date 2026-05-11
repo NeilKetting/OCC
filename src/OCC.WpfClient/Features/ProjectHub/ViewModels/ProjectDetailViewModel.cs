@@ -20,7 +20,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
     {
         private readonly IProjectService _projectService;
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
-        private readonly ProjectTasksViewModel _tasksVM;
+        private readonly ProjectTaskListViewModel _tasksVM;
         private readonly ProjectGanttViewModel _ganttVM;
         private readonly ProjectHistoryViewModel _historyVM;
         private readonly IEmployeeService _employeeService;
@@ -42,7 +42,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IProjectService projectService, 
             IEmployeeService employeeService,
             ProjectSpecificDashboardViewModel dashboardVM, 
-            ProjectTasksViewModel tasksVM, 
+            ProjectTaskListViewModel tasksVM, 
             ProjectGanttViewModel ganttVM, 
             ProjectHistoryViewModel historyVM,
             IDialogService dialogService,

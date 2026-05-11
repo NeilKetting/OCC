@@ -34,7 +34,7 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="15">
+            <Grid Grid.Row="0" Margin="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -44,7 +44,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="&#xE77B;" Style="{StaticResource SymbolIcon}" FontSize="22" Foreground="#FFFF00" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="&#xE77B;" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="#FFFF00" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
                     <TextBlock Grid.Column="1" Grid.Row="0" Text="Employee Overview" Style="{StaticResource HeaderText}" />
                     <TextBlock Grid.Column="1" Grid.Row="1" Text="Manage staff records and teams." Style="{StaticResource LabelText}"/>
                 </Grid>
@@ -183,13 +183,13 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open Details">
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Opacity="0.8"/>
+                                        <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open Details">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SuccessGreen}" FontSize="14"/>
                                         </Button>
-                                        <Button Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Edit">
+                                        <Button Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Edit">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
                                         </Button>
-                                        <Button Command="{Binding DataContext.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete">
+                                        <Button Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="14"/>
                                         </Button>
                                     </StackPanel>
@@ -202,28 +202,6 @@
                             <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
                             <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
                             <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
-                            <Setter Property="ContextMenu">
-                                <Setter.Value>
-                                    <ContextMenu Style="{StaticResource ModernContextMenu}">
-                                        <MenuItem Header="Open Details" Command="{Binding Path=PlacementTarget.Tag.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
-                                            <MenuItem.Icon>
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Header="Edit Employee" Command="{Binding Path=PlacementTarget.Tag.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
-                                            <MenuItem.Icon>
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="12"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <Separator Style="{x:Null}" Visibility="Collapsed"/>
-                                        <MenuItem Header="Delete Employee" Command="{Binding Path=PlacementTarget.Tag.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}">
-                                            <MenuItem.Icon>
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="12"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                    </ContextMenu>
-                                </Setter.Value>
-                            </Setter>
                         </Style>
                     </DataGrid.RowStyle>
                 </DataGrid>

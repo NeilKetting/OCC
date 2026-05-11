@@ -18,6 +18,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IDialogService _dialogService;
 
         private List<IncidentSummaryDto> _allIncidents = new();
 
@@ -31,10 +32,16 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             new() { Header = "Status", PropertyName = "Status", Width = 1 }
         };
 
-        public IncidentsViewModel(IHealthSafetyService hseqService, IServiceProvider serviceProvider, IPdfService pdfService) : base(pdfService)
+        // Standard commands for centralized UI
+        public override IRelayCommand<object>? OpenCommand => OpenIncidentCommand;
+        public override IRelayCommand<object>? EditCommand => EditIncidentCommand;
+        public override IRelayCommand<object>? DeleteCommand => DeleteSelectedIncidentsCommand;
+
+        public IncidentsViewModel(IHealthSafetyService hseqService, IServiceProvider serviceProvider, IPdfService pdfService, IDialogService dialogService) : base(pdfService)
         {
             _hseqService = hseqService;
             _serviceProvider = serviceProvider;
+            _dialogService = dialogService;
             Title = "Incidents";
             
             _ = LoadDataAsync();
@@ -84,8 +91,15 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         [RelayCommand]
-        public async Task EditIncident(IncidentSummaryDto? summary)
+        private void OpenIncident(object? parameter)
         {
+            _ = EditIncident(parameter);
+        }
+
+        [RelayCommand]
+        public async Task EditIncident(object? parameter)
+        {
+            var summary = parameter as IncidentSummaryDto ?? SelectedItem;
             if (summary == null) return;
 
             try
@@ -136,30 +150,45 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task DeleteIncident(IncidentSummaryDto summary)
+        private async Task DeleteSelectedIncidents(object? parameter)
         {
-            if (summary == null) return;
+            List<IncidentSummaryDto> targets = new();
+            if (parameter is System.Collections.IList list)
+            {
+                targets = list.Cast<IncidentSummaryDto>().ToList();
+            }
+            else if (parameter is IncidentSummaryDto summary)
+            {
+                targets.Add(summary);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
+
+            if (!targets.Any()) return;
+
+            string message = targets.Count > 1 
+                ? $"Are you sure you want to delete {targets.Count} selected incidents? This action cannot be undone."
+                : $"Are you sure you want to delete this incident from '{targets[0].Date:d}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Incident", message);
+            if (!confirmed) return;
             
             try 
             {
                 IsBusy = true;
                 BusyText = "Deleting...";
-                var success = await _hseqService.DeleteIncidentAsync(summary.Id);
-                if (success)
+                foreach (var t in targets)
                 {
-                    NotifySuccess("Success", "Incident deleted.");
-                    _allIncidents.Remove(summary);
-                    FilterItems();
-                    if (SelectedItem?.Id == summary.Id) SelectedItem = null;
+                    await _hseqService.DeleteIncidentAsync(t.Id);
                 }
-                else
-                {
-                    NotifyError("Error", "Failed to delete incident.");
-                }
+                NotifySuccess("Success", targets.Count > 1 ? "Incidents deleted." : "Incident deleted.");
+                await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                NotifyError("Error", "Exception deleting incident.");
+                NotifyError("Error", "Failed to delete incident(s).");
                 System.Diagnostics.Debug.WriteLine(ex);
             }
             finally

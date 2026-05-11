@@ -31,6 +31,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ConnectionSettings _connectionSettings;
         private readonly LocalSettingsService _localSettings;
+        private readonly IUpdateService _updateService;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private INavigationService _navigation;
@@ -257,7 +259,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             IFeatureService featureService,
             UserActivityService userActivityService,
             IHttpClientFactory httpClientFactory,
-            ConnectionSettings connectionSettings)
+            ConnectionSettings connectionSettings,
+            IUpdateService updateService,
+            IDialogService dialogService)
         {
             _logger = logger;
             _navigation = navigation;
@@ -269,6 +273,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _userActivityService = userActivityService;
             _httpClientFactory = httpClientFactory;
             _connectionSettings = connectionSettings;
+            _updateService = updateService;
+            _dialogService = dialogService;
             _localSettings = _serviceProvider.GetRequiredService<LocalSettingsService>();
 
 
@@ -503,6 +509,54 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private void ShowSupportHub()
         {
             OpenHub("Support.SupportHub");
+        }
+
+
+        [RelayCommand]
+        private async Task CheckForUpdates()
+        {
+            try
+            {
+                IsAppBusy = true;
+                BusyMessage = "Checking for updates...";
+                
+                // Add a small artificial delay so the user can see it's actually doing something
+                await Task.Delay(1500);
+
+                var update = await _updateService.CheckForUpdatesAsync();
+                
+                IsAppBusy = false;
+
+                if (update != null)
+                {
+                    var confirmed = await _dialogService.ShowConfirmationAsync("Update Available", 
+                        $"A new version (v{update.TargetFullRelease.Version}) is available. Would you like to download and install it now? The application will restart after downloading.");
+                    
+                    if (confirmed)
+                    {
+                        IsAppBusy = true;
+                        BusyMessage = "Downloading update...";
+                        
+                        await _updateService.DownloadUpdatesAsync(update, p => 
+                        {
+                            BusyMessage = $"Downloading update ({p}%)...";
+                        });
+
+                        await _dialogService.ShowAlertAsync("Update Ready", "The update has been downloaded. The application will now restart to apply changes.");
+                        _updateService.ApplyUpdatesAndRestart(update);
+                    }
+                }
+                else
+                {
+                    await _dialogService.ShowAlertAsync("No Updates", "You are already running the latest version of OCC ERP.");
+                }
+            }
+            catch (Exception ex)
+            {
+                IsAppBusy = false;
+                _logger.LogError(ex, "Error checking for updates from main menu");
+                await _dialogService.ShowAlertAsync("Update Error", "An error occurred while checking for updates. Please check your internet connection and try again.");
+            }
         }
 
 

@@ -42,6 +42,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         public List<string> BranchOptions { get; } = new List<string> { "All" }.Concat(Enum.GetNames(typeof(Branch))).ToList();
 
+        // Standard commands for centralized UI
+        public override IRelayCommand<object>? OpenCommand => OpenSupplierCommand;
+        public override IRelayCommand<object>? EditCommand => EditSupplierCommand;
+        public override IRelayCommand<object>? DeleteCommand => DeleteSelectedSuppliersCommand;
+
         public SupplierViewModel(
             ISupplierService supplierService,
             IDialogService dialogService,
@@ -123,9 +128,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task EditSupplier(SupplierSummaryDto? summary)
+        private void OpenSupplier(object? parameter)
         {
-            var target = summary ?? SelectedItem;
+            _ = EditSupplier(parameter);
+        }
+
+        [RelayCommand]
+        private async Task EditSupplier(object? parameter)
+        {
+            var target = parameter as SupplierSummaryDto ?? SelectedItem;
             if (target == null) return;
 
             try
@@ -150,27 +161,44 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task DeleteSupplier(SupplierSummaryDto? summary)
+        private async Task DeleteSelectedSuppliers(object? parameter)
         {
-            var target = summary ?? SelectedItem;
-            if (target == null) return;
+            List<SupplierSummaryDto> targets = new();
+            if (parameter is System.Collections.IList list)
+            {
+                targets = list.Cast<SupplierSummaryDto>().ToList();
+            }
+            else if (parameter is SupplierSummaryDto summary)
+            {
+                targets.Add(summary);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
 
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Supplier",
-                $"Are you sure you want to delete '{target.Name}'? This action cannot be undone.");
+            if (!targets.Any()) return;
 
+            string message = targets.Count > 1 
+                ? $"Are you sure you want to delete {targets.Count} selected suppliers? This action cannot be undone."
+                : $"Are you sure you want to delete supplier '{targets[0].Name}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Supplier", message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting supplier...";
-                await _supplierService.DeleteSupplierAsync(target.Id);
+                BusyText = "Deleting...";
+                foreach (var t in targets)
+                {
+                    await _supplierService.DeleteSupplierAsync(t.Id);
+                }
                 await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting supplier");
-                await _dialogService.ShowAlertAsync("Error", $"Failed to delete supplier: {ex.Message}");
+                _logger.LogError(ex, "Bulk delete failed");
             }
             finally
             {

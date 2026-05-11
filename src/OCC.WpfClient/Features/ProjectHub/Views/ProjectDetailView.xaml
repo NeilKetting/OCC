@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Styles/Common.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/OCC.WpfClient;component/Styles/Common.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -55,7 +55,7 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource SidebarNavItem}" 
-                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectTasksViewModel}}"
+                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectTaskListViewModel}}"
                                  Command="{Binding ShowTasksCommand}"
                                  Margin="0,2">
                         <Grid>

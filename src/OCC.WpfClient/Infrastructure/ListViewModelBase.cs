@@ -27,6 +27,9 @@ namespace OCC.WpfClient.Infrastructure
 
         [ObservableProperty]
         private T? _selectedItem;
+        
+        [ObservableProperty]
+        private System.Collections.IList? _selectedItems;
 
         protected readonly IPdfService _pdfService;
         public abstract string ReportTitle { get; }
@@ -36,6 +39,11 @@ namespace OCC.WpfClient.Infrastructure
         {
             _pdfService = pdfService;
         }
+
+        // Standard commands for centralized UI (Context Menus, Double Click, etc.)
+        public virtual IRelayCommand<object>? OpenCommand => null;
+        public virtual IRelayCommand<object>? EditCommand => null;
+        public virtual IRelayCommand<object>? DeleteCommand => null;
 
         [RelayCommand]
         public async Task PrintAsync()
