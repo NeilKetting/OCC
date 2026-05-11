@@ -42,20 +42,35 @@ namespace OCC.WpfClient.Features.Splash.ViewModels
                 // 2. Update Check
                 LoadingStatus = "Verifying Version Integrity...";
                 _logger.LogInformation("Status: {Status}", LoadingStatus);
-                var update = await _updateService.CheckForUpdatesAsync();
-                
-                if (update != null)
+
+                var localSettings = App.Current.Dispatcher.Invoke(() => 
+                    ((App)App.Current).ServiceProvider.GetRequiredService<LocalSettingsService>());
+
+                if (localSettings.Settings.AutoCheckUpdates)
                 {
-                    _logger.LogInformation("Update found: v{Version}", update.TargetFullRelease.Version);
-                    LoadingStatus = $"Downloading Update v{update.TargetFullRelease.Version}...";
-                    IsUpdateDownloading = true;
-                    await _updateService.DownloadUpdatesAsync(update, p => ProgressValue = p);
+                    var update = await _updateService.CheckForUpdatesAsync();
                     
-                    _logger.LogInformation("Updates downloaded. Applying and restarting...");
-                    LoadingStatus = "Applying Updates... App will restart.";
-                    await Task.Delay(1000);
-                    _updateService.ApplyUpdatesAndRestart(update);
-                    return;
+                    if (update != null)
+                    {
+                        _logger.LogInformation("Update found: v{Version}", update.TargetFullRelease.Version);
+                        LoadingStatus = $"Downloading Update v{update.TargetFullRelease.Version}...";
+                        IsUpdateDownloading = true;
+                        await _updateService.DownloadUpdatesAsync(update, p => ProgressValue = p);
+                        
+                        _logger.LogInformation("Updates downloaded. Applying and restarting...");
+                        LoadingStatus = "Applying Updates... App will restart.";
+                        await Task.Delay(1500);
+                        _updateService.ApplyUpdatesAndRestart(update);
+                        
+                        // Fallback: If restart doesn't trigger immediately, don't just hang
+                        await Task.Delay(5000);
+                        System.Windows.Application.Current.Shutdown();
+                        return;
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Auto-update check disabled in settings.");
                 }
 
                 _logger.LogInformation("No updates found. Proceeding with module loading.");

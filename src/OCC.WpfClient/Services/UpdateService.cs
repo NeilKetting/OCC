@@ -61,8 +61,16 @@ namespace OCC.WpfClient.Services
 
         public async Task<UpdateInfo?> CheckForUpdatesAsync()
         {
+            // Never check for updates while debugging to prevent loops
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                _logger.LogInformation("Skipping update check: Debugger is attached.");
+                return null;
+            }
+
             if (_mgr == null || !_mgr.IsInstalled) 
             {
+                _logger.LogInformation("Skipping update check: App is not installed (Portable/Debug mode).");
                 return null;
             }
 
@@ -71,13 +79,19 @@ namespace OCC.WpfClient.Services
                 _logger.LogInformation("Checking for updates...");
                 var updateInfo = await _mgr.CheckForUpdatesAsync();
                 
-                if (updateInfo == null) return null;
+                if (updateInfo == null || updateInfo.TargetFullRelease == null) return null;
 
-                if (_mgr.CurrentVersion != null && updateInfo.TargetFullRelease.Version <= _mgr.CurrentVersion)
+                // Robust version comparison
+                var localVersion = _mgr.CurrentVersion;
+                var remoteVersion = updateInfo.TargetFullRelease.Version;
+
+                if (localVersion != null && remoteVersion <= localVersion)
                 {
+                    _logger.LogInformation($"No new updates. Local: {localVersion}, Remote: {remoteVersion}");
                     return null;
                 }
 
+                _logger.LogInformation($"New update found! Local: {localVersion}, Remote: {remoteVersion}");
                 return updateInfo;
             }
             catch (Exception ex)
