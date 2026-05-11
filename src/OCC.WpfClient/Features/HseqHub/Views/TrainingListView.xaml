@@ -59,7 +59,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
+                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
                     <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" ap:WatermarkProperties.Watermark="Search training..."/>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="20,0">

@@ -31,8 +31,10 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             new() { Header = "Contact Person", PropertyName = "ContactPerson", Width = 1.5 }
         };
 
+        [ObservableProperty] private bool _isNameVisible = true;
         [ObservableProperty] private bool _isEmailVisible = true;
         [ObservableProperty] private bool _isPhoneVisible = true;
+        [ObservableProperty] private bool _isActionsVisible = true;
         
         [ObservableProperty] private bool _isColumnPickerOpen;
 
@@ -63,8 +65,10 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             var layout = _settingsService.Settings.CustomerListLayout;
             if (layout?.Columns != null && layout.Columns.Any())
             {
+                IsNameVisible = layout.Columns.FirstOrDefault(c => c.Header == "Name")?.IsVisible ?? true;
                 IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
                 IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
+                IsActionsVisible = layout.Columns.FirstOrDefault(c => c.Header == "Actions")?.IsVisible ?? true;
             }
         }
 
@@ -74,16 +78,20 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             {
                 Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
                 {
+                    new() { Header = "Name", IsVisible = IsNameVisible },
                     new() { Header = "Email", IsVisible = IsEmailVisible },
-                    new() { Header = "Phone", IsVisible = IsPhoneVisible }
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible },
+                    new() { Header = "Actions", IsVisible = IsActionsVisible }
                 }
             };
             _settingsService.Settings.CustomerListLayout = layout;
             _settingsService.Save();
         }
 
+        partial void OnIsNameVisibleChanged(bool value) => SaveLayout();
         partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
         partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsActionsVisibleChanged(bool value) => SaveLayout();
 
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;

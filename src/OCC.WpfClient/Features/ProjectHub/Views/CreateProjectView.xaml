@@ -93,6 +93,28 @@
                         </Grid>
                     </StackPanel>
 
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="LOCALITY" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Project.StreetLine2}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Unit / Floor"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="CITY" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Project.City}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="City"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="POSTAL CODE" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Project.PostalCode}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code"/>
+                        </StackPanel>
+                    </Grid>
+
                     <Border Visibility="{Binding IsComprehensiveMode, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#1A3B82F6" BorderBrush="#803B82F6" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,10,0,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -143,11 +165,6 @@
                         <DatePicker SelectedDate="{Binding Project.StartDate}" Style="{StaticResource ModernDatePicker}"/>
                         <DatePicker Grid.Column="2" SelectedDate="{Binding Project.EndDate}" Style="{StaticResource ModernDatePicker}"/>
                     </Grid>
-
-                    <TextBlock Text="LOCALITY DETAILS" Style="{StaticResource FormLabelText}"/>
-                    <TextBox Text="{Binding Project.StreetLine2}" Style="{StaticResource ModernInput}" Margin="0,0,0,10" ap:WatermarkProperties.Watermark="Unit / Floor"/>
-                    <TextBox Text="{Binding Project.City}" Style="{StaticResource ModernInput}" Margin="0,0,0,10" ap:WatermarkProperties.Watermark="City"/>
-                    <TextBox Text="{Binding Project.PostalCode}" Style="{StaticResource ModernInput}" Margin="0,0,0,25" ap:WatermarkProperties.Watermark="Postal Code"/>
 
                     <TextBlock Text="REFERENCE CODE" Style="{StaticResource FormLabelText}"/>
                     <TextBox Text="{Binding Project.ShortName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="PROJ-001"/>

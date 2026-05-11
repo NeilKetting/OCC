@@ -45,13 +45,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
+                    <ControlTemplate.Resources>
+                        <!-- Apply ModernMenuItem style automatically to all MenuItems in this context menu, 
+                             avoiding the ItemContainerStyle crash with Separators -->
+                        <Style TargetType="MenuItem" BasedOn="{StaticResource ModernMenuItem}"/>
+                    </ControlTemplate.Resources>
                     <Border Background="#232d36" CornerRadius="12" Padding="0,5" BorderBrush="#3b4a54" BorderThickness="1">
                         <ItemsPresenter SnapsToDevicePixels="True"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="ItemContainerStyle" Value="{StaticResource ModernMenuItem}"/>
     </Style>
 
 </ResourceDictionary>

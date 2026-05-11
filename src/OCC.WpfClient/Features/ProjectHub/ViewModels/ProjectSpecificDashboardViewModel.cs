@@ -13,11 +13,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using OCC.WpfClient.Infrastructure;
 using OCC.Shared.DTOs;
+using OCC.Shared.Enums;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
     public partial class ProjectSpecificDashboardViewModel : ViewModelBase
     {
+        private readonly Services.Interfaces.ISnagService _snagService;
         private List<ProjectTask> _allTasks = new();
         private Project? _project;
 
@@ -34,7 +36,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _etaStatus = "ON TRACK";
         [ObservableProperty] private string _streetLine1 = string.Empty;
         [ObservableProperty] private string _cityStatePostal = string.Empty;
+        [ObservableProperty] private string _varianceText = string.Empty;
+        [ObservableProperty] private bool _isLate;
         
+        [ObservableProperty] private ObservableCollection<ProjectTask> _upcomingMilestones = new();
+        [ObservableProperty] private int _upcomingMilestonesCount;
+        [ObservableProperty] private int _activeSnagsCount;
         [ObservableProperty] private ObservableCollection<SubContractorSummaryDto> _subContractors = new();
         
         public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColors.White);
@@ -43,8 +50,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ObservableCollection<ISeries> ScheduleSeries { get; set; } = new();
         public ObservableCollection<ISeries> ProgressGaugeSeries { get; set; } = new();
 
-        public ProjectSpecificDashboardViewModel()
+        public ProjectSpecificDashboardViewModel(Services.Interfaces.ISnagService snagService)
         {
+            _snagService = snagService;
             Title = "Stats";
         }
 
@@ -64,8 +72,33 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     StreetLine1 = _project.StreetLine1 ?? string.Empty;
                     CityStatePostal = $"{_project.City}, {_project.PostalCode}";
                     ExtractSubContractors(_allTasks);
+                    
+                    // Filter upcoming milestones (next 7 days)
+                    var now = DateTime.Now;
+                    var nextWeek = now.AddDays(7);
+                    var milestones = _allTasks
+                        .Where(t => !t.IsComplete && t.FinishDate >= now && t.FinishDate <= nextWeek)
+                        .OrderBy(t => t.FinishDate)
+                        .ToList();
+                        
+                    UpcomingMilestones.Clear();
+                    foreach (var m in milestones) UpcomingMilestones.Add(m);
+                    UpcomingMilestonesCount = milestones.Count;
+                    
+                    _ = FetchSnagData();
                 }
             });
+        }
+
+        private async Task FetchSnagData()
+        {
+            if (_project == null) return;
+            try
+            {
+                var snags = await _snagService.GetProjectSnagJobsAsync(_project.Id);
+                ActiveSnagsCount = snags.Count(s => s.Status != SnagStatus.Fixed && s.Status != SnagStatus.Closed);
+            }
+            catch { /* Ignore for now */ }
         }
 
         private void ExtractSubContractors(IEnumerable<ProjectTask> tasks)
@@ -117,7 +150,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ToDoTasks = nonGroupTasks.Count(t => t.Status == "To Do" || t.Status == "New" || t.Status == "Not Started");
 
             var now = DateTime.Now;
-            OverdueTasks = nonGroupTasks.Count(t => !t.IsComplete && t.FinishDate < now);
+            OverdueTasks = nonGroupTasks.Count(t => t.IsOverdue);
             DelayedStartTasks = nonGroupTasks.Count(t => !t.IsComplete && t.Status == "Not Started" && t.StartDate < now && t.FinishDate >= now);
 
             if (TotalTasks > 0)
@@ -278,7 +311,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             EtaDateString = predictedEndDate.ToString("dd MMM yyyy");
             
             var varianceDays = (predictedEndDate - _project.EndDate).TotalDays;
-            EtaStatus = varianceDays > 7 ? $"Expected {Math.Round(varianceDays)} days late" : "On schedule";
+            IsLate = varianceDays > 0;
+            
+            if (IsLate)
+            {
+                VarianceText = $"Deadline missed by {Math.Round(varianceDays)} days";
+                EtaStatus = $"Expected {Math.Round(varianceDays)} days late";
+            }
+            else
+            {
+                VarianceText = string.Empty;
+                EtaStatus = "On schedule";
+            }
         }
     }
 }

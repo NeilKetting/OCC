@@ -9,12 +9,22 @@ namespace OCC.WpfClient.Infrastructure.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string s && parameter is string p)
+            string? s = value?.ToString();
+            bool hasValue = !string.IsNullOrWhiteSpace(s);
+            bool invert = parameter?.ToString()?.Equals("Invert", StringComparison.OrdinalIgnoreCase) ?? false;
+
+            if (parameter is string p && !invert)
             {
-                // Hide if the value matches the parameter (e.g. don't show "Main" header)
-                return s.Equals(p, StringComparison.OrdinalIgnoreCase) ? Visibility.Collapsed : Visibility.Visible;
+                // Equality check if parameter is provided and not "Invert"
+                return s != null && s.Equals(p, StringComparison.OrdinalIgnoreCase) ? Visibility.Collapsed : Visibility.Visible;
             }
-            return Visibility.Visible;
+
+            if (invert)
+            {
+                return hasValue ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            return hasValue ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

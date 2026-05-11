@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OCC.WpfClient.Features.Main.ViewModels
 {
-    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>
     {
         private readonly ILogger<MainViewModel> _logger;
         private readonly IPermissionService _permissionService;
@@ -188,12 +188,21 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         [ObservableProperty]
         private bool _isUserListVisible;
-
-        [ObservableProperty]
-        private bool _isProfileMenuVisible;
         
         [ObservableProperty]
+        private bool _isProfileMenuVisible;
+
+        [ObservableProperty]
         private string _statusMessage = "Ready";
+        
+        [ObservableProperty]
+        private double _importProgress;
+        
+        [ObservableProperty]
+        private bool _isImportProgressVisible;
+        
+        [ObservableProperty]
+        private string _importProgressText = string.Empty;
 
 
         [RelayCommand]
@@ -316,6 +325,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             WeakReferenceMessenger.Default.Register<OpenProjectMessage>(this);
             WeakReferenceMessenger.Default.Register<StatusUpdateMessage>(this);
             WeakReferenceMessenger.Default.Register<PreferenceChangedMessage>(this);
+            WeakReferenceMessenger.Default.Register<ImportProgressMessage>(this);
             
             _signalRService.UserListUpdated += OnUserListUpdated;
             _ = _signalRService.StartAsync();
@@ -833,6 +843,23 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     {
                         if (StatusMessage == message.Value) StatusMessage = "Ready";
                     });
+                });
+            }
+        }
+
+        public void Receive(ImportProgressMessage message)
+        {
+            var info = message.Value;
+            ImportProgress = info.Progress;
+            ImportProgressText = info.Message;
+            IsImportProgressVisible = info.IsVisible;
+            
+            if (info.IsComplete)
+            {
+                Task.Run(async () =>
+                {
+                    await Task.Delay(3000);
+                    App.Current.Dispatcher.Invoke(() => IsImportProgressVisible = false);
                 });
             }
         }

@@ -41,6 +41,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public bool IsSubtask => Task?.Model?.ParentId != null;
         public bool IsParentTask => !IsSubtask;
         public bool IsManualProgressEnabled => Task != null && !Task.HasSubtasks;
+        
+        public TimeSpan? StartTime
+        {
+            get => Task?.StartDate?.TimeOfDay;
+            set { if (Task != null && Task.StartDate.HasValue && value.HasValue) Task.StartDate = Task.StartDate.Value.Date + value.Value; OnPropertyChanged(nameof(StartTime)); }
+        }
+
+        public TimeSpan? FinishTime
+        {
+            get => Task?.FinishDate?.TimeOfDay;
+            set { if (Task != null && Task.FinishDate.HasValue && value.HasValue) Task.FinishDate = Task.FinishDate.Value.Date + value.Value; OnPropertyChanged(nameof(FinishTime)); }
+        }
+
         public event EventHandler? CloseInitiated;
         public event EventHandler? CloseFinished;
         public int CommentsCount => Comments.Count;
@@ -222,7 +235,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             AllPotentialAssignees.Add(new AssigneeSelectionViewModel 
             { 
                 Id = Guid.Empty, // Placeholder for company
-                Name = "Circle Construction - Jhb", 
+                Name = "Orange Circle Construction JHB", 
                 Role = "Internal", 
                 Type = AssigneeType.Staff,
                 Branch = "Jhb"
@@ -230,7 +243,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             AllPotentialAssignees.Add(new AssigneeSelectionViewModel 
             { 
                 Id = Guid.Empty, 
-                Name = "Orange Circle Construction - CPT", 
+                Name = "Orange Circle Construction CPT", 
                 Role = "Internal", 
                 Type = AssigneeType.Staff,
                 Branch = "CPT"

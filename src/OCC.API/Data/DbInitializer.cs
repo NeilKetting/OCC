@@ -57,12 +57,50 @@ namespace OCC.API.Data
                 logger.LogInformation("Environment is Development. Starting comprehensive seeding...");
                 SeedEmployees(context, logger);
                 SeedAttendance(context, logger);
+                PatchSubContractorNames(context, logger); // Ensure correct naming for OCC branches
                 SeedProjects(context, logger);
                 SeedTasks(context, logger);
             }
             else
             {
                 logger.LogInformation("Skipped: Not in Development Environment.");
+                // Even in prod, we might want to ensure these names are correct if they exist
+                PatchSubContractorNames(context, logger);
+            }
+        }
+
+        private static void PatchSubContractorNames(AppDbContext context, ILogger logger)
+        {
+            var subs = context.SubContractors.ToList();
+            bool changed = false;
+
+            foreach (var sub in subs)
+            {
+                // Fix generic "Circle Construction" or variations to the requested full names
+                if (sub.Name.Contains("Circle Construction", StringComparison.OrdinalIgnoreCase) && !sub.Name.StartsWith("Orange", StringComparison.OrdinalIgnoreCase))
+                {
+                    var oldName = sub.Name;
+                    if (sub.Branch.Equals("Johannesburg", StringComparison.OrdinalIgnoreCase) || sub.Name.Contains("Jhb", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sub.Name = "Orange Circle Construction JHB";
+                    }
+                    else if (sub.Branch.Equals("Cape Town", StringComparison.OrdinalIgnoreCase) || sub.Name.Contains("Cpt", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sub.Name = "Orange Circle Construction CPT";
+                    }
+                    else
+                    {
+                        sub.Name = "Orange Circle Construction";
+                    }
+                    
+                    logger.LogInformation("Patched SubContractor name from '{Old}' to '{New}'", oldName, sub.Name);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                context.SaveChanges();
             }
         }
 

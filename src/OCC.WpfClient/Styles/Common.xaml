@@ -130,5 +130,22 @@
         </Setter>
     </Style>
 
+    <!-- Modern ProgressBar Template -->
+    <ControlTemplate x:Key="ModernProgressBarTemplate" TargetType="ProgressBar">
+        <Grid x:Name="TemplateRoot">
+            <Border Background="{TemplateBinding Background}" 
+                    BorderThickness="{TemplateBinding BorderThickness}" 
+                    BorderBrush="{TemplateBinding BorderBrush}" 
+                    CornerRadius="4"/>
+            <Grid Margin="1">
+                <Rectangle x:Name="PART_Track" Fill="Transparent"/>
+                <Decorator x:Name="PART_Indicator" HorizontalAlignment="Left">
+                    <Grid x:Name="ForegroundGrid">
+                        <Rectangle x:Name="Indicator" Fill="{TemplateBinding Foreground}" RadiusX="3" RadiusY="3"/>
+                    </Grid>
+                </Decorator>
+            </Grid>
+        </Grid>
+    </ControlTemplate>
 </ResourceDictionary>
 

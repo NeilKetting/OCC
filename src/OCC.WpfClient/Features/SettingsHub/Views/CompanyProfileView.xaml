@@ -7,6 +7,7 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.SettingsHub.ViewModels"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+    xmlns:controls="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:CompanyProfileViewModel, IsDesignTimeCreatable=True}">
@@ -187,12 +188,12 @@
                                 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Shift Start Time" Style="{StaticResource FormLabelText}"/>
-                                    <TextBox Text="{Binding CurrentBranchDetails.ShiftStartTime, StringFormat='hh\\:mm'}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 07:00"/>
+                                    <controls:ModernTimePicker SelectedTime="{Binding CurrentBranchDetails.ShiftStartTime, Mode=TwoWay}" />
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Shift End Time" Style="{StaticResource FormLabelText}"/>
-                                    <TextBox Text="{Binding CurrentBranchDetails.ShiftEndTime, StringFormat='hh\\:mm'}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 16:45"/>
+                                    <controls:ModernTimePicker SelectedTime="{Binding CurrentBranchDetails.ShiftEndTime, Mode=TwoWay}" />
                                 </StackPanel>
                             </Grid>
 

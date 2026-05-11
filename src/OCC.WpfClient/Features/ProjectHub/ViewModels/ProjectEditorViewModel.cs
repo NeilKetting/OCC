@@ -23,6 +23,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
+        private bool _isHandlingSelection;
 
         [ObservableProperty] private ProjectWrapper? _project;
         [ObservableProperty] private Employee? _selectedSiteManager;
@@ -101,6 +102,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private async void Project_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            if (_isHandlingSelection) return;
+
             if (e.PropertyName == nameof(ProjectWrapper.StreetLine1))
             {
                 await UpdateAddressSuggestions();
@@ -147,6 +150,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var details = await _googleMapsService.GetPlaceDetailsAsync(suggestion.PlaceId, _sessionToken);
                 if (details != null && Project != null)
                 {
+                    _isHandlingSelection = true;
                     Project.StreetLine1 = details.StreetLine1;
                     Project.StreetLine2 = details.StreetLine2;
                     Project.City = details.City;
@@ -159,6 +163,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     AddressSuggestions.Clear();
                     SelectedAddressSuggestion = null;
                     _sessionToken = Guid.NewGuid().ToString();
+                    _isHandlingSelection = false;
                 }
             }
             finally { IsBusy = false; }

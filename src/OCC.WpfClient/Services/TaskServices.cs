@@ -46,11 +46,11 @@ namespace OCC.WpfClient.Services
         public ProjectTaskService(IHttpClientFactory httpClientFactory, IAuthService authService, ConnectionSettings connectionSettings, ILogger<ProjectTaskService> logger) 
             : base(httpClientFactory, authService, connectionSettings) { _logger = logger; }
 
-        public async Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false)
+        public async Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false, int take = 100)
         {
             var client = HttpClientFactory.CreateClient();
             EnsureAuthorization(client);
-            var url = GetFullUrl($"api/ProjectTasks?projectId={projectId}&assignedToMe={assignedToMe}");
+            var url = GetFullUrl($"api/ProjectTasks?projectId={projectId}&assignedToMe={assignedToMe}&take={take}");
             return await client.GetFromJsonAsync<IEnumerable<ProjectTask>>(url) ?? new List<ProjectTask>();
         }
 

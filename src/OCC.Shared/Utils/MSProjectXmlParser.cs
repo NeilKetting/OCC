@@ -10,11 +10,11 @@ namespace OCC.Shared.Utils
 {
     public class MSProjectXmlParser
     {
-        public async Task<(List<ProjectTask> Tasks, List<string> Resources, string? ProjectName)> ParseAsync(Stream stream, IProgress<string>? progress = null)
+        public async Task<(List<ProjectTask> RootTasks, List<ProjectTask> FlatTasks, List<string> Resources, string? ProjectName)> ParseAsync(Stream stream, IProgress<(string Message, double Progress)>? progress = null)
         {
             try
             {
-                progress?.Report("Loading XML...");
+                progress?.Report(("Loading XML...", 5));
                 using var reader = new StreamReader(stream);
                 var xmlContent = await reader.ReadToEndAsync();
                 var doc = XDocument.Parse(xmlContent);
@@ -32,7 +32,7 @@ namespace OCC.Shared.Utils
                 var tasksElement = project.Element(ns + "Tasks");
                 if (tasksElement == null)
                 {
-                    return (new List<ProjectTask>(), new List<string>(), null); // No tasks found
+                    return (new List<ProjectTask>(), new List<ProjectTask>(), new List<string>(), null); // No tasks found
                 }
 
                 var flatTasks = new List<(ProjectTask Task, int OutlineLevel)>();
@@ -40,7 +40,7 @@ namespace OCC.Shared.Utils
                 int total = elements.Count;
                 int count = 0;
 
-                progress?.Report($"Found {total} tasks. Parsing...");
+                progress?.Report(($"Found {total} tasks. Parsing...", 10));
 
                 // Parse Resources
                 var resourceMap = new Dictionary<string, string>(); // ResUID -> Name
@@ -91,8 +91,9 @@ namespace OCC.Shared.Utils
                     var xmlUid = taskElem.Element(ns + "UID")?.Value;
 
                     // Slow down for visibility as requested
-                    await Task.Delay(10);
-                    progress?.Report($"Parsing Task {count} of {total}: {name}...");
+                    await Task.Delay(50);
+                    double pct = 10 + (80.0 * count / total);
+                    progress?.Report(($"Importing {count}/{total}: {name}", pct));
 
                     // Skip if "IsNull" is 1 (blank row)
                     if (taskElem.Element(ns + "IsNull")?.Value == "1")
@@ -190,7 +191,7 @@ namespace OCC.Shared.Utils
                     }
                 }
 
-                progress?.Report("Reconstructing hierarchy...");
+                progress?.Report(("Reconstructing hierarchy...", 95));
 
                 // Reconstruct Hierarchy
                 var rootTasks = new List<ProjectTask>();
@@ -209,9 +210,12 @@ namespace OCC.Shared.Utils
                         }
                     }
 
+                    task.IndentLevel = level;
                     if (parent != null)
                     {
+                        task.ParentId = parent.Id;
                         parent.Children.Add(task);
+                        parent.IsGroup = true;
                     }
                     else
                     {
@@ -236,13 +240,13 @@ namespace OCC.Shared.Utils
                     RecalculateDates(r);
                 }
 
-                progress?.Report("Import complete!");
-                return (rootTasks, allResourceNames.ToList(), projectName);
+                progress?.Report(("Import complete!", 100));
+                return (rootTasks, flatTasks.Select(x => x.Task).ToList(), allResourceNames.ToList(), projectName);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error parsing XML: {ex.Message}");
-                return (new List<ProjectTask>(), new List<string>(), null);
+                return (new List<ProjectTask>(), new List<ProjectTask>(), new List<string>(), null);
             }
         }
 

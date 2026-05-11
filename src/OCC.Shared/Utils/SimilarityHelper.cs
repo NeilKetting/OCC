@@ -43,10 +43,67 @@ namespace OCC.Shared.Utils
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target))
                 return string.IsNullOrEmpty(source) && string.IsNullOrEmpty(target) ? 1.0 : 0.0;
 
-            int distance = GetLevenshteinDistance(source.ToLowerInvariant(), target.ToLowerInvariant());
-            int maxLength = Math.Max(source.Length, target.Length);
+            source = source.ToLowerInvariant().Trim();
+            target = target.ToLowerInvariant().Trim();
 
-            return 1.0 - ((double)distance / maxLength);
+            if (source == target) return 1.0;
+
+            // 1. Check for Acronyms (e.g. "OCC" vs "Orange Circle Construction")
+            if (IsAcronymMatch(source, target)) return 0.95;
+
+            // 1.1 Specialized Internal Matching for "Circle Construction" or "OCC"
+            if ((source.Contains("circle") || source == "occ") && (target.Contains("circle") || target.Contains("orange circle")))
+                return 0.85;
+
+            // 2. Levenshtein Distance
+            int distance = GetLevenshteinDistance(source, target);
+            int maxLength = Math.Max(source.Length, target.Length);
+            double levScore = 1.0 - ((double)distance / maxLength);
+
+            // 3. Word-based overlap (handles "Circle Construction" vs "Circle Construction - Jhb")
+            var sourceWords = source.Split(new[] { ' ', '-', '/', '_' }, StringSplitOptions.RemoveEmptyEntries);
+            var targetWords = target.Split(new[] { ' ', '-', '/', '_' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            int matches = 0;
+            foreach (var sw in sourceWords)
+            {
+                if (sw.Length <= 2) continue; // Skip small words like "of", "in"
+                foreach (var tw in targetWords)
+                {
+                    if (sw == tw) { matches++; break; }
+                }
+            }
+
+            double wordScore = (double)matches / Math.Max(sourceWords.Length, targetWords.Length);
+
+            return Math.Max(levScore, wordScore);
+        }
+
+        private static bool IsAcronymMatch(string source, string target)
+        {
+            if (source.Length < 2 || target.Length < 2) return false;
+
+            // Try source as acronym of target
+            if (CheckAcronym(source, target)) return true;
+            
+            // Try target as acronym of source
+            if (CheckAcronym(target, source)) return true;
+
+            return false;
+        }
+
+        private static bool CheckAcronym(string acronym, string fullName)
+        {
+            var words = fullName.Split(new[] { ' ', '-', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length < acronym.Length) return false;
+
+            string generated = "";
+            foreach (var w in words)
+            {
+                if (w.Length > 0) generated += w[0];
+            }
+
+            return generated.Contains(acronym);
         }
     }
 }

@@ -157,7 +157,6 @@ namespace OCC.WpfClient.Features.ProjectHub.Models
 
             if (mode == ProjectCreationMode.Comprehensive)
             {
-                if (string.IsNullOrWhiteSpace(ShortName)) Errors.Add("Project ID / Ref is required.");
                 if (string.IsNullOrWhiteSpace(Status)) Errors.Add("Status is required.");
                 if (string.IsNullOrWhiteSpace(Priority)) Errors.Add("Priority is required.");
                 

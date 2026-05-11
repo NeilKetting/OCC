@@ -416,7 +416,7 @@ namespace OCC.Client.Features.ProjectsHub.ViewModels
             try
             {
                 var parser = new MSProjectXmlParser();
-                var progress = new Progress<string>(msg => ImportProgressMessage = msg);
+                var progress = new Progress<(string Message, double Progress)>(p => ImportProgressMessage = p.Message);
 
                 var result = await parser.ParseAsync(stream, progress);
                 
@@ -425,12 +425,12 @@ namespace OCC.Client.Features.ProjectsHub.ViewModels
                     Project.Name = result.ProjectName;
                 }
 
-                if (result.Tasks.Count > 0)
+                if (result.RootTasks.Count > 0)
                 {
                     // Logic to set dates from tasks if needed
                 }
 
-                _importedTasks = result.Tasks;
+                _importedTasks = result.RootTasks;
                 
                 ImportProgressMessage = "Import Complete!";
                 
@@ -441,14 +441,12 @@ namespace OCC.Client.Features.ProjectsHub.ViewModels
                     CreationMode = ProjectCreationMode.Comprehensive;
                 }
 
-                await Task.Delay(500); // UI delay
                 Project.Validate(); // Show validation errors in results
                 ShowImportComplete = true;
             }
             catch (Exception ex)
             {
                 ImportProgressMessage = $"Error: {ex.Message}";
-                await Task.Delay(2000);
             }
             finally
             {

@@ -31,11 +31,14 @@ namespace OCC.WpfClient.Features.ProjectHub.Models
         public bool IsMapped => Action == ReconciliationAction.MapToExisting;
         public bool IsSkipped => Action == ReconciliationAction.Skip;
 
+        public Action? OnActionUpdated { get; set; }
+
         partial void OnActionChanged(ReconciliationAction value)
         {
             OnPropertyChanged(nameof(IsNew));
             OnPropertyChanged(nameof(IsMapped));
             OnPropertyChanged(nameof(IsSkipped));
+            OnActionUpdated?.Invoke();
         }
     }
 }

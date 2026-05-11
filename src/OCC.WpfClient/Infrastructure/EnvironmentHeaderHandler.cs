@@ -25,7 +25,18 @@ namespace OCC.WpfClient.Infrastructure
                 request.Headers.Add("X-Environment", "Live");
             }
 
-            return await base.SendAsync(request, cancellationToken);
+            try
+            {
+                return await base.SendAsync(request, cancellationToken);
+            }
+            catch (System.Net.Http.HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
+            {
+                // Return a custom response instead of crashing
+                return new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
+                {
+                    Content = new StringContent("API server is unreachable.")
+                };
+            }
         }
     }
 }

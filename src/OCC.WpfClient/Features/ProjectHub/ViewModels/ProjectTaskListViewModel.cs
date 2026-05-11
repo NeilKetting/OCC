@@ -31,6 +31,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isStageVisible = true;
         [ObservableProperty] private bool _isDurationVisible = true;
         [ObservableProperty] private bool _isAssignedVisible = true;
+        [ObservableProperty] private bool _isPriorityVisible = true;
 
         [ObservableProperty] private bool _isColumnPickerOpen;
 
@@ -40,6 +41,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private TaskDetailViewModel? _currentTaskDetail;
         [ObservableProperty] private Guid _projectId;
         [ObservableProperty] private string _parentTaskName = string.Empty;
+        [ObservableProperty] private int _totalActionableTaskCount;
 
         [ObservableProperty] private string _searchQuery = string.Empty;
         [ObservableProperty] private string _selectedStageFilter = "All Stages";
@@ -90,6 +92,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsStageVisible = layout.Columns.FirstOrDefault(c => c.Header == "Stage")?.IsVisible ?? true;
                 IsDurationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Duration")?.IsVisible ?? true;
                 IsAssignedVisible = layout.Columns.FirstOrDefault(c => c.Header == "Assigned")?.IsVisible ?? true;
+                IsPriorityVisible = layout.Columns.FirstOrDefault(c => c.Header == "Priority")?.IsVisible ?? true;
             }
         }
 
@@ -104,7 +107,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     new() { Header = "Progress", IsVisible = IsProgressVisible },
                     new() { Header = "Stage", IsVisible = IsStageVisible },
                     new() { Header = "Duration", IsVisible = IsDurationVisible },
-                    new() { Header = "Assigned", IsVisible = IsAssignedVisible }
+                    new() { Header = "Assigned", IsVisible = IsAssignedVisible },
+                    new() { Header = "Priority", IsVisible = IsPriorityVisible }
                 }
             };
             _settingsService.Settings.ProjectTaskListLayout = layout;
@@ -117,6 +121,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         partial void OnIsStageVisibleChanged(bool value) => SaveLayout();
         partial void OnIsDurationVisibleChanged(bool value) => SaveLayout();
         partial void OnIsAssignedVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPriorityVisibleChanged(bool value) => SaveLayout();
 
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
@@ -147,6 +152,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
 
             _rootTasks = roots.OrderBy(t => t.OrderIndex).ToList();
+            
+            // Calculate total actionable (non-group) tasks for the header badge
+            TotalActionableTaskCount = taskList.Count(t => !t.IsGroup);
+            
             RefreshDisplayList();
         }
 

@@ -6,6 +6,7 @@ using OCC.Shared.Models;
 using OCC.Shared.Utils;
 using OCC.WpfClient.Features.ProjectHub.Models;
 using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
+        private bool _isHandlingSelection;
 
         [ObservableProperty] private ProjectWrapper _project;
         
@@ -45,6 +47,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _validationMessage = "Geofencing requires a site address.";
         [ObservableProperty] private AddressSuggestion? _selectedAddressSuggestion;
         [ObservableProperty] private bool _isReconciling;
+        [ObservableProperty] private int _reconciliationTotalCount;
+        [ObservableProperty] private int _reconciliationMapCount;
+        [ObservableProperty] private int _reconciliationCreateCount;
+        [ObservableProperty] private int _reconciliationSkipCount;
+        
         public ObservableCollection<AssigneeReconciliationRow> ReconciliationRows { get; } = new();
 
         public ObservableCollection<Employee> SiteManagers { get; } = new();
@@ -79,6 +86,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             Project = new ProjectWrapper(new Project 
             { 
+                Id = Guid.NewGuid(),
                 Status = "Planning", 
                 Priority = "Medium", 
                 StartDate = DateTime.Today,
@@ -95,6 +103,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 value.PropertyChanged += Project_PropertyChanged;
             }
+        }
+
+        private void UpdateReconciliationStats()
+        {
+            ReconciliationTotalCount = ReconciliationRows.Count;
+            ReconciliationMapCount = ReconciliationRows.Count(r => r.Action == ReconciliationAction.MapToExisting);
+            ReconciliationCreateCount = ReconciliationRows.Count(r => r.Action == ReconciliationAction.CreateNew);
+            ReconciliationSkipCount = ReconciliationRows.Count(r => r.Action == ReconciliationAction.Skip);
         }
 
         private async Task LoadDataAsync()
@@ -133,6 +149,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private async void Project_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            if (_isHandlingSelection) return;
+
             if (e.PropertyName == nameof(ProjectWrapper.StreetLine1))
             {
                 await UpdateAddressSuggestions();
@@ -210,6 +228,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var details = await _googleMapsService.GetPlaceDetailsAsync(suggestion.PlaceId, _sessionToken);
                 if (details != null)
                 {
+                    _isHandlingSelection = true;
                     Project.StreetLine1 = details.StreetLine1;
                     Project.StreetLine2 = details.StreetLine2;
                     Project.City = details.City;
@@ -222,6 +241,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     AddressSuggestions.Clear();
                     SelectedAddressSuggestion = null;
                     _sessionToken = Guid.NewGuid().ToString();
+                    _isHandlingSelection = false;
                 }
             }
             catch (Exception)
@@ -260,14 +280,33 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             try
             {
                 IsBusy = true;
+
+                // Ensure project has an ID before linking tasks
+                if (Project.Id == Guid.Empty)
+                {
+                    Project.Model.Id = Guid.NewGuid();
+                }
+
+                // Ensure imported tasks are attached if present
+                if (_importedTasks != null && _importedTasks.Any())
+                {
+                    Project.Model.Tasks = _importedTasks;
+                    
+                    // Also ensure every task is explicitly linked to the project
+                    foreach (var t in _importedTasks)
+                    {
+                        t.ProjectId = Project.Id;
+                    }
+                }
+
                 await _projectService.CreateProjectAsync(Project.Model);
 
                 NotifySuccess("Success", $"Project '{Project.Name}' created successfully.");
                 Close(Project.Id);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                NotifyError("Error", "Failed to create project.");
+                NotifyError("Error", $"Failed to create project: {ex.Message}");
             }
             finally
             {
@@ -285,12 +324,22 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             try
             {
                 var parser = new MSProjectXmlParser();
-                var progress = new Progress<string>(msg => ImportProgressMessage = msg);
+                var progress = new Progress<(string msg, double pct)>(p => 
+                {
+                    ImportProgressMessage = p.msg;
+                    WeakReferenceMessenger.Default.Send(new ImportProgressMessage(new ImportProgressInfo 
+                    { 
+                        Message = p.msg, 
+                        Progress = p.pct, 
+                        IsVisible = true,
+                        IsComplete = p.pct >= 100
+                    }));
+                });
 
                 var result = await parser.ParseAsync(stream, progress);
                 
                 if (!string.IsNullOrEmpty(result.ProjectName)) Project.Name = result.ProjectName;
-                _importedTasks = result.Tasks;
+                _importedTasks = result.FlatTasks;
 
                 await MatchAssigneesAsync(result.Resources);
             }
@@ -320,23 +369,35 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var subContractors = await _subContractorService.GetSubContractorSummariesAsync();
 
             var potentialMatches = new List<AssigneeSelectionViewModel>();
+            
+            // Add internal company options for mapping (e.g. mapping "OCC" in XML to full name)
+            potentialMatches.Add(new AssigneeSelectionViewModel { Id = Guid.Empty, Name = "Orange Circle Construction JHB", Role = "Internal", Type = AssigneeType.Staff, Branch = "Jhb" });
+            potentialMatches.Add(new AssigneeSelectionViewModel { Id = Guid.Empty, Name = "Orange Circle Construction CPT", Role = "Internal", Type = AssigneeType.Staff, Branch = "CPT" });
+            potentialMatches.Add(new AssigneeSelectionViewModel { Id = Guid.Empty, Name = "OCC", Role = "Internal", Type = AssigneeType.Staff, Branch = "Global" });
+
             foreach (var e in employees) potentialMatches.Add(new AssigneeSelectionViewModel { Id = e.Id, Name = e.DisplayName, Role = e.Role.ToString(), Type = AssigneeType.Staff, Branch = e.Branch });
             foreach (var sc in subContractors) potentialMatches.Add(new AssigneeSelectionViewModel { Id = sc.Id, Name = sc.Name, Role = "Contractor", Type = AssigneeType.Contractor, Branch = sc.Branch });
 
             foreach (var rName in resourceNames)
             {
-                var exact = potentialMatches.FirstOrDefault(m => string.Equals(m.Name, rName, StringComparison.OrdinalIgnoreCase));
-                if (exact != null)
+                // Prioritize exact or high-confidence matches (including acronyms like OCC)
+                var bestMatch = potentialMatches
+                    .Select(m => new { Match = m, Score = SimilarityHelper.GetSimilarity(rName, m.Name) })
+                    .OrderByDescending(x => x.Score)
+                    .FirstOrDefault();
+
+                if (bestMatch != null && bestMatch.Score >= 0.9)
                 {
-                    ResolveAssignee(rName, exact.Id, exact.Name, exact.Type);
+                    ResolveAssignee(rName, bestMatch.Match.Id, bestMatch.Match.Name, bestMatch.Match.Type);
                     continue;
                 }
 
+                // If no high-confidence match, look for fuzzy matches for the user to choose from
                 var fuzzyMatches = potentialMatches
                     .Select(m => new { Match = m, Score = SimilarityHelper.GetSimilarity(rName, m.Name) })
-                    .Where(x => x.Score >= 0.8)
+                    .Where(x => x.Score >= 0.4) // Lowered threshold for broader suggestions
                     .OrderByDescending(x => x.Score)
-                    .Take(5)
+                    .Take(8)
                     .ToList();
 
                 var row = new AssigneeReconciliationRow { ImportedName = rName };
@@ -352,8 +413,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     row.Action = ReconciliationAction.CreateNew;
                 }
 
+                row.OnActionUpdated = UpdateReconciliationStats;
                 ReconciliationRows.Add(row);
             }
+
+            UpdateReconciliationStats();
 
             if (ReconciliationRows.Any())
             {

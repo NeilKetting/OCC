@@ -72,7 +72,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Search -->
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
+                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
                     <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                              Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
                              ap:WatermarkProperties.Watermark="Search partners..."/>
@@ -94,7 +94,7 @@
                                 <ItemsControl ItemsSource="{Binding Branches}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Button Content="{Binding}" Command="{Binding DataContext.SelectBranchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarButton}" HorizontalContentAlignment="Left" Padding="12,8" Margin="2"/>
+                                            <Button Content="{Binding}" Command="{Binding DataContext.SelectBranchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarButton}" HorizontalContentAlignment="Left" Padding="12,8" Margin="2" Foreground="{StaticResource TextMain}"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -118,7 +118,7 @@
                                     <ItemsControl ItemsSource="{Binding Specialties}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Button Content="{Binding}" Command="{Binding DataContext.SelectSpecialtyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarButton}" HorizontalContentAlignment="Left" Padding="12,8" Margin="2"/>
+                                                <Button Content="{Binding}" Command="{Binding DataContext.SelectSpecialtyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarButton}" HorizontalContentAlignment="Left" Padding="12,8" Margin="2" Foreground="{StaticResource TextMain}"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

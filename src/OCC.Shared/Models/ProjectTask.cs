@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 using OCC.Shared.Enums;
+using System.Text.Json.Serialization;
 
 namespace OCC.Shared.Models
 {
@@ -161,7 +162,7 @@ namespace OCC.Shared.Models
         }
 
         [NotMapped]
-        public bool IsOverdue => !IsComplete && FinishDate < DateTime.Now && Status != "Cancelled";
+        public bool IsOverdue => !IsComplete && FinishDate.Date < DateTime.Today && Status != "Cancelled";
 
         [NotMapped]
         public string StatusColor 
@@ -241,15 +242,18 @@ namespace OCC.Shared.Models
         public Guid? ProjectId { get; set; }
         
         /// <summary> Navigation property to the parent Project. </summary>
+        [JsonIgnore]
         public virtual Project? Project { get; set; }
         
         /// <summary> Navigation property to the parent task (if any). </summary>
+        [JsonIgnore]
         public virtual ProjectTask? ParentTask { get; set; }
 
         /// <summary> Optional Foreign Key to a parent task (for nested sub-tasks). </summary>
         public Guid? ParentId { get; set; }
 
         /// <summary> Collection of sub-tasks. </summary>
+        [JsonIgnore]
         public List<ProjectTask> Children { get; set; } = new();
 
         /// <summary> List of dependency task IDs (Predecessors). </summary>
