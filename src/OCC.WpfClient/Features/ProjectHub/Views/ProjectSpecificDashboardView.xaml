@@ -5,7 +5,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
-             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000"
              d:DataContext="{d:DesignInstance vm:ProjectSpecificDashboardViewModel}">
@@ -14,30 +13,10 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Styles/Common.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <conv:VisibilityConverter x:Key="VisibilityConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid Margin="0" Background="{StaticResource AppBackground}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header Section -->
-        <Border Grid.Row="0" Margin="30,30,30,0">
-            <Grid>
-                <StackPanel>
-                    <TextBlock Text="Project Analytics" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBlock Text="{Binding StreetLine1}" FontSize="28" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="{Binding CityStatePostal}" Style="{StaticResource LabelText}" Margin="0,2,0,0"/>
-                </StackPanel>
-
-
-            </Grid>
-        </Border>
-
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="30,10,30,30">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="30">
             <!-- 1. Top Section: Cards Row -->
             <UniformGrid Columns="4" Margin="0,0,0,30">
                 <!-- Health Card -->
@@ -57,9 +36,6 @@
                             <TextBlock Grid.Column="1" Text="{Binding ProjectHealth}" Foreground="White" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
                         </Grid>
                         <TextBlock Text="Based on overdue tasks" Foreground="{StaticResource TextSub}" FontSize="10" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding VarianceText}" Foreground="{StaticResource ErrorRed}" FontSize="11" FontWeight="SemiBold" 
-                                   Visibility="{Binding IsLate, Converter={StaticResource VisibilityConverter}}" 
-                                   Margin="0,5,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
 
@@ -105,22 +81,19 @@
                         <TextBlock Text="{Binding TotalTasks}" Foreground="White" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
-
                 <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="100">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="COMPLETED" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding CompletedTasks}" Foreground="{StaticResource SuccessGreen}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
-
                 <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="100">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="IN PROGRESS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding InProgressTasks}" Foreground="{StaticResource AccentBlue}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
-
-                <Border BorderBrush="{StaticResource ErrorRed}" BorderThickness="1" CornerRadius="16" Background="#10EF4444" Margin="10,0,0,0" Height="100">
+                <Border Style="{StaticResource GlassCard}" Margin="10,0,0,0" Height="100" BorderBrush="{StaticResource ErrorRed}" BorderThickness="1" Background="#0DFF3B30">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="OVERDUE" Foreground="{StaticResource ErrorRed}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding OverdueTasks}" Foreground="{StaticResource ErrorRed}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -128,103 +101,79 @@
                 </Border>
             </UniformGrid>
 
+            <!-- Active Sub-Contractors Section -->
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,0,30" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="ACTIVE SUB-CONTRACTORS" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="External trade partners currently assigned to project tasks" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding SubContractors}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#10FFFFFF" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15,10" Margin="0,0,10,10">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding ColorTheme}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="5" Color="White" Opacity="0.2" ShadowDepth="0"/>
+                                            </Border.Effect>
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+
+            <!-- 3. Charts Row -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left Column: Active Snags & Milestones -->
-                <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                    <Border Style="{StaticResource GlassCard}" Padding="20" Margin="0,0,0,20">
-                        <StackPanel>
-                            <TextBlock Text="ACTIVE SNAGS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,20"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Ellipse Width="40" Height="40" Fill="#20EC4899" HorizontalAlignment="Left"/>
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EC4899" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding ActiveSnagsCount}" Foreground="White" FontSize="24" FontWeight="Bold"/>
-                                    <TextBlock Text="Open snag items requiring attention" Foreground="{StaticResource TextSub}" FontSize="10"/>
-                                </StackPanel>
-                            </Grid>
+                <!-- Status Distribution -->
+                <Border Grid.Column="0" Style="{StaticResource GlassCard}" Margin="0,0,15,0" Padding="25">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="400"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Task Distribution" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="Breakdown by staff workload" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </StackPanel>
-                    </Border>
+                        <lvc:PieChart Grid.Row="1" Series="{Binding StatusSeries}" Background="Transparent" LegendPosition="Bottom" LegendTextPaint="{Binding LegendTextPaint}" />
+                    </Grid>
+                </Border>
 
-                    <Border Style="{StaticResource GlassCard}" Padding="20">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,15">
-                                <TextBlock Text="UPCOMING MILESTONES (7 DAYS)" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
-                                <Border Background="{StaticResource AccentBlue}" CornerRadius="10" HorizontalAlignment="Right" Padding="8,2">
-                                    <TextBlock Text="{Binding UpcomingMilestonesCount}" Foreground="White" FontSize="10" FontWeight="Bold"/>
-                                </Border>
-                            </Grid>
-                            
-                            <ItemsControl ItemsSource="{Binding UpcomingMilestones}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="#10FFFFFF" BorderThickness="0,0,0,1" Padding="0,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding Status}" Foreground="{StaticResource TextSub}" FontSize="10"/>
-                                                </StackPanel>
-                                                <TextBlock Grid.Column="1" Text="{Binding FinishDate, StringFormat='{}{0:dd MMM}'}" Foreground="White" FontSize="11" VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            
-                            <TextBlock Text="No upcoming milestones for this week." Foreground="{StaticResource TextSub}" FontSize="11" HorizontalAlignment="Center" Margin="0,20,0,10">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding UpcomingMilestones.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                <!-- Schedule Adherence -->
+                <Border Grid.Column="1" Style="{StaticResource GlassCard}" Margin="15,0,0,0" Padding="25">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="400"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Schedule Health" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="Deadlines vs Completion" Foreground="{StaticResource TextSub}" FontSize="12"/>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <!-- Right Column: Sub-Contractors -->
-                <Border Grid.Column="1" Style="{StaticResource GlassCard}" Padding="20" Margin="10,0,0,0">
-                    <StackPanel>
-                        <TextBlock Text="ACTIVE SUB-CONTRACTORS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,20"/>
-                        <ItemsControl ItemsSource="{Binding SubContractors}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#08FFFFFF" CornerRadius="8" Padding="15,12" Margin="0,0,0,10">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="4" Height="24" Background="{Binding ColorTheme}" CornerRadius="2"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" FontSize="13" FontWeight="SemiBold" Margin="15,0,0,0" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
+                        <lvc:PieChart Grid.Row="1" Series="{Binding ScheduleSeries}" Background="Transparent" LegendPosition="Bottom" LegendTextPaint="{Binding LegendTextPaint}" />
+                    </Grid>
                 </Border>
             </Grid>
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

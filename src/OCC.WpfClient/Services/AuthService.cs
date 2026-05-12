@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.DTOs;
@@ -72,6 +73,10 @@ namespace OCC.WpfClient.Services
                         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
                         
                         _logger.LogInformation("Login successful for {Email}. User: {FirstName} {LastName}", email, _currentUser.FirstName, _currentUser.LastName);
+                        
+                        // Fetch Google Maps key securely
+                        _ = FetchGoogleMapsKey();
+                        
                         NotifyUserChanged();
                         return (true, string.Empty);
                     }
@@ -164,15 +169,32 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        private async Task FetchGoogleMapsKey()
+        {
+            try
+            {
+                var url = GetFullUrl("api/Config/google-maps-key");
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<JsonElement>();
+                    if (data.TryGetProperty("key", out var keyProp))
+                    {
+                        _connectionSettings.GoogleApiKey = keyProp.GetString() ?? "";
+                        _logger.LogInformation("Google Maps API Key successfully retrieved from server.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching Google Maps API key from server.");
+            }
+        }
+
         private class LoginResponse
         {
             public string Token { get; set; } = string.Empty;
             public User User { get; set; } = new();
-        }
-
-        private class ProvisionalKeyResponse
-        {
-            public string ProvisionalPrivateKey { get; set; } = string.Empty;
         }
     }
 }

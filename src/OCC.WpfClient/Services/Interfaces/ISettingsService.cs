@@ -7,5 +7,6 @@ namespace OCC.WpfClient.Services.Interfaces
     {
         Task<CompanyDetails> GetCompanyDetailsAsync();
         Task SaveCompanyDetailsAsync(CompanyDetails details);
+        Task<string?> GetGoogleMapsKeyAsync();
     }
 }

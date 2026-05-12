@@ -108,5 +108,31 @@ namespace OCC.WpfClient.Services
                 throw;
             }
         }
+
+        public async Task<string?> GetGoogleMapsKeyAsync()
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl("api/Config/google-maps-key");
+
+            try
+            {
+                var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<JsonElement>();
+                    if (data.TryGetProperty("key", out var keyProp))
+                    {
+                        return keyProp.GetString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching Google Maps API key");
+            }
+
+            return null;
+        }
     }
 }
