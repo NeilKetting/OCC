@@ -59,7 +59,10 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                     var allEmployees = await _employeeService.GetEmployeesAsync();
                     if (allEmployees != null)
                     {
-                        var managers = allEmployees.Where(e => e.Role == EmployeeRole.SiteManager).ToList();
+                        var managers = allEmployees.Where(e => e.Role == EmployeeRole.SiteManager || 
+                                                              e.Role == EmployeeRole.SnrForeman || 
+                                                              e.Role == EmployeeRole.JnrForeman || 
+                                                              e.Role == EmployeeRole.LegacySeniorForeman).ToList();
                         SiteManagers = new ObservableCollection<EmployeeSummaryDto>(managers);
                     }
                 }

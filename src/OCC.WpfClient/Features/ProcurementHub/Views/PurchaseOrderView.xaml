@@ -485,7 +485,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="Auto" Foreground="{StaticResource TextSub}"/>
+                            <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextSub}"/>
                             <DataGridTextColumn Header="REMARKS" Binding="{Binding Remarks}" Width="Auto"/>
                             <DataGridTextColumn Header="QTY" Width="60" Binding="{Binding QuantityOrdered}">
                                 <DataGridTextColumn.ElementStyle>

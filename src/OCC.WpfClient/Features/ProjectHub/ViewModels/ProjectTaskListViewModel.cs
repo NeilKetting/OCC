@@ -389,34 +389,53 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public async void Receive(TaskUpdatedMessage message)
         {
-            // Find the task locally and update it
-            var updatedTask = await _taskService.GetTaskAsync(message.TaskId);
-            if (updatedTask == null) return;
-
-            App.Current.Dispatcher.Invoke(() =>
+            try
             {
-                var existing = Tasks.FirstOrDefault(t => t.Id == message.TaskId);
-                if (existing != null)
+                // Find the task locally and update it
+                var updatedTask = await _taskService.GetTaskAsync(message.TaskId);
+                
+                App.Current.Dispatcher.Invoke(() =>
                 {
-                    // Update properties manually to trigger UI refresh on the object in the list
-                    existing.Status = updatedTask.Status;
-                    existing.PercentComplete = updatedTask.PercentComplete;
-                    existing.IsOnHold = updatedTask.IsOnHold;
-                    existing.HoldReason = updatedTask.HoldReason;
-                    existing.Name = updatedTask.Name;
-                    existing.IsExpanded = updatedTask.IsExpanded; // Preserve or update
+                    var existing = Tasks.FirstOrDefault(t => t.Id == message.TaskId);
                     
-                    // Force refresh colors and labels
-                    existing.NotifyPropertyChanged(nameof(existing.StatusColor));
-                    existing.NotifyPropertyChanged(nameof(existing.IsComplete));
-                    existing.NotifyPropertyChanged(nameof(existing.IsOverdue));
-                }
-                else
-                {
-                    // If it's a new task or we can't find it, we might need to rebuild hierarchy
-                    // But for simple updates, this is enough.
-                }
-            });
+                    if (updatedTask == null)
+                    {
+                        // Task was likely deleted on the server
+                        if (existing != null)
+                        {
+                            Tasks.Remove(existing);
+                            HasTasks = Tasks.Any();
+                        }
+                        return;
+                    }
+
+                    if (existing != null)
+                    {
+                        // Update properties manually to trigger UI refresh on the object in the list
+                        existing.Status = updatedTask.Status;
+                        existing.PercentComplete = updatedTask.PercentComplete;
+                        existing.IsOnHold = updatedTask.IsOnHold;
+                        existing.HoldReason = updatedTask.HoldReason;
+                        existing.Name = updatedTask.Name;
+                        existing.IsExpanded = updatedTask.IsExpanded; // Preserve or update
+                        
+                        // Force refresh colors and labels
+                        existing.NotifyPropertyChanged(nameof(existing.StatusColor));
+                        existing.NotifyPropertyChanged(nameof(existing.IsComplete));
+                        existing.NotifyPropertyChanged(nameof(existing.IsOverdue));
+                    }
+                    else
+                    {
+                        // If it's a new task or we can't find it, we might need to rebuild hierarchy
+                        // But for simple updates, this is enough.
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // Safety net for async void
+                System.Diagnostics.Debug.WriteLine($"Error handling TaskUpdatedMessage: {ex.Message}");
+            }
         }
     }
 

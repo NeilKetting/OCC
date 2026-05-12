@@ -106,7 +106,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 var employees = await _employeeService.GetEmployeesAsync();
                 AvailableSiteManagers.Clear();
-                foreach (var emp in employees.Where(e => e.Status == EmployeeStatus.Active && e.Role == EmployeeRole.SiteManager))
+                foreach (var emp in employees.Where(e => e.Status == EmployeeStatus.Active && 
+                                                        (e.Role == EmployeeRole.SiteManager || 
+                                                         e.Role == EmployeeRole.SnrForeman || 
+                                                         e.Role == EmployeeRole.JnrForeman || 
+                                                         e.Role == EmployeeRole.LegacySeniorForeman)))
                 {
                     AvailableSiteManagers.Add(emp);
                 }

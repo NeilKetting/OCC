@@ -82,12 +82,17 @@ namespace OCC.WpfClient.Services
             var url = GetFullUrl($"api/Projects/{id}");
             try
             {
-                return await client.GetFromJsonAsync<Project>(url);
+                var response = await client.GetAsync(url);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    return null;
+                    
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<Project>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching project {Id} from {Url}", id, url);
-                throw;
+                return null;
             }
         }
 

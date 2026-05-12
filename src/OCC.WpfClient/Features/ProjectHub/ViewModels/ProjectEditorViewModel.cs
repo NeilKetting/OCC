@@ -94,7 +94,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             SiteManagers.Clear();
             var employees = await _employeeService.GetEmployeesAsync();
-            foreach (var e in employees.Where(x => x.Role == EmployeeRole.SiteManager).OrderBy(x => x.FirstName))
+            foreach (var e in employees.Where(x => x.Role == EmployeeRole.SiteManager || 
+                                             x.Role == EmployeeRole.SnrForeman || 
+                                             x.Role == EmployeeRole.JnrForeman || 
+                                             x.Role == EmployeeRole.LegacySeniorForeman).OrderBy(x => x.FirstName))
             {
                 SiteManagers.Add(new Employee { Id = e.Id, FirstName = e.FirstName, LastName = e.LastName, EmployeeNumber = e.EmployeeNumber });
             }

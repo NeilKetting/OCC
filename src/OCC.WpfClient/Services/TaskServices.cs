@@ -59,7 +59,21 @@ namespace OCC.WpfClient.Services
             var client = HttpClientFactory.CreateClient();
             EnsureAuthorization(client);
             var url = GetFullUrl($"api/ProjectTasks/{id}");
-            return await client.GetFromJsonAsync<ProjectTask>(url);
+            
+            try
+            {
+                var response = await client.GetAsync(url);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    return null;
+                    
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<ProjectTask>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching task {Id}", id);
+                return null;
+            }
         }
 
         public async Task<ProjectTask> CreateTaskAsync(ProjectTask task)
