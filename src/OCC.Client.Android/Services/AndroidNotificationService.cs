@@ -19,7 +19,9 @@ namespace OCC.Client.Android.Services
             _context = context;
         }
 
+#pragma warning disable 67
         public event EventHandler<OCC.Shared.Models.Notification>? NotificationReceived;
+#pragma warning restore 67
 
         public Task ClearAllAsync() => Task.CompletedTask;
 
@@ -51,13 +53,16 @@ namespace OCC.Client.Android.Services
 
             long triggerAtMillis = (long)(triggerTime.ToUniversalTime() - DateTimeOffset.UnixEpoch.UtcDateTime).TotalMilliseconds;
 
-            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.M)
+            if (pendingIntent != null)
             {
-                alarmManager.SetExactAndAllowWhileIdle(AlarmType.RtcWakeup, triggerAtMillis, pendingIntent);
-            }
-            else
-            {
-                alarmManager.SetExact(AlarmType.RtcWakeup, triggerAtMillis, pendingIntent);
+                if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.M)
+                {
+                    alarmManager.SetExactAndAllowWhileIdle(AlarmType.RtcWakeup, triggerAtMillis, pendingIntent);
+                }
+                else
+                {
+                    alarmManager.SetExact(AlarmType.RtcWakeup, triggerAtMillis, pendingIntent);
+                }
             }
 
             return Task.CompletedTask;

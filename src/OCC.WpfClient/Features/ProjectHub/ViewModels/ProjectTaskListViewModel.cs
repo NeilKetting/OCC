@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using OCC.Shared.Models;
+using OCC.Shared.DTOs;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Infrastructure;
@@ -22,6 +23,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IProjectTaskService _taskService;
         private readonly ISubContractorService _subContractorService;
         private readonly ITaskAssignmentService _assignmentService;
+        private readonly IDialogService _dialogService;
         private readonly LocalSettingsService _settingsService;
 
         // Column Visibility
@@ -54,6 +56,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _selectedSpecialtyFilter = "All Specialties";
         [ObservableProperty] private ObservableCollection<string> _availableSpecialties = new() { "All Specialties" };
 
+        // Smart Filters
+        [ObservableProperty] private int _overdueCount;
+        [ObservableProperty] private int _dueTodayCount;
+        [ObservableProperty] private int _dueThisWeekCount;
+        [ObservableProperty] private int _dueThisMonthCount;
+        [ObservableProperty] private bool _isFilterPopupOpen;
+        
+        [ObservableProperty] private string _activeSmartFilter = "All Tasks"; // "All", "Overdue", "Today", "Week", "Month"
+        [ObservableProperty] private Guid? _filterSubContractorId;
+
+        public ObservableCollection<SubContractorFilterDto> SubContractorFilters { get; } = new();
+
         public ObservableCollection<string> AvailableStages { get; } = new() 
         {
             "All Stages", "Not Started", "Started", "Halfway", "Almost Done", "Completed", "On Hold"
@@ -76,12 +90,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IProjectTaskService taskService,
             ISubContractorService subContractorService,
             ITaskAssignmentService assignmentService,
+            IDialogService dialogService,
             LocalSettingsService settingsService)
         {
             _serviceProvider = serviceProvider;
             _taskService = taskService;
             _subContractorService = subContractorService;
             _assignmentService = assignmentService;
+            _dialogService = dialogService;
             _settingsService = settingsService;
             Title = "Tasks";
             
@@ -139,6 +155,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ProjectId = projectId;
             var taskList = tasks.ToList();
 
+            CalculateSmartStats(taskList);
+
             // Build hierarchy (Ported from legacy app)
             foreach (var task in taskList) task.Children.Clear();
             
@@ -188,17 +206,109 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private bool MatchesFilter(ProjectTask task)
         {
+            // If it's a group and we're filtering by subbie, we might want to hide it if no children match
+            // But usually we show the hierarchy.
+            
             bool matchesSearch = string.IsNullOrWhiteSpace(SearchQuery) || 
                 task.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
 
             bool matchesStage = SelectedStageFilter == "All Stages" || 
                 task.Status.Equals(SelectedStageFilter, StringComparison.OrdinalIgnoreCase);
 
+            bool matchesSmart = true;
+            if (ActiveSmartFilter == "Overdue") matchesSmart = task.IsOverdue;
+            else if (ActiveSmartFilter == "Due Today") matchesSmart = task.FinishDate.Date == DateTime.Today;
+            else if (ActiveSmartFilter == "Due This Week") 
+            {
+                var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                var endOfWeek = startOfWeek.AddDays(7);
+                matchesSmart = task.FinishDate.Date >= startOfWeek && task.FinishDate.Date < endOfWeek;
+            }
+            else if (ActiveSmartFilter == "Due This Month") matchesSmart = task.FinishDate.Month == DateTime.Today.Month && task.FinishDate.Year == DateTime.Today.Year;
+
+            bool matchesSubbie = true;
+            if (FilterSubContractorId.HasValue)
+            {
+                matchesSubbie = task.Assignments?.Any(a => a.AssigneeId == FilterSubContractorId.Value) ?? false;
+            }
+
             // If this task doesn't match but a child does, we still show the parent
             bool anyChildMatches = task.Children?.Any(c => MatchesFilter(c)) ?? false;
 
-            return (matchesSearch && matchesStage) || anyChildMatches;
+            return (matchesSearch && matchesStage && matchesSmart && matchesSubbie) || anyChildMatches;
         }
+
+        private void CalculateSmartStats(List<ProjectTask> allTasks)
+        {
+            var actionable = allTasks.Where(t => !t.IsGroup).ToList();
+            
+            OverdueCount = actionable.Count(t => t.IsOverdue);
+            DueTodayCount = actionable.Count(t => t.FinishDate.Date == DateTime.Today);
+            
+            var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+            var endOfWeek = startOfWeek.AddDays(7);
+            DueThisWeekCount = actionable.Count(t => t.FinishDate.Date >= startOfWeek && t.FinishDate.Date < endOfWeek);
+            
+            DueThisMonthCount = actionable.Count(t => t.FinishDate.Month == DateTime.Today.Month && t.FinishDate.Year == DateTime.Today.Year);
+
+            // Subcontractor stats
+            var subbieStats = new Dictionary<Guid, (string Name, int Count)>();
+            foreach(var task in actionable)
+            {
+                if (task.Assignments == null) continue;
+                foreach(var assign in task.Assignments)
+                {
+                    if (subbieStats.ContainsKey(assign.AssigneeId))
+                    {
+                        var stats = subbieStats[assign.AssigneeId];
+                        subbieStats[assign.AssigneeId] = (stats.Name, stats.Count + 1);
+                    }
+                    else
+                    {
+                        subbieStats[assign.AssigneeId] = (assign.AssigneeName, 1);
+                    }
+                }
+            }
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                SubContractorFilters.Clear();
+                foreach(var kvp in subbieStats.OrderBy(x => x.Value.Name))
+                {
+                    SubContractorFilters.Add(new SubContractorFilterDto { Id = kvp.Key, Name = kvp.Value.Name, TaskCount = kvp.Value.Count });
+                }
+            });
+        }
+
+        [RelayCommand]
+        private void ApplySmartFilter(string filter)
+        {
+            ActiveSmartFilter = filter;
+            IsFilterPopupOpen = false;
+            RefreshDisplayList();
+        }
+
+        [RelayCommand]
+        private void ApplySubContractorFilter(Guid? subbieId)
+        {
+            FilterSubContractorId = subbieId;
+            IsFilterPopupOpen = false;
+            RefreshDisplayList();
+        }
+
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            ActiveSmartFilter = "All Tasks";
+            FilterSubContractorId = null;
+            SelectedStageFilter = "All Stages";
+            SearchQuery = string.Empty;
+            IsFilterPopupOpen = false;
+            RefreshDisplayList();
+        }
+
+        [RelayCommand]
+        private void ToggleFilterPopup() => IsFilterPopupOpen = !IsFilterPopupOpen;
 
         private void FlattenTask(ProjectTask task, List<ProjectTask> flatList)
         {
@@ -303,6 +413,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private async Task DeleteTask(ProjectTask task)
         {
             if (task == null) return;
+
+            var confirm = await _dialogService.ShowConfirmationAsync(
+                "Delete Task", 
+                $"Are you sure you want to delete task '{task.Name}'?\n\nThis action cannot be undone.");
+
+            if (!confirm) return;
+
             await _taskService.DeleteTaskAsync(task.Id);
             Tasks.Remove(task);
             HasTasks = Tasks.Any();

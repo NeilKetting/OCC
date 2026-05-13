@@ -165,7 +165,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Project.Name}" FontSize="12" Foreground="{StaticResource TextSub}"/>
+                                                    <TextBlock Text="{Binding Project.Name}" FontSize="12" Foreground="{StaticResource AccentBlue}"/>
                                                     <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Foreground="White"/>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">

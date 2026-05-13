@@ -268,9 +268,16 @@ namespace OCC.Shared.Utils
 
             foreach (var child in task.Children)
             {
-                if (child.StartDate < minStart) minStart = child.StartDate;
-                if (child.FinishDate > maxFinish) maxFinish = child.FinishDate;
-                hasDates = true;
+                if (child.StartDate > DateTime.MinValue && child.StartDate < minStart) 
+                {
+                    minStart = child.StartDate;
+                    hasDates = true;
+                }
+                if (child.FinishDate > DateTime.MinValue && child.FinishDate > maxFinish) 
+                {
+                    maxFinish = child.FinishDate;
+                    hasDates = true;
+                }
             }
 
             if (hasDates && minStart != DateTime.MaxValue && maxFinish != DateTime.MinValue)

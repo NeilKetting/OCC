@@ -92,6 +92,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         /// </summary>
         public ObservableCollection<GanttDependencyLine> Dependencies { get; } = new();
 
+        // Smart Filters
+        [ObservableProperty] private int _overdueCount;
+        [ObservableProperty] private int _dueTodayCount;
+        [ObservableProperty] private int _dueThisWeekCount;
+        [ObservableProperty] private int _dueThisMonthCount;
+        [ObservableProperty] private bool _isFilterPopupOpen;
+        
+        [ObservableProperty] private string _activeSmartFilter = "All Tasks"; // "All", "Overdue", "Today", "Week", "Month"
+        [ObservableProperty] private Guid? _filterSubContractorId;
+
+        public ObservableCollection<OCC.Shared.DTOs.SubContractorFilterDto> SubContractorFilters { get; } = new();
+
         #endregion
 
         #region Constructors
@@ -171,6 +183,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // Expand all by default to avoid large white space at bottom (User Workaround)
             foreach (var t in tasks) t.IsExpanded = true;
             
+            CalculateSmartStats(tasks);
+
             // 1. Build Hierarchy
             _rootTasks = _projectService.BuildTaskHierarchy(tasks);
             
@@ -183,9 +197,105 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         /// </summary>
         private void RefreshGanttView()
         {
-            var visibleTasks = _projectService.FlattenHierarchy(_rootTasks);
+            var filteredRoots = _rootTasks.Where(t => MatchesFilter(t)).ToList();
+            var visibleTasks = _projectService.FlattenHierarchy(filteredRoots);
             RebuildGanttTasks(visibleTasks);
         }
+
+        private bool MatchesFilter(ProjectTask task)
+        {
+            bool matchesSmart = true;
+            if (ActiveSmartFilter == "Overdue") matchesSmart = task.IsOverdue;
+            else if (ActiveSmartFilter == "Due Today") matchesSmart = task.FinishDate.Date == DateTime.Today;
+            else if (ActiveSmartFilter == "Due This Week") 
+            {
+                var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                var endOfWeek = startOfWeek.AddDays(7);
+                matchesSmart = task.FinishDate.Date >= startOfWeek && task.FinishDate.Date < endOfWeek;
+            }
+            else if (ActiveSmartFilter == "Due This Month") matchesSmart = task.FinishDate.Month == DateTime.Today.Month && task.FinishDate.Year == DateTime.Today.Year;
+
+            bool matchesSubbie = true;
+            if (FilterSubContractorId.HasValue)
+            {
+                matchesSubbie = task.Assignments?.Any(a => a.AssigneeId == FilterSubContractorId.Value) ?? false;
+            }
+
+            // If this task doesn't match but a child does, we still show the parent
+            bool anyChildMatches = task.Children?.Any(c => MatchesFilter(c)) ?? false;
+
+            return (matchesSmart && matchesSubbie) || anyChildMatches;
+        }
+
+        private void CalculateSmartStats(List<ProjectTask> allTasks)
+        {
+            var actionable = allTasks.Where(t => !t.IsGroup).ToList();
+            
+            OverdueCount = actionable.Count(t => t.IsOverdue);
+            DueTodayCount = actionable.Count(t => t.FinishDate.Date == DateTime.Today);
+            
+            var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+            var endOfWeek = startOfWeek.AddDays(7);
+            DueThisWeekCount = actionable.Count(t => t.FinishDate.Date >= startOfWeek && t.FinishDate.Date < endOfWeek);
+            
+            DueThisMonthCount = actionable.Count(t => t.FinishDate.Month == DateTime.Today.Month && t.FinishDate.Year == DateTime.Today.Year);
+
+            // Subcontractor stats
+            var subbieStats = new Dictionary<Guid, (string Name, int Count)>();
+            foreach(var task in actionable)
+            {
+                if (task.Assignments == null) continue;
+                foreach(var assign in task.Assignments)
+                {
+                    if (subbieStats.ContainsKey(assign.AssigneeId))
+                    {
+                        var stats = subbieStats[assign.AssigneeId];
+                        subbieStats[assign.AssigneeId] = (stats.Name, stats.Count + 1);
+                    }
+                    else
+                    {
+                        subbieStats[assign.AssigneeId] = (assign.AssigneeName, 1);
+                    }
+                }
+            }
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                SubContractorFilters.Clear();
+                foreach(var kvp in subbieStats.OrderBy(x => x.Value.Name))
+                {
+                    SubContractorFilters.Add(new OCC.Shared.DTOs.SubContractorFilterDto { Id = kvp.Key, Name = kvp.Value.Name, TaskCount = kvp.Value.Count });
+                }
+            });
+        }
+
+        [RelayCommand]
+        private void ApplySmartFilter(string filter)
+        {
+            ActiveSmartFilter = filter;
+            IsFilterPopupOpen = false;
+            RefreshGanttView();
+        }
+
+        [RelayCommand]
+        private void ApplySubContractorFilter(Guid? subbieId)
+        {
+            FilterSubContractorId = subbieId;
+            IsFilterPopupOpen = false;
+            RefreshGanttView();
+        }
+
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            ActiveSmartFilter = "All Tasks";
+            FilterSubContractorId = null;
+            IsFilterPopupOpen = false;
+            RefreshGanttView();
+        }
+
+        [RelayCommand]
+        private void ToggleFilterPopup() => IsFilterPopupOpen = !IsFilterPopupOpen;
 
         #endregion
 
