@@ -9,8 +9,13 @@ namespace OCC.WpfClient.Infrastructure
     /// Base class for all ViewModels in the WPF application.
     /// Provides common observable properties like IsBusy and Title.
     /// </summary>
-    public abstract partial class ViewModelBase : ObservableValidator
+    public abstract partial class ViewModelBase : ObservableValidator, System.IDisposable
     {
+        public virtual void Dispose()
+        {
+            WeakReferenceMessenger.Default.UnregisterAll(this);
+        }
+
         [ObservableProperty]
         private bool _isBusy;
 

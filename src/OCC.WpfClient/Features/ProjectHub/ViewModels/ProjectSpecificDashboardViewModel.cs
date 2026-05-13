@@ -50,6 +50,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ObservableCollection<ISeries> ScheduleSeries { get; set; } = new();
         public ObservableCollection<ISeries> ProgressGaugeSeries { get; set; } = new();
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            StatusSeries.Clear();
+            ScheduleSeries.Clear();
+            ProgressGaugeSeries.Clear();
+            UpcomingMilestones.Clear();
+            SubContractors.Clear();
+            _allTasks.Clear();
+        }
+
         public ProjectSpecificDashboardViewModel(Services.Interfaces.ISnagService snagService)
         {
             _snagService = snagService;

@@ -6,7 +6,9 @@
              mc:Ignorable="d" 
              xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
-             Loaded="OnAuthViewLoaded">
+             Loaded="OnAuthViewLoaded"
+             Unloaded="OnAuthViewUnloaded">
+
     <UserControl.Resources>
         <Storyboard x:Key="FlipToRegister">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetName="CardScale" Storyboard.TargetProperty="ScaleX">
@@ -96,7 +98,8 @@
                         </RadialGradientBrush>
                     </Grid.OpacityMask>
 
-                    <Image Source="/Assets/Images/occ_branded_background_final.png" 
+                    <Image x:Name="BackgroundImage" 
+                           Source="/Assets/Images/occ_branded_background_final.png" 
                            Stretch="None"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Grid>
@@ -142,7 +145,8 @@
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="20" ShadowDepth="1" Color="White" Opacity="0.9"/>
                     </Border.Effect>
-                    <Image Source="/Assets/Images/occ_logo.png" 
+                    <Image x:Name="LogoImage" 
+                           Source="/Assets/Images/occ_logo.png" 
                            Width="220" 
                            Stretch="Uniform" 
                            RenderOptions.BitmapScalingMode="HighQuality"/>

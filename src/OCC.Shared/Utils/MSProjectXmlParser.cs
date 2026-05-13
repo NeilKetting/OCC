@@ -145,7 +145,8 @@ namespace OCC.Shared.Utils
                         FinishDate = finish,
                         Duration = durationDisplay,
                         PercentComplete = percent,
-                        Priority = FormatPriority(priorityStr)
+                        Priority = FormatPriority(priorityStr),
+                        OrderIndex = count // Maintain original sequence from XML
                     };
 
                     // Populate Assignments (Names only for now, ID to be resolved by VM)

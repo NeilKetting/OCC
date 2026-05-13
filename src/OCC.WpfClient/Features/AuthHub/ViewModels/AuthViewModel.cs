@@ -66,6 +66,15 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
 
         public Array Environments => Enum.GetValues(typeof(ConnectionSettings.AppEnvironment));
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            _clockTimer?.Stop();
+            LoginModel = new();
+            RegisterModel = new();
+            _logger.LogInformation("AuthViewModel disposed and cleaned up.");
+        }
+
         public AuthViewModel(ILogger<AuthViewModel> logger,
                             IAuthService authService, 
                             INavigationService navigationService,

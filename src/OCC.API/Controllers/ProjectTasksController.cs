@@ -209,12 +209,25 @@ namespace OCC.API.Controllers
                     .Where(u => userGuids.Contains(u.Id))
                     .ToDictionaryAsync(u => u.Id.ToString(), u => u.DisplayName ?? u.Email);
                 
+                // Pre-fetch project names to ensure we have them even if Include fails
+                var projectIds = topTasks.Where(t => t.ProjectId.HasValue).Select(t => t.ProjectId!.Value).Distinct().ToList();
+                var projectMap = await _context.Projects
+                    .Where(p => projectIds.Contains(p.Id))
+                    .ToDictionaryAsync(p => p.Id, p => p.Name);
+
                 var dtos = topTasks.Select(t => 
                 {
                     var userId = string.IsNullOrEmpty(t.UpdatedBy) ? t.CreatedBy : t.UpdatedBy;
                     string? displayName = null;
                     if (userId == "System") displayName = "System";
                     else if (!string.IsNullOrEmpty(userId)) userMap.TryGetValue(userId, out displayName);
+
+                    // Robust project name resolution
+                    string pName = t.Project?.Name ?? string.Empty;
+                    if (string.IsNullOrEmpty(pName) && t.ProjectId.HasValue && t.ProjectId.Value != Guid.Empty)
+                    {
+                        projectMap.TryGetValue(t.ProjectId.Value, out pName);
+                    }
 
                     return new OCC.Shared.DTOs.DashboardUpdateDto
                     {
@@ -223,7 +236,7 @@ namespace OCC.API.Controllers
                         DisplayName = displayName,
                         Action = "Status Changed",
                         TaskName = t.Name,
-                        ProjectName = t.Project?.Name ?? string.Empty,
+                        ProjectName = pName ?? "Unknown Project",
                         ProjectId = t.ProjectId,
                         Status = t.Status
                     };
@@ -379,12 +392,19 @@ namespace OCC.API.Controllers
 
                     if (existingTask.Status != task.Status)
                     {
+                        // Fetch project name for the live broadcast
+                        var pName = await _context.Projects
+                            .Where(p => p.Id == task.ProjectId)
+                            .Select(p => p.Name)
+                            .FirstOrDefaultAsync() ?? "Unknown Project";
+
                         var updateDto = new OCC.Shared.DTOs.DashboardUpdateDto
                         {
                             Timestamp = DateTime.UtcNow,
                             User = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "System",
                             DisplayName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value,
                             TaskName = task.Name,
+                            ProjectName = pName,
                             ProjectId = task.ProjectId,
                             Status = task.Status
                         };
