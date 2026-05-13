@@ -658,6 +658,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 return;
             }
 
+            hub.Dispose();
             OpenHubs.Remove(hub);
             if (ActiveHub == hub)
             {
@@ -692,6 +693,13 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         [RelayCommand]
         private void CloseAllTabs()
         {
+            foreach (var hub in OpenHubs.ToList())
+            {
+                if (hub.Title != "Dashboard")
+                {
+                    hub.Dispose();
+                }
+            }
             OpenHubs.Clear();
             ActiveHub = null;
         }
@@ -702,9 +710,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             var hubToKeep = currentHub ?? ActiveHub;
             if (hubToKeep == null) return;
             
-            var hubsToRemove = OpenHubs.Where(h => h != hubToKeep).ToList();
+            var hubsToRemove = OpenHubs.Where(h => h != hubToKeep && h.Title != "Dashboard").ToList();
             foreach (var hub in hubsToRemove)
             {
+                hub.Dispose();
                 OpenHubs.Remove(hub);
             }
             ActiveHub = hubToKeep;
@@ -719,9 +728,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             var index = OpenHubs.IndexOf(referenceHub);
             if (index >= 0)
             {
-                while (OpenHubs.Count > index + 1)
+                var hubsToRemove = OpenHubs.Skip(index + 1).ToList();
+                foreach (var hub in hubsToRemove)
                 {
-                    OpenHubs.RemoveAt(OpenHubs.Count - 1);
+                    hub.Dispose();
+                    OpenHubs.Remove(hub);
                 }
             }
             ActiveHub = referenceHub;
@@ -872,9 +883,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
-            _logger.LogInformation("Disposing MainViewModel");
+            base.Dispose();
+            _logger.LogInformation("Disposing MainViewModel and all open hubs");
+
+            foreach (var hub in OpenHubs.ToList())
+            {
+                hub.Dispose();
+            }
+            OpenHubs.Clear();
             
             // Unsubscribe from global services to prevent memory leaks and duplicate event triggers
             if (_signalRService != null)

@@ -45,7 +45,7 @@ namespace OCC.WpfClient.Features.ProcurementHub
                 NavigationRoutes.Procurement,
                 "Operations",
                 iconColor: "#004B50",
-                iconCode: "\uE9D9"));
+                iconCode: "\uE7BF"));
 
             procurement.Children.Add(new NavItem(
                 "Suppliers",

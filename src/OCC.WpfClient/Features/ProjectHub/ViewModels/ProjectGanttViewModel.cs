@@ -113,6 +113,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _projectService = projectService;
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            GanttTasks.Clear();
+            DateHeaders.Clear();
+            Dependencies.Clear();
+            _rootTasks.Clear();
+        }
+
         #endregion
 
         #region Commands

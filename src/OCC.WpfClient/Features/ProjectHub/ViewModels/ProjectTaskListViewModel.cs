@@ -63,6 +63,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public ViewModelBase? ActiveOverlay => CurrentTaskDetail;
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            Tasks.Clear();
+            _rootTasks.Clear();
+        }
+
+
         public ProjectTaskListViewModel(
             IServiceProvider serviceProvider, 
             IProjectTaskService taskService,

@@ -100,6 +100,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         // Use the SAME method as ProjectDetailViewModel.LoadProjectAsync
                         var pTasks = await _projectService.GetProjectTasksAsync(p.Id);
                         var actionable = pTasks.Where(t => !t.IsGroup).ToList();
+                        
+                        // Manually attach project info for the Dashboard Milestones list
+                        foreach(var t in actionable)
+                        {
+                            t.Project = new Project { Name = p.Name };
+                        }
+
                         totalOverdue += actionable.Count(t => t.IsOverdue);
                         allActionableTasks.AddRange(actionable);
                     }
