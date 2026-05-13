@@ -223,7 +223,7 @@ namespace OCC.API.Controllers
                     else if (!string.IsNullOrEmpty(userId)) userMap.TryGetValue(userId, out displayName);
 
                     // Robust project name resolution
-                    string pName = t.Project?.Name ?? string.Empty;
+                    string? pName = t.Project?.Name;
                     if (string.IsNullOrEmpty(pName) && t.ProjectId.HasValue && t.ProjectId.Value != Guid.Empty)
                     {
                         projectMap.TryGetValue(t.ProjectId.Value, out pName);

@@ -125,19 +125,18 @@ try
 {
     FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
     {
-        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile("service-account.json")
+        Credential = Google.Apis.Auth.OAuth2.CredentialFactory
+            .FromFile<Google.Apis.Auth.OAuth2.ServiceAccountCredential>("service-account.json")
+            .ToGoogleCredential()
     });
 }
 catch (Exception ex)
 {
     Console.WriteLine($"[CRITICAL] Failed to initialize Firebase: {ex.Message}");
-    // Don't throw, let the app start so other features still work
 }
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// Configure the HTTP request pipeline.
 // Seed Databases
 using (var scope = app.Services.CreateScope())
 {
@@ -166,7 +165,6 @@ using (var scope = app.Services.CreateScope())
             
             using var context = new AppDbContext(optionsBuilder.Options, services.GetRequiredService<IHttpContextAccessor>());
             
-            // This is the command that actually creates the tables
             DbInitializer.Initialize(context, hasher, app.Environment.IsDevelopment(), logger);
             
             logger.LogInformation($"[DB-INIT] {connectionName} is ready.");
@@ -174,7 +172,6 @@ using (var scope = app.Services.CreateScope())
         catch (Exception ex)
         {
             logger.LogError(ex, $"[DB-INIT] Failed to initialize {connectionName}. Error: {ex.Message}");
-            // Continue to the next database so we don't block the whole API
         }
     }
 }

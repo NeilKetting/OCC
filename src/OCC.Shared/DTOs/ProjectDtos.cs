@@ -8,16 +8,16 @@ namespace OCC.Shared.DTOs
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         private string _status = "Active";
-        public string Status 
-        { 
-            get 
+        public string Status
+        {
+            get
             {
                 if (Progress >= 100 && _status != "Archived" && _status != "OnHold" && _status != "Cancelled")
                     return "Completed";
-                
+
                 if (Progress > 0 && (_status == "Planning" || _status == "Not Started"))
                     return "In Progress";
-                    
+
                 return _status;
             }
             set => _status = value;
@@ -112,13 +112,13 @@ namespace OCC.Shared.DTOs
 
                 if (string.IsNullOrEmpty(Status))
                     return $"{Action} '{TaskName}'{projectSuffix} by {userName}.";
-                
+
                 string formattedStatus = Status;
                 if (formattedStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
                     return $"Task '{TaskName}'{projectSuffix} completed by {userName}.";
                 if (formattedStatus.Equals("Started", StringComparison.OrdinalIgnoreCase))
                     return $"Task '{TaskName}'{projectSuffix} started by {userName}.";
-                
+
                 return $"Task '{TaskName}'{projectSuffix} progress: {Status} (updated by {userName}).";
             }
         }
@@ -141,5 +141,13 @@ namespace OCC.Shared.DTOs
                 };
             }
         }
+    }
+
+    public class SubContractorFilterDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int TaskCount { get; set; }
+        public string DisplayText => $"{Name} ({TaskCount})";
     }
 }
