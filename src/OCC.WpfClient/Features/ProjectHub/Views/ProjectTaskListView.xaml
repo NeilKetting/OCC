@@ -102,7 +102,7 @@
                         </Button>
 
                         <Popup IsOpen="{Binding IsFilterPopupOpen}" PlacementTarget="{Binding ElementName=FilterButton}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
-                            <Border Background="{StaticResource BackgroundCard}" BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="1" CornerRadius="8" Margin="5" Padding="0" Width="280">
+                            <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="1" CornerRadius="8" Margin="5" Padding="0" Width="280">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
                                 </Border.Effect>
@@ -121,7 +121,7 @@
                                         <StackPanel Margin="10">
                                             <TextBlock Text="QUICK FILTERS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" Margin="5,5,5,10"/>
                                             
-                                            <Button Style="{StaticResource LinkButtonStyle}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Overdue" Margin="0,2">
+                                            <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Overdue" Margin="0,2">
                                                 <Grid HorizontalAlignment="Stretch" Width="240">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#FF5252" Margin="5,0,10,0"/>
@@ -133,7 +133,7 @@
                                                 </Grid>
                                             </Button>
 
-                                            <Button Style="{StaticResource LinkButtonStyle}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due Today" Margin="0,2">
+                                            <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due Today" Margin="0,2">
                                                 <Grid HorizontalAlignment="Stretch" Width="240">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" Margin="5,0,10,0"/>
@@ -145,7 +145,7 @@
                                                 </Grid>
                                             </Button>
 
-                                            <Button Style="{StaticResource LinkButtonStyle}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due This Week" Margin="0,2">
+                                            <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due This Week" Margin="0,2">
                                                 <Grid HorizontalAlignment="Stretch" Width="240">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8B5CF6" Margin="5,0,10,0"/>
@@ -157,7 +157,7 @@
                                                 </Grid>
                                             </Button>
 
-                                            <Button Style="{StaticResource LinkButtonStyle}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due This Month" Margin="0,2">
+                                            <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due This Month" Margin="0,2">
                                                 <Grid HorizontalAlignment="Stretch" Width="240">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EC4899" Margin="5,0,10,0"/>
@@ -176,7 +176,7 @@
                                             <ItemsControl ItemsSource="{Binding SubContractorFilters}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Button Style="{StaticResource LinkButtonStyle}" 
+                                                        <Button Style="{StaticResource ModernMenuButton}" 
                                                                 Command="{Binding DataContext.ApplySubContractorFilterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
                                                                 CommandParameter="{Binding Id}" Margin="0,2">
                                                             <Grid HorizontalAlignment="Stretch" Width="240">
@@ -195,7 +195,7 @@
                                         </StackPanel>
                                     </ScrollViewer>
 
-                                    <Button Grid.Row="2" Style="{StaticResource LinkButtonStyle}" Command="{Binding ClearFiltersCommand}" 
+                                    <Button Grid.Row="2" Style="{StaticResource ModernMenuButton}" Command="{Binding ClearFiltersCommand}" 
                                             HorizontalAlignment="Stretch" Padding="15,12" Background="#05FFFFFF">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Margin="0,0,10,0" FontSize="12"/>
