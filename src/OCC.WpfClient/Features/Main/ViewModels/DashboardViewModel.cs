@@ -10,9 +10,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
     {
         private readonly IUserService _userService;
         private readonly IToastService _toastService;
+        private readonly IAuthService _authService;
 
         [ObservableProperty]
-        private string _userName = "Neil Ketting";
+        private string _userName = "User";
 
         [ObservableProperty]
         private int _taskCount = 3;
@@ -29,12 +30,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         [ObservableProperty]
         private string _greeting = "Good afternoon";
 
-        public DashboardViewModel(IUserService userService, IToastService toastService)
+        public DashboardViewModel(IUserService userService, IToastService toastService, IAuthService authService)
         {
             _userService = userService;
             _toastService = toastService;
+            _authService = authService;
             Title = "Dashboard";
             
+            UserName = _authService.CurrentUser?.DisplayName ?? "User";
             _ = LoadData();
         }
 

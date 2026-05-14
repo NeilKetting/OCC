@@ -64,6 +64,12 @@ namespace OCC.API.Controllers
                 }
                 if (anyChanges) await _context.SaveChangesAsync();
 
+                // Resolve Creator Names for Project Manager field
+                var creators = projects.Select(p => p.CreatedBy).Distinct().ToList();
+                var userMap = await _context.Users
+                    .Where(u => creators.Contains(u.Email))
+                    .ToDictionaryAsync(u => u.Email, u => u.DisplayName ?? u.Email);
+
                 var summaries = projects.Select(p => 
                 {
                     var avgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.PercentComplete) : 0;
@@ -74,15 +80,18 @@ namespace OCC.API.Controllers
                     else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
                         displayStatus = "In Progress";
 
-                    _logger.LogInformation("Project {Name}: Progress {Progress}, Raw {Raw}, DB Status {DbStatus}, Display Status {DisplayStatus}", 
-                        p.Name, Math.Round(avgProgress), avgProgress, p.Status, displayStatus);
+                    var projectManager = p.ProjectManager;
+                    if (userMap.TryGetValue(p.CreatedBy, out var creatorName))
+                    {
+                        projectManager = creatorName;
+                    }
 
                     return new ProjectSummaryDto
                     {
                         Id = p.Id,
                         Name = p.Name,
                         Status = displayStatus,
-                        ProjectManager = p.ProjectManager,
+                        ProjectManager = projectManager,
                         TaskCount = p.Tasks.Count,
                         Progress = (int)Math.Round(avgProgress),
                         LatestFinish = p.Tasks.Any() ? p.Tasks.Max(t => t.FinishDate) : p.EndDate,
@@ -102,7 +111,6 @@ namespace OCC.API.Controllers
             }
         }
 
-        // GET: api/Projects
         // GET: api/Projects
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(bool assignedToMe = false)
@@ -156,6 +164,13 @@ namespace OCC.API.Controllers
                 }
 
                 var projects = await query.ToListAsync();
+                
+                // Resolve Project Manager names
+                var creators = projects.Select(p => p.CreatedBy).Distinct().ToList();
+                var userMap = await _context.Users
+                    .Where(u => creators.Contains(u.Email))
+                    .ToDictionaryAsync(u => u.Email, u => u.DisplayName ?? u.Email);
+ 
                 foreach (var p in projects)
                 {
                     var avgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.PercentComplete) : 0;
@@ -163,6 +178,11 @@ namespace OCC.API.Controllers
                         p.Status = "Completed";
                     else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
                         p.Status = "In Progress";
+                    
+                    if (userMap.TryGetValue(p.CreatedBy, out var creatorName))
+                    {
+                        p.ProjectManager = creatorName;
+                    }
                 }
                 return projects;
             }
@@ -184,7 +204,7 @@ namespace OCC.API.Controllers
                     .ThenInclude(t => t.Assignments)
                     .Include(p => p.Tasks)
                     .ThenInclude(t => t.Comments)
-                    .Include(p => p.SiteManager) // Added
+                    .Include(p => p.SiteManager)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -195,6 +215,17 @@ namespace OCC.API.Controllers
                     project.Status = "Completed";
                 else if (avgProgress > 0 && (project.Status == "Planning" || project.Status == "Not Started"))
                     project.Status = "In Progress";
+
+                // Resolve Project Manager
+                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Email == project.CreatedBy);
+                if (creator != null)
+                {
+                    project.ProjectManager = creator.DisplayName ?? project.CreatedBy;
+                }
+                else
+                {
+                    project.ProjectManager = project.CreatedBy;
+                }
 
                 return project;
             }
@@ -214,15 +245,12 @@ namespace OCC.API.Controllers
             {
                 if (project.Id == Guid.Empty) project.Id = Guid.NewGuid();
                 
-                // Set Project Manager to current user if not provided
-                if (string.IsNullOrEmpty(project.ProjectManager))
+                // Set Project Manager to creator's display name (Immutable Rule)
+                var userEmail = User.Identity?.Name;
+                if (!string.IsNullOrEmpty(userEmail))
                 {
-                    var userEmail = User.Identity?.Name;
-                    if (!string.IsNullOrEmpty(userEmail))
-                    {
-                        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
-                        project.ProjectManager = user?.DisplayName ?? userEmail;
-                    }
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+                    project.ProjectManager = user?.DisplayName ?? userEmail;
                 }
 
                 _context.Projects.Add(project);
@@ -363,12 +391,16 @@ namespace OCC.API.Controllers
 
                 if (project == null) return NotFound();
 
+                // Resolve Project Manager from Creator
+                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Email == project.CreatedBy);
+                var projectManager = creator?.DisplayName ?? project.CreatedBy;
+
                 var dto = new ProjectPersonnelDto
                 {
                     ProjectId = project.Id,
                     SiteManagerId = project.SiteManagerId,
                     SiteManagerName = project.SiteManager?.DisplayName,
-                    ProjectManager = project.ProjectManager,
+                    ProjectManager = projectManager,
                     TeamMembers = project.TeamMembers
                         .Where(tm => tm.Employee != null)
                         .Select(tm => new EmployeeSummaryDto

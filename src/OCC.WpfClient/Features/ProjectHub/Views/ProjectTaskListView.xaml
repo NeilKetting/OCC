@@ -68,12 +68,46 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
+
+            <Style x:Key="ListActionButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Width" Value="28"/>
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="Margin" Value="2,0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="Transparent" CornerRadius="6">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.6" x:Name="content"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#15FFFFFF"/>
+                                    <Setter TargetName="content" Property="Opacity" Value="1.0"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#25FFFFFF"/>
+                                    <Setter Property="RenderTransform">
+                                        <Setter.Value>
+                                            <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid Margin="0">
         <Grid>
             <Grid.RowDefinitions>
+                <!-- Tool Bar -->
                 <RowDefinition Height="Auto"/>
+                <!-- Stats & Search Line -->
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -84,24 +118,75 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Project Tasks" FontSize="20" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                         <Border Background="{StaticResource AccentBlue}" CornerRadius="12" Padding="10,2" Margin="15,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding TotalActionableTaskCount}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding TotalActionableTaskCount}" TextTrimming="CharacterEllipsis" Foreground="White" FontSize="12" FontWeight="Bold"/>
                         </Border>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Command="{Binding NewTaskCommand}" Style="{StaticResource ActionButtonPrimary}" Padding="20,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,10,0"/>
+                                <TextBlock Text="Create Task"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Stats & Search Line -->
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10,0,10,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Search -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Filters -->
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid HorizontalAlignment="Left" >
+                        <Border Style="{StaticResource GlassCard}" Width="250">
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Search -->
+                                <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="12,0,8,0"/>
+                                <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
+                                         ap:WatermarkProperties.Watermark="Search tasks..." Width="250"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <!-- Search Box -->
+                            <ColumnDefinition Width="Auto" />
+                            <!-- Stage Filter -->
+                            <ColumnDefinition Width="Auto" />
+                            <!-- Filter Button -->
+                            <ColumnDefinition Width="Auto" />
+                            <!-- Divider -->
+                            <ColumnDefinition Width="Auto" />
+                            <!-- Columns -->
+                            <ColumnDefinition Width="*" />
+                            <!-- Spacer -->
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Stage Filter -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Filter Stage:" VerticalAlignment="Center" Foreground="{StaticResource TextSub}" Margin="0,0,10,0" FontSize="11" FontWeight="Bold"/>
+                            <ComboBox ItemsSource="{Binding AvailableStages}" SelectedItem="{Binding SelectedStageFilter}" Style="{StaticResource ModernComboBox}" Width="150" Height="34"/>
+                        </StackPanel>
+
                         <!-- Filter Button -->
-                        <Button x:Name="FilterButton" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Command="{Binding ToggleFilterPopupCommand}">
+                        <Button x:Name="FilterButtonStats" Grid.Column="1" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Command="{Binding ToggleFilterPopupCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Filter" VerticalAlignment="Center" Style="{StaticResource LabelText}"/>
-                                <Border Background="{StaticResource AccentBlue}" CornerRadius="8" Padding="5,0" Margin="5,0,0,0" 
-                                        Visibility="{Binding FilterSubContractorId, Converter={StaticResource VisibilityConverter}, ConverterParameter='NotNull'}">
-                                     <TextBlock Text="1" FontSize="9" Foreground="White" FontWeight="Bold"/>
+                                <Border Background="{StaticResource AccentBlue}" CornerRadius="8" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center"
+                                    Visibility="{Binding FilterSubContractorId, Converter={StaticResource VisibilityConverter}, ConverterParameter='NotNull'}">
+                                    <TextBlock Text="1" FontSize="9" Foreground="White" FontWeight="Bold"/>
                                 </Border>
                             </StackPanel>
                         </Button>
 
-                        <Popup IsOpen="{Binding IsFilterPopupOpen}" PlacementTarget="{Binding ElementName=FilterButton}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+                        <Popup IsOpen="{Binding IsFilterPopupOpen}" PlacementTarget="{Binding ElementName=FilterButtonStats}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
                             <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="1" CornerRadius="8" Margin="5" Padding="0" Width="280">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
@@ -118,9 +203,9 @@
                                     </Border>
 
                                     <ScrollViewer Grid.Row="1" MaxHeight="400" VerticalScrollBarVisibility="Auto">
-                                        <StackPanel Margin="10">
+                                        <StackPanel Margin="5,10,0,10">
                                             <TextBlock Text="QUICK FILTERS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" Margin="5,5,5,10"/>
-                                            
+
                                             <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Overdue" Margin="0,2">
                                                 <Grid HorizontalAlignment="Stretch" Width="240">
                                                     <StackPanel Orientation="Horizontal">
@@ -172,13 +257,13 @@
                                             <Border Height="1" Background="{StaticResource GlassBorderUltraLight}" Margin="5,15"/>
 
                                             <TextBlock Text="SUBCONTRACTORS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" Margin="5,5,5,10"/>
-                                            
+
                                             <ItemsControl ItemsSource="{Binding SubContractorFilters}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Button Style="{StaticResource ModernMenuButton}" 
-                                                                Command="{Binding DataContext.ApplySubContractorFilterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
-                                                                CommandParameter="{Binding Id}" Margin="0,2">
+                                         Command="{Binding DataContext.ApplySubContractorFilterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
+                                         CommandParameter="{Binding Id}" Margin="0,2">
                                                             <Grid HorizontalAlignment="Stretch" Width="240">
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" Margin="5,0,10,0" FontSize="12"/>
@@ -196,7 +281,7 @@
                                     </ScrollViewer>
 
                                     <Button Grid.Row="2" Style="{StaticResource ModernMenuButton}" Command="{Binding ClearFiltersCommand}" 
-                                            HorizontalAlignment="Stretch" Padding="15,12" Background="#05FFFFFF">
+                                       HorizontalAlignment="Stretch" Padding="15,12" Background="#05FFFFFF">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Margin="0,0,10,0" FontSize="12"/>
                                             <TextBlock Text="Clear All Filters" FontWeight="SemiBold"/>
@@ -206,194 +291,36 @@
                             </Border>
                         </Popup>
 
-                        <Button Command="{Binding NewTaskCommand}" Style="{StaticResource ActionButtonPrimary}" Padding="20,10">
+                        <Separator Grid.Column="2" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="10,5" Foreground="#20FFFFFF"/>
+
+                        <Button x:Name="ColumnsButton" Grid.Column="3" Command="{Binding ToggleColumnPickerCommand}" Style="{StaticResource SecondaryButton}" Margin="10,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,10,0"/>
-                                <TextBlock Text="Create Task"/>
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="COLUMNS" Foreground="White" FontSize="11" FontWeight="Bold"/>
                             </StackPanel>
                         </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
 
-            <!-- Stats & Search Line -->
-            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10,0,10,10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <!-- Search Icon -->
-                        <ColumnDefinition Width="250" />
-                        <!-- Search Box -->
-                        <ColumnDefinition Width="Auto" />
-                        <!-- Stage Filter -->
-                        <ColumnDefinition Width="Auto" />
-                        <!-- Filter Button -->
-                        <ColumnDefinition Width="Auto" />
-                        <!-- Divider -->
-                        <ColumnDefinition Width="Auto" />
-                        <!-- Columns -->
-                        <ColumnDefinition Width="*" />
-                        <!-- Spacer -->
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Search -->
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="12,0,8,0"/>
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
-                             ap:WatermarkProperties.Watermark="Search tasks..."/>
-
-                    <!-- Stage Filter -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
-                        <TextBlock Text="Filter Stage:" VerticalAlignment="Center" Foreground="{StaticResource TextSub}" Margin="0,0,10,0" FontSize="11" FontWeight="Bold"/>
-                        <ComboBox ItemsSource="{Binding AvailableStages}" SelectedItem="{Binding SelectedStageFilter}" Style="{StaticResource ModernComboBox}" Width="150" Height="34"/>
-                    </StackPanel>
-
-                    <!-- Filter Button -->
-                    <Button x:Name="FilterButtonStats" Grid.Column="3" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Command="{Binding ToggleFilterPopupCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Filter" VerticalAlignment="Center" Style="{StaticResource LabelText}"/>
-                            <Border Background="{StaticResource AccentBlue}" CornerRadius="8" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center"
-                                    Visibility="{Binding FilterSubContractorId, Converter={StaticResource VisibilityConverter}, ConverterParameter='NotNull'}">
-                                <TextBlock Text="1" FontSize="9" Foreground="White" FontWeight="Bold"/>
+                        <!-- Column Picker Popup -->
+                        <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-120" VerticalOffset="5">
+                            <Border Background="{StaticResource AppBackground}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
+                                <StackPanel>
+                                    <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <CheckBox Content="Start Date" IsChecked="{Binding IsStartVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    <CheckBox Content="End Date" IsChecked="{Binding IsEndVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    <CheckBox Content="Progress" IsChecked="{Binding IsProgressVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    <CheckBox Content="Stage" IsChecked="{Binding IsStageVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    <CheckBox Content="Duration" IsChecked="{Binding IsDurationVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    <CheckBox Content="Assigned" IsChecked="{Binding IsAssignedVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    <CheckBox Content="Priority" IsChecked="{Binding IsPriorityVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                </StackPanel>
                             </Border>
-                        </StackPanel>
-                    </Button>
-
-                    <Popup IsOpen="{Binding IsFilterPopupOpen}" PlacementTarget="{Binding ElementName=FilterButtonStats}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="1" CornerRadius="8" Margin="5" Padding="0" Width="280">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
-                            </Border.Effect>
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <Border Grid.Row="0" Background="#10FFFFFF" Padding="15,10" CornerRadius="8,8,0,0">
-                                    <TextBlock Text="Filter Tasks" FontWeight="SemiBold" Foreground="White"/>
-                                </Border>
-
-                                <ScrollViewer Grid.Row="1" MaxHeight="400" VerticalScrollBarVisibility="Auto">
-                                    <StackPanel Margin="5,10,0,10">
-                                        <TextBlock Text="QUICK FILTERS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" Margin="5,5,5,10"/>
-
-                                        <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Overdue" Margin="0,2">
-                                            <Grid HorizontalAlignment="Stretch" Width="240">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#FF5252" Margin="5,0,10,0"/>
-                                                    <TextBlock Text="Overdue" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                                <Border Background="#30FF5252" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding OverdueCount}" FontSize="10" Foreground="#FF5252" FontWeight="Bold"/>
-                                                </Border>
-                                            </Grid>
-                                        </Button>
-
-                                        <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due Today" Margin="0,2">
-                                            <Grid HorizontalAlignment="Stretch" Width="240">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" Margin="5,0,10,0"/>
-                                                    <TextBlock Text="Due Today" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                                <Border Background="#302E9DFF" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding DueTodayCount}" FontSize="10" Foreground="{StaticResource AccentBlue}" FontWeight="Bold"/>
-                                                </Border>
-                                            </Grid>
-                                        </Button>
-
-                                        <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due This Week" Margin="0,2">
-                                            <Grid HorizontalAlignment="Stretch" Width="240">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8B5CF6" Margin="5,0,10,0"/>
-                                                    <TextBlock Text="Due This Week" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                                <Border Background="#308B5CF6" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding DueThisWeekCount}" FontSize="10" Foreground="#8B5CF6" FontWeight="Bold"/>
-                                                </Border>
-                                            </Grid>
-                                        </Button>
-
-                                        <Button Style="{StaticResource ModernMenuButton}" Command="{Binding ApplySmartFilterCommand}" CommandParameter="Due This Month" Margin="0,2">
-                                            <Grid HorizontalAlignment="Stretch" Width="240">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EC4899" Margin="5,0,10,0"/>
-                                                    <TextBlock Text="Due This Month" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                                <Border Background="#30EC4899" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding DueThisMonthCount}" FontSize="10" Foreground="#EC4899" FontWeight="Bold"/>
-                                                </Border>
-                                            </Grid>
-                                        </Button>
-
-                                        <Border Height="1" Background="{StaticResource GlassBorderUltraLight}" Margin="5,15"/>
-
-                                        <TextBlock Text="SUBCONTRACTORS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" Margin="5,5,5,10"/>
-
-                                        <ItemsControl ItemsSource="{Binding SubContractorFilters}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button Style="{StaticResource ModernMenuButton}" 
-                                         Command="{Binding DataContext.ApplySubContractorFilterCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
-                                         CommandParameter="{Binding Id}" Margin="0,2">
-                                                        <Grid HorizontalAlignment="Stretch" Width="240">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" Margin="5,0,10,0" FontSize="12"/>
-                                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="160"/>
-                                                            </StackPanel>
-                                                            <Border Background="#15FFFFFF" CornerRadius="10" Padding="8,2" HorizontalAlignment="Right">
-                                                                <TextBlock Text="{Binding TaskCount}" FontSize="10" Foreground="White" Opacity="0.7"/>
-                                                            </Border>
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </ScrollViewer>
-
-                                <Button Grid.Row="2" Style="{StaticResource ModernMenuButton}" Command="{Binding ClearFiltersCommand}" 
-                                       HorizontalAlignment="Stretch" Padding="15,12" Background="#05FFFFFF">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Margin="0,0,10,0" FontSize="12"/>
-                                        <TextBlock Text="Clear All Filters" FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
-                        </Border>
-                    </Popup>
-
-                    <Separator Grid.Column="4" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="10,5" Foreground="#20FFFFFF"/>
-
-                    <Button x:Name="ColumnsButton" Grid.Column="5" Command="{Binding ToggleColumnPickerCommand}" Style="{StaticResource GhostButton}" Padding="10,5">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0"/>
-                            <TextBlock Text="COLUMNS" Foreground="White" FontSize="11" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Column Picker Popup -->
-                    <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-120" VerticalOffset="5">
-                        <Border Background="{StaticResource AppBackground}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
-                            <StackPanel>
-                                <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-                                <CheckBox Content="Start Date" IsChecked="{Binding IsStartVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="End Date" IsChecked="{Binding IsEndVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Progress" IsChecked="{Binding IsProgressVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Stage" IsChecked="{Binding IsStageVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Duration" IsChecked="{Binding IsDurationVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Assigned" IsChecked="{Binding IsAssignedVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Priority" IsChecked="{Binding IsPriorityVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                            </StackPanel>
-                        </Border>
-                    </Popup>
+                        </Popup>
+                    </Grid>
                 </Grid>
             </Border>
 
             <!-- Task List -->
-            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" Padding="1">
+            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" Padding="1" CornerRadius="0">
                 <Grid>
                     <DataGrid x:Name="TasksGrid"
                               ItemsSource="{Binding Tasks}"
@@ -563,6 +490,40 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Actions -->
+                            <DataGridTemplateColumn Header="ACTIONS" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                                    Command="{Binding Data.EditTaskCommand, Source={StaticResource Proxy}}" 
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Edit Task">
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12"/>
+                                            </Button>
+                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                                    Command="{Binding Data.CreateSubtaskCommand, Source={StaticResource Proxy}}" 
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Add Subtask">
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12"/>
+                                            </Button>
+                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                                    Command="{Binding Data.ShowAssignToCommand, Source={StaticResource Proxy}}" 
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Assign To">
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12"/>
+                                            </Button>
+                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                                    Command="{Binding Data.DeleteTaskCommand, Source={StaticResource Proxy}}" 
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Delete Task">
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource ErrorRed}"/>
+                                            </Button>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

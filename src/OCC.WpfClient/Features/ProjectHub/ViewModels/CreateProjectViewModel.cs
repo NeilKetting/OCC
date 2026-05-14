@@ -25,6 +25,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IUserService _userService;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly ISettingsService _settingsService;
+        private readonly IAuthService _authService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
@@ -71,6 +72,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IGoogleMapsService googleMapsService,
             ISubContractorService subContractorService,
             ISettingsService settingsService,
+            IAuthService authService,
             OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings)
         {
             _projectService = projectService;
@@ -80,6 +82,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _userService = userService;
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
+            _authService = authService;
             _connectionSettings = connectionSettings;
 
             Title = "Create New Project";
@@ -91,7 +94,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 Priority = "Medium", 
                 StartDate = DateTime.Today,
                 EndDate = DateTime.Today.AddMonths(1),
-                ProjectManager = "Neil Ketting"
+                ProjectManager = _authService.CurrentUser?.DisplayName ?? "System"
             });
 
             _ = LoadDataAsync();
