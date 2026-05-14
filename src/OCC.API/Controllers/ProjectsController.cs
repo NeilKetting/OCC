@@ -67,9 +67,17 @@ namespace OCC.API.Controllers
                 // Resolve Creator Names for Project Manager field
                 var creators = projects.Select(p => p.CreatedBy).Distinct().ToList();
                 var userMap = await _context.Users
-                    .Where(u => creators.Contains(u.Email))
-                    .ToDictionaryAsync(u => u.Email, u => u.DisplayName ?? u.Email);
-
+                    .Where(u => creators.Contains(u.Id.ToString()) || creators.Contains(u.Email))
+                    .ToListAsync();
+                
+                var nameMap = new Dictionary<string, string>();
+                foreach (var creator in creators)
+                {
+                    var user = userMap.FirstOrDefault(u => u.Id.ToString() == creator || u.Email == creator);
+                    if (user != null) nameMap[creator] = user.DisplayName ?? user.Email ?? creator;
+                    else nameMap[creator] = creator;
+                }
+ 
                 var summaries = projects.Select(p => 
                 {
                     var avgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.PercentComplete) : 0;
@@ -80,11 +88,7 @@ namespace OCC.API.Controllers
                     else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
                         displayStatus = "In Progress";
 
-                    var projectManager = p.ProjectManager;
-                    if (userMap.TryGetValue(p.CreatedBy, out var creatorName))
-                    {
-                        projectManager = creatorName;
-                    }
+                    var projectManager = nameMap.GetValueOrDefault(p.CreatedBy, p.ProjectManager);
 
                     return new ProjectSummaryDto
                     {
@@ -168,8 +172,8 @@ namespace OCC.API.Controllers
                 // Resolve Project Manager names
                 var creators = projects.Select(p => p.CreatedBy).Distinct().ToList();
                 var userMap = await _context.Users
-                    .Where(u => creators.Contains(u.Email))
-                    .ToDictionaryAsync(u => u.Email, u => u.DisplayName ?? u.Email);
+                    .Where(u => creators.Contains(u.Id.ToString()) || creators.Contains(u.Email))
+                    .ToListAsync();
  
                 foreach (var p in projects)
                 {
@@ -179,9 +183,10 @@ namespace OCC.API.Controllers
                     else if (avgProgress > 0 && (p.Status == "Planning" || p.Status == "Not Started"))
                         p.Status = "In Progress";
                     
-                    if (userMap.TryGetValue(p.CreatedBy, out var creatorName))
+                    var user = userMap.FirstOrDefault(u => u.Id.ToString() == p.CreatedBy || u.Email == p.CreatedBy);
+                    if (user != null)
                     {
-                        p.ProjectManager = creatorName;
+                        p.ProjectManager = user.DisplayName ?? user.Email ?? p.CreatedBy;
                     }
                 }
                 return projects;
@@ -217,10 +222,10 @@ namespace OCC.API.Controllers
                     project.Status = "In Progress";
 
                 // Resolve Project Manager
-                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Email == project.CreatedBy);
+                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == project.CreatedBy || u.Email == project.CreatedBy);
                 if (creator != null)
                 {
-                    project.ProjectManager = creator.DisplayName ?? project.CreatedBy;
+                    project.ProjectManager = creator.DisplayName ?? creator.Email ?? project.CreatedBy;
                 }
                 else
                 {
@@ -249,8 +254,8 @@ namespace OCC.API.Controllers
                 var userEmail = User.Identity?.Name;
                 if (!string.IsNullOrEmpty(userEmail))
                 {
-                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
-                    project.ProjectManager = user?.DisplayName ?? userEmail;
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userEmail || u.Email == userEmail);
+                    project.ProjectManager = user?.DisplayName ?? user?.Email ?? userEmail;
                 }
 
                 _context.Projects.Add(project);
@@ -392,8 +397,8 @@ namespace OCC.API.Controllers
                 if (project == null) return NotFound();
 
                 // Resolve Project Manager from Creator
-                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Email == project.CreatedBy);
-                var projectManager = creator?.DisplayName ?? project.CreatedBy;
+                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == project.CreatedBy || u.Email == project.CreatedBy);
+                var projectManager = creator?.DisplayName ?? creator?.Email ?? project.CreatedBy;
 
                 var dto = new ProjectPersonnelDto
                 {
