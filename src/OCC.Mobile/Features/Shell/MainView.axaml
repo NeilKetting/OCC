@@ -91,7 +91,7 @@
                                Foreground="White"
                                HorizontalAlignment="Center"/>
                     
-                    <TextBlock Text="{Binding UpdateVersion, StringFormat='Version {0} is ready to install.'}" 
+                    <TextBlock Text="{Binding UpdateVersion, StringFormat='{}Version {0} is ready to install.'}" 
                                Foreground="#CBD5E1"
                                HorizontalAlignment="Center"/>
 
@@ -146,7 +146,7 @@
                                  Background="#334155"/>
                 </Grid>
 
-                <TextBlock Text="{Binding DownloadProgress, StringFormat='{0:P0}'}" 
+                <TextBlock Text="{Binding DownloadProgress, StringFormat='{}{0:P0}'}" 
                            Foreground="#94A3B8"
                            HorizontalAlignment="Center"/>
             </StackPanel>

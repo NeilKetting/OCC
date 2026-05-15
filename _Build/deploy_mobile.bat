@@ -51,7 +51,7 @@ if "%APK_FOUND%"=="false" (
 )
 
 echo [SUCCESS] Android APK v%VERSION% built successfully!
-echo File can be found in the '%ReleaseDir%' folder: OCC-Mobile-v%VERSION%.apk
+echo File: %~dp0%ReleaseDir%\OCC-Mobile-v%VERSION%.apk
 echo.
 echo ========================================================
 echo NEXT STEPS FOR REMOTE UPDATES:

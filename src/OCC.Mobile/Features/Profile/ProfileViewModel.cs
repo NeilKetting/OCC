@@ -4,17 +4,21 @@ using OCC.Mobile.ViewModels;
 using OCC.Mobile.Services;
 using OCC.Shared.Models;
 
+using CommunityToolkit.Mvvm.Messaging;
+
 namespace OCC.Mobile.Features.Profile
 {
     public partial class ProfileViewModel : ViewModelBase
     {
+        private readonly IAuthService _authService;
+        private readonly INavigationService _navigationService;
+        private readonly IUpdateService? _updateService;
+
         [ObservableProperty]
         private User? _currentUser;
 
         [ObservableProperty]
         private string _appVersion = string.Empty;
-
-        private readonly IUpdateService? _updateService;
 
         public ProfileViewModel(IAuthService authService, INavigationService navigationService, IUpdateService? updateService = null)
         {
@@ -29,7 +33,7 @@ namespace OCC.Mobile.Features.Profile
         [RelayCommand]
         private void CheckForUpdates()
         {
-            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send("CheckForUpdates");
+            WeakReferenceMessenger.Default.Send(UpdateCheckMessage.Instance);
         }
 
         [RelayCommand]

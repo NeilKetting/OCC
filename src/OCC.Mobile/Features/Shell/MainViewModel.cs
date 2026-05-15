@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using OCC.Mobile.ViewModels;
 using OCC.Mobile.Services;
 using System;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace OCC.Mobile.Features.Shell
 {
@@ -55,9 +56,9 @@ namespace OCC.Mobile.Features.Shell
             }
 
             // Listen for manual update checks
-            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Register<string>(this, (r, m) => 
+            WeakReferenceMessenger.Default.Register<UpdateCheckMessage>(this, (r, m) => 
             {
-                if (m == "CheckForUpdates") CheckForUpdatesAsync().FireAndForget();
+                ((MainViewModel)r).CheckForUpdatesAsync().FireAndForget();
             });
 
             // Check for updates automatically
