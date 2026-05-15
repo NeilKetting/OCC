@@ -10,14 +10,14 @@
              d:DesignHeight="800" d:DesignWidth="900"
              d:DataContext="{d:DesignInstance Type=vm:CreateProjectViewModel}">
 
-    <Grid Margin="20" Background="{StaticResource CardBackground}">
+    <Grid Background="{StaticResource CardBackground}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <!-- Left Panel: Form -->
-        <Grid Grid.Column="0" Margin="0,0,30,0">
+        <Grid Grid.Column="0" Margin="15,10,30,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -34,22 +34,39 @@
 
             <!-- Mode Switcher -->
             <Border Grid.Row="1" Background="{StaticResource InputBackground}" 
-                    CornerRadius="10" Padding="4" HorizontalAlignment="Left" Margin="0,0,0,20">
+                    CornerRadius="10" Padding="4" HorizontalAlignment="Left" Margin="0,0,0,20" BorderBrush="{StaticResource PremiumGlassGlow}" BorderThickness="2">
                 <StackPanel Orientation="Horizontal">
                     <RadioButton Style="{StaticResource PremiumRadioButtonStyle}" Content="Job (Quick)" 
-                                 IsChecked="{Binding CreationMode, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ProjectCreationMode.Quick}}"/>
+                                 IsChecked="{Binding CreationMode, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ProjectCreationMode.Quick}}" Margin="0,0,5,0"/>
                     <RadioButton Style="{StaticResource PremiumRadioButtonStyle}" Content="Full Project" 
                                  IsChecked="{Binding CreationMode, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ProjectCreationMode.Comprehensive}}"/>
                 </StackPanel>
             </Border>
 
             <!-- Form Body -->
-            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,15,0">
+            <ScrollViewer x:Name="FormScrollViewer" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,25,0">
                 <StackPanel>
+                    <Border Visibility="{Binding IsComprehensiveMode, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#1A3B82F6" BorderBrush="#803B82F6" 
+                            BorderThickness="1" CornerRadius="12" Padding="20" Margin="20,10,20,30">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="32" Margin="0,0,20,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Import from MS Project" FontWeight="Bold" Foreground="White" FontSize="14"/>
+                                <TextBlock Text="Load tasks from .xml" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                            </StackPanel>
+                            <Button Grid.Column="2" Content="Browse..." Command="{Binding BrowseImportCommand}" Style="{StaticResource ActionButtonSecondary}" Height="32" Padding="15,0"/>
+                        </Grid>
+                    </Border>
                     <TextBlock Text="PROJECT NAME" Style="{StaticResource FormLabelText}"/>
                     <TextBox Text="{Binding Project.Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Style="{StaticResource ModernInput}" Margin="0,0,0,20"
-                             ap:WatermarkProperties.Watermark="e.g. Engen Bendor"/>
+                             ap:WatermarkProperties.Watermark="e.g. Engen Bendor"
+                             ap:CommandProperties.LostFocusCommand="{Binding OnProjectNameLostFocusCommand}"/>
 
                     <Grid Margin="0,0,0,20">
                         <Grid.ColumnDefinitions>
@@ -78,7 +95,10 @@
                     <StackPanel Margin="0,0,0,20">
                         <TextBlock Text="STREET ADDRESS" Style="{StaticResource FormLabelText}"/>
                         <Grid>
-                            <TextBox x:Name="AddressBox" Text="{Binding Project.StreetLine1, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Search address..."/>
+                            <TextBox x:Name="AddressBox" Text="{Binding Project.StreetLine1, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernInput}" 
+                                     ap:WatermarkProperties.Watermark="Search address..."
+                                     ap:FocusProperties.IsFocused="{Binding IsAddressFocused, Mode=TwoWay}"/>
                             <Popup IsOpen="{Binding AddressSuggestions.Count, Converter={StaticResource CollectionToBooleanConverter}, Mode=OneWay}" PlacementTarget="{Binding ElementName=AddressBox}" StaysOpen="False" AllowsTransparency="True">
                                 <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Width="300" MaxHeight="200">
                                     <ListBox ItemsSource="{Binding AddressSuggestions}" SelectedItem="{Binding SelectedAddressSuggestion}" Background="Transparent" BorderThickness="0">
@@ -113,28 +133,12 @@
                             <TextBlock Text="POSTAL CODE" Style="{StaticResource FormLabelText}"/>
                             <TextBox Text="{Binding Project.PostalCode}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Code"/>
                         </StackPanel>
-                    </Grid>
-
-                    <Border Visibility="{Binding IsComprehensiveMode, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#1A3B82F6" BorderBrush="#803B82F6" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,10,0,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="32" Margin="0,0,20,0" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Import from MS Project" FontWeight="Bold" Foreground="White" FontSize="14"/>
-                                <TextBlock Text="Load tasks from .xml" Foreground="{StaticResource TextSub}" FontSize="11"/>
-                            </StackPanel>
-                            <Button Grid.Column="2" Content="Browse..." Command="{Binding BrowseImportCommand}" Style="{StaticResource ActionButtonSecondary}" Height="32" Padding="15,0"/>
-                        </Grid>
-                    </Border>
+                    </Grid>                    
                 </StackPanel>
             </ScrollViewer>
 
             <!-- Actions -->
-            <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,20,0,0">
+            <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,20,0,5">
                 <Button Command="{Binding CreateProjectCommand}" Content="CREATE PROJECT" Style="{StaticResource ActionButtonPrimary}" Height="45" Margin="0,0,0,10"/>
                 <Button Command="{Binding CloseCommand}" Content="CANCEL" Style="{StaticResource ActionButtonSecondary}" Height="45"/>
             </StackPanel>
@@ -192,7 +196,39 @@
                             <DataTemplate>
                                 <Border Style="{StaticResource GlassCard}" Margin="0,0,0,15" Padding="20">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding ImportedName}" FontSize="16" FontWeight="Bold" Foreground="White" Margin="0,0,0,15"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                            <TextBlock Text="{Binding ImportedName}" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                            
+                                            <!-- Match Found Badge -->
+                                            <Border Visibility="{Binding HasSuggestions, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Background="#1A00FF88" BorderBrush="#8000FF88" BorderThickness="1" 
+                                                    CornerRadius="4" Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="10" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="MATCH FOUND" Foreground="#00FF88" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- New Record Badge -->
+                                            <Border Visibility="{Binding IsNew, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Background="#1A3B82F6" BorderBrush="#803B82F6" BorderThickness="1" 
+                                                    CornerRadius="4" Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="10" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="NEW RECORD" Foreground="{StaticResource AccentBlue}" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Skipping Badge -->
+                                            <Border Visibility="{Binding IsSkipped, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Background="#1AFFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1" 
+                                                    CornerRadius="4" Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="10" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="SKIPPING" Foreground="{StaticResource TextSub}" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                             <RadioButton Content="Map" IsChecked="{Binding Action, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ReconciliationAction.MapToExisting}}" Style="{StaticResource PremiumRadioButtonStyle}" Margin="0,0,15,0"/>
                                             <RadioButton Content="Create" IsChecked="{Binding Action, Converter={StaticResource EqualityConverter}, ConverterParameter={x:Static models:ReconciliationAction.CreateNew}}" Style="{StaticResource PremiumRadioButtonStyle}" Margin="0,0,15,0"/>

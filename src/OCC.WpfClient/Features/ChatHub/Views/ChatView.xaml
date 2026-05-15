@@ -130,33 +130,9 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
 
-                                    <MenuItem Header="Starred messages" FontSize="15">
-                                        <MenuItem.Icon>
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="16"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-
-                                    <MenuItem Header="Select chats" FontSize="15">
-                                        <MenuItem.Icon>
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="16"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-
                                     <MenuItem Header="Mark all as read" FontSize="15">
                                         <MenuItem.Icon>
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="16"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-
-                                    <MenuItem Header="App lock" FontSize="15" Tag="HasSeparator">
-                                        <MenuItem.Icon>
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="16"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-
-                                    <MenuItem Header="Log out" FontSize="15" Command="{Binding DataContext.LogoutCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-                                        <MenuItem.Icon>
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="16"/>
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </ContextMenu>

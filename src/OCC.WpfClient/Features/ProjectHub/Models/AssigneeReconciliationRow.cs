@@ -26,6 +26,7 @@ namespace OCC.WpfClient.Features.ProjectHub.Models
         [ObservableProperty] private string _specialties = string.Empty;
 
         public ObservableCollection<AssigneeSelectionViewModel> SuggestedMatches { get; } = new();
+        public bool HasSuggestions => SuggestedMatches.Count > 0;
 
         public bool IsNew => Action == ReconciliationAction.CreateNew;
         public bool IsMapped => Action == ReconciliationAction.MapToExisting;

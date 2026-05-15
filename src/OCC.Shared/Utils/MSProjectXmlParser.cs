@@ -17,13 +17,33 @@ namespace OCC.Shared.Utils
                 progress?.Report(("Loading XML...", 5));
                 using var reader = new StreamReader(stream);
                 var xmlContent = await reader.ReadToEndAsync();
-                var doc = XDocument.Parse(xmlContent);
+
+                if (string.IsNullOrWhiteSpace(xmlContent))
+                {
+                    throw new InvalidOperationException("The XML file is empty.");
+                }
+
+                // Clever check: Quick scan for the expected root tag
+                if (!xmlContent.Contains("<Project") && !xmlContent.Contains("<project"))
+                {
+                    throw new InvalidOperationException("The selected file does not appear to be a valid Microsoft Project XML file (missing <Project> tag).");
+                }
+
+                XDocument doc;
+                try
+                {
+                    doc = XDocument.Parse(xmlContent);
+                }
+                catch (System.Xml.XmlException ex)
+                {
+                    throw new InvalidOperationException($"Invalid XML format: {ex.Message}", ex);
+                }
 
                 var project = doc.Root;
 
                 if (project == null || project.Name.LocalName != "Project")
                 {
-                    throw new InvalidOperationException("Invalid XML format: Root element must be 'Project'.");
+                    throw new InvalidOperationException("Invalid Microsoft Project XML format: Root element must be 'Project'.");
                 }
 
                 // Namespace handling - MSP XML usually has a default namespace
@@ -32,13 +52,19 @@ namespace OCC.Shared.Utils
                 var tasksElement = project.Element(ns + "Tasks");
                 if (tasksElement == null)
                 {
-                    return (new List<ProjectTask>(), new List<ProjectTask>(), new List<string>(), null); // No tasks found
+                    // If no tasks element, it's technically valid but empty
+                    return (new List<ProjectTask>(), new List<ProjectTask>(), new List<string>(), null);
                 }
 
                 var flatTasks = new List<(ProjectTask Task, int OutlineLevel)>();
                 var elements = tasksElement.Elements(ns + "Task").ToList();
                 int total = elements.Count;
                 int count = 0;
+
+                if (total == 0)
+                {
+                    return (new List<ProjectTask>(), new List<ProjectTask>(), new List<string>(), null);
+                }
 
                 progress?.Report(($"Found {total} tasks. Parsing...", 10));
 
@@ -246,8 +272,8 @@ namespace OCC.Shared.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing XML: {ex.Message}");
-                return (new List<ProjectTask>(), new List<ProjectTask>(), new List<string>(), null);
+                // Rethrow to let caller handle notification
+                throw;
             }
         }
 

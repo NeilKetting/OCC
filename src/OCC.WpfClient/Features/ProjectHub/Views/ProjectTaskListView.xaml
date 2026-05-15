@@ -143,13 +143,13 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid HorizontalAlignment="Left" >
-                        <Border Style="{StaticResource GlassCard}" Width="250">
+                        <Border Style="{StaticResource GlassCard}" Width="290">
                             <StackPanel Orientation="Horizontal">
                                 <!-- Search -->
                                 <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="12,0,8,0"/>
                                 <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
-                                         ap:WatermarkProperties.Watermark="Search tasks..." Width="250"/>
+                                         ap:WatermarkProperties.Watermark="Search tasks..." Width="240"/>
                             </StackPanel>
                         </Border>
                     </Grid>

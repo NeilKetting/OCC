@@ -110,7 +110,7 @@
             </Grid.RowDefinitions>
 
             <!-- Top Project Banner -->
-            <Border Grid.Row="0" Height="80" Padding="30,0" Background="#05FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Padding="15,5" Background="#05FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

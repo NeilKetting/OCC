@@ -26,10 +26,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IGoogleMapsService _googleMapsService;
         private readonly ISettingsService _settingsService;
         private readonly IAuthService _authService;
+        private readonly IDialogService _dialogService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private string _sessionToken = Guid.NewGuid().ToString();
         private System.Threading.CancellationTokenSource? _addressCts;
         private bool _isHandlingSelection;
+        private bool _isPerformingAddressSearch;
 
         [ObservableProperty] private ProjectWrapper _project;
         
@@ -47,6 +49,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isAddressMissing = true;
         [ObservableProperty] private string _validationMessage = "Geofencing requires a site address.";
         [ObservableProperty] private AddressSuggestion? _selectedAddressSuggestion;
+        [ObservableProperty] private bool _isAddressFocused;
         [ObservableProperty] private bool _isReconciling;
         [ObservableProperty] private int _reconciliationTotalCount;
         [ObservableProperty] private int _reconciliationMapCount;
@@ -73,6 +76,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ISubContractorService subContractorService,
             ISettingsService settingsService,
             IAuthService authService,
+            IDialogService dialogService,
             OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings)
         {
             _projectService = projectService;
@@ -83,6 +87,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
             _authService = authService;
+            _dialogService = dialogService;
             _connectionSettings = connectionSettings;
 
             Title = "Create New Project";
@@ -129,6 +134,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         Name = c.Name
                     };
                     Customers.Add(cust);
+                }
+
+
+                // Ensure Google Maps API key is available
+                if (string.IsNullOrEmpty(_connectionSettings.GoogleApiKey))
+                {
+                    var key = await _settingsService.GetGoogleMapsKeyAsync();
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        _connectionSettings.GoogleApiKey = key;
+                    }
                 }
 
                 var employees = await _employeeService.GetEmployeesAsync();
@@ -347,15 +363,129 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 if (!string.IsNullOrEmpty(result.ProjectName)) Project.Name = result.ProjectName;
                 _importedTasks = result.FlatTasks;
 
+                // Automatic Address Search for Imported Projects
+                if (!string.IsNullOrWhiteSpace(Project.Name))
+                {
+                    WeakReferenceMessenger.Default.Send(new StatusUpdateMessage($"Searching location for '{Project.Name}'..."));
+                    await SuggestAddressAsync(Project.Name);
+                    WeakReferenceMessenger.Default.Send(new StatusUpdateMessage("Ready"));
+                }
+
                 await MatchAssigneesAsync(result.Resources);
+
+                // Ensure the status bar progress is cleared
+                WeakReferenceMessenger.Default.Send(new ImportProgressMessage(new ImportProgressInfo 
+                { 
+                    Message = "Import Complete!", 
+                    Progress = 100, 
+                    IsVisible = true,
+                    IsComplete = true 
+                }));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 ImportProgressMessage = "Error occurred during import.";
+                WeakReferenceMessenger.Default.Send(new ImportProgressMessage(new ImportProgressInfo 
+                { 
+                    Message = "Import failed.", 
+                    Progress = 100, 
+                    IsVisible = true,
+                    IsComplete = true 
+                }));
+                NotifyError("Import Failed", ex.Message);
             }
             finally
             {
                 IsImporting = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task OnProjectNameLostFocusAsync()
+        {
+            if (CreationMode == ProjectCreationMode.Quick && !string.IsNullOrWhiteSpace(Project.Name))
+            {
+                await SuggestAddressAsync(Project.Name);
+            }
+        }
+
+        private async Task SuggestAddressAsync(string projectName)
+        {
+            if (string.IsNullOrWhiteSpace(projectName) || _isPerformingAddressSearch) return;
+            
+            // Only suggest if we don't have a street address yet
+            if (!string.IsNullOrWhiteSpace(Project.StreetLine1)) return;
+
+            // Final safety check for API key
+            if (string.IsNullOrEmpty(_connectionSettings.GoogleApiKey))
+            {
+                var key = await _settingsService.GetGoogleMapsKeyAsync();
+                if (!string.IsNullOrEmpty(key)) _connectionSettings.GoogleApiKey = key;
+            }
+
+            try
+            {
+                _isPerformingAddressSearch = true;
+                
+                // Clean the project name for better search results (strip dates, "POW", versions etc)
+                string searchTerm = projectName;
+                int dashIndex = searchTerm.IndexOf('-');
+                if (dashIndex > 0) searchTerm = searchTerm.Substring(0, dashIndex);
+                int parenIndex = searchTerm.IndexOf('(');
+                if (parenIndex > 0) searchTerm = searchTerm.Substring(0, parenIndex);
+                searchTerm = searchTerm.Trim();
+
+                WeakReferenceMessenger.Default.Send(new StatusUpdateMessage($"Searching address for '{searchTerm}'..."));
+                
+                // Get suggestions based on the cleaned project name
+                var suggestions = await _googleMapsService.GetAddressSuggestionsAsync(searchTerm, _sessionToken);
+                var bestSuggestion = suggestions?.FirstOrDefault();
+
+                if (bestSuggestion != null)
+                {
+                    bool useAddress = await _dialogService.ShowConfirmationAsync(
+                        "Address Found", 
+                        $"We found a potential address for '{projectName}':\n\n{bestSuggestion.Description}\n\nWould you like to use this location info for geofencing?");
+
+                    if (useAddress)
+                    {
+                        var details = await _googleMapsService.GetPlaceDetailsAsync(bestSuggestion.PlaceId, _sessionToken);
+                        if (details != null)
+                        {
+                            Project.StreetLine1 = details.StreetLine1;
+                            Project.StreetLine2 = details.StreetLine2;
+                            Project.City = details.City;
+                            Project.StateOrProvince = details.StateOrProvince;
+                            Project.PostalCode = details.PostalCode;
+                            Project.Country = details.Country;
+                            Project.Latitude = details.Latitude;
+                            Project.Longitude = details.Longitude;
+                            
+                            IsAddressMissing = false;
+                            NotifyInfo("Address Populated", "Site location has been updated.");
+                        }
+                    }
+                    else
+                    {
+                        // Focus the address field to encourage manual entry
+                        IsAddressFocused = true;
+                    }
+                }
+                else
+                {
+                    NotifyWarning("Location Search", $"Could not find an automated address for '{projectName}'. Please enter it manually.");
+                    IsAddressFocused = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Address Search Error]: {ex.Message}");
+                NotifyError("Search Error", "An error occurred while searching for the site address.");
+            }
+            finally
+            {
+                _isPerformingAddressSearch = false;
+                WeakReferenceMessenger.Default.Send(new StatusUpdateMessage("Ready"));
             }
         }
 

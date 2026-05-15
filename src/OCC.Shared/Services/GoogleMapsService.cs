@@ -30,7 +30,7 @@ namespace OCC.Shared.Services
 
             try
             {
-                var url = $"https://maps.googleapis.com/maps/api/place/autocomplete/json?input={Uri.EscapeDataString(input)}&types=address&components=country:za&sessiontoken={sessionToken}&key={_apiKey}";
+                var url = $"https://maps.googleapis.com/maps/api/place/autocomplete/json?input={Uri.EscapeDataString(input)}&components=country:za&sessiontoken={sessionToken}&key={_apiKey}";
                 var response = await _httpClient.GetFromJsonAsync<GoogleAutocompleteResponse>(url);
 
                 var suggestions = new List<AddressSuggestion>();
