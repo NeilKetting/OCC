@@ -13,6 +13,23 @@ namespace OCC.Mobile.Features.Shell
         [ObservableProperty]
         private bool _isShellVisible;
  
+        [ObservableProperty]
+        private bool _isUpdateAvailable;
+
+        [ObservableProperty]
+        private string _updateVersion = string.Empty;
+
+        [ObservableProperty]
+        private string _updateReleaseNotes = string.Empty;
+
+        [ObservableProperty]
+        private bool _isDownloadingUpdate;
+
+        [ObservableProperty]
+        private double _downloadProgress;
+
+        private UpdateCheckResult? _pendingUpdate;
+ 
         private readonly INavigationService _navigationService;
         private readonly IAuthService _authService;
         private readonly IUpdateService? _updateService;
@@ -37,7 +54,13 @@ namespace OCC.Mobile.Features.Shell
                 signalRService.StartAsync().FireAndForget();
             }
 
-            // Check for updates
+            // Listen for manual update checks
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Register<string>(this, (r, m) => 
+            {
+                if (m == "CheckForUpdates") CheckForUpdatesAsync().FireAndForget();
+            });
+
+            // Check for updates automatically
             CheckForUpdatesAsync().FireAndForget();
         }
 
@@ -50,28 +73,53 @@ namespace OCC.Mobile.Features.Shell
                 var result = await _updateService.CheckForUpdatesAsync();
                 if (result.IsUpdateAvailable)
                 {
-                    // For now, let's just trigger it. 
-                    // In a real premium app, we'd show a "New version available" overlay.
-                    // But for a client tablet, keeping it simple "Update now?" is often better.
-                    
-                    // We'll use a simple background download and then prompt.
-                    // Note: You might want to add a UI prompt here.
-                    var localPath = await _updateService.DownloadUpdateAsync(result, p => 
-                    {
-                        // Progress reporting if we had a progress bar
-                        System.Diagnostics.Debug.WriteLine($"Update Download: {p:P0}");
-                    });
-
-                    if (!string.IsNullOrEmpty(localPath))
-                    {
-                        await _appInstaller.InstallPackageAsync(localPath);
-                    }
+                    _pendingUpdate = result;
+                    UpdateVersion = result.LatestVersion;
+                    UpdateReleaseNotes = result.ReleaseNotes;
+                    IsUpdateAvailable = true;
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Update check failed: {ex.Message}");
             }
+        }
+
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
+        private async Task StartUpdate()
+        {
+            if (_pendingUpdate == null || _updateService == null || _appInstaller == null) return;
+
+            try
+            {
+                IsUpdateAvailable = false; // Hide the prompt
+                IsDownloadingUpdate = true;
+                DownloadProgress = 0;
+
+                var localPath = await _updateService.DownloadUpdateAsync(_pendingUpdate, p => 
+                {
+                    DownloadProgress = p;
+                });
+
+                if (!string.IsNullOrEmpty(localPath))
+                {
+                    await _appInstaller.InstallPackageAsync(localPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Update failed: {ex.Message}");
+            }
+            finally
+            {
+                IsDownloadingUpdate = false;
+            }
+        }
+
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
+        private void DismissUpdate()
+        {
+            IsUpdateAvailable = false;
         }
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]

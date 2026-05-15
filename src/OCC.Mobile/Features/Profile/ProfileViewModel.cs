@@ -8,18 +8,28 @@ namespace OCC.Mobile.Features.Profile
 {
     public partial class ProfileViewModel : ViewModelBase
     {
-        private readonly IAuthService _authService;
-        private readonly INavigationService _navigationService;
- 
         [ObservableProperty]
         private User? _currentUser;
 
-        public ProfileViewModel(IAuthService authService, INavigationService navigationService)
+        [ObservableProperty]
+        private string _appVersion = string.Empty;
+
+        private readonly IUpdateService? _updateService;
+
+        public ProfileViewModel(IAuthService authService, INavigationService navigationService, IUpdateService? updateService = null)
         {
             _authService = authService;
             _navigationService = navigationService;
+            _updateService = updateService;
             CurrentUser = _authService.CurrentUser;
+            AppVersion = _updateService?.CurrentVersion ?? "1.0.0";
             Title = "My Profile";
+        }
+
+        [RelayCommand]
+        private void CheckForUpdates()
+        {
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send("CheckForUpdates");
         }
 
         [RelayCommand]
