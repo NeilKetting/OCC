@@ -217,6 +217,7 @@ namespace OCC.API.Controllers
         [HttpPost("register-device")]
         public async Task<IActionResult> RegisterDevice([FromBody] DeviceRegistrationRequest request)
         {
+            _logger.LogInformation("[Push] Device registration request received. Token: {Token}, Platform: {Platform}", request?.Token, request?.Platform);
             try
             {
                 var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -248,8 +249,16 @@ namespace OCC.API.Controllers
             try
             {
 
+                var dbName = _context.Database.GetDbConnection().Database;
+                
+                if (email.ToLower() == "list")
+                {
+                    var allUsers = await _context.Users.Select(u => new { u.Email, u.DisplayName, u.Id }).ToListAsync();
+                    return Ok(new { Database = dbName, UserCount = allUsers.Count, Users = allUsers });
+                }
+
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() || u.Id.ToString() == email);
-                if (user == null) return NotFound(new { message = $"User {email} not found." });
+                if (user == null) return NotFound(new { Database = dbName, message = $"User {email} not found." });
 
                 var employee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
                 string empLinkNote = "Linked by ID";
@@ -271,6 +280,7 @@ namespace OCC.API.Controllers
 
                 return Ok(new
                 {
+                    Database = dbName,
                     UserId = user.Id,
                     Email = user.Email,
                     DisplayName = user.DisplayName,

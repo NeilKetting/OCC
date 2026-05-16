@@ -11,6 +11,7 @@ namespace OCC.Mobile.Services
     {
         User? CurrentUser { get; }
         string? CurrentToken { get; }
+        string GetBaseUrl();
         Task<(bool Success, string ErrorMessage)> LoginAsync(string email, string password);
         Task<(bool Success, User? User, string ErrorMessage)> RegisterAsync(User user);
         void Logout();
@@ -34,7 +35,7 @@ namespace OCC.Mobile.Services
             _httpClient = new HttpClient();
         }
 
-        private string GetBaseUrl()
+        public string GetBaseUrl()
         {
             if (_settingsService.Settings.SelectedEnvironment == AppEnvironment.Local)
             {

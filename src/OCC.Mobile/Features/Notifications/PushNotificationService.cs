@@ -53,7 +53,7 @@ namespace OCC.Mobile.Features.Notifications
         {
             try
             {
-                var baseUrl = "http://102.221.36.149:8081/"; // Production fallback
+                var baseUrl = _authService.GetBaseUrl();
                 if (_httpClient.BaseAddress == null)
                 {
                     _httpClient.BaseAddress = new Uri(baseUrl);
