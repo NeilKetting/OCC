@@ -417,19 +417,12 @@ google-services.json
 
 # Binaries and Build Artifacts
 *.apk
-_Build/
+_Build/*
+!_Build/*.bat
+!_Build/*.ps1
+!_Build/SQL/
 bin/
 obj/
-
-# _Build folder artifacts (Specific paths just in case)
-_Build/publish/
-_Build/releases/
-_Build/Releases/
-_Build/publish_wpf/
-_Build/releases_wpf/
-_Build/Releases_WPF/
-_Build/releases_mobile/
-_Build/bin_mobile/
 
 # Publish and Releases (Legacy or root)
 publish/
