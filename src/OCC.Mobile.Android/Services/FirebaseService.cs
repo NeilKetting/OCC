@@ -60,7 +60,7 @@ namespace OCC.Mobile.Android.Services
             var pendingIntent = PendingIntent.GetActivity(this, 0, intent, flags);
 
             var builder = new AndroidX.Core.App.NotificationCompat.Builder(this, ChannelId)
-                .SetSmallIcon(Resource.Drawable.icon)
+                .SetSmallIcon(Resource.Mipmap.occ_branded_icon)
                 .SetContentTitle(title)
                 .SetContentText(body)
                 .SetAutoCancel(true)

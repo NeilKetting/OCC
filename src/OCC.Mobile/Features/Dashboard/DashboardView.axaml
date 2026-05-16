@@ -7,10 +7,20 @@
         <StackPanel Spacing="25" Margin="20">
             <!-- Greeting & Header -->
             <StackPanel Spacing="5">
-                <TextBlock Text="{Binding Greeting}" 
-                           Foreground="White" 
-                           FontSize="32" 
-                           FontWeight="ExtraBold"/>
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="{Binding Greeting}" 
+                               Foreground="White" 
+                               FontSize="32" 
+                               FontWeight="ExtraBold"/>
+                    
+                    <!-- Push Status Indicator -->
+                    <Border Grid.Column="1" Background="#1E293B" CornerRadius="10" Padding="8,4" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse Width="6" Height="6" Fill="{Binding PushStatus, Converter={StaticResource PushStatusToColorConverter}}"/>
+                            <TextBlock Text="{Binding PushStatus}" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
                 <TextBlock Text="Here's how your day looks so far" 
                            Foreground="#94A3B8" 
                            FontSize="16"/>

@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OCC.Mobile.ViewModels;
 using OCC.Mobile.Services;
+using OCC.Mobile.Features.Notifications;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.Mobile.Features.Dashboard
 {
@@ -15,7 +17,11 @@ namespace OCC.Mobile.Features.Dashboard
         private readonly IProjectTaskService _taskService;
         private readonly ISignalRService _signalRService;
         private readonly IAuthService _authService;
+        private readonly IPushNotificationService _pushNotificationService;
         private readonly System.Threading.SemaphoreSlim _loadSemaphore = new(1, 1);
+
+        [ObservableProperty]
+        private string _pushStatus = "Initializing...";
 
         [ObservableProperty]
         private int _activeSitesCount;
@@ -81,6 +87,13 @@ namespace OCC.Mobile.Features.Dashboard
             _taskService = taskService;
             _signalRService = signalRService;
             _authService = authService;
+            _pushNotificationService = App.Services?.GetService<IPushNotificationService>()!;
+            
+            PushStatus = _pushNotificationService?.Status ?? "N/A";
+            if (_pushNotificationService is Features.Notifications.PushNotificationService pns)
+            {
+                pns.StatusChanged += (s, e) => PushStatus = e;
+            }
             
             _signalRService.EntityUpdated += OnEntityUpdated;
             

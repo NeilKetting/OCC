@@ -13,6 +13,7 @@
         <conv:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
         <conv:EqualityConverter x:Key="EqualityConverter"/>
         <conv:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
+        <conv:PushStatusToColorConverter x:Key="PushStatusToColorConverter"/>
     </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>

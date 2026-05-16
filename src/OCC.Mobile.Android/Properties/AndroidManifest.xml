@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
-          package="com.occ.fieldhub"
+          package="OrangeCircleConstruction.Mobile.Fresh"
           android:versionCode="5"
           android:versionName="1.0.5">
     <uses-permission android:name="android.permission.INTERNET" />
@@ -9,10 +9,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     
-    <application android:label="OCC Field Hub" android:icon="@drawable/icon" android:debuggable="false" android:usesCleartextTraffic="true" android:requestLegacyExternalStorage="true">
+    <application android:label="OCC Field Hub" android:icon="@mipmap/occ_branded_icon" android:debuggable="false" android:usesCleartextTraffic="true" android:requestLegacyExternalStorage="true">
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.occ.fieldhub.fileprovider"
+            android:authorities="OrangeCircleConstruction.Mobile.Fresh.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

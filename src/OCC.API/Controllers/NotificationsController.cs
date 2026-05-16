@@ -12,6 +12,7 @@ namespace OCC.API.Controllers
     public class NotificationsController : ControllerBase
     {
         private static readonly List<string> _registrationLogs = new();
+        private static readonly List<string> _pushLogs = new();
         private readonly AppDbContext _context;
         private readonly ILogger<NotificationsController> _logger;
         private readonly Services.INotificationService _notificationService;
@@ -248,6 +249,15 @@ namespace OCC.API.Controllers
             }
         }
 
+        public static void LogPush(string log)
+        {
+            lock (_pushLogs)
+            {
+                _pushLogs.Insert(0, $"[{DateTime.UtcNow:HH:mm:ss}] {log}");
+                if (_pushLogs.Count > 50) _pushLogs.RemoveAt(50);
+            }
+        }
+
         [AllowAnonymous]
         [HttpGet("debug-status/{email}")]
         public async Task<IActionResult> GetDebugStatus(string email, [FromQuery] string? env = null)
@@ -288,6 +298,7 @@ namespace OCC.API.Controllers
                 {
                     Database = dbName,
                     RegistrationLogs = _registrationLogs,
+                    PushLogs = _pushLogs,
                     UserId = user.Id,
                     Email = user.Email,
                     DisplayName = user.DisplayName,

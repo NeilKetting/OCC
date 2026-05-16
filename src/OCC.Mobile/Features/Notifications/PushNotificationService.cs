@@ -12,7 +12,9 @@ namespace OCC.Mobile.Features.Notifications
         private readonly HttpClient _httpClient;
 
         public string? FCMToken { get; private set; }
+        public string Status { get; private set; } = "Initializing...";
         public event EventHandler<string>? TokenChanged;
+        public event EventHandler<string>? StatusChanged;
         public event EventHandler<NotificationEventArgs>? NotificationReceived;
 
         public PushNotificationService(Services.IAuthService authService, Services.ILocalSettingsService settingsService)
@@ -41,6 +43,21 @@ namespace OCC.Mobile.Features.Notifications
             {
                 await RegisterTokenWithApi(token);
             }
+            else if (string.IsNullOrEmpty(token))
+            {
+                UpdateStatus("Waiting for Google Token...");
+            }
+            else
+            {
+                UpdateStatus("Token ready, waiting for login...");
+            }
+        }
+
+        public void UpdateStatus(string status)
+        {
+            Status = status;
+            StatusChanged?.Invoke(this, status);
+            System.Diagnostics.Debug.WriteLine($"[Notifications] Status: {status}");
         }
 
         public async Task RegisterWithApiAsync()
@@ -61,9 +78,12 @@ namespace OCC.Mobile.Features.Notifications
                     _httpClient.BaseAddress = new Uri(baseUrl);
                 }
 
+                // Always use the latest token from AuthService
+                _httpClient.DefaultRequestHeaders.Authorization = null;
                 if (!string.IsNullOrEmpty(_authService.CurrentToken))
                 {
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authService.CurrentToken);
+                    System.Diagnostics.Debug.WriteLine($"[Notifications] Using Token for User: {_authService.CurrentUser?.Email}");
                 }
 
                 _httpClient.DefaultRequestHeaders.Remove("X-Environment");
@@ -86,15 +106,19 @@ namespace OCC.Mobile.Features.Notifications
                 var response = await _httpClient.PostAsJsonAsync("api/Notifications/register-device", request);
                 if (response.IsSuccessStatusCode)
                 {
+                    UpdateStatus("Registered Successfully");
                     System.Diagnostics.Debug.WriteLine("[Notifications] Token registered with API successfully.");
                 }
                 else
                 {
+                    var error = await response.Content.ReadAsStringAsync();
+                    UpdateStatus($"API Error: {response.StatusCode} - {error}");
                     System.Diagnostics.Debug.WriteLine($"[Notifications] API registration failed: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
+                UpdateStatus($"Connection Error: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"[Notifications] API Error: {ex.Message}");
             }
         }

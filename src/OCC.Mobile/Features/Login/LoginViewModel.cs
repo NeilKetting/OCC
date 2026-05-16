@@ -28,6 +28,9 @@ namespace OCC.Mobile.Features.Login
         private string _password = string.Empty;
 
         [ObservableProperty]
+        private string _pushStatus = "Initializing...";
+
+        [ObservableProperty]
         private string _errorMessage = string.Empty;
 
         [ObservableProperty]
@@ -61,6 +64,13 @@ namespace OCC.Mobile.Features.Login
             SelectedEnvironment = _settingsService.Settings.SelectedEnvironment;
             CustomLocalUrl = _settingsService.Settings.CustomLocalUrl;
             
+            PushStatus = _pushNotificationService.Status;
+            
+            if (_pushNotificationService is Features.Notifications.PushNotificationService pns)
+            {
+                pns.StatusChanged += (s, e) => PushStatus = e;
+            }
+
             // Fallback for first-time use to automatically pick up the PC's local IP
             if (string.IsNullOrEmpty(CustomLocalUrl))
             {
@@ -140,14 +150,8 @@ namespace OCC.Mobile.Features.Login
                     // Navigation based on Role
                     ErrorMessage = string.Empty;
                     
-                    if (_authService.CurrentUser.UserRole == UserRole.Admin)
-                    {
-                        _navigationService.NavigateTo<AdminDashboardViewModel>();
-                    }
-                    else
-                    {
-                        _navigationService.NavigateTo<DashboardViewModel>();
-                    }
+                    // Always land on Dashboard (Overview) for now to ensure visibility of Push Status
+                    _navigationService.NavigateTo<Dashboard.DashboardViewModel>();
                 }
                 else
                 {

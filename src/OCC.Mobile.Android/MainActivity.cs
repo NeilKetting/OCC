@@ -11,6 +11,7 @@ using OCC.Mobile.Android.Services;
 using OCC.Mobile.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Firebase.Messaging;
+using Firebase;
 using Android.Gms.Tasks;
 using OCC.Mobile.Features.Notifications;
 
@@ -20,7 +21,7 @@ namespace OCC.Mobile.Android
     [Activity(
         Label = "OCC Field Hub",
         Theme = "@style/MyTheme.NoActionBar",
-        Icon = "@drawable/icon",
+        Icon = "@mipmap/occ_branded_icon",
         MainLauncher = true,
         ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode,
         WindowSoftInputMode = SoftInput.AdjustResize,
@@ -45,16 +46,70 @@ namespace OCC.Mobile.Android
                     }
                 }
 #pragma warning restore CA1416
+
+                // Explicitly Initialize Firebase with Hardcoded Fallback
+                try {
+                    var options = new FirebaseOptions.Builder()
+                        .SetApiKey("AIzaSyB2921Ya78f6R0PhdwbYIK9-xvsB0DhWAs")
+                        .SetApplicationId("1:252587602101:android:525ad027c3ff90c05acefc")
+                        .SetProjectId("occ-erp")
+                        .SetGcmSenderId("252587602101")
+                        .Build();
+                    
+                    Firebase.FirebaseApp.InitializeApp(this, options);
+                    System.Diagnostics.Debug.WriteLine("[Firebase] Hardcoded initialization successful.");
+                } catch (Exception ex) {
+                    System.Diagnostics.Debug.WriteLine($"[Firebase] Initialization error: {ex.Message}");
+                    var pushService = App.Services?.GetService<IPushNotificationService>();
+                    if (pushService is Features.Notifications.PushNotificationService pns)
+                    {
+                         pns.UpdateStatus($"Error: Firebase Init {ex.Message}");
+                    }
+                }
+
+                // Check for Google Play Services and show specific error if failed
+                var availability = global::Android.Gms.Common.GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(this);
+                if (availability != global::Android.Gms.Common.ConnectionResult.Success)
+                {
+                    var pushService = App.Services?.GetService<IPushNotificationService>();
+                    if (pushService is Features.Notifications.PushNotificationService pns)
+                    {
+                         System.Threading.Tasks.Task.Run(() => pns.UpdateStatus($"Error: Play Services {availability}"));
+                    }
+                    System.Diagnostics.Debug.WriteLine($"[Firebase] Google Play Services not available: {availability}");
+                }
                 
-                // Fetch and register FCM token on startup
-                try
-                {
-                    FirebaseMessaging.Instance.GetToken().AddOnCompleteListener(new TokenCompleteListener());
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Firebase] Error fetching token: {ex.Message}");
-                }
+                // Aggressive Force-Fetch for FCM token
+                System.Threading.Tasks.Task.Run(async () => {
+                    int attempts = 0;
+                    while (attempts < 5) {
+                        try {
+                            var pushService = App.Services?.GetService<IPushNotificationService>();
+                            if (pushService is Features.Notifications.PushNotificationService pns)
+                            {
+                                pns.UpdateStatus($"Requesting Token (Attempt {attempts+1})...");
+                            }
+
+                            FirebaseMessaging.Instance.GetToken().AddOnCompleteListener(new TokenCompleteListener());
+                            
+                            // Give it 15 seconds per attempt
+                            await System.Threading.Tasks.Task.Delay(15000);
+                            
+                            if (pushService != null && pushService.Status == "Registered Successfully") break;
+                            
+                            attempts++;
+                        } catch (Exception ex) {
+                            System.Diagnostics.Debug.WriteLine($"[Firebase] Fetch Attempt {attempts} failed: {ex.Message}");
+                            await System.Threading.Tasks.Task.Delay(3000);
+                            attempts++;
+                        }
+                    }
+                    
+                    var finalService = App.Services?.GetService<IPushNotificationService>();
+                    if (finalService != null && !finalService.Status.Contains("Successfully")) {
+                        ((Features.Notifications.PushNotificationService)finalService).UpdateStatus("Error: Firebase Timeout");
+                    }
+                });
             }
             catch (Exception ex)
             {

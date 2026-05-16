@@ -84,10 +84,12 @@ namespace OCC.API.Services
 
                     string response = await FirebaseAdmin.Messaging.FirebaseMessaging.DefaultInstance.SendAsync(message);
                     Console.WriteLine($"[PUSH SENT] ID: {response} To User {userId} on {device.Platform}");
+                    Controllers.NotificationsController.LogPush($"SUCCESS: Sent to User {userId} ({device.Platform}) ID: {response}");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[PUSH FAILED] To User {userId} on {device.Platform}: {ex.Message}");
+                    Controllers.NotificationsController.LogPush($"FAILED: User {userId} ({device.Platform}) ERROR: {ex.Message}");
                 }
             }
             

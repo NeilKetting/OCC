@@ -6,6 +6,7 @@ namespace OCC.Mobile.Features.Notifications
     public interface IPushNotificationService
     {
         string? FCMToken { get; }
+        string Status { get; }
         event EventHandler<string>? TokenChanged;
         event EventHandler<NotificationEventArgs>? NotificationReceived;
         
