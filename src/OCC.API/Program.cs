@@ -45,11 +45,13 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
     var httpContext = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext;
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     
-    // Check for environment header
+    // Check for environment header OR query parameter
     var environmentHeader = httpContext?.Request.Headers["X-Environment"].ToString();
+    var environmentQuery = httpContext?.Request.Query["env"].ToString();
+    var selectedEnv = !string.IsNullOrEmpty(environmentHeader) ? environmentHeader : environmentQuery;
     
     string connectionString;
-    if (environmentHeader == "Test")
+    if (selectedEnv == "Test")
     {
         connectionString = configuration.GetConnectionString("TestConnection") 
                            ?? configuration.GetConnectionString("DefaultConnection")!;
