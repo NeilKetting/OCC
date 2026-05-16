@@ -156,14 +156,13 @@ namespace OCC.API.Controllers
                         }
                     }
 
-                    if (linkedEmployee == null)
-                    {
-                        return new List<Project>();
-                    }
-
+                    // For filtering, we include both Employee-based assignments and User-based (Contractor) assignments
                     query = query.Where(p => 
-                        p.SiteManagerId == linkedEmployee.Id || 
-                        p.Tasks.Any(t => t.Assignments.Any(a => a.AssigneeId == linkedEmployee.Id))
+                        (linkedEmployee != null && p.SiteManagerId == linkedEmployee.Id) || 
+                        p.Tasks.Any(t => t.Assignments.Any(a => 
+                            (a.AssigneeType == AssigneeType.Staff && linkedEmployee != null && a.AssigneeId == linkedEmployee.Id) ||
+                            (a.AssigneeType == AssigneeType.Contractor && a.AssigneeId == userId)
+                        ))
                     );
                 }
 
@@ -647,15 +646,38 @@ namespace OCC.API.Controllers
             try
             {
                 var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == siteManagerId.Value);
-                if (employee != null && employee.LinkedUserId.HasValue)
+                if (employee != null)
                 {
-                    await _notificationService.SendPushNotificationAsync(
-                        employee.LinkedUserId.Value,
-                        "New Project Assigned",
-                        $"You have been assigned as the Site Manager for: {project.Name}");
+                    Guid? targetUserId = employee.LinkedUserId;
                     
-                    _logger.LogInformation("Sent assignment push notification to Site Manager {Name} (User {UserId}) for project {Project}", 
-                        employee.DisplayName, employee.LinkedUserId.Value, project.Name);
+                    // Fallback: If not explicitly linked, try to find a user by email
+                    if (!targetUserId.HasValue && !string.IsNullOrEmpty(employee.Email))
+                    {
+                        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == employee.Email);
+                        if (user != null)
+                        {
+                            targetUserId = user.Id;
+                            // Auto-link for next time to prevent this lookup
+                            employee.LinkedUserId = user.Id;
+                            await _context.SaveChangesAsync();
+                            _logger.LogInformation("Auto-linked Employee {Emp} to User {User} via Email during notification", employee.DisplayName, user.Id);
+                        }
+                    }
+
+                    if (targetUserId.HasValue)
+                    {
+                        await _notificationService.SendPushNotificationAsync(
+                            targetUserId.Value,
+                            "New Project Assigned",
+                            $"You have been assigned as the Site Manager for: {project.Name}");
+                        
+                        _logger.LogInformation("Sent assignment push notification to Site Manager {Name} (User {UserId}) for project {Project}", 
+                            employee.DisplayName, targetUserId.Value, project.Name);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Skipped push notification for Site Manager {Name}: No linked User account found.", employee.DisplayName);
+                    }
                 }
             }
             catch (Exception ex)

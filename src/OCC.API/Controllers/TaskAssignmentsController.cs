@@ -15,12 +15,14 @@ namespace OCC.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly Services.INotificationService _notificationService;
         private readonly ILogger<TaskAssignmentsController> _logger;
 
-        public TaskAssignmentsController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<TaskAssignmentsController> logger)
+        public TaskAssignmentsController(AppDbContext context, IHubContext<NotificationHub> hubContext, Services.INotificationService notificationService, ILogger<TaskAssignmentsController> logger)
         {
             _context = context;
             _hubContext = hubContext;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
@@ -67,6 +69,9 @@ namespace OCC.API.Controllers
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "TaskAssignment", "Create", assignment.Id);
 
+                // Notify Assignee
+                await NotifyAssigneeAsync(assignment);
+
                 return CreatedAtAction("GetTaskAssignment", new { id = assignment.Id }, assignment);
             }
             catch (Exception ex)
@@ -94,6 +99,73 @@ namespace OCC.API.Controllers
             {
                  _logger.LogError(ex, "Error deleting assignment {Id}", id);
                  return StatusCode(500, "Internal server error");
+            }
+        }
+
+        private async Task NotifyAssigneeAsync(TaskAssignment assignment)
+        {
+            try
+            {
+                Guid? targetUserId = null;
+                string taskName = "a new task";
+
+                // 1. Resolve Task Name
+                var task = await _context.ProjectTasks.Include(t => t.Project).FirstOrDefaultAsync(t => t.Id == assignment.TaskId);
+                if (task != null) taskName = task.Name;
+
+                // 2. Resolve target User ID
+                if (assignment.AssigneeType == AssigneeType.Staff)
+                {
+                    var employee = await _context.Employees.FindAsync(assignment.AssigneeId);
+                    if (employee != null)
+                    {
+                        targetUserId = employee.LinkedUserId;
+                        
+                        // Fallback: Link by Email
+                        if (!targetUserId.HasValue && !string.IsNullOrEmpty(employee.Email))
+                        {
+                            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == employee.Email);
+                            if (user != null)
+                            {
+                                targetUserId = user.Id;
+                                employee.LinkedUserId = user.Id;
+                                await _context.SaveChangesAsync();
+                            }
+                        }
+                    }
+                }
+                else if (assignment.AssigneeType == AssigneeType.Contractor)
+                {
+                    // Check if AssigneeId is a direct User ID
+                    if (await _context.Users.AnyAsync(u => u.Id == assignment.AssigneeId))
+                    {
+                        targetUserId = assignment.AssigneeId;
+                    }
+                    else
+                    {
+                        // Check if it's a SubContractor ID
+                        var contractor = await _context.SubContractors.FindAsync(assignment.AssigneeId);
+                        if (contractor != null)
+                        {
+                            targetUserId = contractor.PortalUserId;
+                        }
+                    }
+                }
+
+                if (targetUserId.HasValue)
+                {
+                    var projectTitle = task?.Project?.Name ?? "a project";
+                    await _notificationService.SendPushNotificationAsync(
+                        targetUserId.Value,
+                        "New Task Assigned",
+                        $"You have been assigned to task: '{taskName}' in project: '{projectTitle}'"
+                    );
+                    _logger.LogInformation("Sent task assignment push to User {UserId}", targetUserId.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send push notification for task assignment");
             }
         }
     }

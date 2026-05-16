@@ -251,6 +251,7 @@ namespace OCC.API.Controllers
                 if (user == null) return NotFound(new { message = $"User {email} not found." });
 
                 var employee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
+                var subContractor = await _context.SubContractors.FirstOrDefaultAsync(s => s.PortalUserId == user.Id);
                 var devices = await _context.UserDevices.Where(d => d.UserId == user.Id).ToListAsync();
 
                 return Ok(new
@@ -258,8 +259,11 @@ namespace OCC.API.Controllers
                     UserId = user.Id,
                     Email = user.Email,
                     DisplayName = user.DisplayName,
+                    Role = user.UserRole.ToString(),
                     IsEmployeeLinked = employee != null,
                     EmployeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : "NOT LINKED",
+                    IsSubContractorLinked = subContractor != null,
+                    SubContractorName = subContractor?.Name ?? "NOT LINKED",
                     DeviceCount = devices.Count,
                     Devices = devices.Select(d => new { 
                         d.Platform, 
