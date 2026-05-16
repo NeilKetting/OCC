@@ -125,12 +125,26 @@ builder.Services.AddOpenApi();
 // --- INITIALIZE FIREBASE ---
 try
 {
-    FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+    // Look for key in secure server folder first, then fallback to local app directory
+    var serverKeyPath = @"C:\OCC-Keys\service-account.json";
+    var localKeyPath = Path.Combine(AppContext.BaseDirectory, "service-account.json");
+    
+    var finalKeyPath = File.Exists(serverKeyPath) ? serverKeyPath : localKeyPath;
+
+    if (File.Exists(finalKeyPath))
     {
-        Credential = Google.Apis.Auth.OAuth2.CredentialFactory
-            .FromFile<Google.Apis.Auth.OAuth2.ServiceAccountCredential>("service-account.json")
-            .ToGoogleCredential()
-    });
+        FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+        {
+            Credential = Google.Apis.Auth.OAuth2.CredentialFactory
+                .FromFile<Google.Apis.Auth.OAuth2.ServiceAccountCredential>(finalKeyPath)
+                .ToGoogleCredential()
+        });
+        Console.WriteLine($"[STARTUP] Firebase initialized successfully using key at: {finalKeyPath}");
+    }
+    else
+    {
+        Console.WriteLine("[STARTUP] Firebase SKIPPED: No service-account.json found in secure folder or local path.");
+    }
 }
 catch (Exception ex)
 {
