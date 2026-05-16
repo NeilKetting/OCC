@@ -148,6 +148,7 @@ try
 }
 catch (Exception ex)
 {
+    OCC.API.Controllers.NotificationsController.FirebaseInitError = ex.Message;
     Console.WriteLine($"[CRITICAL] Failed to initialize Firebase: {ex.Message}");
 }
 

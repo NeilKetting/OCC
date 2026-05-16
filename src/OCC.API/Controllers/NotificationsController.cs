@@ -13,6 +13,7 @@ namespace OCC.API.Controllers
     {
         private static readonly List<string> _registrationLogs = new();
         private static readonly List<string> _pushLogs = new();
+        public static string? FirebaseInitError { get; set; }
         private readonly AppDbContext _context;
         private readonly ILogger<NotificationsController> _logger;
         private readonly Services.INotificationService _notificationService;
@@ -298,6 +299,7 @@ namespace OCC.API.Controllers
                 {
                     Database = dbName,
                     FirebaseInitialized = FirebaseAdmin.FirebaseApp.DefaultInstance != null,
+                    FirebaseInitError = FirebaseInitError,
                     ServiceAccountLocal = System.IO.File.Exists(System.IO.Path.Combine(AppContext.BaseDirectory, "service-account.json")),
                     ServiceAccountSecure = System.IO.File.Exists(@"C:\OCC-Source\Keys\service-account.json"),
                     RegistrationLogs = _registrationLogs,
