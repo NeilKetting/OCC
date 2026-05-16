@@ -258,15 +258,6 @@ namespace OCC.API.Controllers
             }
         }
 
-        public static void LogPush(string log)
-        {
-            lock (_pushLogs)
-            {
-                _pushLogs.Insert(0, $"[{DateTime.UtcNow:HH:mm:ss}] {log}");
-                if (_pushLogs.Count > 50) _pushLogs.RemoveAt(50);
-            }
-        }
-
         [AllowAnonymous]
         [HttpGet("debug-status/{email}")]
         public async Task<IActionResult> GetDebugStatus(string email, [FromQuery] string? env = null)
