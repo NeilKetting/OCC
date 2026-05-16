@@ -9,7 +9,6 @@ using Avalonia.Android;
 using OCC.Mobile;
 using OCC.Mobile.Android.Services;
 using OCC.Mobile.Services;
-using OCC.Mobile.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Firebase.Messaging;
 using Android.Gms.Tasks;

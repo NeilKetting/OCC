@@ -4,10 +4,6 @@ using Firebase.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
-using Microsoft.Extensions.DependencyInjection;
-using OCC.Mobile.Features.Notifications;
-using OCC.Mobile;
-
 
 namespace OCC.Client.Android.Services
 {
@@ -32,10 +28,6 @@ namespace OCC.Client.Android.Services
             string title = message.GetNotification()?.Title ?? (message.Data.ContainsKey("title") ? message.Data["title"] : "OCC Update");
             string body = message.GetNotification()?.Body ?? (message.Data.ContainsKey("message") ? message.Data["message"] : "New update from office");
 
-            // Notify shared service for potential UI updates
-            var pushService = App.Services?.GetService<IPushNotificationService>();
-            pushService?.HandleNotification(title, body);
-
             // Show local notification using the same logic as our AlarmReceiver
             ShowNotification(title, body);
         }
@@ -43,14 +35,7 @@ namespace OCC.Client.Android.Services
         public override void OnNewToken(string token)
         {
             base.OnNewToken(token);
-            
-            // Register token with the shared service
-            var pushService = App.Services?.GetService<IPushNotificationService>();
-            if (pushService != null)
-            {
-                pushService.UpdateToken(token);
-            }
-            
+            // TODO: Send this token to the API so the boss knows this device's address
             System.Diagnostics.Debug.WriteLine($"New FCM Token: {token}");
         }
 

@@ -5,10 +5,6 @@ using Avalonia.Android;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Runtime.Versioning;
-using Firebase.Messaging;
-using Android.Gms.Tasks;
-using OCC.Mobile.Features.Notifications;
-
 
 namespace OCC.Client.Android
 {
@@ -36,39 +32,12 @@ namespace OCC.Client.Android
                 // AndroidX.Core.SplashScreen.SplashScreen.InstallSplashScreen(this);
 
                 base.OnCreate(savedInstanceState);
-
-                // Fetch and register FCM token on startup
-                try
-                {
-                    FirebaseMessaging.Instance.GetToken().AddOnCompleteListener(new TokenCompleteListener());
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Firebase] Error fetching token: {ex.Message}");
-                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"CRITICAL ERROR IN ONCREATE: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine(ex.StackTrace);
                 throw;
-            }
-        }
-
-        private class TokenCompleteListener : Java.Lang.Object, IOnCompleteListener
-        {
-            public void OnComplete(Task task)
-            {
-                if (task.IsSuccessful)
-                {
-                    var token = task.Result.ToString();
-                    var pushService = App.Services?.GetService<IPushNotificationService>();
-                    if (pushService != null)
-                    {
-                        pushService.UpdateToken(token);
-                    }
-                    System.Diagnostics.Debug.WriteLine($"[Firebase] Initial Token: {token}");
-                }
             }
         }
 
