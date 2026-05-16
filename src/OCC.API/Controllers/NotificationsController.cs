@@ -297,6 +297,8 @@ namespace OCC.API.Controllers
                 return Ok(new
                 {
                     Database = dbName,
+                    FirebaseInitialized = FirebaseAdmin.FirebaseApp.DefaultInstance != null,
+                    ServiceAccountExists = System.IO.File.Exists(System.IO.Path.Combine(AppContext.BaseDirectory, "service-account.json")),
                     RegistrationLogs = _registrationLogs,
                     PushLogs = _pushLogs,
                     UserId = user.Id,
