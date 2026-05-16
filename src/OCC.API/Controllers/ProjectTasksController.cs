@@ -346,6 +346,7 @@ namespace OCC.API.Controllers
                 existingTask.NextReminderDate = task.NextReminderDate;
                 existingTask.IsReminderSet = task.IsReminderSet;
                 existingTask.Frequency = task.Frequency;
+                existingTask.AssignedTo = task.AssignedTo; // Persist legacy assignment string
                 
                 // Recursive Completion: If a parent is marked Completed, mark all children as Completed.
                 // This preserves DB integrity where parents can't be done if kids are active.

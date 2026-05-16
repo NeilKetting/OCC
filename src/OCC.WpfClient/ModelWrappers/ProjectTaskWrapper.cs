@@ -64,6 +64,7 @@ namespace OCC.WpfClient.ModelWrappers
         [ObservableProperty] private bool _isReminderSet;
         [ObservableProperty] private ReminderFrequency _frequency;
         [ObservableProperty] private DateTime? _nextReminderDate;
+        [ObservableProperty] private string _assignedTo = string.Empty;
 
         private void Initialize()
         {
@@ -95,6 +96,7 @@ namespace OCC.WpfClient.ModelWrappers
                 IsReminderSet = _model.IsReminderSet;
                 Frequency = _model.Frequency;
                 NextReminderDate = _model.NextReminderDate;
+                AssignedTo = _model.AssignedTo;
             }
             finally
             {
@@ -125,6 +127,7 @@ namespace OCC.WpfClient.ModelWrappers
             _model.IsReminderSet = IsReminderSet;
             _model.Frequency = Frequency;
             _model.NextReminderDate = NextReminderDate;
+            _model.AssignedTo = AssignedTo;
         }
 
         partial void OnDescriptionChanged(string value) => _model.Description = value;

@@ -438,7 +438,7 @@
                             <DataGridTextColumn Header="DURATION" Binding="{Binding Duration}" Width="Auto" Visibility="{Binding Data.IsDurationVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
 
                             <!-- Assigned -->
-                            <DataGridTemplateColumn Header="ASSIGNED" Width="150" Visibility="{Binding Data.IsAssignedVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn Header="ASSIGNED" Width="Auto" Visibility="{Binding Data.IsAssignedVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding Data.ShowAssignToCommand, Source={StaticResource Proxy}}" 
@@ -495,7 +495,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="ACTIONS" Width="130">
+                            <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

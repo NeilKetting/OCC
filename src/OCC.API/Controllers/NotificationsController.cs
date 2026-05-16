@@ -242,16 +242,38 @@ namespace OCC.API.Controllers
         }
 
         [HttpGet("debug-status/{email}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetDebugStatus(string email)
         {
             try
             {
+                // Security check: Admin can check anyone, others can only check themselves
+                var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+                bool isAdmin = User.IsInRole("Admin");
+                
+                if (!isAdmin && currentUserEmail != email)
+                {
+                    return Forbid();
+                }
+
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email || u.Id.ToString() == email);
                 if (user == null) return NotFound(new { message = $"User {email} not found." });
 
                 var employee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
+                string empLinkNote = "Linked by ID";
+                if (employee == null)
+                {
+                    employee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == user.Email);
+                    if (employee != null) empLinkNote = "Match found by Email (Lazy-link ready)";
+                }
+
                 var subContractor = await _context.SubContractors.FirstOrDefaultAsync(s => s.PortalUserId == user.Id);
+                string scLinkNote = "Linked by ID";
+                if (subContractor == null)
+                {
+                    subContractor = await _context.SubContractors.FirstOrDefaultAsync(s => s.Email == user.Email);
+                    if (subContractor != null) scLinkNote = "Match found by Email (Lazy-link ready)";
+                }
+
                 var devices = await _context.UserDevices.Where(d => d.UserId == user.Id).ToListAsync();
 
                 return Ok(new
@@ -262,8 +284,10 @@ namespace OCC.API.Controllers
                     Role = user.UserRole.ToString(),
                     IsEmployeeLinked = employee != null,
                     EmployeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : "NOT LINKED",
+                    EmployeeLinkMethod = employee != null ? empLinkNote : "N/A",
                     IsSubContractorLinked = subContractor != null,
                     SubContractorName = subContractor?.Name ?? "NOT LINKED",
+                    SubContractorLinkMethod = subContractor != null ? scLinkNote : "N/A",
                     DeviceCount = devices.Count,
                     Devices = devices.Select(d => new { 
                         d.Platform, 

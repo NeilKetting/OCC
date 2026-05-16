@@ -148,6 +148,19 @@ namespace OCC.API.Controllers
                         if (contractor != null)
                         {
                             targetUserId = contractor.PortalUserId;
+                            
+                            // Fallback: Link by Email for SubContractors too
+                            if (!targetUserId.HasValue && !string.IsNullOrEmpty(contractor.Email))
+                            {
+                                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == contractor.Email);
+                                if (user != null)
+                                {
+                                    targetUserId = user.Id;
+                                    contractor.PortalUserId = user.Id;
+                                    await _context.SaveChangesAsync();
+                                    _logger.LogInformation("Auto-linked SubContractor {Name} to User {User} via Email", contractor.Name, user.Id);
+                                }
+                            }
                         }
                     }
                 }

@@ -437,7 +437,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var assignedIds = assignments.Select(a => a.AssigneeId).ToHashSet();
 
             var list = new List<SubContractorSelectionViewModel>();
-            var specialties = new HashSet<string> { "All Specialties" };
+            
+            // Add "Internal" Options (Synced with TaskDetailViewModel)
+            var jhb = new SubContractorSelectionViewModel(Guid.Empty, "Orange Circle Construction JHB", "Internal", "#2E9DFF") { Type = AssigneeType.Staff };
+            jhb.IsSelected = assignments.Any(a => a.AssigneeId == Guid.Empty && a.AssigneeName == jhb.Name);
+            list.Add(jhb);
+
+            var cpt = new SubContractorSelectionViewModel(Guid.Empty, "Orange Circle Construction CPT", "Internal", "#2E9DFF") { Type = AssigneeType.Staff };
+            cpt.IsSelected = assignments.Any(a => a.AssigneeId == Guid.Empty && a.AssigneeName == cpt.Name);
+            list.Add(cpt);
+
+            var specialties = new HashSet<string> { "All Specialties", "Internal" };
 
             foreach (var sc in contractors)
             {
@@ -477,7 +487,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // Remove assignments no longer selected
             foreach (var assignment in currentAssignments)
             {
-                if (!selectedSubbies.Any(x => x.Id == assignment.AssigneeId))
+                if (!selectedSubbies.Any(x => x.Id == assignment.AssigneeId && (x.Id != Guid.Empty || x.Name == assignment.AssigneeName)))
                 {
                     await _assignmentService.DeleteAssignmentAsync(assignment.Id);
                 }
@@ -486,14 +496,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // Add new assignments
             foreach (var subbie in selectedSubbies)
             {
-                if (!currentAssignments.Any(x => x.AssigneeId == subbie.Id))
+                if (!currentAssignments.Any(x => x.AssigneeId == subbie.Id && (subbie.Id != Guid.Empty || x.AssigneeName == subbie.Name)))
                 {
                     await _assignmentService.AddAssignmentAsync(new TaskAssignment
                     {
                         TaskId = TaskToAssign.Id,
                         AssigneeId = subbie.Id,
                         AssigneeName = subbie.Name,
-                        AssigneeType = AssigneeType.Contractor
+                        AssigneeType = subbie.Type
                     });
                 }
             }
@@ -570,6 +580,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public string Name { get; }
         public string Specialty { get; }
         public string Color { get; }
+        public AssigneeType Type { get; set; } = AssigneeType.Contractor;
 
         [ObservableProperty] private bool _isSelected;
         [ObservableProperty] private bool _isVisible = true;

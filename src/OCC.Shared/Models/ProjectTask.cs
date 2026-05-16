@@ -298,8 +298,13 @@ namespace OCC.Shared.Models
         /// <summary> Planned duration in hours (stored as nullable TimeSpan). </summary>
         public TimeSpan? PlannedDurationHours { get; set; }
 
+        private string _assignedTo = string.Empty;
         /// <summary> Legacy property to support old database schema. </summary>
-        public string AssignedTo { get; set; } = string.Empty;
+        public string AssignedTo 
+        { 
+            get => _assignedTo; 
+            set { if (_assignedTo != value) { _assignedTo = value; OnPropertyChanged(); } } 
+        }
 
         #endregion
 
