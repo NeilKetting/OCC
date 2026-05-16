@@ -288,6 +288,8 @@ namespace OCC.API.Controllers
             var existingProject = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
             bool siteManagerChanged = existingProject != null && existingProject.SiteManagerId != project.SiteManagerId;
 
+            NotificationsController.LogPush($"[PUT] Project {id} Update. SiteManagerChanged: {siteManagerChanged} (Old: {existingProject?.SiteManagerId} -> New: {project.SiteManagerId})");
+
             _context.Entry(project).State = EntityState.Modified;
 
             try
@@ -641,6 +643,7 @@ namespace OCC.API.Controllers
 
         private async Task NotifySiteManagerAssignmentAsync(Project project, Guid? siteManagerId)
         {
+            NotificationsController.LogPush($"[NOTIFY] Start for Project {project.Name} to SM {siteManagerId}");
             if (!siteManagerId.HasValue) return;
 
             try
@@ -649,6 +652,7 @@ namespace OCC.API.Controllers
                 if (employee != null)
                 {
                     Guid? targetUserId = employee.LinkedUserId;
+                    NotificationsController.LogPush($"[NOTIFY] Employee {employee.DisplayName} found. LinkedUserId: {targetUserId}");
                     
                     // Fallback: If not explicitly linked, try to find a user by email
                     if (!targetUserId.HasValue && !string.IsNullOrEmpty(employee.Email))
@@ -661,11 +665,13 @@ namespace OCC.API.Controllers
                             employee.LinkedUserId = user.Id;
                             await _context.SaveChangesAsync();
                             _logger.LogInformation("Auto-linked Employee {Emp} to User {User} via Email during notification", employee.DisplayName, user.Id);
+                            NotificationsController.LogPush($"[NOTIFY] Auto-linked via email: {user.Email} -> {user.Id}");
                         }
                     }
 
                     if (targetUserId.HasValue)
                     {
+                        NotificationsController.LogPush($"[NOTIFY] Triggering Push to User {targetUserId.Value}");
                         await _notificationService.SendPushNotificationAsync(
                             targetUserId.Value,
                             "New Project Assigned",
@@ -676,12 +682,18 @@ namespace OCC.API.Controllers
                     }
                     else
                     {
+                        NotificationsController.LogPush($"[NOTIFY] ABORTED: No linked User account for {employee.DisplayName}");
                         _logger.LogWarning("Skipped push notification for Site Manager {Name}: No linked User account found.", employee.DisplayName);
                     }
+                }
+                else
+                {
+                    NotificationsController.LogPush($"[NOTIFY] ABORTED: Employee {siteManagerId} not found in DB.");
                 }
             }
             catch (Exception ex)
             {
+                NotificationsController.LogPush($"[NOTIFY] ERROR: {ex.Message}");
                 _logger.LogError(ex, "Failed to send push notification for project assignment to Site Manager {Id}", siteManagerId);
             }
         }
