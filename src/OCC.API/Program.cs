@@ -133,13 +133,15 @@ try
 
     if (File.Exists(finalKeyPath))
     {
+        // Read text and strip BOM (Byte Order Mark) which crashes the Google parser
+        var json = File.ReadAllText(finalKeyPath);
+        if (json.StartsWith("\uFEFF")) json = json.Substring(1);
+        
         FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
         {
-            Credential = Google.Apis.Auth.OAuth2.CredentialFactory
-                .FromFile<Google.Apis.Auth.OAuth2.ServiceAccountCredential>(finalKeyPath)
-                .ToGoogleCredential()
+            Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(json)
         });
-        Console.WriteLine($"[STARTUP] Firebase initialized successfully using key at: {finalKeyPath}");
+        Console.WriteLine($"[STARTUP] Firebase initialized successfully (BOM Stripped) using key at: {finalKeyPath}");
     }
     else
     {
