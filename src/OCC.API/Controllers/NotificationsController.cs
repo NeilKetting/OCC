@@ -284,6 +284,29 @@ namespace OCC.API.Controllers
                 return $"Error reading: {ex.Message}";
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("repair-key")]
+        public IActionResult RepairKey([FromBody] string cleanJson)
+        {
+            try
+            {
+                var path = @"C:\OCC-Source\Keys\service-account.json";
+                var dir = System.IO.Path.GetDirectoryName(path);
+                if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir!);
+                
+                // Write with NO BOM
+                var utf8NoBom = new System.Text.UTF8Encoding(false);
+                System.IO.File.WriteAllText(path, cleanJson.Trim(), utf8NoBom);
+                
+                return Ok("Key file repaired successfully. Please restart the API or run update_main.bat to reload.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Repair failed: {ex.Message}");
+            }
+        }
+
         [AllowAnonymous]
         [HttpGet("debug-status/{email}")]
         public async Task<IActionResult> GetDebugStatus(string email, [FromQuery] string? env = null)
