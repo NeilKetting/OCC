@@ -61,14 +61,51 @@ namespace OCC.Shared.Models
         public DateTime StartDate 
         { 
             get => _startDate; 
-            set { if (_startDate != value) { _startDate = value; OnPropertyChanged(); } } 
+            set 
+            { 
+                if (_startDate != value) 
+                { 
+                    _startDate = value; 
+                    UpdateDurationFromDates();
+                    OnPropertyChanged(); 
+                } 
+            } 
         }
 
         private DateTime _finishDate;
         public DateTime FinishDate 
         { 
             get => _finishDate; 
-            set { if (_finishDate != value) { _finishDate = value; OnPropertyChanged(); } } 
+            set 
+            { 
+                if (_finishDate != value) 
+                { 
+                    _finishDate = value; 
+                    UpdateDurationFromDates();
+                    OnPropertyChanged(); 
+                } 
+            } 
+        }
+
+        private void UpdateDurationFromDates()
+        {
+            if (FinishDate >= StartDate && StartDate != DateTime.MinValue && FinishDate != DateTime.MinValue)
+            {
+                var time = FinishDate - StartDate;
+                
+                if (time.TotalDays >= 1)
+                {
+                    Duration = $"{time.TotalDays:0.##} days";
+                }
+                else if (time.TotalHours > 0)
+                {
+                    Duration = $"{time.TotalHours:0.##} hours";
+                }
+                else
+                {
+                    Duration = "0 days";
+                }
+            }
         }
         
         private string _duration = string.Empty;

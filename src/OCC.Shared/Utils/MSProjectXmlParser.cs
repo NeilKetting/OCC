@@ -169,7 +169,6 @@ namespace OCC.Shared.Utils
                         Name = name,
                         StartDate = start,
                         FinishDate = finish,
-                        Duration = durationDisplay,
                         PercentComplete = percent,
                         Priority = FormatPriority(priorityStr),
                         OrderIndex = count // Maintain original sequence from XML

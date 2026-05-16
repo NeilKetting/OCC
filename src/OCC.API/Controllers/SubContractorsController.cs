@@ -93,6 +93,8 @@ namespace OCC.API.Controllers
             {
                 if (subContractor.Id == Guid.Empty) subContractor.Id = Guid.NewGuid();
 
+                _logger.LogInformation("Creating SubContractor {Name} with ColorTheme: {ColorTheme}", subContractor.Name, subContractor.ColorTheme);
+
                 _context.SubContractors.Add(subContractor);
                 await _context.SaveChangesAsync();
                 
@@ -115,7 +117,11 @@ namespace OCC.API.Controllers
 
             try
             {
+                _logger.LogInformation("Updating SubContractor {Id} with ColorTheme: {ColorTheme}", id, subContractor.ColorTheme);
+
                 _context.Update(subContractor);
+                _context.Entry(subContractor).Property(x => x.ColorTheme).IsModified = true;
+                
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "SubContractor", "Update", id);
             }
