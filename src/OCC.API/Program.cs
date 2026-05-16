@@ -126,7 +126,7 @@ builder.Services.AddOpenApi();
 try
 {
     // Look for key in secure server folder first, then fallback to local app directory
-    var serverKeyPath = @"C:\OCC-Keys\service-account.json";
+    var serverKeyPath = @"C:\OCC-Source\Keys\service-account.json";
     var localKeyPath = Path.Combine(AppContext.BaseDirectory, "service-account.json");
     
     var finalKeyPath = File.Exists(serverKeyPath) ? serverKeyPath : localKeyPath;
