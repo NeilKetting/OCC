@@ -11,6 +11,7 @@ namespace OCC.API.Controllers
     [Authorize]
     public class NotificationsController : ControllerBase
     {
+        private static readonly List<string> _registrationLogs = new();
         private readonly AppDbContext _context;
         private readonly ILogger<NotificationsController> _logger;
         private readonly Services.INotificationService _notificationService;
@@ -217,12 +218,15 @@ namespace OCC.API.Controllers
         [HttpPost("register-device")]
         public async Task<IActionResult> RegisterDevice([FromBody] DeviceRegistrationRequest request)
         {
-            _logger.LogInformation("[Push] Device registration request received. Token: {Token}, Platform: {Platform}", request?.Token, request?.Platform);
+            var logEntry = $"[{DateTime.UtcNow:HH:mm:ss}] Attempt from {request?.Platform ?? "Unknown"}: Token={(request?.Token != null ? request.Token.Substring(0, Math.Min(10, request.Token.Length)) + "..." : "NULL")}";
+            
+            _logger.LogInformation("[Push] {LogEntry}", logEntry);
             try
             {
                 var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!Guid.TryParse(userIdString, out var userId))
                 {
+                    lock(_registrationLogs) { _registrationLogs.Insert(0, logEntry + " - FAILED: Unauthorized (No Claim)"); if(_registrationLogs.Count > 20) _registrationLogs.RemoveAt(20); }
                     return Unauthorized("User ID not found in claims.");
                 }
 
@@ -233,10 +237,12 @@ namespace OCC.API.Controllers
 
                 await _notificationService.RegisterDeviceAsync(userId, request.Token, request.Platform, request.DeviceName);
 
+                lock(_registrationLogs) { _registrationLogs.Insert(0, logEntry + $" - SUCCESS for User ID: {userId}"); if(_registrationLogs.Count > 20) _registrationLogs.RemoveAt(20); }
                 return Ok(new { message = "Device registered successfully." });
             }
             catch (Exception ex)
             {
+                lock(_registrationLogs) { _registrationLogs.Insert(0, logEntry + $" - ERROR: {ex.Message}"); if(_registrationLogs.Count > 20) _registrationLogs.RemoveAt(20); }
                 _logger.LogError(ex, "Error registering device");
                 return StatusCode(500, "Internal server error");
             }
@@ -254,7 +260,7 @@ namespace OCC.API.Controllers
                 if (email.ToLower() == "list")
                 {
                     var allUsers = await _context.Users.Select(u => new { u.Email, u.DisplayName, u.Id }).ToListAsync();
-                    return Ok(new { Database = dbName, UserCount = allUsers.Count, Users = allUsers });
+                    return Ok(new { Database = dbName, RegistrationLogs = _registrationLogs, UserCount = allUsers.Count, Users = allUsers });
                 }
 
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() || u.Id.ToString() == email);
