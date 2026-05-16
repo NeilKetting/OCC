@@ -20,6 +20,7 @@ namespace OCC.Mobile
     {
         public IServiceProvider? Services { get; private set; }
         public static Action<IServiceCollection>? RegisterPlatformServices { get; set; }
+        public static string AppVersion { get; set; } = "1.0.0";
 
         public override void Initialize()
         {

@@ -13,7 +13,7 @@ namespace OCC.Mobile.Services
         private const string RepoOwner = "NeilKetting";
         private const string RepoName = "OCC.Mobile";
 
-        public string CurrentVersion => System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+        public string CurrentVersion => App.AppVersion;
 
         public GitHubUpdateService(HttpClient httpClient, ILogger<GitHubUpdateService> logger)
         {
@@ -21,7 +21,8 @@ namespace OCC.Mobile.Services
             _logger = logger;
             
             // GitHub API requires a User-Agent
-            _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("OCC.Mobile", "1.0.0"));
+            // Use a more standard User-Agent that GitHub definitely accepts
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:100.0) Gecko/100.0 Firefox/100.0");
         }
 
         public async Task<UpdateCheckResult> CheckForUpdatesAsync()
@@ -77,7 +78,7 @@ namespace OCC.Mobile.Services
             if (string.IsNullOrEmpty(update.DownloadUrl))
                 throw new ArgumentException("Download URL is empty.");
 
-            var destinationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "update.apk");
+            var destinationPath = Path.Combine(Path.GetTempPath(), "update.apk");
 
             using var response = await _httpClient.GetAsync(update.DownloadUrl, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();

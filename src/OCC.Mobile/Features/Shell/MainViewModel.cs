@@ -29,6 +29,12 @@ namespace OCC.Mobile.Features.Shell
         [ObservableProperty]
         private double _downloadProgress;
 
+        [ObservableProperty]
+        private string _downloadStatus = "Downloading Update...";
+
+        [ObservableProperty]
+        private string _downloadSpeed = string.Empty;
+        
         private UpdateCheckResult? _pendingUpdate;
  
         private readonly INavigationService _navigationService;
@@ -58,26 +64,34 @@ namespace OCC.Mobile.Features.Shell
             // Listen for manual update checks
             WeakReferenceMessenger.Default.Register<UpdateCheckMessage>(this, (r, m) => 
             {
-                ((MainViewModel)r).CheckForUpdatesAsync().FireAndForget();
+                ((MainViewModel)r).CheckForUpdatesAsync(true).FireAndForget();
             });
 
             // Check for updates automatically
             CheckForUpdatesAsync().FireAndForget();
         }
 
-        private async Task CheckForUpdatesAsync()
+        private async Task CheckForUpdatesAsync(bool isManual = false)
         {
             if (_updateService == null || _appInstaller == null) return;
-
+            
+            // Give the network a few seconds to initialize
+            await Task.Delay(3000);
+            
             try
             {
                 var result = await _updateService.CheckForUpdatesAsync();
+                
                 if (result.IsUpdateAvailable)
                 {
                     _pendingUpdate = result;
                     UpdateVersion = result.LatestVersion;
                     UpdateReleaseNotes = result.ReleaseNotes;
                     IsUpdateAvailable = true;
+                }
+                else if (isManual)
+                {
+                    await _appInstaller!.ShowToastAsync("You are up to date!");
                 }
             }
             catch (Exception ex)
@@ -93,9 +107,11 @@ namespace OCC.Mobile.Features.Shell
 
             try
             {
-                IsUpdateAvailable = false; // Hide the prompt
+                IsUpdateAvailable = false;
                 IsDownloadingUpdate = true;
                 DownloadProgress = 0;
+                DownloadStatus = "Downloading Update...";
+                DownloadSpeed = "";
 
                 var localPath = await _updateService.DownloadUpdateAsync(_pendingUpdate, p => 
                 {
@@ -104,11 +120,24 @@ namespace OCC.Mobile.Features.Shell
 
                 if (!string.IsNullOrEmpty(localPath))
                 {
+                    DownloadStatus = "Launching Installer...";
+                    DownloadProgress = 1.0;
+                    
+                    // Small delay to ensure UI updates before we lose focus
+                    await Task.Delay(1000);
+                    
                     await _appInstaller.InstallPackageAsync(localPath);
+                }
+                else
+                {
+                    DownloadStatus = "Download failed: Empty path";
+                    await Task.Delay(3000);
                 }
             }
             catch (Exception ex)
             {
+                DownloadStatus = $"Error: {ex.Message}";
+                await Task.Delay(5000);
                 System.Diagnostics.Debug.WriteLine($"Update failed: {ex.Message}");
             }
             finally
@@ -117,11 +146,7 @@ namespace OCC.Mobile.Features.Shell
             }
         }
 
-        [CommunityToolkit.Mvvm.Input.RelayCommand]
-        private void DismissUpdate()
-        {
-            IsUpdateAvailable = false;
-        }
+ 
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         private void NavigateToDashboard() => _navigationService.NavigateTo<Dashboard.DashboardViewModel>();

@@ -85,13 +85,13 @@
                           Data="M12,18H14V20H12V18M12,4A2,2 0 0,1 14,6V12A2,2 0 0,1 12,14A2,2 0 0,1 10,12V6A2,2 0 0,1 12,4M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
                           HorizontalAlignment="Center" Stretch="Uniform" Width="48" Height="48"/>
                     
-                    <TextBlock Text="New Version Available" 
+                    <TextBlock Text="Mandatory Update" 
                                FontSize="20" 
                                FontWeight="Bold" 
                                Foreground="White"
                                HorizontalAlignment="Center"/>
                     
-                    <TextBlock Text="{Binding UpdateVersion, StringFormat='{}Version {0} is ready to install.'}" 
+                    <TextBlock Text="{Binding UpdateVersion, StringFormat='{}Version {0} is required to continue.'}" 
                                Foreground="#CBD5E1"
                                HorizontalAlignment="Center"/>
 
@@ -102,26 +102,15 @@
                                MaxHeight="100"
                                Margin="0,10"/>
 
-                    <Grid ColumnDefinitions="*, *">
-                        <Button Grid.Column="0" 
-                                Content="Later" 
-                                Command="{Binding DismissUpdateCommand}"
-                                Background="Transparent"
-                                BorderBrush="#334155"
-                                BorderThickness="1"
-                                HorizontalAlignment="Stretch"
-                                Margin="0,0,8,0"
-                                Padding="12"/>
-                        
-                        <Button Grid.Column="1" 
-                                Content="Update Now" 
-                                Command="{Binding StartUpdateCommand}"
-                                Background="{DynamicResource BrandPrimaryBrush}"
-                                Foreground="White"
-                                HorizontalAlignment="Stretch"
-                                Margin="8,0,0,0"
-                                Padding="12"/>
-                    </Grid>
+                    <Button Content="Update Now" 
+                            Command="{Binding StartUpdateCommand}"
+                            Background="{DynamicResource BrandPrimaryBrush}"
+                            Foreground="White"
+                            HorizontalAlignment="Stretch"
+                            Height="50"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Padding="12"/>
                 </StackPanel>
             </Border>
         </Border>
@@ -132,7 +121,7 @@
                 Background="#CC000000"
                 ZIndex="300">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24" Width="280">
-                <TextBlock Text="Downloading Update..." 
+                <TextBlock Text="{Binding DownloadStatus}" 
                            Foreground="White" 
                            FontSize="18"
                            FontWeight="SemiBold"
@@ -146,9 +135,14 @@
                                  Background="#334155"/>
                 </Grid>
 
-                <TextBlock Text="{Binding DownloadProgress, StringFormat='{}{0:P0}'}" 
-                           Foreground="#94A3B8"
-                           HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                    <TextBlock Text="{Binding DownloadProgress, StringFormat='{}{0:P0}'}" 
+                               Foreground="#94A3B8"/>
+                    <TextBlock Text="{Binding DownloadSpeed}" 
+                               Foreground="#64748B"
+                               FontSize="12"
+                               VerticalAlignment="Bottom"/>
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>

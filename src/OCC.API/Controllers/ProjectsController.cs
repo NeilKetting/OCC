@@ -263,6 +263,12 @@ namespace OCC.API.Controllers
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Create", project.Id);
 
+                // Notify Site Manager if assigned during creation
+                if (project.SiteManagerId.HasValue)
+                {
+                    await NotifySiteManagerAssignmentAsync(project, project.SiteManagerId);
+                }
+
                 return CreatedAtAction("GetProject", new { id = project.Id }, project);
             }
             catch (Exception ex)
@@ -278,12 +284,23 @@ namespace OCC.API.Controllers
         public async Task<IActionResult> PutProject(Guid id, Project project)
         {
             if (id != project.Id) return BadRequest();
+
+            // Track if Site Manager has changed to send notification
+            var existingProject = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+            bool siteManagerChanged = existingProject != null && existingProject.SiteManagerId != project.SiteManagerId;
+
             _context.Entry(project).State = EntityState.Modified;
 
             try
             {
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+
+                // Notify if Site Manager was changed during this edit
+                if (siteManagerChanged && project.SiteManagerId.HasValue)
+                {
+                    await NotifySiteManagerAssignmentAsync(project, project.SiteManagerId);
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -469,26 +486,11 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
 
-                // --- NEW: SEND PUSH NOTIFICATION ---
+                // Notify Site Manager if assigned/updated
                 if (update.SiteManagerId.HasValue)
                 {
-                    try
-                    {
-                        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == update.SiteManagerId.Value);
-                        if (employee != null && employee.LinkedUserId.HasValue)
-                        {
-                            await _notificationService.SendPushNotificationAsync(
-                                employee.LinkedUserId.Value,
-                                "New Project Assigned",
-                                $"You have been assigned as the Site Manager for: {project.Name}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to send push notification for project assignment");
-                    }
+                    await NotifySiteManagerAssignmentAsync(project, update.SiteManagerId);
                 }
-                // ------------------------------------
 
                 return NoContent();
             }
@@ -637,6 +639,30 @@ namespace OCC.API.Controllers
         }
 
         private bool ProjectExists(Guid id) => _context.Projects.Any(e => e.Id == id);
+
+        private async Task NotifySiteManagerAssignmentAsync(Project project, Guid? siteManagerId)
+        {
+            if (!siteManagerId.HasValue) return;
+
+            try
+            {
+                var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == siteManagerId.Value);
+                if (employee != null && employee.LinkedUserId.HasValue)
+                {
+                    await _notificationService.SendPushNotificationAsync(
+                        employee.LinkedUserId.Value,
+                        "New Project Assigned",
+                        $"You have been assigned as the Site Manager for: {project.Name}");
+                    
+                    _logger.LogInformation("Sent assignment push notification to Site Manager {Name} (User {UserId}) for project {Project}", 
+                        employee.DisplayName, employee.LinkedUserId.Value, project.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send push notification for project assignment to Site Manager {Id}", siteManagerId);
+            }
+        }
 
         [HttpPost("sync-assignments")]
         [Authorize]

@@ -14,26 +14,25 @@ using Microsoft.Extensions.DependencyInjection;
 namespace OCC.Mobile.Android
 {
     [Activity(
-        Label = "OCC Mobile",
+        Label = "OCC Field Hub",
         Theme = "@style/MyTheme.NoActionBar",
         Icon = "@drawable/icon",
         MainLauncher = true,
         ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode,
-        WindowSoftInputMode = SoftInput.AdjustResize)]
+        WindowSoftInputMode = SoftInput.AdjustResize,
+        Exported = true)]
     public class MainActivity : AvaloniaMainActivity
     {
+        public static MainActivity? Instance { get; private set; }
+
         protected override void OnCreate(Bundle? savedInstanceState)
         {
+            Instance = this;
             try
             {
                 base.OnCreate(savedInstanceState);
                 
-                // Register Android-specific services before the app initializes
-                OCC.Mobile.App.RegisterPlatformServices = services =>
-                {
-                    services.AddSingleton<IAppInstaller, AndroidAppInstaller>();
-                };
-                
+#pragma warning disable CA1416
                 if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
                 {
                     if (CheckSelfPermission(global::Android.Manifest.Permission.PostNotifications) != Permission.Granted)
@@ -41,6 +40,7 @@ namespace OCC.Mobile.Android
                         RequestPermissions(new[] { global::Android.Manifest.Permission.PostNotifications }, 0);
                     }
                 }
+#pragma warning restore CA1416
             }
             catch (Exception ex)
             {
@@ -54,9 +54,30 @@ namespace OCC.Mobile.Android
     [global::Android.App.ApplicationAttribute]
     public class AndroidApp : AvaloniaAndroidApplication<OCC.Mobile.App>
     {
+        static AndroidApp()
+        {
+            // Register Android-specific services the VERY moment the app process starts
+            OCC.Mobile.App.RegisterPlatformServices = services =>
+            {
+                services.AddSingleton<IAppInstaller, AndroidAppInstaller>();
+            };
+        }
+
         public AndroidApp(IntPtr handle, global::Android.Runtime.JniHandleOwnership transfer)
             : base(handle, transfer)
         {
+        }
+
+        public override void OnCreate()
+        {
+            base.OnCreate();
+            
+            // Get the actual version from the Android Package Manager
+            var packageInfo = PackageManager?.GetPackageInfo(PackageName ?? "", 0);
+            var version = packageInfo?.VersionName ?? "1.0.0";
+            
+            // Set the static app version
+            OCC.Mobile.App.AppVersion = version;
         }
     }
 }

@@ -240,6 +240,41 @@ namespace OCC.API.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("debug-status/{email}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetDebugStatus(string email)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email || u.Id.ToString() == email);
+                if (user == null) return NotFound(new { message = $"User {email} not found." });
+
+                var employee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
+                var devices = await _context.UserDevices.Where(d => d.UserId == user.Id).ToListAsync();
+
+                return Ok(new
+                {
+                    UserId = user.Id,
+                    Email = user.Email,
+                    DisplayName = user.DisplayName,
+                    IsEmployeeLinked = employee != null,
+                    EmployeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : "NOT LINKED",
+                    DeviceCount = devices.Count,
+                    Devices = devices.Select(d => new { 
+                        d.Platform, 
+                        d.DeviceName, 
+                        LastSeen = d.LastSeenUtc,
+                        TokenPreview = !string.IsNullOrEmpty(d.DeviceToken) ? d.DeviceToken.Substring(0, Math.Min(10, d.DeviceToken.Length)) + "..." : "EMPTY"
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking debug status for {Email}", email);
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 
     public class DeviceRegistrationRequest

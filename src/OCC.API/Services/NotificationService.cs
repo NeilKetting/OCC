@@ -55,8 +55,13 @@ namespace OCC.API.Services
                 .Where(d => d.UserId == userId)
                 .ToListAsync();
 
-            if (!devices.Any()) return;
+            if (!devices.Any())
+            {
+                Console.WriteLine($"[PUSH SKIPPED] User {userId} has no registered devices.");
+                return;
+            }
 
+            Console.WriteLine($"[PUSH STARTING] Sending to {devices.Count} devices for User {userId}");
             foreach (var device in devices)
             {
                 // --- FINAL STEP: FIREBASE INTEGRATION ---
