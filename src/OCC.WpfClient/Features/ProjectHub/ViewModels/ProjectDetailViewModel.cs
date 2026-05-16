@@ -92,7 +92,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 UpdateHeaderInfo();
                 var tasks = await _projectService.GetProjectTasksAsync(projectId);
                 _dashboardVM.UpdateProjectData(Project, tasks);
-                _tasksVM.UpdateTasks(ProjectId, tasks);
+                await _tasksVM.UpdateTasksAsync(ProjectId, tasks);
                 _ganttVM.UpdateTasks(ProjectId, tasks.ToList());
                 _ = _historyVM.LoadHistoryAsync(ProjectId);
                 UpdateStatus("Ready");

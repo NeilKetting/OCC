@@ -154,22 +154,29 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
-        public void UpdateTasks(Guid projectId, IEnumerable<ProjectTask> tasks)
+        public async Task UpdateTasksAsync(Guid projectId, IEnumerable<ProjectTask> tasks)
         {
             ProjectId = projectId;
             var taskList = tasks.ToList();
 
-            // Refresh color map for badges
-            _ = Task.Run(async () => {
+            // Refresh color map for badges - Ensure this completes BEFORE we refresh the display list
+            try
+            {
                 var contractors = await _subContractorService.GetSubContractorsAsync();
-                foreach(var sc in contractors) {
+                foreach (var sc in contractors)
+                {
                     if (!string.IsNullOrEmpty(sc.ColorTheme))
                         SubContractorColorMap[sc.Name] = sc.ColorTheme;
                 }
-                // Add internals
-                SubContractorColorMap["Orange Circle Construction JHB"] = "#2E9DFF";
-                SubContractorColorMap["Orange Circle Construction CPT"] = "#2E9DFF";
-            });
+                
+                // Add/Force internals to Orange as requested
+                SubContractorColorMap["Orange Circle Construction JHB"] = "#FF9800";
+                SubContractorColorMap["Orange Circle Construction CPT"] = "#FF9800";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error fetching subcontractor colors: {ex.Message}");
+            }
 
             CalculateSmartStats(taskList);
 

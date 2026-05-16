@@ -248,7 +248,7 @@ namespace OCC.API.Controllers
             try
             {
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email || u.Id.ToString() == email);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() || u.Id.ToString() == email);
                 if (user == null) return NotFound(new { message = $"User {email} not found." });
 
                 var employee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
