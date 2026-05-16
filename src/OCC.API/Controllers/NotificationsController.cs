@@ -268,8 +268,12 @@ namespace OCC.API.Controllers
             {
                 var info = new System.IO.FileInfo(path);
                 var content = System.IO.File.ReadAllText(path);
+                var rawBytes = System.IO.File.ReadAllBytes(path);
+                var firstBytes = string.Join(",", rawBytes.Take(Math.Min(10, rawBytes.Length)));
+
                 return new {
                     Size = info.Length,
+                    FirstBytes = firstBytes,
                     Starts = content.Substring(0, Math.Min(20, content.Length)),
                     Ends = content.Substring(Math.Max(0, content.Length - 10)),
                     HasBOM = content.StartsWith("\uFEFF") || content.StartsWith("ï»¿")
