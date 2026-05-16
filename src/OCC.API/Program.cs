@@ -123,7 +123,9 @@ builder.Services.AddHostedService<OCC.API.Services.SignalRHeartbeatService>();
 builder.Services.AddOpenApi();
 
     // NUCLEAR OPTION: Hardcode the key temporarily to bypass the file system entirely
-    var json = @"
+    try
+    {
+        var json = @"
 {
   ""type"": ""service_account"",
   ""project_id"": ""occ-erp"",
@@ -139,12 +141,12 @@ builder.Services.AddOpenApi();
 }
 ";
 
-    FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
-    {
-        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(json.Trim())
-    });
-    Console.WriteLine("[STARTUP] Firebase initialized successfully using HARDCODED key.");
-}
+        FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+        {
+            Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(json.Trim())
+        });
+        Console.WriteLine("[STARTUP] Firebase initialized successfully using HARDCODED key.");
+    }
 catch (Exception ex)
 {
     OCC.API.Controllers.NotificationsController.FirebaseInitError = ex.Message;
