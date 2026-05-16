@@ -259,7 +259,27 @@ namespace OCC.API.Controllers
             }
         }
 
-        [AllowAnonymous]
+        private object GetKeyDetails()
+        {
+            var path = @"C:\OCC-Source\Keys\service-account.json";
+            if (!System.IO.File.Exists(path)) return "File Not Found";
+
+            try
+            {
+                var info = new System.IO.FileInfo(path);
+                var content = System.IO.File.ReadAllText(path);
+                return new {
+                    Size = info.Length,
+                    Starts = content.Substring(0, Math.Min(20, content.Length)),
+                    Ends = content.Substring(Math.Max(0, content.Length - 10)),
+                    HasBOM = content.StartsWith("\uFEFF") || content.StartsWith("ï»¿")
+                };
+            }
+            catch (Exception ex)
+            {
+                return $"Error reading: {ex.Message}";
+            }
+        }
         [HttpGet("debug-status/{email}")]
         public async Task<IActionResult> GetDebugStatus(string email, [FromQuery] string? env = null)
         {
@@ -302,6 +322,7 @@ namespace OCC.API.Controllers
                     FirebaseInitError = FirebaseInitError,
                     ServiceAccountLocal = System.IO.File.Exists(System.IO.Path.Combine(AppContext.BaseDirectory, "service-account.json")),
                     ServiceAccountSecure = System.IO.File.Exists(@"C:\OCC-Source\Keys\service-account.json"),
+                    KeyDetails = GetKeyDetails(),
                     RegistrationLogs = _registrationLogs,
                     PushLogs = _pushLogs,
                     UserId = user.Id,
