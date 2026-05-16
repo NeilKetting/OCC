@@ -287,10 +287,15 @@ namespace OCC.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("repair-key")]
-        public IActionResult RepairKey([FromBody] string cleanJson)
+        public async Task<IActionResult> RepairKey()
         {
             try
             {
+                using var reader = new System.IO.StreamReader(Request.Body);
+                var cleanJson = await reader.ReadToEndAsync();
+
+                if (string.IsNullOrWhiteSpace(cleanJson)) return BadRequest("Empty body received.");
+
                 var path = @"C:\OCC-Source\Keys\service-account.json";
                 var dir = System.IO.Path.GetDirectoryName(path);
                 if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir!);
