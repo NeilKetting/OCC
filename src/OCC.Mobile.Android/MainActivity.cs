@@ -9,7 +9,12 @@ using Avalonia.Android;
 using OCC.Mobile;
 using OCC.Mobile.Android.Services;
 using OCC.Mobile.Services;
+using OCC.Mobile.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Firebase.Messaging;
+using Android.Gms.Tasks;
+using OCC.Mobile.Features.Notifications;
+
 
 namespace OCC.Mobile.Android
 {
@@ -41,12 +46,39 @@ namespace OCC.Mobile.Android
                     }
                 }
 #pragma warning restore CA1416
+                
+                // Fetch and register FCM token on startup
+                try
+                {
+                    FirebaseMessaging.Instance.GetToken().AddOnCompleteListener(new TokenCompleteListener());
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Firebase] Error fetching token: {ex.Message}");
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"CRITICAL STARTUP ERROR: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine(ex.StackTrace);
                 throw;
+            }
+        }
+
+        private class TokenCompleteListener : Java.Lang.Object, IOnCompleteListener
+        {
+            public void OnComplete(Task task)
+            {
+                if (task.IsSuccessful)
+                {
+                    var token = task.Result.ToString();
+                    var pushService = App.Services?.GetService<IPushNotificationService>();
+                    if (pushService != null)
+                    {
+                        pushService.UpdateToken(token);
+                    }
+                    System.Diagnostics.Debug.WriteLine($"[Firebase] Initial Token: {token}");
+                }
             }
         }
     }

@@ -14,7 +14,7 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         Background="Transparent"
-        Icon="/Assets/Images/occ_logo_transparent.png"
+        Icon="/Assets/Images/occ-icon-256x256.png"
         AllowsTransparency="False"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="Auto"

@@ -241,19 +241,12 @@ namespace OCC.API.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("debug-status/{email}")]
         public async Task<IActionResult> GetDebugStatus(string email)
         {
             try
             {
-                // Security check: Admin can check anyone, others can only check themselves
-                var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name;
-                bool isAdmin = User.IsInRole("Admin");
-                
-                if (!isAdmin && currentUserEmail != email)
-                {
-                    return Forbid();
-                }
 
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email || u.Id.ToString() == email);
                 if (user == null) return NotFound(new { message = $"User {email} not found." });

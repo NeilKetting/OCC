@@ -25,6 +25,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ITaskAssignmentService _assignmentService;
         private readonly IDialogService _dialogService;
         private readonly LocalSettingsService _settingsService;
+        
+        /// <summary> Global map of subcontractor names to their assigned hex colors for UI badges. </summary>
+        public static Dictionary<string, string> SubContractorColorMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+
 
         // Column Visibility
         [ObservableProperty] private bool _isStartVisible = true;
@@ -154,6 +158,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             ProjectId = projectId;
             var taskList = tasks.ToList();
+
+            // Refresh color map for badges
+            _ = Task.Run(async () => {
+                var contractors = await _subContractorService.GetSubContractorsAsync();
+                foreach(var sc in contractors) {
+                    if (!string.IsNullOrEmpty(sc.ColorTheme))
+                        SubContractorColorMap[sc.Name] = sc.ColorTheme;
+                }
+                // Add internals
+                SubContractorColorMap["Orange Circle Construction JHB"] = "#2E9DFF";
+                SubContractorColorMap["Orange Circle Construction CPT"] = "#2E9DFF";
+            });
 
             CalculateSmartStats(taskList);
 

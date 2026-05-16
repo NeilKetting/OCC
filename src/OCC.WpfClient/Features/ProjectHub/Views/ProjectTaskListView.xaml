@@ -20,6 +20,9 @@
             <conv:VisibilityConverter x:Key="VisibilityConverter" />
             <conv:LevelToIndentConverter x:Key="LevelToIndentConverter" IndentStep="30" />
             <conv:RotationConverter x:Key="RotationConverter" />
+            <conv:StringToBadgeListConverter x:Key="StringToBadgeListConverter" />
+            <conv:UserInitialsConverter x:Key="UserInitialsConverter" />
+            <conv:UserColorConverter x:Key="UserColorConverter" />
 
             <Style x:Key="ExpanderButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent"/>
@@ -446,25 +449,30 @@
                                                 Style="{StaticResource ModernMenuButton}"
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Left"
+                                                Padding="4,6"
                                                 Foreground="White"
                                                 Background="Transparent">
-                                            <TextBlock Text="{Binding AssignedTo}" TextTrimming="CharacterEllipsis">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="White"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding AssignedTo}" Value="">
-                                                                <Setter Property="Text" Value="Unassigned"/>
-                                                                <Setter Property="Opacity" Value="0.5"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding AssignedTo}" Value="{x:Null}">
-                                                                <Setter Property="Text" Value="Unassigned"/>
-                                                                <Setter Property="Opacity" Value="0.5"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                            <ItemsControl ItemsSource="{Binding AssignedTo, Converter={StaticResource StringToBadgeListConverter}}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Width="26" Height="26" Margin="0,0,-10,0" ToolTip="{Binding Name}">
+                                                            <Ellipse Stroke="{StaticResource BackgroundDark}" StrokeThickness="1.5" Fill="{Binding BackgroundColor}">
+                                                                <Ellipse.Effect>
+                                                                    <DropShadowEffect BlurRadius="4" Opacity="0.4" ShadowDepth="1"/>
+                                                                </Ellipse.Effect>
+                                                            </Ellipse>
+                                                            <TextBlock Text="{Binding Initials}" 
+                                                                       Foreground="{Binding ForegroundColor}" FontSize="9" FontWeight="Bold" 
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -503,19 +511,19 @@
                                                     Command="{Binding Data.EditTaskCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
                                                     ToolTip="Edit Task">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12"/>
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource AccentBlue}"/>
                                             </Button>
                                             <Button Style="{StaticResource ListActionButtonStyle}" 
                                                     Command="{Binding Data.CreateSubtaskCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
                                                     ToolTip="Add Subtask">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12"/>
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource SuccessGreen}"/>
                                             </Button>
                                             <Button Style="{StaticResource ListActionButtonStyle}" 
                                                     Command="{Binding Data.ShowAssignToCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
                                                     ToolTip="Assign To">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12"/>
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource OrangeBrush}"/>
                                             </Button>
                                             <Button Style="{StaticResource ListActionButtonStyle}" 
                                                     Command="{Binding Data.DeleteTaskCommand, Source={StaticResource Proxy}}" 

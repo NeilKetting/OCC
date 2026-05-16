@@ -31,7 +31,7 @@ namespace OCC.Mobile.Android.Services
 
             ShowNotification(title, body);
 
-            var pushService = ((App)Avalonia.Application.Current!).Services?.GetService<IPushNotificationService>();
+            var pushService = App.Services?.GetService<IPushNotificationService>();
             pushService?.HandleNotification(title, body);
         }
 
@@ -40,7 +40,7 @@ namespace OCC.Mobile.Android.Services
             base.OnNewToken(token);
             System.Diagnostics.Debug.WriteLine($"New FCM Token: {token}");
             
-            var pushService = ((App)Avalonia.Application.Current!).Services?.GetService<IPushNotificationService>();
+            var pushService = App.Services?.GetService<IPushNotificationService>();
             pushService?.UpdateToken(token);
         }
 

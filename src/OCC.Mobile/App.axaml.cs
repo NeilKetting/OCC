@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Microsoft.Extensions.DependencyInjection;
 using OCC.Mobile.Features.AdminDashboard;
 using OCC.Mobile.Features.Dashboard;
@@ -18,7 +19,8 @@ namespace OCC.Mobile
 {
     public partial class App : Application
     {
-        public IServiceProvider? Services { get; private set; }
+        public static IServiceProvider? Services { get; private set; }
+
         public static Action<IServiceCollection>? RegisterPlatformServices { get; set; }
         public static string AppVersion { get; set; } = "1.0.0";
 
@@ -43,6 +45,7 @@ namespace OCC.Mobile
                     desktop.MainWindow = new Window
                     {
                         Title = "OCC Mobile (Tablet View)",
+                        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://OCC.Mobile/Assets/app_icon.png"))),
                         Width = 1280,
                         Height = 800,
                         WindowStartupLocation = WindowStartupLocation.CenterScreen,
