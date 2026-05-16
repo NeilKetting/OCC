@@ -133,15 +133,20 @@ try
 
     if (File.Exists(finalKeyPath))
     {
-        // Read text and strip BOM (Byte Order Mark) which crashes the Google parser
-        var json = File.ReadAllText(finalKeyPath);
-        if (json.StartsWith("\uFEFF")) json = json.Substring(1);
+        // Aggressive BOM strip: Read raw bytes and skip the first 3 if they match the UTF-8 BOM
+        var bytes = File.ReadAllBytes(finalKeyPath);
+        if (bytes.Length > 3 && bytes[0] == 239 && bytes[1] == 187 && bytes[2] == 191)
+        {
+            bytes = bytes.Skip(3).ToArray();
+        }
+        
+        var json = System.Text.Encoding.UTF8.GetString(bytes).Trim();
         
         FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
         {
             Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(json)
         });
-        Console.WriteLine($"[STARTUP] Firebase initialized successfully (BOM Stripped) using key at: {finalKeyPath}");
+        Console.WriteLine($"[STARTUP] Firebase initialized successfully (Byte-Level BOM Stripped) using key at: {finalKeyPath}");
     }
     else
     {
