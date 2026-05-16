@@ -8,15 +8,17 @@ namespace OCC.Mobile.Features.Notifications
     public class PushNotificationService : IPushNotificationService
     {
         private readonly Services.IAuthService _authService;
+        private readonly Services.ILocalSettingsService _settingsService;
         private readonly HttpClient _httpClient;
 
         public string? FCMToken { get; private set; }
         public event EventHandler<string>? TokenChanged;
         public event EventHandler<NotificationEventArgs>? NotificationReceived;
 
-        public PushNotificationService(Services.IAuthService authService)
+        public PushNotificationService(Services.IAuthService authService, Services.ILocalSettingsService settingsService)
         {
             _authService = authService;
+            _settingsService = settingsService;
             _httpClient = new HttpClient();
         }
 
@@ -63,6 +65,9 @@ namespace OCC.Mobile.Features.Notifications
                 {
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authService.CurrentToken);
                 }
+
+                _httpClient.DefaultRequestHeaders.Remove("X-Environment");
+                _httpClient.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
 
                 var platform = "Unknown";
 #if ANDROID
