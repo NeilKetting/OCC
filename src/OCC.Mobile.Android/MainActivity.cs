@@ -71,12 +71,24 @@ namespace OCC.Mobile.Android
                 if (task.IsSuccessful)
                 {
                     var token = task.Result.ToString();
-                    var pushService = App.Services?.GetService<IPushNotificationService>();
-                    if (pushService != null)
-                    {
-                        pushService.UpdateToken(token);
-                    }
                     System.Diagnostics.Debug.WriteLine($"[Firebase] Initial Token: {token}");
+
+                    // Wait for services to be ready
+                    System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        int retries = 0;
+                        while (App.Services == null && retries < 20)
+                        {
+                            await System.Threading.Tasks.Task.Delay(1000);
+                            retries++;
+                        }
+
+                        var pushService = App.Services?.GetService<IPushNotificationService>();
+                        if (pushService != null)
+                        {
+                            pushService.UpdateToken(token);
+                        }
+                    });
                 }
             }
         }

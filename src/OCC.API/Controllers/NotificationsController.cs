@@ -287,6 +287,7 @@ namespace OCC.API.Controllers
                 return Ok(new
                 {
                     Database = dbName,
+                    RegistrationLogs = _registrationLogs,
                     UserId = user.Id,
                     Email = user.Email,
                     DisplayName = user.DisplayName,
