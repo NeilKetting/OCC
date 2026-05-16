@@ -149,7 +149,7 @@ builder.Services.AddOpenApi();
     }
 catch (Exception ex)
 {
-    OCC.API.Controllers.NotificationsController.FirebaseInitError = ex.Message;
+    OCC.API.Controllers.NotificationsController.FirebaseInitError = $"{ex.Message} | {ex.StackTrace}";
     Console.WriteLine($"[CRITICAL] Failed to initialize Firebase: {ex.Message}");
 }
 
