@@ -122,30 +122,29 @@ builder.Services.AddHostedService<OCC.API.Services.SignalRHeartbeatService>();
 // OpenAPI (Built-in .NET 10)
 builder.Services.AddOpenApi();
 
-    // NUCLEAR OPTION: Hardcode the key temporarily to bypass the file system entirely
+    // FINAL ATTEMPT: Use FromStream with manual BOM skip for maximum robustness
     try
     {
-        var json = @"
-{
-  ""type"": ""service_account"",
-  ""project_id"": ""occ-erp"",
-  ""private_key_id"": ""c0b8a5ac02a8c3d292c6a06cc083c6086a4edf1e"",
-  ""private_key"": ""-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDLL6hPJF+CZkcF\nOoFYmPMQ+c/64N01CmsYaxClAF6PwlbULX7zB9KsBzizr7UjT+auul4uYk01CDZO\npw6G0saXkIsCp0nhC8yrc0D+w8p+wk8nU49pbqDZ8ulQHYTzzy0IhNp24S4OJbwf\n97/8gfyE/Cy2R7RBdyWzEzjQnxvsDiNrF9FzO3Y6bZGnNpzGzW21RXnzD62ALEyN\nNPmQPrcx7ZVmo0UZuevpfEgrCBG71cqdscAwyqP2q9I+ITxSxYhb/KDsVLWbxvEe\ngn18WVKXwZamT0KHLLjahruTbpiDWuD1SA+yiRsIhsQjxIQy+qlFbD5VUolDTuLK\nvyj52MoLAgMBAAECggEAECne5Eja9jcnsDFKx98G+xM8adNIlacaBOvDe7TPUPVf\nTeq+nhvBtSCv8I9qRABftAesZVk5lh3soA4nGC+dT8JWZKQlOuti4UK+aWXu7m2L\nuW+qyXLdBemOiOqIQJL7HKHg9TMNpF95GzvswGwgx/19mxSSMOEHFTtSujnmET2c\nX/maZo10MwFoLj9LCFk3XF7INL1kT50ONTRzxMjybKPg1c+MmVYNeq1JyA4lC5/c\nu1GyJ/WFyyROGkScLY4X+lcX7EX83St+b0K9ncVYviZJ6KFfsP0rKRnBU6GFZ8he\OdilzAlS8exFCtxrmjeiof2sw/GCh9XXK6GlUT1fPQKBgQDtUc7S0Cys2XPOaC4L\nVOTlfDv81KyRbyMmN7q9KqrokRmI4Um9IDURhYHvglCPBxFWNpvMFji8uWf0e1q0\nEJBtMW3kfX98PJDdNXFqUIdubImbHLXnr7aY7F4waYk94WB6MZ5OujIu21wkJlhV\nJ4PpZwzme5IilOr15KKalGYG5wKBgQDbLghIW56fUub+/1K/3Xs+EpUJW0uDVJvB\nooM/Z62gDKs4ghcMuyZ8UmkNPnxJfNGYzcnxXvZIVT9Jox41dl3JXQhA+CFNi65m\ndxCXA0++ClFkAjthQaEuVDL7S+6Va0N9wjiDuq82EJPtvRMWb/Er3Xk1QGNzKTqB\nqJ5jSgoTPQKBgHloC42Pj/tRN0xVwZBserjnyGx8hFfWaj3n7rFNfaeCa3S6BBYr\nvtpa2XEk0n+JFxZq02Mhzx7FHuhUnr9VZf1mdxiYFzsAZP+1knLYBaC5B+CBXJHN\nM3WiHkFYDCzK+qcocRtHZ9rOv6GCuFe/4lzqKhBTERx94IGw2HqKBnPrAoGAa1PT\nQnt65VHXQ68LemCeZPr8eCR4icr4qo1F79p5LxKFFZq+ZsGOSvqf7phWjDXO/SBo\nbwWtXCZCY3C47j0UF/Kyg/39cNehgxNy0EAS4GB1Ep/1K97TarhYbq30Gr73wbFF\ns1vLSJI9ngEkQ6x1UKGXJPhuuonJ2IwVY1FyNZECgYEArUENgy875hiUrSHs5Smc\nfuSvA9KaYHDXBJv2hPqjyygiIsL66+q2PVmvK5HhCA4p01aDTiFj4KUrItaDVduy\nAYcqfUY83QgQhJA07mvWZxvuUh+LLSq87xczP5zrEJOuwOOrlU1kGUOvhxcw6q7v\n84CN6ymQSc+ioQsKpS2X4ME=\n-----END PRIVATE KEY-----\n"",
-  ""client_email"": ""firebase-adminsdk-fbsvc@occ-erp.iam.gserviceaccount.com"",
-  ""client_id"": ""112180666520112396745"",
-  ""auth_uri"": ""https://accounts.google.com/o/oauth2/auth"",
-  ""token_uri"": ""https://oauth2.googleapis.com/token"",
-  ""auth_provider_x509_cert_url"": ""https://www.googleapis.com/oauth2/v1/certs"",
-  ""client_x509_cert_url"": ""https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40occ-erp.iam.gserviceaccount.com"",
-  ""universe_domain"": ""googleapis.com""
-}
-";
-
-        FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+        var keyPath = @"C:\OCC-Source\Keys\service-account.json";
+        if (File.Exists(keyPath))
         {
-            Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(json.Trim())
-        });
-        Console.WriteLine("[STARTUP] Firebase initialized successfully using HARDCODED key.");
+            var bytes = File.ReadAllBytes(keyPath);
+            // Skip BOM if present
+            int offset = (bytes.Length > 3 && bytes[0] == 239 && bytes[1] == 187 && bytes[2] == 191) ? 3 : 0;
+            
+            using (var ms = new MemoryStream(bytes, offset, bytes.Length - offset))
+            {
+                FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+                {
+                    Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromStream(ms)
+                });
+            }
+            Console.WriteLine($"[STARTUP] Firebase initialized successfully via Stream from: {keyPath}");
+        }
+        else
+        {
+            Console.WriteLine($"[STARTUP] Firebase SKIPPED: File not found at {keyPath}");
+        }
     }
 catch (Exception ex)
 {
