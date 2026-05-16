@@ -280,6 +280,7 @@ namespace OCC.API.Controllers
                 return $"Error reading: {ex.Message}";
             }
         }
+        [AllowAnonymous]
         [HttpGet("debug-status/{email}")]
         public async Task<IActionResult> GetDebugStatus(string email, [FromQuery] string? env = null)
         {
