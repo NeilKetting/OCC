@@ -84,18 +84,29 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public async Task LoadProjectAsync(Guid projectId)
         {
             ProjectId = projectId;
-            UpdateStatus("Loading project details...");
-                Project = await _projectService.GetProjectAsync(projectId);
-            if (Project != null)
+            
+            try
             {
-                Title = Project.Name;
-                UpdateHeaderInfo();
-                var tasks = await _projectService.GetProjectTasksAsync(projectId);
-                _dashboardVM.UpdateProjectData(Project, tasks);
-                await _tasksVM.UpdateTasksAsync(ProjectId, tasks);
-                _ganttVM.UpdateTasks(ProjectId, tasks.ToList());
-                _ = _historyVM.LoadHistoryAsync(ProjectId);
-                UpdateStatus("Ready");
+                IsBusy = true;
+                BusyText = "Loading project details...";
+                UpdateStatus("Loading project details...");
+                
+                Project = await _projectService.GetProjectAsync(projectId);
+                if (Project != null)
+                {
+                    Title = Project.Name;
+                    UpdateHeaderInfo();
+                    var tasks = await _projectService.GetProjectTasksAsync(projectId);
+                    _dashboardVM.UpdateProjectData(Project, tasks);
+                    await _tasksVM.UpdateTasksAsync(ProjectId, tasks);
+                    await _ganttVM.UpdateTasksAsync(ProjectId, tasks.ToList());
+                    _ = _historyVM.LoadHistoryAsync(ProjectId);
+                    UpdateStatus("Ready");
+                }
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

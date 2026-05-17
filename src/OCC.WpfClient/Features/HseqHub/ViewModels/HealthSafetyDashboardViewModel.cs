@@ -67,20 +67,26 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
             try
             {
-               var stats = await _hseqService.GetDashboardStatsAsync();
-               if (stats != null)
-               {
-                   TotalSafeHours = stats.TotalSafeHours;
-                   TotalIncidents = stats.IncidentsTotal;
-                   
-                   // Update Charts
-                   UpdateAuditChart(stats.RecentAuditScores);
-                   UpdateIncidentChart(stats);
-               }
+                IsBusy = true;
+                BusyText = "Loading dashboard...";
+                var stats = await _hseqService.GetDashboardStatsAsync();
+                if (stats != null)
+                {
+                    TotalSafeHours = stats.TotalSafeHours;
+                    TotalIncidents = stats.IncidentsTotal;
+                    
+                    // Update Charts
+                    UpdateAuditChart(stats.RecentAuditScores);
+                    UpdateIncidentChart(stats);
+                }
             }
             catch (Exception)
             {
                 // Silent fail or log
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

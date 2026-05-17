@@ -178,18 +178,31 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         /// </summary>
         /// <param name="projectId">ID of the project.</param>
         /// <param name="tasks">The list of tasks to display.</param>
-        public void UpdateTasks(Guid projectId, List<ProjectTask> tasks)
+        public async Task UpdateTasksAsync(Guid projectId, List<ProjectTask> tasks)
         {
-            // Expand all by default to avoid large white space at bottom (User Workaround)
-            foreach (var t in tasks) t.IsExpanded = true;
-            
-            CalculateSmartStats(tasks);
+            try
+            {
+                IsBusy = true;
+                BusyText = "Rendering Gantt Chart...";
+                
+                // Allow UI thread to show the spinner before we block it with heavy rendering
+                await Task.Delay(10);
 
-            // 1. Build Hierarchy
-            _rootTasks = _projectService.BuildTaskHierarchy(tasks);
-            
-            // 2. Refresh Visuals
-            RefreshGanttView();
+                // Expand all by default to avoid large white space at bottom (User Workaround)
+                foreach (var t in tasks) t.IsExpanded = true;
+                
+                CalculateSmartStats(tasks);
+
+                // 1. Build Hierarchy
+                _rootTasks = _projectService.BuildTaskHierarchy(tasks);
+                
+                // 2. Refresh Visuals
+                RefreshGanttView();
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         /// <summary>

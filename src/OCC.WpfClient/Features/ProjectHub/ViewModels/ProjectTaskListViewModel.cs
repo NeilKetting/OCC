@@ -156,56 +156,69 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public async Task UpdateTasksAsync(Guid projectId, IEnumerable<ProjectTask> tasks)
         {
-            ProjectId = projectId;
-            var taskList = tasks.ToList();
-
-            // Refresh color map for badges - Ensure this completes BEFORE we refresh the display list
             try
             {
-                var contractors = await _subContractorService.GetSubContractorsAsync();
-                foreach (var sc in contractors)
-                {
-                    if (!string.IsNullOrEmpty(sc.ColorTheme))
-                        SubContractorColorMap[sc.Name] = sc.ColorTheme;
-                }
+                IsBusy = true;
+                BusyText = "Processing tasks...";
                 
-                // Add/Force internals to Orange as requested
-                SubContractorColorMap["Orange Circle Construction JHB"] = "#FF9800";
-                SubContractorColorMap["Orange Circle Construction CPT"] = "#FF9800";
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error fetching subcontractor colors: {ex.Message}");
-            }
+                // Allow UI thread to show the spinner before we block it with heavy rendering
+                await Task.Delay(10);
 
-            CalculateSmartStats(taskList);
+                ProjectId = projectId;
+                var taskList = tasks.ToList();
 
-            // Build hierarchy (Ported from legacy app)
-            foreach (var task in taskList) task.Children.Clear();
-            
-            var lookup = taskList.ToDictionary(t => t.Id);
-            var roots = new List<ProjectTask>();
-
-            foreach (var task in taskList)
-            {
-                if (task.ParentId.HasValue && task.ParentId != Guid.Empty && lookup.TryGetValue(task.ParentId.Value, out var parent))
+                // Refresh color map for badges - Ensure this completes BEFORE we refresh the display list
+                try
                 {
-                    parent.Children.Add(task);
-                    task.IndentLevel = parent.IndentLevel + 1;
+                    var contractors = await _subContractorService.GetSubContractorsAsync();
+                    foreach (var sc in contractors)
+                    {
+                        if (!string.IsNullOrEmpty(sc.ColorTheme))
+                            SubContractorColorMap[sc.Name] = sc.ColorTheme;
+                    }
+                    
+                    // Add/Force internals to Orange as requested
+                    SubContractorColorMap["Orange Circle Construction JHB"] = "#FF9800";
+                    SubContractorColorMap["Orange Circle Construction CPT"] = "#FF9800";
                 }
-                else
+                catch (Exception ex)
                 {
-                    roots.Add(task);
-                    task.IndentLevel = 0;
+                    System.Diagnostics.Debug.WriteLine($"Error fetching subcontractor colors: {ex.Message}");
                 }
-            }
 
-            _rootTasks = roots.OrderBy(t => t.OrderIndex).ToList();
-            
-            // Calculate total actionable (non-group) tasks for the header badge
-            TotalActionableTaskCount = taskList.Count(t => !t.IsGroup);
-            
-            RefreshDisplayList();
+                CalculateSmartStats(taskList);
+
+                // Build hierarchy (Ported from legacy app)
+                foreach (var task in taskList) task.Children.Clear();
+                
+                var lookup = taskList.ToDictionary(t => t.Id);
+                var roots = new List<ProjectTask>();
+
+                foreach (var task in taskList)
+                {
+                    if (task.ParentId.HasValue && task.ParentId != Guid.Empty && lookup.TryGetValue(task.ParentId.Value, out var parent))
+                    {
+                        parent.Children.Add(task);
+                        task.IndentLevel = parent.IndentLevel + 1;
+                    }
+                    else
+                    {
+                        roots.Add(task);
+                        task.IndentLevel = 0;
+                    }
+                }
+
+                _rootTasks = roots.OrderBy(t => t.OrderIndex).ToList();
+                
+                // Calculate total actionable (non-group) tasks for the header badge
+                TotalActionableTaskCount = taskList.Count(t => !t.IsGroup);
+                
+                RefreshDisplayList();
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         private void RefreshDisplayList()
@@ -576,11 +589,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         existing.HoldReason = updatedTask.HoldReason;
                         existing.Name = updatedTask.Name;
                         existing.IsExpanded = updatedTask.IsExpanded; // Preserve or update
+                        existing.StartDate = updatedTask.StartDate;
+                        existing.FinishDate = updatedTask.FinishDate;
                         
                         // Force refresh colors and labels
                         existing.NotifyPropertyChanged(nameof(existing.StatusColor));
                         existing.NotifyPropertyChanged(nameof(existing.IsComplete));
                         existing.NotifyPropertyChanged(nameof(existing.IsOverdue));
+                        existing.NotifyPropertyChanged(nameof(existing.Duration));
                     }
                     else
                     {

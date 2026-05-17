@@ -26,6 +26,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             _projectId = projectId;
             IsLoading = true;
+            IsBusy = true;
+            BusyText = "Loading project history...";
             UpdateStatus("Loading project history...");
 
             try
@@ -48,6 +50,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             finally
             {
                 IsLoading = false;
+                IsBusy = false;
             }
         }
     }

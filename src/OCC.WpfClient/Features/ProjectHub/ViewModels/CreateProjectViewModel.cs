@@ -589,12 +589,23 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             try
             {
+                var existing = await _subContractorService.GetSubContractorSummariesAsync();
+                var usedColors = existing.Select(e => e.ColorTheme?.ToUpperInvariant()).Where(c => !string.IsNullOrEmpty(c)).ToHashSet();
+                var random = new Random();
+
                 foreach (var row in ReconciliationRows)
                 {
                     if (row.Action == ReconciliationAction.Skip) continue;
 
                     if (row.Action == ReconciliationAction.CreateNew)
                     {
+                        string generatedColor;
+                        do
+                        {
+                            generatedColor = $"#{random.Next(0x1000000):X6}";
+                        } while (usedColors.Contains(generatedColor));
+                        usedColors.Add(generatedColor);
+
                         var newSub = new SubContractor 
                         { 
                             Name = row.ImportedName, 
@@ -602,7 +613,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                             Email = row.Email,
                             Phone = row.Phone,
                             Address = row.Address,
-                            Specialties = row.Specialties
+                            Specialties = row.Specialties,
+                            ColorTheme = generatedColor
                         };
                         var created = await _subContractorService.CreateSubContractorAsync(newSub);
                         ResolveAssignee(row.ImportedName, created.Id, created.Name, AssigneeType.Contractor);
