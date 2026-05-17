@@ -169,7 +169,26 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private void ShowTasks() => CurrentView = _tasksVM;
 
         [RelayCommand]
-        private void ShowGantt() => CurrentView = _ganttVM;
+        private async Task ShowGantt()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Loading Gantt Chart...";
+                
+                // Allow the busy spinner to render before blocking the thread with layout
+                await Task.Delay(100);
+                
+                CurrentView = _ganttVM;
+                
+                // Wait for the UI layout and rendering cycle to complete
+                await App.Current.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         [RelayCommand]
         private void ShowHistory() => CurrentView = _historyVM;
