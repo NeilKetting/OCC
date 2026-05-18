@@ -23,9 +23,22 @@ namespace OCC.WpfClient.Infrastructure.Converters
                 foreach (var name in names)
                 {
                     string bgColor = "#2E9DFF"; // Default
-                    if (ProjectTaskListViewModel.SubContractorColorMap.TryGetValue(name, out var color))
+                    string fgColor = null;
+
+                    if (name.Equals("OCC", StringComparison.OrdinalIgnoreCase) || 
+                        name.StartsWith("Orange Circle", StringComparison.OrdinalIgnoreCase))
+                    {
+                        bgColor = "#FF9800"; // Orange for OCC internal records
+                        fgColor = "White";    // White foreground
+                    }
+                    else if (ProjectTaskListViewModel.SubContractorColorMap.TryGetValue(name, out var color))
                     {
                         bgColor = color;
+                    }
+
+                    if (fgColor == null)
+                    {
+                        fgColor = GetContrastColor(bgColor);
                     }
 
                     badges.Add(new BadgeData
@@ -33,7 +46,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
                         Name = name,
                         Initials = GetInitials(name),
                         BackgroundColor = bgColor,
-                        ForegroundColor = GetContrastColor(bgColor)
+                        ForegroundColor = fgColor
                     });
                 }
                 return badges;

@@ -475,11 +475,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var list = new List<SubContractorSelectionViewModel>();
             
             // Add "Internal" Options (Synced with TaskDetailViewModel)
-            var jhb = new SubContractorSelectionViewModel(Guid.Empty, "Orange Circle Construction JHB", "Internal", "#2E9DFF") { Type = AssigneeType.Staff };
+            var jhb = new SubContractorSelectionViewModel(Guid.Empty, "Orange Circle Construction JHB", "Internal", "#FF9800") { Type = AssigneeType.Staff };
             jhb.IsSelected = assignments.Any(a => a.AssigneeId == Guid.Empty && a.AssigneeName == jhb.Name);
             list.Add(jhb);
 
-            var cpt = new SubContractorSelectionViewModel(Guid.Empty, "Orange Circle Construction CPT", "Internal", "#2E9DFF") { Type = AssigneeType.Staff };
+            var cpt = new SubContractorSelectionViewModel(Guid.Empty, "Orange Circle Construction CPT", "Internal", "#FF9800") { Type = AssigneeType.Staff };
             cpt.IsSelected = assignments.Any(a => a.AssigneeId == Guid.Empty && a.AssigneeName == cpt.Name);
             list.Add(cpt);
 

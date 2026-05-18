@@ -452,6 +452,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         var details = await _googleMapsService.GetPlaceDetailsAsync(bestSuggestion.PlaceId, _sessionToken);
                         if (details != null)
                         {
+                            _isHandlingSelection = true;
                             Project.StreetLine1 = details.StreetLine1;
                             Project.StreetLine2 = details.StreetLine2;
                             Project.City = details.City;
@@ -460,6 +461,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                             Project.Country = details.Country;
                             Project.Latitude = details.Latitude;
                             Project.Longitude = details.Longitude;
+                            
+                            AddressSuggestions.Clear();
+                            SelectedAddressSuggestion = null;
+                            _sessionToken = Guid.NewGuid().ToString();
+                            _isHandlingSelection = false;
                             
                             IsAddressMissing = false;
                             NotifyInfo("Address Populated", "Site location has been updated.");

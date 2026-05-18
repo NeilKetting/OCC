@@ -92,10 +92,11 @@ namespace OCC.Shared.Models
             if (FinishDate >= StartDate && StartDate != DateTime.MinValue && FinishDate != DateTime.MinValue)
             {
                 var time = FinishDate - StartDate;
+                var days = (FinishDate.Date - StartDate.Date).Days;
                 
-                if (time.TotalDays >= 1)
+                if (days >= 1)
                 {
-                    Duration = $"{time.TotalDays:0.##} days";
+                    Duration = $"{days} days";
                 }
                 else if (time.TotalHours > 0)
                 {

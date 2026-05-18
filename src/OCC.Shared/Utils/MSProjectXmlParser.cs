@@ -314,8 +314,8 @@ namespace OCC.Shared.Utils
                 task.IsGroup = true;
 
                 // Update Duration string roughly
-                var days = (maxFinish - minStart).TotalDays;
-                task.Duration = $"{days:0.##} days";
+                var days = (maxFinish.Date - minStart.Date).Days;
+                task.Duration = $"{days} days";
             }
         }
 
