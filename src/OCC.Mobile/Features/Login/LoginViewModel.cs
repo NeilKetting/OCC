@@ -41,6 +41,8 @@ namespace OCC.Mobile.Features.Login
 
         [ObservableProperty]
         private string? _customLocalUrl;
+        
+        public string AppVersion => App.AppVersion;
 
         public Array Environments => Enum.GetValues(typeof(AppEnvironment));
 
