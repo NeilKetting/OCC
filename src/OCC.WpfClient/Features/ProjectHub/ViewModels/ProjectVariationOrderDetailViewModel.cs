@@ -35,11 +35,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Wrapper.CommitToModel();
             if (Wrapper.Id == Guid.Empty)
             {
-                await _variationOrderService.CreateVariationOrderAsync(Wrapper.Model);
+                var created = await _variationOrderService.CreateVariationOrderAsync(Wrapper.Model);
+                if (created != null)
+                {
+                    Wrapper.Model.Id = created.Id;
+                    Wrapper.Model.RowVersion = created.RowVersion;
+                    Wrapper.Initialize();
+                }
             }
             else
             {
                 await _variationOrderService.UpdateVariationOrderAsync(Wrapper.Model);
+                
+                var latest = await _variationOrderService.GetVariationOrderAsync(Wrapper.Id);
+                if (latest != null)
+                {
+                    Wrapper.Model.RowVersion = latest.RowVersion;
+                    Wrapper.Initialize();
+                }
             }
         }
 

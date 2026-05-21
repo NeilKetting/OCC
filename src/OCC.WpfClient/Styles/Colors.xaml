@@ -86,11 +86,17 @@
     <SolidColorBrush x:Key="PrimaryTealLight" Color="#e0f2f1" />
 
     <LinearGradientBrush x:Key="TopMenuGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#d4cdcb" Offset="0.0" />
+        <GradientStop Color="#5c5857" Offset="0.5" />
+        <GradientStop Color="#B3FF8F00" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="IconButtonGradient" StartPoint="0,0" EndPoint="1,0">
         <GradientStop Color="#BF00252E" Offset="0.0" />
         <GradientStop Color="#800F172A" Offset="0.5" />
         <GradientStop Color="#B3FF8F00" Offset="1.0" />
     </LinearGradientBrush>
-    
+
     <LinearGradientBrush x:Key="PremiumGlassGlow" x:Shared="False" StartPoint="0,0" EndPoint="1,1">
         <LinearGradientBrush.RelativeTransform>
             <TranslateTransform X="0" Y="0" />

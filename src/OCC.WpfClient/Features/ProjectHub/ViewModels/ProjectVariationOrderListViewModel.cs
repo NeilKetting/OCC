@@ -128,7 +128,35 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             var target = parameter as ProjectVariationOrderWrapper ?? SelectedItem;
             if (target == null) return;
-            OpenOverlay(new ProjectVariationOrderDetailViewModel(this, target, _variationOrderService, _dialogService, _logger, _pdfService));
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Loading details...";
+                var latest = await _variationOrderService.GetVariationOrderAsync(target.Id);
+                if (latest != null)
+                {
+                    target.Model.Description = latest.Description;
+                    target.Model.ApprovedBy = latest.ApprovedBy;
+                    target.Model.Date = latest.Date;
+                    target.Model.AdditionalComments = latest.AdditionalComments;
+                    target.Model.Status = latest.Status;
+                    target.Model.IsInvoiced = latest.IsInvoiced;
+                    target.Model.RowVersion = latest.RowVersion;
+                    target.Initialize();
+
+                    OpenOverlay(new ProjectVariationOrderDetailViewModel(this, target, _variationOrderService, _dialogService, _logger, _pdfService));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load variation order details");
+                NotifyError("Error", "Could not load variation order details. Please try again.");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
@@ -170,6 +198,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 wrapper.CommitToModel();
                 await _variationOrderService.UpdateVariationOrderAsync(wrapper.Model);
+                
+                var latest = await _variationOrderService.GetVariationOrderAsync(wrapper.Id);
+                if (latest != null)
+                {
+                    wrapper.Model.RowVersion = latest.RowVersion;
+                    wrapper.Initialize();
+                }
+                
                 UpdateOpenCount();
             }
             catch (Exception ex)
