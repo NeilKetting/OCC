@@ -2,10 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure">
 
-    <Style TargetType="{x:Type infra:BaseListView}">
+    <Style TargetType="{x:Type infra:ListViewBase}">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type infra:BaseListView}">
+                <ControlTemplate TargetType="{x:Type infra:ListViewBase}">
                     <Grid Background="{TemplateBinding Background}">
                         <!-- Main Content -->
                         <ContentPresenter Content="{TemplateBinding Content}" />

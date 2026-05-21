@@ -32,6 +32,11 @@ namespace OCC.Client.Features.BugHub.ViewModels
 
         public BugReportType[] AvailableTypes { get; } = (BugReportType[])Enum.GetValues(typeof(BugReportType));
 
+        public BugReportDialogViewModel()
+        {
+             
+        }
+
         public BugReportDialogViewModel(
             IBugReportService bugService, 
             IAuthService authService,

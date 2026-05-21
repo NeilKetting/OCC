@@ -24,6 +24,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ProjectGanttViewModel _ganttVM;
         private readonly ProjectHistoryViewModel _historyVM;
         private readonly IEmployeeService _employeeService;
+        private readonly ProjectReportViewModel _reportVM;
+        private readonly ProjectVariationOrderListViewModel _variationOrdersVM;
 
         [ObservableProperty] private Project? _project;
         [ObservableProperty] private ViewModelBase _currentView;
@@ -45,6 +47,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ProjectTaskListViewModel tasksVM, 
             ProjectGanttViewModel ganttVM, 
             ProjectHistoryViewModel historyVM,
+            ProjectReportViewModel reportVM,
+            ProjectVariationOrderListViewModel variationOrdersVM,
             IDialogService dialogService,
             ILogger<ProjectDetailViewModel> logger,
             IPdfService pdfService) : base(dialogService, logger, pdfService)
@@ -55,6 +59,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _tasksVM = tasksVM;
             _ganttVM = ganttVM;
             _historyVM = historyVM;
+            _reportVM = reportVM;
+            _variationOrdersVM = variationOrdersVM;
             _currentView = _dashboardVM;
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
@@ -101,6 +107,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     await _tasksVM.UpdateTasksAsync(ProjectId, tasks);
                     await _ganttVM.UpdateTasksAsync(ProjectId, tasks.ToList());
                     _ = _historyVM.LoadHistoryAsync(ProjectId);
+                    await _reportVM.LoadReportDataAsync(ProjectId);
+                    await _variationOrdersVM.LoadProjectAsync(ProjectId);
                     UpdateStatus("Ready");
                 }
             }
@@ -119,9 +127,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 AvailableSiteManagers.Clear();
                 foreach (var emp in employees.Where(e => e.Status == EmployeeStatus.Active && 
                                                         (e.Role == EmployeeRole.SiteManager || 
-                                                         e.Role == EmployeeRole.SnrForeman || 
-                                                         e.Role == EmployeeRole.JnrForeman || 
-                                                         e.Role == EmployeeRole.LegacySeniorForeman)))
+                                                          e.Role == EmployeeRole.SnrForeman || 
+                                                          e.Role == EmployeeRole.JnrForeman || 
+                                                          e.Role == EmployeeRole.LegacySeniorForeman)))
                 {
                     AvailableSiteManagers.Add(emp);
                 }
@@ -192,6 +200,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         [RelayCommand]
         private void ShowHistory() => CurrentView = _historyVM;
+
+        [RelayCommand]
+        private void ShowReport() => CurrentView = _reportVM;
+
+        [RelayCommand]
+        private void ShowVariationOrders() => CurrentView = _variationOrdersVM;
 
         protected override string GetReportTitle() => $"Project Profile: {Project?.Name}";
         protected override object GetReportItem() => new

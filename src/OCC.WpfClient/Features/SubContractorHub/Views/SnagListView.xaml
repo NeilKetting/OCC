@@ -1,4 +1,4 @@
-<infra:BaseListView x:Class="OCC.WpfClient.Features.SubContractorHub.Views.SnagListView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.SubContractorHub.Views.SnagListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding OverlayViewModel}"
                 DrawerWidth="550"
@@ -169,7 +169,7 @@
             <ContentControl Grid.Row="2" Style="{StaticResource StandardLoadingOverlay}" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
         </Grid>
     </Grid>
-</infra:BaseListView>
+</infra:ListViewBase>
 
 
 

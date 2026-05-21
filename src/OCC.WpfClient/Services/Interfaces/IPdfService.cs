@@ -17,6 +17,11 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a branded profile/detail report for a single entity.
         /// </summary>
         Task<string> GenerateDetailReportPdfAsync<T>(string title, T item);
+
+        /// <summary>
+        /// Generates a branded replica Project Hub report.
+        /// </summary>
+        Task<string> GenerateProjectReportPdfAsync(ProjectReportPrintModel model);
     }
 
     public class ReportColumnDefinition
@@ -24,5 +29,43 @@ namespace OCC.WpfClient.Services.Interfaces
         public string Header { get; set; } = string.Empty;
         public string PropertyName { get; set; } = string.Empty;
         public double Width { get; set; } = 1.0; // Relative width
+    }
+
+    public class ProjectReportPrintModel
+    {
+        public Project Project { get; set; } = new();
+        public int WeekNumber { get; set; }
+        public int TotalTasks { get; set; }
+        public int InProgressTasks { get; set; }
+        public int CompletedTasks { get; set; }
+        public double OverallProgress { get; set; }
+        public double PowPercentRequired { get; set; }
+        public int DelayDays { get; set; }
+        public double SafeWorkingHours { get; set; }
+        public System.DateTime? SiteEstablishmentPlanned { get; set; }
+        public System.DateTime? SiteEstablishmentActual { get; set; }
+        public System.DateTime? PracticalCompletionPlanned { get; set; }
+        public System.DateTime? PracticalCompletionActual { get; set; }
+        public System.DateTime? StreamingPlanned { get; set; }
+        public System.DateTime? StreamingActual { get; set; }
+        public string GeneralWasteTon { get; set; } = "0";
+        public string RubbleM3 { get; set; } = "0";
+        public string ScrapMetalsTon { get; set; } = "0";
+        public string AsbestosTon { get; set; } = "0";
+        public string StatusSummary { get; set; } = string.Empty;
+        public List<ProjectReportPrintVendorRow> VendorReportRows { get; set; } = new();
+        public List<ProjectVariationOrder> VariationOrders { get; set; } = new();
+        public List<string> IncidentPhotoPaths { get; set; } = new();
+    }
+
+    public class ProjectReportPrintVendorRow
+    {
+        public string VendorName { get; set; } = string.Empty;
+        public string Scope { get; set; } = string.Empty;
+        public string SafetyApproved { get; set; } = "Yes";
+        public string AppScore { get; set; } = "100%";
+        public string Audit1 { get; set; } = string.Empty;
+        public string Audit2 { get; set; } = string.Empty;
+        public string Audit3 { get; set; } = string.Empty;
     }
 }

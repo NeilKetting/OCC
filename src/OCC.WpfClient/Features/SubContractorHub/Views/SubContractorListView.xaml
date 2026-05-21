@@ -1,4 +1,4 @@
-<infra:BaseListView x:Class="OCC.WpfClient.Features.SubContractorHub.Views.SubContractorListView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.SubContractorHub.Views.SubContractorListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding OverlayViewModel}"
                 SelectedItems="{Binding SelectedItems, Mode=OneWayToSource}"
@@ -203,7 +203,7 @@
             <ContentControl Grid.Row="2" Style="{StaticResource StandardLoadingOverlay}" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
         </Grid>
     </Grid>
-</infra:BaseListView>
+</infra:ListViewBase>
 
 
 

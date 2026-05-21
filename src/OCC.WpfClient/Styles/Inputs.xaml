@@ -708,4 +708,13 @@
         <Setter Property="Height" Value="24"/>
         <Setter Property="FontSize" Value="11"/>
     </Style>
+
+    <!-- TextBox Card Value Style -->
+    <Style x:Key="TextBox.CardValue" TargetType="TextBox" BasedOn="{StaticResource CompactTextBox}">
+        <Setter Property="Background" Value="#10FFFFFF"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="CaretBrush" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
 </ResourceDictionary>

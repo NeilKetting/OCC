@@ -26,6 +26,10 @@ namespace OCC.WpfClient.Features.ProjectHub
             services.AddTransient<ProjectEditorViewModel>();
             services.AddTransient<ProjectGanttViewModel>();
             services.AddTransient<ProjectHistoryViewModel>();
+            services.AddTransient<ProjectReportViewModel>();
+            services.AddTransient<ProjectVariationOrderListViewModel>();
+            services.AddTransient<ProjectVariationOrderDetailViewModel>();
+            services.AddTransient<IProjectVariationOrderService, ProjectVariationOrderService>();
         }
 
         public void RegisterRoutes(INavigationService navigationService)

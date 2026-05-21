@@ -3,7 +3,7 @@ using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.ProcurementHub.Views
 {
-    public partial class SupplierListView : BaseListView
+    public partial class SupplierListView : ListViewBase
     {
         public SupplierListView()
         {

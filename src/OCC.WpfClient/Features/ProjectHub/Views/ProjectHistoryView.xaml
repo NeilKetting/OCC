@@ -17,14 +17,14 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid Margin="30">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,25">
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="Project History" FontSize="24" FontWeight="Bold" Foreground="White"/>
             <TextBlock Text="Historical record of all personnel and contractors who have contributed to this project." 
                        Style="{StaticResource FormLabelText}"/>

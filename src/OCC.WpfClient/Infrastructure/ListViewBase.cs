@@ -11,10 +11,10 @@ using OCC.WpfClient.Infrastructure.Converters;
 
 namespace OCC.WpfClient.Infrastructure
 {
-    public class BaseListView : UserControl
+    public class ListViewBase : UserControl
     {
         public static readonly DependencyProperty IsDrawerOpenProperty =
-            DependencyProperty.Register("IsDrawerOpen", typeof(bool), typeof(BaseListView), 
+            DependencyProperty.Register("IsDrawerOpen", typeof(bool), typeof(ListViewBase), 
                 new PropertyMetadata(false, OnIsDrawerOpenChanged));
 
         public bool IsDrawerOpen
@@ -24,7 +24,7 @@ namespace OCC.WpfClient.Infrastructure
         }
 
         public static readonly DependencyProperty DrawerWidthProperty =
-            DependencyProperty.Register("DrawerWidth", typeof(double), typeof(BaseListView), 
+            DependencyProperty.Register("DrawerWidth", typeof(double), typeof(ListViewBase), 
                 new PropertyMetadata(550.0));
 
         public double DrawerWidth
@@ -34,7 +34,7 @@ namespace OCC.WpfClient.Infrastructure
         }
 
         public static readonly DependencyProperty OverlayContentProperty =
-            DependencyProperty.Register("OverlayContent", typeof(object), typeof(BaseListView), 
+            DependencyProperty.Register("OverlayContent", typeof(object), typeof(ListViewBase), 
                 new PropertyMetadata(null));
 
         public object OverlayContent
@@ -44,7 +44,7 @@ namespace OCC.WpfClient.Infrastructure
         }
 
         public static readonly DependencyProperty SelectedItemsProperty =
-            DependencyProperty.Register("SelectedItems", typeof(System.Collections.IList), typeof(BaseListView), 
+            DependencyProperty.Register("SelectedItems", typeof(System.Collections.IList), typeof(ListViewBase), 
                 new PropertyMetadata(null));
 
         public System.Collections.IList SelectedItems
@@ -53,7 +53,7 @@ namespace OCC.WpfClient.Infrastructure
             set => SetValue(SelectedItemsProperty, value);
         }
 
-        static BaseListView()
+        static ListViewBase()
         {
             // Register class handlers for DataGridRow to intercept right-clicks before selection logic
             EventManager.RegisterClassHandler(typeof(DataGridRow), UIElement.PreviewMouseRightButtonDownEvent, new MouseButtonEventHandler(OnDataGridRowPreviewRightMouseDown), true);
@@ -66,7 +66,7 @@ namespace OCC.WpfClient.Infrastructure
                 var dg = FindVisualParentStatic<DataGrid>(row);
                 if (dg != null)
                 {
-                    var listView = FindVisualParentStatic<BaseListView>(dg);
+                    var listView = FindVisualParentStatic<ListViewBase>(dg);
                     if (listView != null)
                     {
                         listView.DataGrid_PreviewMouseRightButtonDown(dg, e);
@@ -75,12 +75,12 @@ namespace OCC.WpfClient.Infrastructure
             }
         }
 
-        public BaseListView()
+        public ListViewBase()
         {
-            this.Loaded += BaseListView_Loaded;
+            this.Loaded += ListViewBase_Loaded;
         }
 
-        private void BaseListView_Loaded(object sender, RoutedEventArgs e)
+        private void ListViewBase_Loaded(object sender, RoutedEventArgs e)
         {
             // Ensure all DataGrids have the selection column and correct mode
             var dataGrids = FindVisualChildren<DataGrid>(this);
@@ -386,7 +386,7 @@ namespace OCC.WpfClient.Infrastructure
 
         private static void OnIsDrawerOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BaseListView view)
+            if (d is ListViewBase view)
             {
                 view.HandleDrawerTransition((bool)e.NewValue);
             }

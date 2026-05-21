@@ -1,4 +1,4 @@
-<utils:BaseListView x:Class="OCC.WpfClient.Features.ProcurementHub.Views.SupplierListView"
+<utils:ListViewBase x:Class="OCC.WpfClient.Features.ProcurementHub.Views.SupplierListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -14,10 +14,10 @@
              IsDrawerOpen="{Binding IsOverlayActive}"
              SelectedItems="{Binding SelectedItems, Mode=OneWayToSource}">
 
-    <utils:BaseListView.Resources>
+    <utils:ListViewBase.Resources>
         <utils:BindingProxy x:Key="Proxy" Data="{Binding}" />
         <conv:VisibilityConverter x:Key="VisibilityConverter" />
-    </utils:BaseListView.Resources>
+    </utils:ListViewBase.Resources>
 
     <Grid Background="{StaticResource AppBackground}">
         <Grid>
@@ -154,4 +154,4 @@
             <ContentControl Grid.Row="2" Style="{StaticResource StandardLoadingOverlay}" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
         </Grid>
     </Grid>
-</utils:BaseListView>
+</utils:ListViewBase>

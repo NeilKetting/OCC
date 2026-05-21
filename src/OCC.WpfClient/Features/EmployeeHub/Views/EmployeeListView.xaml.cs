@@ -4,7 +4,7 @@ using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.EmployeeHub.Views
 {
-    public partial class EmployeeListView : BaseListView
+    public partial class EmployeeListView : ListViewBase
     {
         public EmployeeListView()
         {

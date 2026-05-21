@@ -1,4 +1,4 @@
-<infra:BaseListView x:Class="OCC.WpfClient.Features.HseqHub.Views.DocumentsView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.HseqHub.Views.DocumentsView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding ActiveOverlay}"
                 DrawerWidth="550"
@@ -95,4 +95,4 @@
             </Border>
         </Grid>
     </Grid>
-</infra:BaseListView>
+</infra:ListViewBase>

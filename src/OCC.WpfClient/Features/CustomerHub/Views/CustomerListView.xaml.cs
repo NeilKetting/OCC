@@ -3,7 +3,7 @@ using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.CustomerHub.Views
 {
-    public partial class CustomerListView : BaseListView
+    public partial class CustomerListView : ListViewBase
     {
         public CustomerListView()
         {

@@ -4,7 +4,7 @@ using VM = OCC.WpfClient.Features.HseqHub.ViewModels;
 
 namespace OCC.WpfClient.Features.HseqHub.Views
 {
-    public partial class AuditListView : BaseListView
+    public partial class AuditListView : ListViewBase
     {
         public AuditListView()
         {

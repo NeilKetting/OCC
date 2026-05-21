@@ -139,6 +139,10 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
         <projViews:ProjectSpecificDashboardView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type projVm:ProjectReportViewModel}">
+        <projViews:ProjectReportView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type projVm:ProjectTaskListViewModel}">
         <projViews:ProjectTaskListView />
     </DataTemplate>
@@ -153,6 +157,10 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
 
     <DataTemplate DataType="{x:Type projVm:ProjectHistoryViewModel}">
         <projViews:ProjectHistoryView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectVariationOrderListViewModel}">
+        <projViews:ProjectVariationOrderListView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:CreateProjectViewModel}">

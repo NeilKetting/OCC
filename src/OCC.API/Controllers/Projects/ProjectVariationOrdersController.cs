@@ -102,7 +102,7 @@ namespace OCC.API.Controllers.Projects
                 }
                 else
                 {
-                    throw;
+                    return Conflict("Another user has updated this record. Please reload and try again.");
                 }
             }
             catch (Exception ex)

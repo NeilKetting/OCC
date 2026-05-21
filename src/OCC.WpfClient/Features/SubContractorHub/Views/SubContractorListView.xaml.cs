@@ -4,7 +4,7 @@ using OCC.WpfClient.Features.SubContractorHub.ViewModels;
 
 namespace OCC.WpfClient.Features.SubContractorHub.Views
 {
-    public partial class SubContractorListView : BaseListView
+    public partial class SubContractorListView : ListViewBase
     {
         public SubContractorListView()
         {

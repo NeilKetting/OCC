@@ -1,4 +1,4 @@
-<infra:BaseListView x:Class="OCC.WpfClient.Features.HseqHub.Views.IncidentListView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.HseqHub.Views.IncidentListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding ActiveOverlay}"
                 SelectedItems="{Binding SelectedItems, Mode=OneWayToSource}"
@@ -137,4 +137,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</infra:BaseListView>
+</infra:ListViewBase>

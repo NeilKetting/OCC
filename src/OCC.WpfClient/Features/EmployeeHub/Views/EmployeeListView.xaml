@@ -1,4 +1,4 @@
-<utils:BaseListView x:Class="OCC.WpfClient.Features.EmployeeHub.Views.EmployeeListView"
+<utils:ListViewBase x:Class="OCC.WpfClient.Features.EmployeeHub.Views.EmployeeListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding OverlayViewModel}"
                 DrawerWidth="550"
@@ -216,6 +216,6 @@
             </Border>
         </Grid>
     </Grid>
-</utils:BaseListView>
+</utils:ListViewBase>
 
 

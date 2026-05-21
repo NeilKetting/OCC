@@ -146,6 +146,11 @@ namespace OCC.Client.Features.CalendarHub.ViewModels
 
         #endregion
 
+        public CalendarHubViewModel()
+        {
+            
+        }
+
         public CalendarHubViewModel(
             ICalendarService calendarService,
             UserPreferencesService preferencesService)

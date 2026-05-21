@@ -28,7 +28,7 @@ namespace OCC.WpfClient.Infrastructure
         }
 
         [RelayCommand]
-        public async Task PrintAsync()
+        public virtual async Task PrintAsync()
         {
             try
             {

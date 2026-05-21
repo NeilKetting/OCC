@@ -18,7 +18,9 @@
             </Grid.ColumnDefinitions>
             
             <!-- Left Controls: Filter / View Options -->
-            
+            <Grid Grid.Column="0">
+                <TextBlock Text="Gantt Chart" Style="{StaticResource HeaderText}"/>
+            </Grid>
 
             <!-- Right Controls: Zoom and Date Navigation -->
             <StackPanel Grid.Column="2" Orientation="Horizontal">

@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace OCC.WpfClient.Features.ProjectHub.Views
 {
-    public partial class ProjectListView : OCC.WpfClient.Infrastructure.ListViewBase
+    public partial class ProjectReportView : UserControl
     {
-        public ProjectListView()
+        public ProjectReportView()
         {
             InitializeComponent();
         }

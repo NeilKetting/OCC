@@ -17,7 +17,7 @@ namespace OCC.Mobile.Features.Dashboard
         private readonly IProjectTaskService _taskService;
         private readonly ISignalRService _signalRService;
         private readonly IAuthService _authService;
-        private readonly IPushNotificationService _pushNotificationService;
+        private readonly IPushNotificationService? _pushNotificationService;
         private readonly System.Threading.SemaphoreSlim _loadSemaphore = new(1, 1);
 
         [ObservableProperty]

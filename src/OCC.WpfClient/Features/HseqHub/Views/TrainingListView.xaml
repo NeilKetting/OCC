@@ -1,4 +1,4 @@
-<infra:BaseListView x:Class="OCC.WpfClient.Features.HseqHub.Views.TrainingListView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.HseqHub.Views.TrainingListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding ActiveOverlay}"
                 DrawerWidth="550"
@@ -143,4 +143,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</infra:BaseListView>
+</infra:ListViewBase>

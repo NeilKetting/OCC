@@ -3,7 +3,7 @@ using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.SubContractorHub.Views
 {
-    public partial class SnagListView : BaseListView
+    public partial class SnagListView : ListViewBase
     {
         public SnagListView()
         {

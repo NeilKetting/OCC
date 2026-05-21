@@ -7,7 +7,7 @@ namespace OCC.WpfClient.Features.HseqHub.Views
     /// <summary>
     /// Interaction logic for DocumentsView.xaml
     /// </summary>
-    public partial class DocumentsView : BaseListView
+    public partial class DocumentsView : ListViewBase
     {
         public DocumentsView()
         {

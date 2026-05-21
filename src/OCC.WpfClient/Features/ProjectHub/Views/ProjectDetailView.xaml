@@ -96,6 +96,34 @@
                         </Grid>
                     </RadioButton>
 
+                    <RadioButton Style="{StaticResource SidebarNavItem}" 
+                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectReportViewModel}}"
+                                 Command="{Binding ShowReportCommand}"
+                                 Margin="0,2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="16" Opacity="0.7" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Project Report" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </Grid>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarNavItem}" 
+                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectVariationOrderListViewModel}}"
+                                 Command="{Binding ShowVariationOrdersCommand}"
+                                 Margin="0,2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE8C3;" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="16" Opacity="0.7" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Variation Orders" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </Grid>
+                    </RadioButton>
+
                 </StackPanel>
             </Grid>
         </Border>

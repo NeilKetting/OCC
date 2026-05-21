@@ -1,4 +1,4 @@
-<infra:BaseListView x:Class="OCC.WpfClient.Features.HseqHub.Views.AuditListView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.HseqHub.Views.AuditListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding ActiveOverlay}"
                 DrawerWidth="700"
@@ -133,4 +133,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</infra:BaseListView>
+</infra:ListViewBase>
