@@ -238,7 +238,7 @@
                             </StackPanel>
 
                             <!-- Login Button -->
-                            <Button Style="{StaticResource ModernPrimaryButton}" 
+                            <Button Style="{StaticResource LoginButton}" 
                                     Command="{Binding LoginCommand}"
                                     CommandParameter="{Binding ElementName=LoginPasswordBox}"
                                     Tag="{Binding IsBusy}"
@@ -291,7 +291,7 @@
                                              Style="{StaticResource ModernPasswordInput}"/>
                             </StackPanel>
 
-                            <Button Style="{StaticResource ModernPrimaryButton}" 
+                            <Button Style="{StaticResource LoginButton}" 
                                     Command="{Binding RegisterCommand}"
                                     CommandParameter="{Binding ElementName=RegisterPasswordBox}"
                                     Tag="{Binding IsBusy}"
@@ -315,7 +315,7 @@
                                 <TextBox Style="{StaticResource ModernInput}" 
                                          ap:WatermarkProperties.Watermark="Email Address"
                                          Text="{Binding ForgotPasswordEmail, UpdateSourceTrigger=PropertyChanged}"/>
-                                <Button Style="{StaticResource ModernPrimaryButton}" 
+                                <Button Style="{StaticResource LoginButton}" 
                                         Content="Send Reset Code" 
                                         Command="{Binding SendResetRequestCommand}"
                                         Margin="0,20,0,0"/>
@@ -331,7 +331,7 @@
                                 <PasswordBox Name="NewPasswordBox" 
                                              ap:WatermarkProperties.Watermark="New Password"
                                              Style="{StaticResource ModernPasswordInput}"/>
-                                <Button Style="{StaticResource ModernPrimaryButton}" 
+                                <Button Style="{StaticResource LoginButton}" 
                                         Content="Update Password" 
                                         Command="{Binding VerifyResetAndSaveCommand}"
                                         CommandParameter="{Binding ElementName=NewPasswordBox}"

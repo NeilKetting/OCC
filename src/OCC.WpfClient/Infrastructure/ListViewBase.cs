@@ -1,13 +1,9 @@
-using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Animation;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Linq;
-using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Infrastructure.Converters;
+using System.Windows.Media.Animation;
 
 namespace OCC.WpfClient.Infrastructure
 {
@@ -82,6 +78,18 @@ namespace OCC.WpfClient.Infrastructure
 
         private void ListViewBase_Loaded(object sender, RoutedEventArgs e)
         {
+            // Auto-bind IsDrawerOpen to "IsOverlayActive" if not explicitly set in XAML
+            if (ReadLocalValue(IsDrawerOpenProperty) == DependencyProperty.UnsetValue)
+            {
+                SetBinding(IsDrawerOpenProperty, new Binding("IsOverlayActive"));
+            }
+
+            // Auto-bind OverlayContent to "OverlayViewModel" if not explicitly set in XAML
+            if (ReadLocalValue(OverlayContentProperty) == DependencyProperty.UnsetValue)
+            {
+                SetBinding(OverlayContentProperty, new Binding("OverlayViewModel"));
+            }
+
             // Ensure all DataGrids have the selection column and correct mode
             var dataGrids = FindVisualChildren<DataGrid>(this);
             foreach (var dataGrid in dataGrids)

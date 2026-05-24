@@ -12,6 +12,7 @@
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=vm:SupplierViewModel}"
              IsDrawerOpen="{Binding IsOverlayActive}"
+             OverlayContent="{Binding OverlayViewModel}"
              SelectedItems="{Binding SelectedItems, Mode=OneWayToSource}">
 
     <utils:ListViewBase.Resources>
@@ -38,7 +39,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="{StaticResource AccentBlue}" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="&#xE716;" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="LightGreen" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold" Opacity="0.6"/>
                     <TextBlock Grid.Column="1" Grid.Row="0" Text="Suppliers" Style="{StaticResource HeaderText}"/>
                     <TextBlock Grid.Column="1" Grid.Row="1" Text="Manage suppliers, service providers and trades." Style="{StaticResource LabelText}"/>
                 </Grid>

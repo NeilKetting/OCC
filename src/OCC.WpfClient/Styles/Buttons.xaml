@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties">
+
     <!-- Tab-like Button with smooth transition -->
     <Style x:Key="ModernTabButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
@@ -49,14 +50,14 @@
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="buttonScale" ScaleX="1" ScaleY="1"/>
                         </Grid.RenderTransform>
-                        
+
                         <!-- Base Background Border -->
                         <Border x:Name="border" 
                                 Background="{TemplateBinding Background}" 
                                 CornerRadius="20"
                                 BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}"
                                 BorderThickness="2" />
-                        
+
                         <!-- Hover Overlay Border -->
                         <Border x:Name="hoverOverlay" 
                                 Background="{StaticResource AccentBlueHover}" 
@@ -70,7 +71,7 @@
                             <ContentPresenter x:Name="contentPresenter" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center"
-                                               Visibility="Visible" />                            
+                                               Visibility="Visible" />
                             <!-- Loading Spinner -->
                             <Viewbox x:Name="spinnerView" Width="24" Height="24" Visibility="Collapsed">
                                 <Path x:Name="spinnerPath" Data="M 12 2 A 10 10 0 1 0 22 12" Stroke="{StaticResource OrangeBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
@@ -103,7 +104,7 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
-                        
+
                         <!-- Pressed State -->
                         <Trigger Property="IsPressed" Value="True">
                             <Trigger.EnterActions>
@@ -147,7 +148,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <!-- Primary Button (System Standard) -->
     <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource ModernPrimaryButtonBackgroundGradient}"/>
@@ -398,28 +399,6 @@
         </Setter>
     </Style>
 
-    <!-- Modern Cancel Button Style (Red Secondary) -->
-    <Style x:Key="CancelButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
-        <Setter Property="Foreground" Value="{StaticResource ErrorRed}" />
-        <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}" />
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource ErrorRed}" />
-                <Setter Property="Foreground" Value="White" />
-                <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}" />
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="#CCFF4B4B" /> <!-- Slightly darker red -->
-                <Setter Property="BorderBrush" Value="#CCFF4B4B" />
-                <Setter Property="RenderTransform">
-                    <Setter.Value>
-                        <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
-                    </Setter.Value>
-                </Setter>
-            </Trigger>
-        </Style.Triggers>
-    </Style>
-
     <!-- Icon Button (Transparent with low-opacity content) -->
     <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
         <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
@@ -434,7 +413,7 @@
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="buttonScale" ScaleX="1.0" ScaleY="1.0"/>
                         </Grid.RenderTransform>
-                        
+
                         <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" BorderThickness="2" 
                                 BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}" Padding="10,5">
                             <ContentPresenter x:Name="content" 
@@ -473,7 +452,7 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
-                        
+
                         <!-- Pressed State -->
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
@@ -494,7 +473,7 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
-                        
+
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.2"/>
                         </Trigger>
@@ -503,7 +482,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <!-- Premium Button Style (used in Support Hub) -->
     <Style x:Key="PremiumButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
@@ -603,7 +582,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <!-- Toolbar Icon Button Style (Sleek and Transparent) -->
     <Style x:Key="ToolbarIconButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
@@ -721,7 +700,7 @@
     </Style>
 
     <!-- Action Button (Primary) - Integrated into feature layout -->
-    <Style x:Key="ActionButtonPrimary" TargetType="Button" BasedOn="{StaticResource ModernPrimaryButton}">
+    <Style x:Key="ActionButtonPrimary" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
         <Setter Property="Height" Value="36"/>
         <Setter Property="Padding" Value="20,0"/>
         <Setter Property="FontSize" Value="13"/>
@@ -735,6 +714,207 @@
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
+
+    <!-- Neil's Buttons Start -->
+
+    <!-- Action Button Base Style -->
+    <Style x:Key="ActionButtonBase" TargetType="Button">
+        <Setter Property="MinWidth" Value="100"/>
+        <Setter Property="Background" Value="#1AFFFFFF"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Padding" Value="16,0"/>
+        <Setter Property="Height" Value="40"/>
+        <!-- Default Attached Properties -->
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.IconSize" Value="14"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource GlassBackgroundHover}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource GlassBorderLight}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="buttonScale" ScaleX="1.0" ScaleY="1.0"/>
+                        </Grid.RenderTransform>
+                        
+                        <!-- Base Border -->
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        
+                        <!-- Hover Overlay Border -->
+                        <Border x:Name="hoverOverlay" 
+                                Background="{TemplateBinding ap:ButtonProperties.HoverBackground}" 
+                                BorderBrush="{TemplateBinding ap:ButtonProperties.HoverBorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Opacity="0"
+                                IsHitTestVisible="False"/>
+
+                        <!-- Content Container -->
+                        <StackPanel x:Name="contentStackPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" IsHitTestVisible="False">
+                            <!-- Icon -->
+                            <TextBlock x:Name="iconTextBlock"
+                                       Text="{TemplateBinding ap:ButtonProperties.Icon}"
+                                       Foreground="{TemplateBinding ap:ButtonProperties.IconForeground}"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="{TemplateBinding ap:ButtonProperties.IconSize}"
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Center"
+                                       Visibility="{TemplateBinding ap:ButtonProperties.Icon, Converter={StaticResource StringToVisibilityConverter}}"/>
+                            <!-- Content -->
+                            <ContentPresenter x:Name="contentPresenter" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Mouse Over State -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource Self}, Path=(ap:ButtonProperties.HoverForeground)}"/>
+                            <Setter TargetName="iconTextBlock" Property="Foreground" Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(ap:ButtonProperties.HoverIconForeground)}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <!-- Smooth background color transition -->
+                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.18"/>
+                                        <!-- Scale growth animation targeting buttonScale -->
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.05" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.05" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.0" Duration="0:0:0.12"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.0" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        
+                        <!-- Pressed State -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="0.95" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="0.95" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.05" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.05" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        
+                        <!-- Disabled State -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- // Detail View Button Start // -->
+    
+    <!-- Login Button -->
+    <Style x:Key="LoginButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
+        <Setter Property="Content" Value="Create"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE8F4;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
+    </Style>
+    
+    <!-- Create Button -->
+    <Style x:Key="CreateButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
+        <Setter Property="Content" Value="Create"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE8F4;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
+    </Style>
+
+    <!-- Save Button Style -->
+    <Style x:Key="SaveButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
+        <Setter Property="Content" Value="Save"/>
+        <Setter Property="Foreground" Value="{StaticResource SuccessGreen}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SuccessGreen}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE74E;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource SuccessGreen}"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource SuccessGreen}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource SuccessGreen}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
+    </Style>
+
+    <!-- Cancel Button Style -->
+    <Style x:Key="CancelButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
+        <Setter Property="Content" Value="Cancel"/>
+        <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE10A;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
+    </Style>
+
+    <!-- Delete Button Style -->
+    <Style x:Key="DeleteButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
+        <Setter Property="Content" Value="Delete"/>
+        <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE74D;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
+    </Style>
+
+    <!-- Print Button Style -->
+    <Style x:Key="PrintButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
+        <Setter Property="Content" Value="Print"/>
+        <Setter Property="Foreground" Value="{StaticResource SecondaryGold}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SecondaryGold}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE749;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource SecondaryGold}"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource SecondaryGold}"/>
+        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource SecondaryGold}"/>
+        <Setter Property="ap:ButtonProperties.HoverForeground" Value="#0F172A"/>
+        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="#0F172A"/>
+    </Style>
+
+    <!-- // Detail View Button End // -->
+
+    <!-- Neil's Buttons End -->
 
     <!-- Small Icon Button (Transparent with Hover) -->
     <Style x:Key="IconButtonSmall" TargetType="Button">
@@ -795,7 +975,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <!-- Modern Menu Button (used in custom overlays) -->
     <Style x:Key="ModernMenuButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>

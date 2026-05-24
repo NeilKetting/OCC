@@ -56,7 +56,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             _subContractorService = subContractorService;
             _userService = userService;
 
-            Title = IsNew ? "New Sub-Contractor" : $"Edit {model.Name}";
+            Title = IsNew ? "New Sub-Contractor" : $"Edit: {model.Name}";
             
             _name = model.Name;
             _email = model.Email ?? string.Empty;

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace OCC.WpfClient.Infrastructure
 {
     public interface IFeatureService

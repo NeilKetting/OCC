@@ -133,29 +133,19 @@
                         <!-- Left Actions -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <!-- Print Button -->
-                            <Button Style="{StaticResource ActionButtonSecondary}" Command="{Binding PrintCommand}" Width="120" Height="40">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Print" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-
+                            <Button Style="{StaticResource PrintButton}" Command="{Binding PrintCommand}" />
                             <!-- Create Task Button -->
-                            <Button Style="{StaticResource ActionButtonSecondary}" 
+                            <Button Style="{StaticResource CreateButton}" 
                                     Command="{Binding CreateTaskCommand}" 
                                     Visibility="{Binding CanCreateTask, Converter={StaticResource VisibilityConverter}}"
-                                    Width="140" Height="40" Margin="10,0,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Create Task" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                    Margin="10,0,0,0" Content="Create Task">
                             </Button>
                         </StackPanel>
 
                         <!-- Cancel / Save Buttons -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Width="100" Height="40" Margin="0,0,8,0"/>
-                            <Button Content="Save" Style="{StaticResource ActionButtonPrimary}" Command="{Binding SaveCommand}" Width="140" Height="40"/>
+                            <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Margin="0,0,10,0"/>
+                            <Button Style="{StaticResource SaveButton}" Command="{Binding SaveCommand}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

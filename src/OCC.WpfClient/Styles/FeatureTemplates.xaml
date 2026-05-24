@@ -101,6 +101,10 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
         <procViews:SupplierListView/>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type procVm:SupplierDetailViewModel}">
+        <procViews:SupplierDetailView/>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type procDialogVm:ReceiveStockViewModel}">
         <procDialogViews:ReceiveStockDialog/>
     </DataTemplate>

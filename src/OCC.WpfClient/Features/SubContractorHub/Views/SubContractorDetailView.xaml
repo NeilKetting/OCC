@@ -194,8 +194,8 @@
                     </Border>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Cancel" Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Width="100" Height="40" Margin="0,0,8,0"/>
-                        <Button Content="Save Partner" Style="{StaticResource ActionButtonPrimary}" Command="{Binding SaveCommand}" Width="140" Height="40"/>
+                        <Button Style="{StaticResource CancelButton}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                        <Button Content="Save Partner" Style="{StaticResource SaveButton}" Command="{Binding SaveCommand}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

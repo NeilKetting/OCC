@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using OCC.WpfClient.Services.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace OCC.WpfClient.Infrastructure
 {
     public class FeatureService : IFeatureService
@@ -23,7 +18,7 @@ namespace OCC.WpfClient.Infrastructure
             
             foreach (var item in allItems)
             {
-                var existing = merged.FirstOrDefault(m => string.Equals(m.Label?.Trim(), item.Label?.Trim(), System.StringComparison.OrdinalIgnoreCase));
+                var existing = merged.FirstOrDefault(m => string.Equals(m.Label?.Trim(), item.Label?.Trim(), StringComparison.OrdinalIgnoreCase));
                 if (existing != null)
                 {
                     foreach (var child in item.Children)

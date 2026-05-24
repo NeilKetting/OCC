@@ -107,7 +107,7 @@
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="IconButtonGradient" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#BF00252E" Offset="0.0" />
+        <GradientStop Color="{StaticResource Orange}" Offset="0.0" />
         <GradientStop Color="#800F172A" Offset="0.5" />
         <GradientStop Color="#B3FF8F00" Offset="1.0" />
     </LinearGradientBrush>
@@ -131,7 +131,13 @@
         <GradientStop Color="Red" Offset="0.25" />
         <GradientStop Color="Blue" Offset="0.75" />
         <GradientStop Color="Yellow" Offset="1.0" />
+    </LinearGradientBrush>    
+    
+    <!-- Save Button Gradiant -->
+    <!-- New Workspace Resources -->
+    <LinearGradientBrush x:Key="SaveButtonBorderGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource SuccessGreenColor}" Offset="0" />
+        <GradientStop Color="#1A2E9DFF" Offset="0.5" />
     </LinearGradientBrush>
-
 
 </ResourceDictionary>

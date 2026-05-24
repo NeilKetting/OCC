@@ -23,32 +23,29 @@
                     </Grid.ColumnDefinitions>
                     
                     <!-- Placeholder Cards -->
-                    <Border Grid.Column="0" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,10,0">
+                    <Border Grid.Column="0" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,10,0">
                         <StackPanel>
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18" Margin="0,0,8,10"/>
                                     <TextBlock Text="ORDERS" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <Button Content="+ New PO" Style="{StaticResource ModernPrimaryButton}"
-                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                        Padding="10,2" Height="25" FontSize="14"
+                                <Button HorizontalAlignment="Right" Content="+ New PO" Style="{StaticResource CreateButton}"
                                         Command="{Binding NavigateToPurchaseOrderCommand}"/>
                             </Grid>
                             <TextBlock Text="12 Active" Foreground="White" FontSize="20"/>
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="1" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="20" Margin="10,0,10,0">
+                    <Border Grid.Column="1" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="10" Margin="10,0,10,0">
                         <StackPanel>
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18" Margin="0,0,8,10"/>
                                     <TextBlock Text="INVENTORY" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <Button Content="+ Receive Stock" Style="{StaticResource ModernPrimaryButton}"
-                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                        Padding="10,2" Height="25" FontSize="14"
+                                <Button HorizontalAlignment="Right" Content="+ Receive Stock" Style="{StaticResource CreateButton}"
+                                        
                                         Command="{Binding ReceiveStockCommand}"/>
                             </Grid>
                             <TextBlock Text="5 Low Stock" Foreground="White" FontSize="20"/>

@@ -261,7 +261,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 
                 LoadPermissions(_user.Permissions);
                 
-                Title = $"Edit {FirstName} {LastName} (Reloaded)";
+                Title = $"Edit {FirstName} {LastName}";
             }
         }
 

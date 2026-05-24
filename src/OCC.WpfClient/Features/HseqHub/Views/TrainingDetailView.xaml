@@ -61,7 +61,7 @@
         </ScrollViewer>
 
         <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,20,0,0">
-            <Button Style="{StaticResource ActionButtonPrimary}" Command="{Binding SaveTrainingCommand}" Content="SAVE RECORD" Height="45" Margin="0,0,0,10"/>
+            <Button Style="{StaticResource SaveButton}" Command="{Binding SaveTrainingCommand}" Content="SAVE RECORD" Margin="0,0,0,10"/>
             <Button Style="{StaticResource CancelButton}" Command="{Binding CloseCommand}" Content="CANCEL" Height="45"/>
         </StackPanel>
     </Grid>

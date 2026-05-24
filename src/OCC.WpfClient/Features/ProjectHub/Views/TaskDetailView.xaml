@@ -310,7 +310,7 @@
 
                     <!-- Footer -->
                     <Border Grid.Row="1" VerticalAlignment="Bottom" Background="#10000000" Padding="20,15" Visibility="{Binding IsCreateMode, Converter={StaticResource VisibilityConverter}}">
-                        <Button Content="Create Task" Command="{Binding CreateTaskCommand}" Style="{StaticResource ActionButtonPrimary}" HorizontalAlignment="Stretch" Height="45"/>
+                        <Button Content="Create Task" Command="{Binding CreateTaskCommand}" Style="{StaticResource CreateButton}" HorizontalAlignment="Stretch"/>
                     </Border>
                 </Grid>
             </Border>

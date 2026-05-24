@@ -138,9 +138,9 @@
             </ScrollViewer>
 
             <!-- Actions -->
-            <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,20,0,5">
-                <Button Command="{Binding CreateProjectCommand}" Content="CREATE PROJECT" Style="{StaticResource PrimaryButton}" Margin="0,0,0,10"/>
-                <Button Command="{Binding CloseCommand}" Content="CANCEL" Style="{StaticResource CancelButton}" />
+            <StackPanel Grid.Row="3" Orientation="Vertical" Margin="10,20,10,5">
+                <Button Command="{Binding CreateProjectCommand}" Content="CREATE PROJECT" Style="{StaticResource SaveButton}" Margin="0,0,0,10"/>
+                <Button Command="{Binding CloseCommand}" Style="{StaticResource CancelButton}" />
             </StackPanel>
         </Grid>
 
