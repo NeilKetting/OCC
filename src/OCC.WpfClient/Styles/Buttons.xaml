@@ -37,59 +37,93 @@
 
     <!-- Primary Action Button with smooth hover transition -->
     <Style x:Key="ModernPrimaryButton" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{StaticResource ModernPrimaryButtonBackgroundGradient}"/>
+        <Setter Property="Foreground" Value="#fffff2"/>
         <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="16,8"/>
-        <Setter Property="Height" Value="48"/>
+        <Setter Property="Padding" Value="20,10,20,12"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="border" 
-                            Background="{TemplateBinding Background}" 
-                            CornerRadius="8"
-                            Padding="{TemplateBinding Padding}"
-                            TextElement.Foreground="{TemplateBinding Foreground}">
-                        <Grid>
+                    <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="buttonScale" ScaleX="1" ScaleY="1"/>
+                        </Grid.RenderTransform>
+                        
+                        <!-- Base Background Border -->
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                CornerRadius="20"
+                                BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}"
+                                BorderThickness="2" />
+                        
+                        <!-- Hover Overlay Border -->
+                        <Border x:Name="hoverOverlay" 
+                                Background="{StaticResource AccentBlueHover}" 
+                                CornerRadius="20"
+                                BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}"
+                                BorderThickness="2"
+                                Opacity="0" />
+
+                        <!-- Content Grid with Padding -->
+                        <Grid Margin="{TemplateBinding Padding}">
                             <ContentPresenter x:Name="contentPresenter" 
-                                              HorizontalAlignment="Center" 
-                                              VerticalAlignment="Center"
-                                              Visibility="Visible" />
-                            
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"
+                                               Visibility="Visible" />                            
                             <!-- Loading Spinner -->
                             <Viewbox x:Name="spinnerView" Width="24" Height="24" Visibility="Collapsed">
-                                <Path x:Name="spinnerPath" Data="M 12 2 A 10 10 0 1 0 22 12" Stroke="White" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                <Path x:Name="spinnerPath" Data="M 12 2 A 10 10 0 1 0 22 12" Stroke="{StaticResource OrangeBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
                                     <Path.RenderTransform>
                                         <RotateTransform x:Name="spinnerTransform" Angle="0" />
                                     </Path.RenderTransform>
                                 </Path>
                             </Viewbox>
                         </Grid>
-                    </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Hover State -->
                         <Trigger Property="IsMouseOver" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="border" 
-                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)" 
-                                                        To="{StaticResource AccentBlueHoverColor}" Duration="0:0:0.2"/>
+                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" 
+                                                         Storyboard.TargetProperty="Opacity" 
+                                                         To="1" Duration="0:0:0.2"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="border" 
-                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)" 
-                                                        To="{StaticResource AccentBlueColor}" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" 
+                                                         Storyboard.TargetProperty="Opacity" 
+                                                         To="0" Duration="0:0:0.15"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
                         
+                        <!-- Pressed State -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.0" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.0" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+
                         <!-- Busy State triggered by Tag property -->
                         <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
                             <Setter TargetName="contentPresenter" Property="Visibility" Value="Collapsed"/>
@@ -115,11 +149,120 @@
     </Style>
     
     <!-- Primary Button (System Standard) -->
-    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ModernPrimaryButton}">
-        <Setter Property="Height" Value="30"/>
-        <Setter Property="Padding" Value="15,0"/>
+    <Style x:Key="PrimaryButton" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource ModernPrimaryButtonBackgroundGradient}"/>
+        <Setter Property="Foreground" Value="#fffff2"/>
+        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+        <Setter Property="Padding" Value="16,0"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="buttonScale" ScaleX="1" ScaleY="1"/>
+                        </Grid.RenderTransform>
+
+                        <!-- Base Background Border -->
+                        <Border x:Name="border" 
+                        Background="{TemplateBinding Background}" 
+                        CornerRadius="8"
+                        BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}"
+                        BorderThickness="2" />
+
+                        <!-- Hover Overlay Border -->
+                        <Border x:Name="hoverOverlay" 
+                        Background="{StaticResource AccentBlueHover}" 
+                        CornerRadius="8"
+                        BorderBrush="{StaticResource GlassBorderUltraLight}"
+                        BorderThickness="2"
+                        Opacity="0" />
+
+                        <!-- Content Grid with Padding -->
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <ContentPresenter x:Name="contentPresenter" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"
+                                       Visibility="Visible" />
+                            <!-- Loading Spinner -->
+                            <Viewbox x:Name="spinnerView" Width="24" Height="24" Visibility="Collapsed">
+                                <Path x:Name="spinnerPath" Data="M 12 2 A 10 10 0 1 0 22 12" Stroke="{StaticResource OrangeBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                    <Path.RenderTransform>
+                                        <RotateTransform x:Name="spinnerTransform" Angle="0" />
+                                    </Path.RenderTransform>
+                                </Path>
+                            </Viewbox>
+                        </Grid>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Hover State -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" 
+                                                 Storyboard.TargetProperty="Opacity" 
+                                                 To="1" Duration="0:0:0.2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" 
+                                                 Storyboard.TargetProperty="Opacity" 
+                                                 To="0" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+
+                        <!-- Pressed State -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.0" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.0" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+
+                        <!-- Busy State triggered by Tag property -->
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
+                            <Setter TargetName="contentPresenter" Property="Visibility" Value="Collapsed"/>
+                            <Setter TargetName="spinnerView" Property="Visibility" Value="Visible"/>
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="SpinAnimation">
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetName="spinnerTransform"
+                                                 Storyboard.TargetProperty="Angle"
+                                                 From="0" To="360" Duration="0:0:1" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="SpinAnimation"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Secondary Button (Glass Style) -->
@@ -194,6 +337,7 @@
         </Setter>
     </Style>
 
+    <!-- Window Close Button -->
     <Style x:Key="WindowCloseButton" TargetType="Button" BasedOn="{StaticResource WindowControlButton}">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -228,6 +372,7 @@
         </Setter>
     </Style>
 
+    <!-- Modern Context Menu Item -->
     <Style TargetType="MenuItem">
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="Padding" Value="10,8"/>
@@ -276,8 +421,8 @@
     </Style>
 
     <!-- Icon Button (Transparent with low-opacity content) -->
-    <Style x:Key="IconButton" TargetType="Button">
-        <Setter Property="Background" Value="Transparent"/>
+    <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+        <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="5"/>
         <Setter Property="Cursor" Value="Hand"/>
@@ -285,25 +430,71 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" BorderThickness="1" BorderBrush="{StaticResource TopMenuGradient}" Padding="10,5">
-                        <ContentPresenter x:Name="content" 
-                                      HorizontalAlignment="Center" 
-                                      VerticalAlignment="Center" 
-                                      Opacity="1"/>
-                    </Border>
+                    <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="buttonScale" ScaleX="1.0" ScaleY="1.0"/>
+                        </Grid.RenderTransform>
+                        
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" BorderThickness="2" 
+                                BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}" Padding="10,5">
+                            <ContentPresenter x:Name="content" 
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center" 
+                                           Opacity="0.9"/>
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Hover State -->
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="content" Property="Opacity" Value="1.0"/>
                             <Setter TargetName="border" Property="Background" Value="#10FFFFFF"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" 
+                                                         Storyboard.TargetProperty="ScaleX" 
+                                                         To="1.08" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" 
+                                                         Storyboard.TargetProperty="ScaleY" 
+                                                         To="1.08" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" 
+                                                         Storyboard.TargetProperty="ScaleX" 
+                                                         To="1.0" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" 
+                                                         Storyboard.TargetProperty="ScaleY" 
+                                                         To="1.0" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
+                        
+                        <!-- Pressed State -->
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
-                            <Setter Property="RenderTransform">
-                                <Setter.Value>
-                                    <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
-                                </Setter.Value>
-                            </Setter>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="0.95" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="0.95" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.08" Duration="0:0:0.05"/>
+                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.08" Duration="0:0:0.05"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
+                        
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.2"/>
                         </Trigger>
@@ -312,6 +503,7 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
     <!-- Premium Button Style (used in Support Hub) -->
     <Style x:Key="PremiumButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
@@ -442,6 +634,7 @@
         </Setter>
     </Style>
 
+    <!-- Toolbar Button Style (Sleek and Transparent) -->
     <Style x:Key="ToolbarButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -468,6 +661,7 @@
         </Setter>
     </Style>
 
+    <!-- Toolbar Toggle Button Style (Sleek and Transparent) -->
     <Style x:Key="ToolbarToggleButton" TargetType="ToggleButton">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>

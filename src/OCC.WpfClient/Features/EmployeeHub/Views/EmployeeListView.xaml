@@ -49,11 +49,11 @@
                     <TextBlock Grid.Column="1" Grid.Row="1" Text="Manage staff records and teams." Style="{StaticResource LabelText}"/>
                 </Grid>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddEmployeeCommand}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Button Style="{StaticResource IconButton}" Command="{Binding AddEmployeeCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,8,0"/>
-                            <TextBlock Text="Add Employee" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
+                            <TextBlock Text="Add Employee" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

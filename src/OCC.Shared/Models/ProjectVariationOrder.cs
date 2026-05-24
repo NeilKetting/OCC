@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace OCC.Shared.Models
 {
@@ -16,5 +16,6 @@ namespace OCC.Shared.Models
 
         public string Status { get; set; } = "Variation Request";
         public bool IsInvoiced { get; set; }
+        public int DurationDays { get; set; }
     }
 }

@@ -139,8 +139,8 @@
 
             <!-- Actions -->
             <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,20,0,5">
-                <Button Command="{Binding CreateProjectCommand}" Content="CREATE PROJECT" Style="{StaticResource ActionButtonPrimary}" Height="45" Margin="0,0,0,10"/>
-                <Button Command="{Binding CloseCommand}" Content="CANCEL" Style="{StaticResource ActionButtonSecondary}" Height="45"/>
+                <Button Command="{Binding CreateProjectCommand}" Content="CREATE PROJECT" Style="{StaticResource PrimaryButton}" Margin="0,0,0,10"/>
+                <Button Command="{Binding CloseCommand}" Content="CANCEL" Style="{StaticResource CancelButton}" />
             </StackPanel>
         </Grid>
 

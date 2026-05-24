@@ -42,6 +42,9 @@ namespace OCC.WpfClient.ModelWrappers
         private bool _isInvoiced;
 
         [ObservableProperty]
+        private int _durationDays;
+
+        [ObservableProperty]
         private byte[]? _rowVersion;
 
         public void Initialize()
@@ -52,6 +55,7 @@ namespace OCC.WpfClient.ModelWrappers
             AdditionalComments = _model.AdditionalComments;
             Status = _model.Status;
             IsInvoiced = _model.IsInvoiced;
+            DurationDays = _model.DurationDays;
             RowVersion = _model.RowVersion;
         }
 
@@ -63,6 +67,7 @@ namespace OCC.WpfClient.ModelWrappers
             _model.AdditionalComments = AdditionalComments;
             _model.Status = Status;
             _model.IsInvoiced = IsInvoiced;
+            _model.DurationDays = DurationDays;
             _model.RowVersion = RowVersion;
         }
 

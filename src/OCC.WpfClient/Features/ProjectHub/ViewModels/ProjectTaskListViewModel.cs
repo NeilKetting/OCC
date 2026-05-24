@@ -17,7 +17,7 @@ using OCC.WpfClient.Infrastructure.Messages;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectTaskListViewModel : ViewModelBase, IOverlayProvider, IRecipient<TaskUpdatedMessage>
+    public partial class ProjectTaskListViewModel : ViewModelBase, IOverlayProvider, IRecipient<TaskUpdatedMessage>, IRecipient<CreateTaskFromVariationOrderMessage>
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IProjectTaskService _taskService;
@@ -106,7 +106,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Tasks";
             
             LoadLayout();
-            WeakReferenceMessenger.Default.Register(this);
+            WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
+            WeakReferenceMessenger.Default.Register<CreateTaskFromVariationOrderMessage>(this);
         }
 
         private void LoadLayout()
@@ -609,6 +610,44 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 // Safety net for async void
                 System.Diagnostics.Debug.WriteLine($"Error handling TaskUpdatedMessage: {ex.Message}");
+            }
+        }
+
+        public async void Receive(CreateTaskFromVariationOrderMessage message)
+        {
+            var variationOrder = message.VariationOrder;
+            var toastService = _serviceProvider.GetRequiredService<IToastService>();
+            try
+            {
+                var vm = _serviceProvider.GetRequiredService<TaskDetailViewModel>();
+                await vm.InitializeForCreation(ProjectId);
+                
+                // Prefill details from approved Variation Order
+                vm.Task.Name = $"VO: {variationOrder.Description}";
+                vm.Task.Description = $"Created from Variation Order: {variationOrder.Description}";
+                if (!string.IsNullOrEmpty(variationOrder.AdditionalComments))
+                {
+                    vm.Task.Description += $"\n\nComments: {variationOrder.AdditionalComments}";
+                }
+                vm.Task.VariationOrderId = variationOrder.Id;
+                
+                // Set start/finish date based on VO's date and duration days
+                vm.Task.StartDate = variationOrder.Date;
+                if (variationOrder.DurationDays > 0)
+                {
+                    vm.Task.FinishDate = variationOrder.Date.AddDays(variationOrder.DurationDays);
+                }
+                else
+                {
+                    vm.Task.FinishDate = variationOrder.Date.AddDays(1);
+                }
+                
+                vm.CloseFinished += (s, e) => CurrentTaskDetail = null;
+                CurrentTaskDetail = vm;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError("Error", "Could not initialize new task: " + ex.Message);
             }
         }
     }

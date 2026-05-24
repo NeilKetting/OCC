@@ -132,6 +132,9 @@ namespace OCC.Client.ModelWrappers
         [ObservableProperty]
         private DateTime? _nextReminderDate;
 
+        [ObservableProperty]
+        private Guid? _variationOrderId;
+
         /// <summary>
         /// Initializes the wrapper properties from the model.
         /// </summary>
@@ -183,6 +186,7 @@ namespace OCC.Client.ModelWrappers
                 IsReminderSet = _model.IsReminderSet;
                 Frequency = _model.Frequency;
                 NextReminderDate = _model.NextReminderDate;
+                VariationOrderId = _model.VariationOrderId;
             }
             finally
             {
@@ -229,6 +233,7 @@ namespace OCC.Client.ModelWrappers
             _model.IsReminderSet = IsReminderSet;
             _model.Frequency = Frequency;
             _model.NextReminderDate = NextReminderDate;
+            _model.VariationOrderId = VariationOrderId;
         }
 
         // --- Property Change Handlers ---

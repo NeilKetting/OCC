@@ -628,6 +628,7 @@ namespace OCC.API.Controllers
                 {
                     var averageProgress = project.Tasks.Average(t => (double)t.PercentComplete);
                     var oldStatus = project.Status;
+                    var oldEndDate = project.EndDate;
 
                     if (averageProgress >= 100)
                     {
@@ -638,16 +639,23 @@ namespace OCC.API.Controllers
                         project.Status = "In Progress";
                     }
 
-                    if (oldStatus != project.Status)
+                    var maxFinishDate = project.Tasks.Max(t => t.FinishDate);
+                    if (maxFinishDate > project.EndDate)
                     {
-                        _logger.LogInformation("Project {Id} status updated from {Old} to {New}", project.Id, oldStatus, project.Status);
+                        project.EndDate = maxFinishDate;
+                    }
+
+                    if (oldStatus != project.Status || oldEndDate != project.EndDate)
+                    {
+                        _logger.LogInformation("Project {Id} updated. Status: {OldStatus}->{NewStatus}, EndDate: {OldEndDate}->{NewEndDate}", 
+                            project.Id, oldStatus, project.Status, oldEndDate, project.EndDate);
                         _context.Entry(project).State = EntityState.Modified;
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating project status for {ProjectId}", projectId);
+                _logger.LogError(ex, "Error updating project status and end date for {ProjectId}", projectId);
             }
         }
     }

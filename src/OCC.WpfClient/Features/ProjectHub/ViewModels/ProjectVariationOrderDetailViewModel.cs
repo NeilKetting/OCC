@@ -1,8 +1,13 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.ModelWrappers;
 using OCC.WpfClient.Services.Interfaces;
 
@@ -13,13 +18,20 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ProjectVariationOrderListViewModel _parent;
         private readonly ProjectVariationOrderWrapper _wrapper;
         private readonly IProjectVariationOrderService _variationOrderService;
+        private readonly IProjectTaskService _projectTaskService;
 
         public ProjectVariationOrderWrapper Wrapper => _wrapper;
+
+        [ObservableProperty]
+        private bool _isTaskCreated;
+
+        public bool CanCreateTask => Wrapper.Status == "Approved" && !IsTaskCreated && Wrapper.Id != Guid.Empty;
 
         public ProjectVariationOrderDetailViewModel(
             ProjectVariationOrderListViewModel parent,
             ProjectVariationOrderWrapper wrapper,
             IProjectVariationOrderService variationOrderService,
+            IProjectTaskService projectTaskService,
             IDialogService dialogService,
             ILogger logger,
             IPdfService pdfService) : base(dialogService, logger, pdfService)
@@ -27,7 +39,46 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _parent = parent;
             _wrapper = wrapper;
             _variationOrderService = variationOrderService;
+            _projectTaskService = projectTaskService;
             Title = wrapper.Id == Guid.Empty ? "New Variation Order" : "Edit Variation Order";
+
+            _wrapper.PropertyChanged += Wrapper_PropertyChanged;
+            _ = CheckIfTaskCreatedAsync();
+        }
+
+        private void Wrapper_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ProjectVariationOrderWrapper.Status))
+            {
+                OnPropertyChanged(nameof(CanCreateTask));
+                CreateTaskCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        private async Task CheckIfTaskCreatedAsync()
+        {
+            if (Wrapper.Id == Guid.Empty) return;
+
+            try
+            {
+                var tasks = await _projectTaskService.GetTasksAsync(Wrapper.ProjectId);
+                IsTaskCreated = tasks.Any(t => t.VariationOrderId == Wrapper.Id);
+                OnPropertyChanged(nameof(CanCreateTask));
+                CreateTaskCommand.NotifyCanExecuteChanged();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to check if task is created for variation order {Id}", Wrapper.Id);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanCreateTask))]
+        private void CreateTask()
+        {
+            Wrapper.CommitToModel();
+            WeakReferenceMessenger.Default.Send(new CreateTaskFromVariationOrderMessage(Wrapper.Model));
+            Wrapper.PropertyChanged -= Wrapper_PropertyChanged;
+            _parent.CloseDetailView();
         }
 
         protected override async Task ExecuteSaveAsync()
@@ -76,6 +127,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         protected override void OnSaveSuccess()
         {
+            Wrapper.PropertyChanged -= Wrapper_PropertyChanged;
             NotifySuccess("Success", "Variation order saved successfully.");
             _parent.LoadDataAsync().ConfigureAwait(false);
             _parent.CloseDetailView();
@@ -132,6 +184,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         protected override void OnCancel()
         {
+            Wrapper.PropertyChanged -= Wrapper_PropertyChanged;
             _parent.CloseDetailView();
         }
 

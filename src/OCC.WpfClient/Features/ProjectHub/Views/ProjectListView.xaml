@@ -48,11 +48,11 @@
                     <TextBlock Grid.Column="1" Grid.Row="1" Text="Monitor and manage all active design and construction projects." Style="{StaticResource LabelText}"/>
                 </Grid>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Command="{Binding AddProjectCommand}" Style="{StaticResource PrimaryButton}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Button Command="{Binding AddProjectCommand}" Style="{StaticResource IconButton}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,10,0"/>
-                            <TextBlock Text="Create New Project" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
+                            <TextBlock Text="Create New Project" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

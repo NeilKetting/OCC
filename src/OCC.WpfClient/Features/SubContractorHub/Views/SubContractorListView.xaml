@@ -46,11 +46,11 @@
                     <TextBlock Text="Manage specialized service providers and trades." Style="{StaticResource LabelText}"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddSubContractorCommand}" Width="180" Height="36">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Button Style="{StaticResource IconButton}" Command="{Binding AddSubContractorCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,8,0"/>
-                            <TextBlock Text="Add Partner" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
+                            <TextBlock Text="Add Partner" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

@@ -14,8 +14,10 @@
     <Color x:Key="InputBackgroundHoverColor">#4D475A6B</Color>
     <Color x:Key="InputBorderColor">#4A5B6F</Color>
     <Color x:Key="InputBorderHoverColor">#6A7B8F</Color>
+    <Color x:Key="ButtonTextColor">#F5F5F5</Color>
     
     <!-- Text & UI Colors -->
+    
     <Color x:Key="TextMainColor">#FFFFFF</Color>
     <Color x:Key="TextSubColor">#A0FFFFFF</Color>
     <Color x:Key="ErrorRedColor">#FF4B4B</Color>
@@ -36,6 +38,7 @@
     <Color x:Key="SuccessGreenColor">#00C853</Color>
 
     <!-- Brushes -->
+    <SolidColorBrush x:Key="ButtonTextColorBrush" Color="{StaticResource ButtonTextColor}"/>
     <SolidColorBrush x:Key="BackgroundDark" Color="{StaticResource BackgroundDarkColor}" />
     <SolidColorBrush x:Key="BackgroundDarker" Color="{StaticResource BackgroundDarkerColor}" />
     <SolidColorBrush x:Key="CardBackground" Color="{StaticResource CardBackgroundColor}" />
@@ -89,6 +92,18 @@
         <GradientStop Color="#d4cdcb" Offset="0.0" />
         <GradientStop Color="#5c5857" Offset="0.5" />
         <GradientStop Color="#B3FF8F00" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ModernPrimaryButtonBackgroundGradient" StartPoint="0.5,0.5" EndPoint="1.5,1.5">
+        <GradientStop Color="#093C5D" Offset="0.0" />
+        <GradientStop Color="#6EADBC" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ModernPrimaryButtonBorderGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#d4cdcb" Offset="0.0" />
+        <GradientStop Color="#5c5857" Offset="0.4" />
+        <GradientStop Color="#5c5857" Offset="0.6" />
+        <GradientStop Color="#d4cdcb" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="IconButtonGradient" StartPoint="0,0" EndPoint="1,0">

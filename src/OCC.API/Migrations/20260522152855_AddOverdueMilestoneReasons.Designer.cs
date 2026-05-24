@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OCC.API.Data;
 
@@ -11,9 +12,11 @@ using OCC.API.Data;
 namespace OCC.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522152855_AddOverdueMilestoneReasons")]
+    partial class AddOverdueMilestoneReasons
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2636,16 +2639,11 @@ namespace OCC.API.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("VariationOrderId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParentId");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("VariationOrderId");
 
                     b.ToTable("ProjectTasks");
                 });
@@ -2723,9 +2721,6 @@ namespace OCC.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DurationDays")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -2799,7 +2794,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("b862c2f5-9fe1-4228-9946-4d0aa0fdb12a"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(735),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7419),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2808,7 +2803,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("a1e140e8-e1a8-4acf-b5e0-715ed41c7af3"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1293),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7954),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 3, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2817,7 +2812,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("2d50946b-c807-4e9f-a74d-a6c5493b3c94"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1294),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7955),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 4, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2826,7 +2821,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("e91fa4f6-1b80-423b-8755-c8e133c34670"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1296),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7956),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 4, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2835,7 +2830,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("3e473dfe-4182-4c81-8ba8-f5c33a9e1ed1"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1297),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7957),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 4, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2844,7 +2839,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("80ce73e9-fd26-47db-b79f-57165ba68111"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1297),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7958),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2853,7 +2848,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("7f422560-941b-4fe4-80ef-b22adeddfbee"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1298),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7959),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 6, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2862,7 +2857,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("e226a941-9246-4dd5-91ec-7dff8a5a96ca"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1299),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7960),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 8, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2871,7 +2866,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("0dc5e6d5-2530-40d7-8301-9d41f44c879b"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1300),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7961),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2880,7 +2875,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("5eb30cce-ad23-43a9-9ca2-50236232dccf"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1301),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7962),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 9, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2889,7 +2884,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("b5b21171-4284-4f14-bfa4-e8bd0cdb3264"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1302),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7963),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2898,7 +2893,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("496a7469-aa27-435d-899c-1a7c540f5187"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1314),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7964),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 12, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -2907,7 +2902,7 @@ namespace OCC.API.Migrations
                         new
                         {
                             Id = new Guid("fcc99eac-4678-49da-9e2e-f1026fe7c867"),
-                            CreatedAtUtc = new DateTime(2026, 5, 24, 5, 50, 34, 50, DateTimeKind.Utc).AddTicks(1315),
+                            CreatedAtUtc = new DateTime(2026, 5, 22, 15, 28, 54, 498, DateTimeKind.Utc).AddTicks(7965),
                             CreatedBy = "System",
                             Date = new DateTime(2026, 12, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
@@ -4034,15 +4029,9 @@ namespace OCC.API.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("OCC.Shared.Models.ProjectVariationOrder", "VariationOrder")
-                        .WithMany()
-                        .HasForeignKey("VariationOrderId");
-
                     b.Navigation("ParentTask");
 
                     b.Navigation("Project");
-
-                    b.Navigation("VariationOrder");
                 });
 
             modelBuilder.Entity("OCC.Shared.Models.ProjectTeamMember", b =>

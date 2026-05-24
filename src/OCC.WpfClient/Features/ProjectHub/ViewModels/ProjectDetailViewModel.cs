@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectDetailViewModel : DetailViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IOverlayProvider
+    public partial class ProjectDetailViewModel : DetailViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IRecipient<CreateTaskFromVariationOrderMessage>, IOverlayProvider
     {
         private readonly IProjectService _projectService;
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
@@ -65,6 +65,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
             WeakReferenceMessenger.Default.Register<ProjectUpdatedMessage>(this);
+            WeakReferenceMessenger.Default.Register<CreateTaskFromVariationOrderMessage>(this);
         }
     
         private void UpdateHeaderInfo()
@@ -168,6 +169,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 _ = LoadProjectAsync(ProjectId);
             }
+        }
+
+        public void Receive(CreateTaskFromVariationOrderMessage message)
+        {
+            ShowTasks();
         }
 
         [RelayCommand]

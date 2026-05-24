@@ -42,7 +42,12 @@
                     <TextBlock Text="Policies, Templates, and Registers" Style="{StaticResource LabelText}" Opacity="0.7"/>
                 </StackPanel>
 
-                <Button Grid.Column="1" Style="{StaticResource ActionButtonPrimary}" Command="{Binding OpenUploadCommand}" Content="+ UPLOAD NEW" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Style="{StaticResource IconButton}" Command="{Binding OpenUploadCommand}" Margin="0,0,20,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
+                        <TextBlock Text="Upload Document" Style="{StaticResource ButtonTextStyle}"/>
+                    </StackPanel>
+                </Button>
             </Grid>
 
             <!-- Document Grid -->
@@ -55,23 +60,25 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource GlassCard}" Width="240" Margin="0,0,16,16">
+                            <Border Style="{StaticResource GlassCard}" Width="220" Margin="0,0,16,16">
                                 <StackPanel>
                                     <Grid Margin="0,0,0,15">
                                         <Border CornerRadius="8" Background="#1A3B82F6" Width="45" Height="45" HorizontalAlignment="Left">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource PrimaryTeal}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
-                                        <Button HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource IconButtonSmall}" 
+                                        <Button HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource IconButtonSmall}" Margin="5"
                                                 Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="12"/>
                                         </Button>
                                     </Grid>
 
-                                    <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="Bold" FontSize="14" TextTrimming="CharacterEllipsis" Margin="0,0,0,5"/>
-                                    <TextBlock Text="{Binding Category}" FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,0,0,15"/>
+                                    <StackPanel Margin="5">
+                                        <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="Bold" FontSize="14" TextTrimming="CharacterEllipsis" Margin="0,0,0,5"/>
+                                        <TextBlock Text="{Binding Category}" FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,0,0,15"/>
+                                    </StackPanel>
 
-                                    <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
-                                        <Grid>
+                                    <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0">
+                                        <Grid Margin="8,5,5,5">
                                             <TextBlock Text="{Binding UploadDate, StringFormat='d MMM yyyy'}" FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
                                             <Button HorizontalAlignment="Right" Style="{StaticResource GhostButton}" Padding="10,4"
                                                     Command="{Binding DataContext.DownloadDocumentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">

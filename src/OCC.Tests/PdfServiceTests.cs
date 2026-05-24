@@ -25,7 +25,9 @@ namespace OCC.Tests
                     Id = Guid.NewGuid(),
                     Name = "Test Project A",
                     Customer = "Acme Corp",
-                    Status = "Active"
+                    Status = "Active",
+                    StartDate = DateTime.Today.AddDays(-30),
+                    EndDate = DateTime.Today.AddDays(90)
                 },
                 WeekNumber = 12,
                 TotalTasks = 50,
@@ -35,12 +37,38 @@ namespace OCC.Tests
                 PowPercentRequired = 0.70f,
                 DelayDays = 3,
                 SafeWorkingHours = 1250,
-                SiteEstablishmentPlanned = DateTime.Today.AddDays(-30),
-                SiteEstablishmentActual = DateTime.Today.AddDays(-28),
-                PracticalCompletionPlanned = DateTime.Today.AddDays(90),
-                PracticalCompletionActual = null,
-                StreamingPlanned = DateTime.Today.AddDays(45),
-                StreamingActual = DateTime.Today.AddDays(44),
+                ThisWeekMilestones = new List<MilestonePrintModel>
+                {
+                    new MilestonePrintModel
+                    {
+                        Name = "Site Establishment",
+                        PlannedDate = DateTime.Today.AddDays(-2),
+                        Progress = 100,
+                        Status = "Complete",
+                        IsComplete = true
+                    },
+                    new MilestonePrintModel
+                    {
+                        Name = "Practical Completion",
+                        PlannedDate = DateTime.Today.AddDays(2),
+                        Progress = 50,
+                        Status = "In Progress",
+                        IsComplete = false,
+                        Reason = "Waiting for inspection approvals"
+                    }
+                },
+                OverdueMilestones = new List<MilestonePrintModel>
+                {
+                    new MilestonePrintModel
+                    {
+                        Name = "Streaming (Go-Live)",
+                        PlannedDate = DateTime.Today.AddDays(-5),
+                        Progress = 80,
+                        Status = "Delayed",
+                        IsComplete = false,
+                        Reason = "Hardware delivery delayed by supplier"
+                    }
+                },
                 GeneralWasteTon = "12.5",
                 RubbleM3 = "45.0",
                 ScrapMetalsTon = "3.2",

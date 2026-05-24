@@ -18,6 +18,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
     public partial class ProjectVariationOrderListViewModel : ListViewModelBase<ProjectVariationOrderWrapper>
     {
         private readonly IProjectVariationOrderService _variationOrderService;
+        private readonly IProjectTaskService _projectTaskService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<ProjectVariationOrderListViewModel> _logger;
         private Guid _projectId;
@@ -40,13 +41,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public ProjectVariationOrderListViewModel(
             IProjectVariationOrderService variationOrderService,
+            IProjectTaskService projectTaskService,
             IDialogService dialogService,
-            ILogger<ProjectVariationOrderListViewModel> _logger,
+            ILogger<ProjectVariationOrderListViewModel> logger,
             IPdfService pdfService) : base(pdfService)
         {
             _variationOrderService = variationOrderService;
+            _projectTaskService = projectTaskService;
             _dialogService = dialogService;
-            this._logger = _logger;
+            _logger = logger;
             Title = "Variation Orders";
         }
 
@@ -114,7 +117,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 Status = "Variation Request"
             };
             var wrapper = new ProjectVariationOrderWrapper(order);
-            OpenOverlay(new ProjectVariationOrderDetailViewModel(this, wrapper, _variationOrderService, _dialogService, _logger, _pdfService));
+            OpenOverlay(new ProjectVariationOrderDetailViewModel(this, wrapper, _variationOrderService, _projectTaskService, _dialogService, _logger, _pdfService));
         }
 
         [RelayCommand]
@@ -145,7 +148,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     target.Model.RowVersion = latest.RowVersion;
                     target.Initialize();
 
-                    OpenOverlay(new ProjectVariationOrderDetailViewModel(this, target, _variationOrderService, _dialogService, _logger, _pdfService));
+                    OpenOverlay(new ProjectVariationOrderDetailViewModel(this, target, _variationOrderService, _projectTaskService, _dialogService, _logger, _pdfService));
                 }
             }
             catch (Exception ex)

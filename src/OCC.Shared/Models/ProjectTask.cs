@@ -282,6 +282,16 @@ namespace OCC.Shared.Models
         /// <summary> Navigation property to the parent Project. </summary>
         [JsonIgnore]
         public virtual Project? Project { get; set; }
+
+        private Guid? _variationOrderId;
+        public Guid? VariationOrderId 
+        { 
+            get => _variationOrderId; 
+            set { if (_variationOrderId != value) { _variationOrderId = value; OnPropertyChanged(); } } 
+        }
+
+        [JsonIgnore]
+        public virtual ProjectVariationOrder? VariationOrder { get; set; }
         
         /// <summary> Navigation property to the parent task (if any). </summary>
         [JsonIgnore]

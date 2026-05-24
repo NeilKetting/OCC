@@ -15,6 +15,7 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Features.ProjectHub.Models;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
@@ -26,6 +27,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IAuthService _authService;
         private readonly ConnectionSettings _connectionSettings;
+        private readonly IProjectReportService _projectReportService;
 
         [ObservableProperty] private Project? _project;
         [ObservableProperty] private Guid _projectId;
@@ -42,19 +44,22 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _rubbleM3 = "0";
         [ObservableProperty] private string _scrapMetalsTon = "0";
         [ObservableProperty] private string _asbestosTon = "0";
-        [ObservableProperty] private DateTime? _siteEstablishmentPlanned;
-        [ObservableProperty] private DateTime? _siteEstablishmentActual;
-        [ObservableProperty] private DateTime? _practicalCompletionPlanned;
-        [ObservableProperty] private DateTime? _practicalCompletionActual;
         [ObservableProperty] private double _powPercentRequired;
         [ObservableProperty] private int _delayDays;
-        [ObservableProperty] private DateTime? _streamingPlanned;
-        [ObservableProperty] private DateTime? _streamingActual;
+
+        // Dynamic Milestones
+        [ObservableProperty] private ObservableCollection<MilestoneReportItem> _thisWeekMilestones = new();
+        [ObservableProperty] private ObservableCollection<MilestoneReportItem> _overdueMilestones = new();
+        [ObservableProperty] private bool _hasThisWeekMilestones;
+        [ObservableProperty] private bool _noThisWeekMilestones = true;
+        [ObservableProperty] private bool _hasOverdueMilestones;
+        [ObservableProperty] private bool _noOverdueMilestones = true;
 
         // Display lists
         [ObservableProperty] private ObservableCollection<VendorReportRow> _vendorReportRows = new();
         [ObservableProperty] private ObservableCollection<IncidentPhotoDto> _incidentPhotos = new();
         [ObservableProperty] private ObservableCollection<ProjectVariationOrder> _variationOrders = new();
+        [ObservableProperty] private ObservableCollection<ProjectReportHistory> _reportHistory = new();
         [ObservableProperty] private bool _hasPhotos;
 
         private List<ProjectTask> _loadedTasks = new();
@@ -68,7 +73,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ConnectionSettings connectionSettings,
             IDialogService dialogService,
             ILogger<ProjectReportViewModel> logger,
-            IPdfService pdfService) : base(dialogService, logger, pdfService)
+            IPdfService pdfService,
+            IProjectReportService projectReportService) : base(dialogService, logger, pdfService)
         {
             _projectService = projectService;
             _healthSafetyService = healthSafetyService;
@@ -76,6 +82,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _httpClientFactory = httpClientFactory;
             _authService = authService;
             _connectionSettings = connectionSettings;
+            _projectReportService = projectReportService;
             Title = "Project Report";
         }
 
@@ -99,19 +106,233 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 CompletedTasks = nonGroupTasks.Count(t => t.Status == "Completed" || t.Status == "Done" || t.PercentComplete == 100);
                 OverallProgress = TotalTasks > 0 ? (double)nonGroupTasks.Sum(t => t.PercentComplete) / TotalTasks : 0;
 
-                // Calculate week number
+                // Calculate week number based on Thursday-to-Thursday reporting cycle
                 if (Project.StartDate != default)
                 {
-                    var days = (DateTime.Today - Project.StartDate).Days;
-                    WeekNumber = Math.Max(1, (days / 7) + 1);
+                    // Find the first Thursday on or after Project.StartDate
+                    var firstThursday = Project.StartDate.Date;
+                    while (firstThursday.DayOfWeek != DayOfWeek.Thursday)
+                    {
+                        firstThursday = firstThursday.AddDays(1);
+                    }
+
+                    if (DateTime.Today <= firstThursday)
+                    {
+                        WeekNumber = 1;
+                    }
+                    else
+                    {
+                        var daysSinceFirstThursday = (DateTime.Today - firstThursday).Days;
+                        WeekNumber = ((daysSinceFirstThursday - 1) / 7) + 2;
+                    }
                 }
                 else
                 {
                     WeekNumber = 1;
                 }
 
-                // Load local report properties
-                LoadLocalReportData();
+                // Load report draft details from API
+                var draft = await _projectReportService.GetDraftAsync(projectId);
+                if (draft != null)
+                {
+                    StatusSummary = draft.StatusSummary;
+                    GeneralWasteTon = draft.GeneralWasteTon;
+                    RubbleM3 = draft.RubbleM3;
+                    ScrapMetalsTon = draft.ScrapMetalsTon;
+                    AsbestosTon = draft.AsbestosTon;
+                    PowPercentRequired = draft.PowPercentRequired;
+                    DelayDays = draft.DelayDays;
+                }
+                else
+                {
+                    // Defaults
+                    StatusSummary = Project?.Description ?? string.Empty;
+                    GeneralWasteTon = "0";
+                    RubbleM3 = "0";
+                    ScrapMetalsTon = "0";
+                    AsbestosTon = "0";
+                    PowPercentRequired = 0;
+                    DelayDays = 0;
+                }
+
+                // Calculate Comprehensive POW progress
+                var today = DateTime.Today;
+                double totalLeafPlannedProgress = 0;
+                foreach (var task in nonGroupTasks)
+                {
+                    double plannedProgress = 0;
+                    if (today < task.StartDate)
+                    {
+                        plannedProgress = 0;
+                    }
+                    else if (today > task.FinishDate)
+                    {
+                        plannedProgress = 100;
+                    }
+                    else
+                    {
+                        double totalDuration = (task.FinishDate - task.StartDate).TotalSeconds;
+                        if (totalDuration <= 0)
+                        {
+                            plannedProgress = 100;
+                        }
+                        else
+                        {
+                            double elapsed = (today - task.StartDate).TotalSeconds;
+                            plannedProgress = (elapsed / totalDuration) * 100;
+                        }
+                    }
+                    totalLeafPlannedProgress += plannedProgress;
+                }
+                PowPercentRequired = nonGroupTasks.Count > 0 ? totalLeafPlannedProgress / nonGroupTasks.Count : 0;
+
+                // Load reasons map
+                var reasonsMap = new Dictionary<Guid, string>();
+                if (draft != null && !string.IsNullOrEmpty(draft.OverdueMilestoneReasons))
+                {
+                    try
+                    {
+                        reasonsMap = JsonSerializer.Deserialize<Dictionary<Guid, string>>(draft.OverdueMilestoneReasons) ?? new Dictionary<Guid, string>();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to deserialize overdue milestone reasons.");
+                    }
+                }
+
+                // Calculate reporting week start/end
+                var weekEndDate = today;
+                while (weekEndDate.DayOfWeek != DayOfWeek.Thursday)
+                {
+                    weekEndDate = weekEndDate.AddDays(1);
+                }
+                var weekStartDate = weekEndDate.AddDays(-6);
+
+                // Load dynamic milestones
+                ProjectTask? projectTask = null;
+                if (Project != null && !string.IsNullOrEmpty(Project.Name))
+                {
+                    projectTask = tasks.FirstOrDefault(t => t.Name.Trim().Equals(Project.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+                    if (projectTask == null)
+                    {
+                        projectTask = tasks.FirstOrDefault(t => t.Name.Contains(Project.Name, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (projectTask != null)
+                    {
+                        var lookup = tasks.ToDictionary(t => t.Id);
+                        bool isRoot = !projectTask.ParentId.HasValue || projectTask.ParentId == Guid.Empty || !lookup.ContainsKey(projectTask.ParentId.Value);
+                        if (isRoot)
+                        {
+                            var childGroups = tasks.Where(t => t.ParentId == projectTask.Id && t.IsGroup).ToList();
+                            if (childGroups.Count == 1)
+                            {
+                                projectTask = childGroups[0];
+                            }
+                        }
+                    }
+                }
+
+                List<ProjectTask> parentTasks;
+                if (projectTask != null)
+                {
+                    parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == projectTask.Id).ToList();
+                }
+                else
+                {
+                    var lookup = tasks.ToDictionary(t => t.Id);
+                    var roots = tasks.Where(t => !t.ParentId.HasValue || t.ParentId == Guid.Empty || !lookup.ContainsKey(t.ParentId.Value)).ToList();
+                    if (roots.Count == 1)
+                    {
+                        var root = roots[0];
+                        var rootChildren = tasks.Where(t => t.ParentId == root.Id).ToList();
+                        var childGroups = rootChildren.Where(t => t.IsGroup).ToList();
+                        if (childGroups.Count == 1)
+                        {
+                            var projectTaskCandidate = childGroups[0];
+                            parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == projectTaskCandidate.Id).ToList();
+                        }
+                        else
+                        {
+                            parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == root.Id).ToList();
+                        }
+                    }
+                    else
+                    {
+                        parentTasks = tasks.Where(t => t.IsGroup && (!t.ParentId.HasValue || t.ParentId == Guid.Empty || !lookup.ContainsKey(t.ParentId.Value))).ToList();
+                    }
+                }
+
+                var thisWeekList = new List<MilestoneReportItem>();
+                var overdueList = new List<MilestoneReportItem>();
+
+                var workingDays = GetUpcomingWorkingDays(today, 5);
+                var minWorkingDay = workingDays[0];
+                var maxWorkingDay = workingDays[4];
+
+                foreach (var pt in parentTasks)
+                {
+                    if (pt.FinishDate.Date < today && !pt.IsComplete)
+                    {
+                        var item = new MilestoneReportItem
+                        {
+                            TaskId = pt.Id,
+                            Name = pt.Name,
+                            StartDate = pt.StartDate,
+                            PlannedDate = pt.FinishDate,
+                            Progress = pt.PercentComplete,
+                            Status = pt.Status,
+                            IsComplete = pt.IsComplete
+                        };
+                        if (reasonsMap.TryGetValue(pt.Id, out var reason))
+                        {
+                            item.Reason = reason;
+                        }
+                        overdueList.Add(item);
+                    }
+                    else
+                    {
+                        bool isThisWeek = false;
+                        if (pt.IsComplete)
+                        {
+                            isThisWeek = pt.FinishDate.Date >= minWorkingDay && pt.FinishDate.Date <= maxWorkingDay;
+                        }
+                        else
+                        {
+                            isThisWeek = pt.StartDate.Date <= maxWorkingDay && pt.FinishDate.Date >= minWorkingDay;
+                        }
+
+                        if (isThisWeek)
+                        {
+                            var item = new MilestoneReportItem
+                            {
+                                TaskId = pt.Id,
+                                Name = pt.Name,
+                                StartDate = pt.StartDate,
+                                PlannedDate = pt.FinishDate,
+                                Progress = pt.PercentComplete,
+                                Status = pt.Status,
+                                IsComplete = pt.IsComplete
+                            };
+                            if (reasonsMap.TryGetValue(pt.Id, out var reason))
+                            {
+                                item.Reason = reason;
+                            }
+                            thisWeekList.Add(item);
+                        }
+                    }
+                }
+
+                ThisWeekMilestones = new ObservableCollection<MilestoneReportItem>(thisWeekList);
+                OverdueMilestones = new ObservableCollection<MilestoneReportItem>(overdueList);
+
+                HasThisWeekMilestones = ThisWeekMilestones.Any();
+                NoThisWeekMilestones = !HasThisWeekMilestones;
+                HasOverdueMilestones = OverdueMilestones.Any();
+                NoOverdueMilestones = !HasOverdueMilestones;
+
+                // Load report run history
+                await LoadHistoryAsync();
 
                 // Fetch safe working hours
                 await FetchSafeWorkingHoursAsync();
@@ -309,82 +530,92 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             return Path.Combine(folder, $"{ProjectId}.json");
         }
 
-        private void LoadLocalReportData()
+        private async Task LoadHistoryAsync()
         {
             try
             {
-                var path = GetLocalFilePath();
-                if (File.Exists(path))
+                var list = await _projectReportService.GetHistoryAsync(ProjectId);
+                ReportHistory.Clear();
+                foreach (var item in list)
                 {
-                    var json = File.ReadAllText(path);
-                    var data = JsonSerializer.Deserialize<LocalProjectReportData>(json);
-                    if (data != null)
-                    {
-                        StatusSummary = data.StatusSummary;
-                        GeneralWasteTon = data.GeneralWasteTon;
-                        RubbleM3 = data.RubbleM3;
-                        ScrapMetalsTon = data.ScrapMetalsTon;
-                        AsbestosTon = data.AsbestosTon;
-                        SiteEstablishmentPlanned = data.SiteEstablishmentPlanned;
-                        SiteEstablishmentActual = data.SiteEstablishmentActual;
-                        PracticalCompletionPlanned = data.PracticalCompletionPlanned;
-                        PracticalCompletionActual = data.PracticalCompletionActual;
-                        PowPercentRequired = data.PowPercentRequired;
-                        DelayDays = data.DelayDays;
-                        StreamingPlanned = data.StreamingPlanned;
-                        StreamingActual = data.StreamingActual;
-                        return;
-                    }
+                    ReportHistory.Add(item);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to load local report properties.");
+                _logger.LogWarning(ex, "Failed to load report history for project {ProjectId}", ProjectId);
             }
-
-            // Defaults
-            StatusSummary = Project?.Description ?? string.Empty;
-            GeneralWasteTon = "0";
-            RubbleM3 = "0";
-            ScrapMetalsTon = "0";
-            AsbestosTon = "0";
-            SiteEstablishmentPlanned = Project?.StartDate;
-            SiteEstablishmentActual = Project?.StartDate;
-            PracticalCompletionPlanned = Project?.EndDate;
-            PracticalCompletionActual = Project?.EndDate;
-            PowPercentRequired = 0;
-            DelayDays = 0;
-            StreamingPlanned = Project?.EndDate;
-            StreamingActual = Project?.EndDate;
         }
 
-        private void SaveLocalReportData()
+        [RelayCommand]
+        public void DownloadReport(ProjectReportHistory history)
+        {
+            if (history == null || string.IsNullOrEmpty(history.FilePath)) return;
+
+            try
+            {
+                var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5000/";
+                if (!baseUrl.EndsWith("/")) baseUrl += "/";
+                var fullUrl = history.FilePath.StartsWith("http") ? history.FilePath : $"{baseUrl}{history.FilePath.TrimStart('/')}";
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = fullUrl,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                NotifyError("Error", "Could not open historical report: " + ex.Message);
+                _logger.LogError(ex, "Error opening historical report {HistoryId}", history.Id);
+            }
+        }
+
+        private async Task SaveLocalReportDataAsync()
         {
             try
             {
-                var path = GetLocalFilePath();
-                var data = new LocalProjectReportData
+                var reasonsMap = new Dictionary<Guid, string>();
+                if (ThisWeekMilestones != null)
                 {
+                    foreach (var m in ThisWeekMilestones)
+                    {
+                        if (!string.IsNullOrEmpty(m.Reason))
+                        {
+                            reasonsMap[m.TaskId] = m.Reason;
+                        }
+                    }
+                }
+                if (OverdueMilestones != null)
+                {
+                    foreach (var m in OverdueMilestones)
+                    {
+                        if (!string.IsNullOrEmpty(m.Reason))
+                        {
+                            reasonsMap[m.TaskId] = m.Reason;
+                        }
+                    }
+                }
+                var overdueMilestoneReasonsJson = JsonSerializer.Serialize(reasonsMap);
+
+                var draft = new ProjectReportDraft
+                {
+                    ProjectId = ProjectId,
                     StatusSummary = StatusSummary,
                     GeneralWasteTon = GeneralWasteTon,
                     RubbleM3 = RubbleM3,
                     ScrapMetalsTon = ScrapMetalsTon,
                     AsbestosTon = AsbestosTon,
-                    SiteEstablishmentPlanned = SiteEstablishmentPlanned,
-                    SiteEstablishmentActual = SiteEstablishmentActual,
-                    PracticalCompletionPlanned = PracticalCompletionPlanned,
-                    PracticalCompletionActual = PracticalCompletionActual,
                     PowPercentRequired = PowPercentRequired,
                     DelayDays = DelayDays,
-                    StreamingPlanned = StreamingPlanned,
-                    StreamingActual = StreamingActual
+                    OverdueMilestoneReasons = overdueMilestoneReasonsJson
                 };
-                var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(path, json);
+
+                await _projectReportService.SaveDraftAsync(ProjectId, draft);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save local report properties.");
+                _logger.LogWarning(ex, "Failed to save report draft to server.");
             }
         }
 
@@ -405,16 +636,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             WasteGeneral = $"{GeneralWasteTon} TON",
             WasteRubble = $"{RubbleM3} m3",
             WasteScrap = $"{ScrapMetalsTon} TON",
-            WasteAsbestos = $"{AsbestosTon} TON",
-            SiteEstPlanned = SiteEstablishmentPlanned?.ToString("yyyy/MM/dd") ?? "-",
-            SiteEstActual = SiteEstablishmentActual?.ToString("yyyy/MM/dd") ?? "-",
-            PracCompPlanned = PracticalCompletionPlanned?.ToString("yyyy/MM/dd") ?? "-",
-            PracCompActual = PracticalCompletionActual?.ToString("yyyy/MM/dd") ?? "-"
+            WasteAsbestos = $"{AsbestosTon} TON"
         };
 
         protected override async Task ExecuteSaveAsync()
         {
-            SaveLocalReportData();
+            await SaveLocalReportDataAsync();
             if (Project != null && StatusSummary != Project.Description)
             {
                 Project.Description = StatusSummary;
@@ -432,6 +659,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             try
             {
+                IsBusy = true;
+                BusyText = "Saving current progress...";
+
+                // Save current edits first so they are not lost when reloading
+                await SaveLocalReportDataAsync();
+
+                BusyText = "Recalculating milestones based on today's date...";
+                // Reload/recalculate everything based on DateTime.Today
+                await LoadReportDataAsync(ProjectId);
+
                 IsBusy = true;
                 BusyText = "Generating Project Report PDF...";
 
@@ -496,6 +733,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var model = new ProjectReportPrintModel
                 {
                     Project = Project ?? new(),
+                    ReportDate = DateTime.Today,
                     WeekNumber = WeekNumber,
                     TotalTasks = TotalTasks,
                     InProgressTasks = InProgressTasks,
@@ -504,12 +742,26 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     PowPercentRequired = PowPercentRequired,
                     DelayDays = DelayDays,
                     SafeWorkingHours = SafeWorkingHours,
-                    SiteEstablishmentPlanned = SiteEstablishmentPlanned,
-                    SiteEstablishmentActual = SiteEstablishmentActual,
-                    PracticalCompletionPlanned = PracticalCompletionPlanned,
-                    PracticalCompletionActual = PracticalCompletionActual,
-                    StreamingPlanned = StreamingPlanned,
-                    StreamingActual = StreamingActual,
+                    ThisWeekMilestones = ThisWeekMilestones.Select(m => new MilestonePrintModel
+                    {
+                        Name = m.Name,
+                        StartDate = m.StartDate,
+                        PlannedDate = m.PlannedDate,
+                        Progress = m.Progress,
+                        Status = m.Status,
+                        Reason = m.Reason,
+                        IsComplete = m.IsComplete
+                    }).ToList(),
+                    OverdueMilestones = OverdueMilestones.Select(m => new MilestonePrintModel
+                    {
+                        Name = m.Name,
+                        StartDate = m.StartDate,
+                        PlannedDate = m.PlannedDate,
+                        Progress = m.Progress,
+                        Status = m.Status,
+                        Reason = m.Reason,
+                        IsComplete = m.IsComplete
+                    }).ToList(),
                     GeneralWasteTon = GeneralWasteTon,
                     RubbleM3 = RubbleM3,
                     ScrapMetalsTon = ScrapMetalsTon,
@@ -532,6 +784,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var path = await _pdfService.GenerateProjectReportPdfAsync(model);
                 
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+
+                // Upload generated PDF to server history
+                var reportName = $"{Project?.Name ?? "Project"} - Week {WeekNumber}";
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    var uploaded = await _projectReportService.UploadReportAsync(ProjectId, WeekNumber, reportName, fs, Path.GetFileName(path));
+                    if (uploaded != null)
+                    {
+                        await LoadHistoryAsync();
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -553,33 +816,90 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var inProgressList = _loadedTasks?.Where(t => t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100)).Select(t => t.Name).Take(3).ToList() ?? new();
             var upcomingList = _loadedTasks?.Where(t => t.Status != "Completed" && t.Status != "Done" && t.PercentComplete == 0).Select(t => t.Name).Take(3).ToList() ?? new();
 
-            var summary = $"As of Week {WeekNumber}, the {Project.Name} project has reached {OverallProgress * 100:F1}% overall progress (against a program requirement of {PowPercentRequired:F1}%). ";
-            
+            var summaryParts = new List<string>();
+
+            // 1. Completed Works
             if (completedList.Any())
             {
-                summary += $"Key completed works include: {string.Join(", ", completedList)}. ";
-            }
-            if (inProgressList.Any())
-            {
-                summary += $"Active works currently in progress include: {string.Join(", ", inProgressList)}. ";
-            }
-            else if (upcomingList.Any())
-            {
-                summary += $"Upcoming scheduled activities include: {string.Join(", ", upcomingList)}. ";
-            }
-
-            if (DelayDays > 0)
-            {
-                summary += $"The project is currently delayed by {DelayDays} days. ";
+                var completedStr = FormatList(completedList);
+                var verb = (completedList.Count > 1 || completedStr.EndsWith("s") || completedStr.Contains(" and ")) ? "are" : "is";
+                summaryParts.Add($"{completedStr} {verb} now fully complete, allowing the team to transition into the next stages.");
             }
             else
             {
-                summary += "Works are currently progressing on schedule. ";
+                summaryParts.Add("Initial project planning and mobilization are complete, transitioning into active work.");
             }
 
-            summary += $"A total of {SafeWorkingHours:N0} safe working hours have been recorded on site to date.";
+            // 2. In Progress Works
+            if (inProgressList.Any())
+            {
+                if (inProgressList.Count == 1)
+                {
+                    var progressStr = inProgressList[0];
+                    var verb = (progressStr.EndsWith("s") || progressStr.Contains(" and ")) ? "are" : "is";
+                    summaryParts.Add($"{progressStr} {verb} currently in progress.");
+                }
+                else
+                {
+                    var firstStr = inProgressList[0];
+                    var firstVerb = (firstStr.EndsWith("s") || firstStr.Contains(" and ")) ? "are" : "is";
+                    var remainingList = inProgressList.Skip(1).ToList();
+                    var remainingStr = FormatList(remainingList);
+                    
+                    var remainingPrefix = "";
+                    if (!remainingStr.StartsWith("the ", StringComparison.OrdinalIgnoreCase) && 
+                        !remainingStr.StartsWith("work on", StringComparison.OrdinalIgnoreCase) &&
+                        !remainingStr.EndsWith("ing", StringComparison.OrdinalIgnoreCase))
+                    {
+                        remainingPrefix = "the ";
+                    }
+                    
+                    summaryParts.Add($"{firstStr} {firstVerb} currently in progress, and we have officially commenced {remainingPrefix}{remainingStr}.");
+                }
+            }
 
-            StatusSummary = summary;
+            // 3. Upcoming Works
+            if (upcomingList.Any())
+            {
+                var upcomingStr = FormatList(upcomingList);
+                summaryParts.Add($"Looking ahead to next week, we are expecting to begin work on {upcomingStr}.");
+            }
+
+            // 4. Status
+            if (DelayDays > 0)
+            {
+                summaryParts.Add($"Project Delayed by {DelayDays} days.");
+            }
+            else
+            {
+                summaryParts.Add("Project on Track");
+            }
+
+            StatusSummary = string.Join(" ", summaryParts);
+        }
+
+        private string FormatList(List<string> items)
+        {
+            if (items == null || !items.Any()) return string.Empty;
+            var cleaned = items.Select(x => x.Trim()).ToList();
+            if (cleaned.Count == 1) return cleaned[0];
+            if (cleaned.Count == 2) return $"{cleaned[0]} and {cleaned[1]}";
+            return $"{string.Join(", ", cleaned.Take(cleaned.Count - 1))}, and {cleaned.Last()}";
+        }
+
+        private List<DateTime> GetUpcomingWorkingDays(DateTime startFrom, int count)
+        {
+            var workingDays = new List<DateTime>();
+            var current = startFrom.Date;
+            while (workingDays.Count < count)
+            {
+                if (current.DayOfWeek != DayOfWeek.Saturday && current.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    workingDays.Add(current);
+                }
+                current = current.AddDays(1);
+            }
+            return workingDays;
         }
     }
 

@@ -65,6 +65,7 @@ namespace OCC.WpfClient.ModelWrappers
         [ObservableProperty] private ReminderFrequency _frequency;
         [ObservableProperty] private DateTime? _nextReminderDate;
         [ObservableProperty] private string _assignedTo = string.Empty;
+        [ObservableProperty] private Guid? _variationOrderId;
 
         private void Initialize()
         {
@@ -97,6 +98,7 @@ namespace OCC.WpfClient.ModelWrappers
                 Frequency = _model.Frequency;
                 NextReminderDate = _model.NextReminderDate;
                 AssignedTo = _model.AssignedTo;
+                VariationOrderId = _model.VariationOrderId;
             }
             finally
             {
@@ -128,6 +130,7 @@ namespace OCC.WpfClient.ModelWrappers
             _model.Frequency = Frequency;
             _model.NextReminderDate = NextReminderDate;
             _model.AssignedTo = AssignedTo;
+            _model.VariationOrderId = VariationOrderId;
         }
 
         partial void OnDescriptionChanged(string value) => _model.Description = value;

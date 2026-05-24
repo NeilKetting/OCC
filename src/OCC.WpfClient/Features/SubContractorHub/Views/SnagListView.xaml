@@ -43,11 +43,11 @@
                     <TextBlock Text="Track and resolve post-completion quality issues." Style="{StaticResource FormLabelText}"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddSnagCommand}" Width="160" Height="36">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Button Style="{StaticResource IconButton}" Command="{Binding AddSnagCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Record Snag" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
+                            <TextBlock Text="Record Snag" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

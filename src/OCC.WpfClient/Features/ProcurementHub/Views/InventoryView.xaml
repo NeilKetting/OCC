@@ -40,11 +40,11 @@
                                Style="{StaticResource LabelText}"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddItemCommand}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Button Style="{StaticResource IconButton}" Command="{Binding AddItemCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Add Stock Item" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
+                            <TextBlock Text="Add Stock Item" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

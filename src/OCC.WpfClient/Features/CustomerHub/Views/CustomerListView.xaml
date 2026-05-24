@@ -50,10 +50,10 @@
                 </Grid>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding AddCustomerCommand}">
+                    <Button Style="{StaticResource IconButton}" Command="{Binding AddCustomerCommand}" >
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,8,0"/>
-                            <TextBlock Text="Add Customer" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
+                            <TextBlock Text="Add Customer" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

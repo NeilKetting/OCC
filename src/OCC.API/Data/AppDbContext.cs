@@ -78,6 +78,9 @@ namespace OCC.API.Data
         public DbSet<ProjectVariationOrder> ProjectVariationOrders { get; set; }
         public DbSet<LogUploadRequest> LogUploads { get; set; }
 
+        public DbSet<ProjectReportDraft> ProjectReportDrafts { get; set; }
+        public DbSet<ProjectReportHistory> ProjectReportHistories { get; set; }
+
         // Chat System
         public DbSet<ChatSession> ChatSessions { get; set; }
         public DbSet<ChatSessionUser> ChatSessionUsers { get; set; }
@@ -350,6 +353,22 @@ namespace OCC.API.Data
                 entity.HasOne(v => v.Project)
                     .WithMany(p => p.VariationOrders)
                     .HasForeignKey(v => v.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectReportDraft>(entity =>
+            {
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectReportHistory>(entity =>
+            {
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

@@ -49,11 +49,11 @@
                     <TextBlock Grid.Column="1" Grid.Row="1" Text="Site compliance monitoring and efficiency ratings" Style="{StaticResource LabelText}"/>
                 </Grid>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource ActionButtonPrimary}" Command="{Binding CreateNewAuditCommand}" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Button Style="{StaticResource IconButton}" Command="{Binding CreateNewAuditCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,8,0"/>
-                            <TextBlock Text="NEW AUDIT"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
+                            <TextBlock Text="New Audit" Style="{StaticResource ButtonTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

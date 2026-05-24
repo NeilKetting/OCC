@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
-using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Services.Interfaces;
-using OCC.WpfClient.Services;
 using OCC.WpfClient.Features.HseqHub.ViewModels;
+using OCC.WpfClient.Infrastructure;
+using OCC.WpfClient.Services;
+using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.HseqHub
 {

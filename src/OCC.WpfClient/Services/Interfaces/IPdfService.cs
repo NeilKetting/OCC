@@ -31,9 +31,21 @@ namespace OCC.WpfClient.Services.Interfaces
         public double Width { get; set; } = 1.0; // Relative width
     }
 
+    public class MilestonePrintModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public System.DateTime StartDate { get; set; }
+        public System.DateTime PlannedDate { get; set; }
+        public int Progress { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public bool IsComplete { get; set; }
+    }
+
     public class ProjectReportPrintModel
     {
         public Project Project { get; set; } = new();
+        public System.DateTime ReportDate { get; set; } = System.DateTime.Today;
         public int WeekNumber { get; set; }
         public int TotalTasks { get; set; }
         public int InProgressTasks { get; set; }
@@ -42,12 +54,8 @@ namespace OCC.WpfClient.Services.Interfaces
         public double PowPercentRequired { get; set; }
         public int DelayDays { get; set; }
         public double SafeWorkingHours { get; set; }
-        public System.DateTime? SiteEstablishmentPlanned { get; set; }
-        public System.DateTime? SiteEstablishmentActual { get; set; }
-        public System.DateTime? PracticalCompletionPlanned { get; set; }
-        public System.DateTime? PracticalCompletionActual { get; set; }
-        public System.DateTime? StreamingPlanned { get; set; }
-        public System.DateTime? StreamingActual { get; set; }
+        public List<MilestonePrintModel> ThisWeekMilestones { get; set; } = new();
+        public List<MilestonePrintModel> OverdueMilestones { get; set; } = new();
         public string GeneralWasteTon { get; set; } = "0";
         public string RubbleM3 { get; set; } = "0";
         public string ScrapMetalsTon { get; set; } = "0";

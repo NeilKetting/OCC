@@ -19,6 +19,14 @@
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
+    <!-- Button Text Style -->
+    <Style x:Key="ButtonTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
     <!-- Standard Form Input Label -->
     <Style x:Key="FormLabelText" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
