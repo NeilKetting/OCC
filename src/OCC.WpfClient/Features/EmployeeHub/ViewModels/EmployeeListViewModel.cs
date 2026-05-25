@@ -64,8 +64,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [ObservableProperty] private bool _isShiftStartVisible = false;
         [ObservableProperty] private bool _isShiftEndVisible = false;
 
-        [ObservableProperty]
-        private bool _isColumnPickerOpen;
+        
 
         public override IRelayCommand<object>? OpenCommand => OpenEmployeeCommand;
         public override IRelayCommand<object>? EditCommand => EditEmployeeCommand;
@@ -174,7 +173,14 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private void AddEmployee()
         {
             var employee = new Models.EmployeeModel();
-            OpenOverlay(new EmployeeDetailViewModel(this, employee, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService));
+            var detailVm = new EmployeeDetailViewModel(employee, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
 
         [RelayCommand]
@@ -197,7 +203,14 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                 if (dto != null)
                 {
                     var model = new Models.EmployeeModel(dto);
-                    OpenOverlay(new EmployeeDetailViewModel(this, model, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService));
+                    var detailVm = new EmployeeDetailViewModel(model, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService);
+                    OpenOverlay(detailVm, async (res) =>
+                    {
+                        if (res is bool saved && saved)
+                        {
+                            await LoadDataAsync();
+                        }
+                    });
                 }
             }
             finally
@@ -287,10 +300,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _logger.LogInformation("Open Report requested for {Id}", target.Id);
         }
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
-
-        public void CloseDetailView() => CloseOverlay();
+        
 
         partial void OnSelectedFilterIndexChanged(int value) => FilterItems();
         partial void OnSelectedBranchFilterIndexChanged(int value) => FilterItems();

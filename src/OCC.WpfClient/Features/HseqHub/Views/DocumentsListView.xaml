@@ -1,4 +1,4 @@
-<infra:ListViewBase x:Class="OCC.WpfClient.Features.HseqHub.Views.DocumentsView"
+<infra:ListViewBase x:Class="OCC.WpfClient.Features.HseqHub.Views.DocumentsListView"
                 IsDrawerOpen="{Binding IsOverlayActive}"
                 OverlayContent="{Binding ActiveOverlay}"
                 DrawerWidth="550"
@@ -11,7 +11,7 @@
                xmlns:views="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
                mc:Ignorable="d" 
                d:DesignHeight="600" d:DesignWidth="1000"
-               d:DataContext="{d:DesignInstance vm:DocumentsViewModel}">
+               d:DataContext="{d:DesignInstance vm:DocumentsListViewModel}">
 
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type vm:DocumentDetailViewModel}">

@@ -20,6 +20,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         private readonly IDialogService _dialogService;
         private readonly ILogger<CustomerListViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
+        private readonly ConnectionSettings _connectionSettings;
         private List<CustomerSummaryDto> _allCustomers = new();
 
         public override string ReportTitle => "Customer Directory";
@@ -36,7 +37,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         [ObservableProperty] private bool _isPhoneVisible = true;
         [ObservableProperty] private bool _isActionsVisible = true;
         
-        [ObservableProperty] private bool _isColumnPickerOpen;
+        
 
         // Standard commands for centralized UI
         public override IRelayCommand<object>? OpenCommand => OpenCustomerCommand;
@@ -48,12 +49,14 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             IDialogService dialogService,
             LocalSettingsService settingsService,
             ILogger<CustomerListViewModel> logger,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ConnectionSettings connectionSettings) : base(pdfService)
         {
             _customerService = customerService;
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = logger;
+            _connectionSettings = connectionSettings;
             Title = "Customer Management";
             
             LoadLayout();
@@ -93,8 +96,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
         partial void OnIsActionsVisibleChanged(bool value) => SaveLayout();
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+        
 
         public override async Task LoadDataAsync()
         {
@@ -122,7 +124,14 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         private void AddCustomer()
         {
             var customer = new Customer();
-            OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger, _pdfService));
+            var detailVm = new CustomerDetailViewModel(customer, _customerService, _dialogService, _logger, _pdfService, _connectionSettings);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
 
         [RelayCommand]
@@ -144,7 +153,14 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 var customer = await _customerService.GetCustomerAsync(target.Id);
                 if (customer != null)
                 {
-                    OpenOverlay(new CustomerDetailViewModel(this, customer, _customerService, _dialogService, _logger, _pdfService));
+                    var detailVm = new CustomerDetailViewModel(customer, _customerService, _dialogService, _logger, _pdfService, _connectionSettings);
+                    OpenOverlay(detailVm, async (res) =>
+                    {
+                        if (res is bool saved && saved)
+                        {
+                            await LoadDataAsync();
+                        }
+                    });
                 }
             }
             finally
@@ -217,6 +233,6 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             TotalCount = result.Count;
         }
 
-        public void CloseDetailView() => CloseOverlay();
+        
     }
 }

@@ -13,7 +13,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 {
     public partial class UserDetailViewModel : DetailViewModelBase
     {
-        private readonly UserListViewModel _parent;
+        
         private readonly IUserService _userService;
         private readonly User _user;
 
@@ -67,9 +67,8 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             UserRole.HSEQ
         };
 
-        public UserDetailViewModel(UserListViewModel parent, User user, IUserService userService, IDialogService dialogService, ILogger logger, IPdfService pdfService) : base(dialogService, logger, pdfService)
+        public UserDetailViewModel(User user, IUserService userService, IDialogService dialogService, ILogger logger, IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
-            _parent = parent;
             _user = user;
             _userService = userService;
 
@@ -227,8 +226,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         protected override void OnSaveSuccess()
         {
             NotifySuccess("Success", $"User '{FirstName} {LastName}' saved successfully.");
-            _parent.LoadDataAsync().ConfigureAwait(false);
-            _parent.CloseDetailView();
+            base.OnSaveSuccess();
         }
 
         protected override async Task ExecuteReloadAsync()
@@ -267,7 +265,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 
         protected override void OnCancel()
         {
-            _parent.CloseDetailView();
+            base.OnCancel();
         }
 
         protected override string GetReportTitle() => $"User Profile: {FirstName} {LastName}";

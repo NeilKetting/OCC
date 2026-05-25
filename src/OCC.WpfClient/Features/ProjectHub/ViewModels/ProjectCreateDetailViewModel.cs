@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class CreateProjectViewModel : OverlayViewModel
+    public partial class ProjectCreateDetailViewModel : OverlayViewModel
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
@@ -67,7 +67,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private List<ProjectTask>? _importedTasks;
 
-        public CreateProjectViewModel(
+        public ProjectCreateDetailViewModel(
             IProjectService projectService,
             ICustomerService customerService,
             IEmployeeService employeeService,
@@ -226,7 +226,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"[CreateProjectViewModel] Address Search Error");
+                System.Diagnostics.Debug.WriteLine($"[ProjectCreateDetailViewModel] Address Search Error");
             }
         }
 

@@ -15,28 +15,28 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         private HealthSafetyDashboardViewModel _dashboardView;
 
         [ObservableProperty]
-        private PerformanceMonitoringViewModel _performanceView;
+        private PerformanceMonitoringListViewModel _performanceView;
 
         [ObservableProperty]
-        private IncidentsViewModel _incidentsView;
+        private IncidentListViewModel _incidentsView;
 
         [ObservableProperty]
-        private TrainingViewModel _trainingView;
+        private TrainingListViewModel _trainingView;
 
         [ObservableProperty]
-        private AuditsViewModel _auditsView;
+        private AuditListViewModel _auditsView;
 
         [ObservableProperty]
-        private DocumentsViewModel _documentsView;
+        private DocumentsListViewModel _documentsView;
 
         public HealthSafetyViewModel(
             HealthSafetyMenuViewModel menuViewModel,
             HealthSafetyDashboardViewModel dashboardView,
-            PerformanceMonitoringViewModel performanceView,
-            IncidentsViewModel incidentsView,
-            TrainingViewModel trainingView,
-            AuditsViewModel auditsView,
-            DocumentsViewModel documentsView)
+            PerformanceMonitoringListViewModel performanceView,
+            IncidentListViewModel incidentsView,
+            TrainingListViewModel trainingView,
+            AuditListViewModel auditsView,
+            DocumentsListViewModel documentsView)
         {
             MenuViewModel = menuViewModel;
             DashboardView = dashboardView;

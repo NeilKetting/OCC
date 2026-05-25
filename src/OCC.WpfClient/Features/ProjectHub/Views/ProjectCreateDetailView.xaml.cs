@@ -5,15 +5,15 @@ namespace OCC.WpfClient.Features.ProjectHub.Views
     /// <summary>
     /// Interaction logic for CreateProjectView.xaml
     /// </summary>
-    public partial class CreateProjectView : UserControl
+    public partial class ProjectCreateDetailView : UserControl
     {
-        public CreateProjectView()
+        public ProjectCreateDetailView()
         {
             InitializeComponent();
-            DataContextChanged += CreateProjectView_DataContextChanged;
+            DataContextChanged += ProjectCreateDetailView_DataContextChanged;
         }
 
-        private void CreateProjectView_DataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+        private void ProjectCreateDetailView_DataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
             if (e.OldValue is System.ComponentModel.INotifyPropertyChanged oldVm)
             {

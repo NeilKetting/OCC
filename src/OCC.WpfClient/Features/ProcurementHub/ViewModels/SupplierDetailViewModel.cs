@@ -17,7 +17,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
     public partial class SupplierDetailViewModel : DetailViewModelBase
     {
-        private readonly SupplierViewModel _parent;
+        
         private readonly ISupplierService _supplierService;
         private readonly Supplier _model;
 
@@ -44,14 +44,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         public bool IsNew => _model.Id == Guid.Empty;
 
         public SupplierDetailViewModel(
-            SupplierViewModel parent,
             Supplier model,
             ISupplierService supplierService,
             IDialogService dialogService,
             ILogger logger,
             IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
-            _parent = parent;
             _model = model;
             _supplierService = supplierService;
 
@@ -187,8 +185,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         protected override void OnSaveSuccess()
         {
             NotifySuccess("Success", $"Supplier '{Name}' saved successfully.");
-            _parent.LoadDataAsync().ConfigureAwait(false);
-            _parent.CloseOverlay();
+            base.OnSaveSuccess();
         }
 
         protected override async Task ExecuteReloadAsync()
@@ -204,7 +201,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         protected override void OnCancel()
         {
-            _parent.CloseOverlay();
+            base.OnCancel();
         }
 
         private string GetEnumDescription(Enum value)

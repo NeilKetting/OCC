@@ -33,6 +33,9 @@ namespace OCC.Shared.Models
 
         /// <summary> Collection of contact persons for this customer. </summary>
         public virtual System.Collections.Generic.ICollection<CustomerContact> Contacts { get; set; } = new System.Collections.Generic.List<CustomerContact>();
+
+        /// <summary> URL or path to the customer's uploaded logo image. </summary>
+        public string LogoUrl { get; set; } = string.Empty;
     }
 }
 

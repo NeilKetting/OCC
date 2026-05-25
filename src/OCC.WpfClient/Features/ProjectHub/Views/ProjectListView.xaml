@@ -19,8 +19,8 @@
         <DataTemplate DataType="{x:Type vm:ProjectDetailViewModel}">
             <views:ProjectDetailView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:CreateProjectViewModel}">
-            <views:CreateProjectView />
+        <DataTemplate DataType="{x:Type vm:ProjectCreateDetailViewModel}">
+            <views:ProjectCreateDetailView />
         </DataTemplate>
     </UserControl.Resources>
 

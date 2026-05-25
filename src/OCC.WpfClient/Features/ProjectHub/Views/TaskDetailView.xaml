@@ -6,7 +6,7 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
              xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
-             xmlns:emp="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
+             xmlns:controls="clr-namespace:OCC.WpfClient.CustomControls"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000"
              d:DataContext="{d:DesignInstance vm:TaskDetailViewModel}">
@@ -236,12 +236,12 @@
                                     <StackPanel Margin="0,0,10,0">
                                         <TextBlock Text="START DATE" Style="{StaticResource LabelText}"/>
                                         <DatePicker SelectedDate="{Binding Task.StartDate}" Style="{StaticResource ModernDatePicker}"/>
-                                        <emp:ModernTimePicker SelectedTime="{Binding StartTime}" Margin="0,5,0,0"/>
+                                        <controls:ModernTimePicker SelectedTime="{Binding StartTime}" Margin="0,5,0,0"/>
                                     </StackPanel>
                                     <StackPanel Margin="10,0,0,0">
                                         <TextBlock Text="DUE DATE" Style="{StaticResource LabelText}"/>
                                         <DatePicker SelectedDate="{Binding Task.FinishDate}" Style="{StaticResource ModernDatePicker}"/>
-                                        <emp:ModernTimePicker SelectedTime="{Binding FinishTime}" Margin="0,5,0,0"/>
+                                        <controls:ModernTimePicker SelectedTime="{Binding FinishTime}" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </UniformGrid>
 

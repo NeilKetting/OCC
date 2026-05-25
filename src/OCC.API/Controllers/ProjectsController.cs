@@ -209,6 +209,7 @@ namespace OCC.API.Controllers
                     .Include(p => p.Tasks)
                     .ThenInclude(t => t.Comments)
                     .Include(p => p.SiteManager)
+                    .Include(p => p.CustomerEntity)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.Id == id);
 

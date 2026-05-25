@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace OCC.WpfClient.Features.ProjectHub.Views
 {
-    public partial class ProjectHistoryView : UserControl
+    public partial class ProjectHistoryListView : UserControl
     {
-        public ProjectHistoryView()
+        public ProjectHistoryListView()
         {
             InitializeComponent();
         }

@@ -3,17 +3,17 @@ using System.Windows.Controls;
 
 namespace OCC.WpfClient.Features.ProcurementHub.Views
 {
-    public partial class PurchaseOrderView : UserControl
+    public partial class PurchaseOrderDetailView : UserControl
     {
-        public PurchaseOrderView()
+        public PurchaseOrderDetailView()
         {
             InitializeComponent();
-            Loaded += PurchaseOrderView_Loaded;
+            Loaded += PurchaseOrderDetailView_Loaded;
         }
 
-        private void PurchaseOrderView_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        private void PurchaseOrderDetailView_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (DataContext is PurchaseOrderViewModel viewModel)
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
             {
                 if (viewModel.LoadDataCommand.CanExecute(null))
                 {

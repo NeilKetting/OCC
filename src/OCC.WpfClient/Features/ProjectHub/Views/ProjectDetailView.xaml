@@ -83,7 +83,7 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource SidebarNavItem}" 
-                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectHistoryViewModel}}"
+                                 IsChecked="{Binding CurrentView, Converter={StaticResource TypeToBooleanConverter}, ConverterParameter={x:Type vm:ProjectHistoryListViewModel}}"
                                  Command="{Binding ShowHistoryCommand}"
                                  Margin="0,2">
                         <Grid>

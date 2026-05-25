@@ -39,7 +39,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         [ObservableProperty] private bool _isPhoneVisible = true;
         [ObservableProperty] private bool _isEmailVisible = true;
         
-        [ObservableProperty] private bool _isColumnPickerOpen;
+        
         [ObservableProperty] private bool _isSpecialtyPickerOpen;
         [ObservableProperty] private bool _isBranchPickerOpen;
 
@@ -106,8 +106,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
         partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+        
 
         [RelayCommand]
         private void SelectSpecialty(string specialty)
@@ -163,7 +162,14 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         private void AddSubContractor()
         {
             var contractor = new SubContractor();
-            OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger, _pdfService));
+            var detailVm = new SubContractorDetailViewModel(contractor, _subContractorService, _userService, _dialogService, _logger, _pdfService);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
 
         [RelayCommand]
@@ -185,7 +191,14 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 var contractor = await _subContractorService.GetSubContractorAsync(target.Id);
                 if (contractor != null)
                 {
-                    OpenOverlay(new SubContractorDetailViewModel(this, contractor, _subContractorService, _userService, _dialogService, _logger, _pdfService));
+                    var detailVm = new SubContractorDetailViewModel(contractor, _subContractorService, _userService, _dialogService, _logger, _pdfService);
+                    OpenOverlay(detailVm, async (res) =>
+                    {
+                        if (res is bool saved && saved)
+                        {
+                            await LoadDataAsync();
+                        }
+                    });
                 }
             }
             finally
@@ -274,6 +287,6 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             TotalCount = result.Count;
         }
 
-        public void CloseDetailView() => CloseOverlay();
+        
     }
 }

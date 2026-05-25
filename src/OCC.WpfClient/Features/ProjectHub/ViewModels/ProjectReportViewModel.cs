@@ -679,6 +679,44 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     return;
                 }
 
+                // Download customer logo to temporary local file if available
+                string? customerLogoLocalPath = null;
+                var tempReportDir = Path.Combine(Path.GetTempPath(), "OCC_Report_Temp");
+                try
+                {
+                    if (!Directory.Exists(tempReportDir))
+                    {
+                        Directory.CreateDirectory(tempReportDir);
+                    }
+                }
+                catch { }
+
+                if (Project?.CustomerEntity != null && !string.IsNullOrEmpty(Project.CustomerEntity.LogoUrl))
+                {
+                    try
+                    {
+                        using var client = _httpClientFactory.CreateClient();
+                        var token = _authService.CurrentToken;
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        }
+
+                        var logoUrl = Project.CustomerEntity.LogoUrl;
+                        var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
+                        var fullUrl = logoUrl.StartsWith("http") ? logoUrl : $"{baseUrl}/{logoUrl.TrimStart('/')}";
+                        var bytes = await client.GetByteArrayAsync(fullUrl);
+                        var ext = Path.GetExtension(logoUrl);
+                        if (string.IsNullOrEmpty(ext)) ext = ".png";
+                        customerLogoLocalPath = Path.Combine(tempReportDir, $"customer_logo_{Project.CustomerEntity.Id}{ext}");
+                        await File.WriteAllBytesAsync(customerLogoLocalPath, bytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to download customer logo {LogoUrl}", Project.CustomerEntity.LogoUrl);
+                    }
+                }
+
                 // Download incident photos to temporary local files
                 var localPhotoPaths = new List<string>();
                 if (IncidentPhotos != null && IncidentPhotos.Any())
@@ -742,6 +780,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     PowPercentRequired = PowPercentRequired,
                     DelayDays = DelayDays,
                     SafeWorkingHours = SafeWorkingHours,
+                    CustomerLogoPath = customerLogoLocalPath,
                     ThisWeekMilestones = ThisWeekMilestones.Select(m => new MilestonePrintModel
                     {
                         Name = m.Name,

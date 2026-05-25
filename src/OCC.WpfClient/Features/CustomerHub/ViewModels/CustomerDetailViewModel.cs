@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 {
@@ -15,30 +16,45 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 
     public partial class CustomerDetailViewModel : DetailViewModelBase
     {
-        private readonly CustomerListViewModel _parent;
+        
         private readonly ICustomerService _customerService;
         private readonly Customer _model;
+        private readonly ConnectionSettings _connectionSettings;
 
         [ObservableProperty] private string _name;
         [ObservableProperty] private string _header;
         [ObservableProperty] private string _email;
         [ObservableProperty] private string _phone;
         [ObservableProperty] private string _address;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FullLogoUrl))]
+        private string _logoUrl = string.Empty;
         [ObservableProperty] private ObservableCollection<CustomerContact> _contacts;
 
         public bool IsNew => _model.Id == Guid.Empty;
 
+        public string? FullLogoUrl
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(LogoUrl)) return null;
+                if (LogoUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return LogoUrl;
+                var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5000/";
+                return $"{baseUrl.TrimEnd('/')}/{LogoUrl.TrimStart('/')}";
+            }
+        }
+
         public CustomerDetailViewModel(
-            CustomerListViewModel parent,
             Customer model,
             ICustomerService customerService,
             IDialogService dialogService,
             ILogger logger,
-            IPdfService pdfService) : base(dialogService, logger, pdfService)
+            IPdfService pdfService,
+            ConnectionSettings connectionSettings) : base(dialogService, logger, pdfService)
         {
-            _parent = parent;
             _model = model;
             _customerService = customerService;
+            _connectionSettings = connectionSettings;
 
             Title = IsNew ? "New Customer" : $"Edit {model.Name}";
             
@@ -47,6 +63,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             _email = model.Email;
             _phone = model.Phone;
             _address = model.Address;
+            _logoUrl = model.LogoUrl ?? string.Empty;
             _contacts = new ObservableCollection<CustomerContact>(model.Contacts ?? new List<CustomerContact>());
         }
 
@@ -57,6 +74,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             _model.Email = Email;
             _model.Phone = Phone;
             _model.Address = Address;
+            _model.LogoUrl = LogoUrl;
             _model.Contacts = Contacts.ToList();
 
             if (IsNew)
@@ -126,8 +144,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         protected override void OnSaveSuccess()
         {
             NotifySuccess("Success", $"Customer '{Name}' saved successfully.");
-            _parent.LoadDataAsync().ConfigureAwait(false);
-            _parent.CloseDetailView();
+            base.OnSaveSuccess();
         }
 
         protected override async Task ExecuteReloadAsync()
@@ -141,6 +158,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 _model.Email = latest.Email;
                 _model.Phone = latest.Phone;
                 _model.Address = latest.Address;
+                _model.LogoUrl = latest.LogoUrl;
                 _model.Contacts = latest.Contacts;
                 _model.RowVersion = latest.RowVersion;
 
@@ -149,6 +167,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 Email = _model.Email;
                 Phone = _model.Phone;
                 Address = _model.Address;
+                LogoUrl = _model.LogoUrl ?? string.Empty;
                 Contacts = new ObservableCollection<CustomerContact>(_model.Contacts ?? new List<CustomerContact>());
                 
                 Title = $"Edit {Name} (Reloaded)";
@@ -157,7 +176,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 
         protected override void OnCancel()
         {
-            _parent.CloseDetailView();
+            base.OnCancel();
         }
 
         [RelayCommand]
@@ -182,5 +201,52 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             ContactsCount = Contacts.Count,
             PrimaryContact = Contacts.FirstOrDefault()?.Name ?? "N/A"
         };
+
+        [RelayCommand]
+        private async Task UploadLogoAsync()
+        {
+            if (IsNew)
+            {
+                await _dialogService.ShowAlertAsync("Save Required", "Please save the customer first before uploading a logo.");
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Select Customer Logo",
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Uploading logo...";
+
+                    var logoPath = dialog.FileName;
+                    var uploadedUrl = await _customerService.UploadLogoAsync(_model.Id, logoPath);
+                    if (!string.IsNullOrEmpty(uploadedUrl))
+                    {
+                        LogoUrl = uploadedUrl;
+                        _model.LogoUrl = uploadedUrl; // Sync with model
+                        NotifySuccess("Success", "Logo uploaded successfully.");
+                    }
+                    else
+                    {
+                        NotifyError("Error", "Failed to upload logo.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to upload logo");
+                    NotifyError("Error", $"Failed to upload logo: {ex.Message}");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
+        }
     }
 }

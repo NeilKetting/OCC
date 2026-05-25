@@ -31,6 +31,12 @@ namespace OCC.WpfClient.Infrastructure
         [ObservableProperty]
         private System.Collections.IList? _selectedItems;
 
+        [ObservableProperty]
+        private bool _isColumnPickerOpen;
+
+        [RelayCommand]
+        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+
         protected readonly IPdfService _pdfService;
         public abstract string ReportTitle { get; }
         public abstract List<ReportColumnDefinition> ReportColumns { get; }

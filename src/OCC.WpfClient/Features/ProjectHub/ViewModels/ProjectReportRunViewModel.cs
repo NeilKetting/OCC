@@ -193,6 +193,38 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         // 4. Fetch Incident Photos
                         var localPhotoPaths = await FetchAndDownloadIncidentPhotosAsync(item.ProjectSummary.Id, item.ProjectSummary.Name);
 
+                        // 5. Download Customer Logo if available
+                        string? customerLogoLocalPath = null;
+                        if (item.ProjectDetails?.CustomerEntity != null && !string.IsNullOrEmpty(item.ProjectDetails.CustomerEntity.LogoUrl))
+                        {
+                            try
+                            {
+                                var tempDir = Path.Combine(Path.GetTempPath(), $"OCC_Report_Temp_{item.ProjectSummary.Id}");
+                                if (!Directory.Exists(tempDir))
+                                {
+                                    Directory.CreateDirectory(tempDir);
+                                }
+                                using var client = _httpClientFactory.CreateClient();
+                                var token = _authService.CurrentToken;
+                                if (!string.IsNullOrEmpty(token))
+                                {
+                                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                                }
+                                var logoUrl = item.ProjectDetails.CustomerEntity.LogoUrl;
+                                var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
+                                var fullUrl = logoUrl.StartsWith("http") ? logoUrl : $"{baseUrl}/{logoUrl.TrimStart('/')}";
+                                var bytes = await client.GetByteArrayAsync(fullUrl);
+                                var ext = Path.GetExtension(logoUrl);
+                                if (string.IsNullOrEmpty(ext)) ext = ".png";
+                                customerLogoLocalPath = Path.Combine(tempDir, $"customer_logo{ext}");
+                                await File.WriteAllBytesAsync(customerLogoLocalPath, bytes);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Failed to download customer logo for project run");
+                            }
+                        }
+
                         // Create Print Model
                         var model = new ProjectReportPrintModel
                         {
@@ -242,7 +274,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                                 Audit3 = r.Audit3
                             }).ToList(),
                             VariationOrders = variations,
-                            IncidentPhotoPaths = localPhotoPaths
+                            IncidentPhotoPaths = localPhotoPaths,
+                            CustomerLogoPath = customerLogoLocalPath
                         };
 
                         var path = await _pdfService.GenerateProjectReportPdfAsync(model);

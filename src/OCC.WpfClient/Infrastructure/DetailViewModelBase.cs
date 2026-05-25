@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Infrastructure
 {
-    public abstract partial class DetailViewModelBase : ViewModelBase
+    public abstract partial class DetailViewModelBase : OverlayViewModel
     {
         protected readonly IDialogService _dialogService;
         protected readonly ILogger _logger;
@@ -116,8 +116,8 @@ namespace OCC.WpfClient.Infrastructure
         protected virtual Task<bool> ExecuteForceSaveAsync() => Task.FromResult(false);
         
         protected virtual Task<bool> ValidateAsync() => Task.FromResult(true);
-        protected virtual void OnSaveSuccess() { }
-        protected virtual void OnCancel() { }
+        protected virtual void OnSaveSuccess() => Close(true);
+        protected virtual void OnCancel() => Close();
 
         protected async Task PulseValidationAsync()
         {

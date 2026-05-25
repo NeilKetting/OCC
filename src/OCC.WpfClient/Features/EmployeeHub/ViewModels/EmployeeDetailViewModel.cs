@@ -10,7 +10,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 {
     public partial class EmployeeDetailViewModel : DetailViewModelBase
     {
-        private readonly EmployeeListViewModel _parent;
+        
         private readonly IEmployeeService _employeeService;
 
         [ObservableProperty]
@@ -45,9 +45,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
 
-        public EmployeeDetailViewModel(EmployeeListViewModel parent, EmployeeModel employee, IEmployeeService employeeService, IUserService userService, IAuthService authService, IDialogService dialogService, ILogger logger, IPdfService pdfService) : base(dialogService, logger, pdfService)
+        public EmployeeDetailViewModel(EmployeeModel employee, IEmployeeService employeeService, IUserService userService, IAuthService authService, IDialogService dialogService, ILogger logger, IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
-            _parent = parent;
             Employee = employee;
             _employeeService = employeeService;
             _userService = userService;
@@ -237,8 +236,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         protected override void OnSaveSuccess()
         {
             NotifySuccess("Success", $"Employee '{Employee.DisplayName}' saved successfully.");
-            _parent.LoadDataAsync().ConfigureAwait(false);
-            _parent.CloseDetailView();
+            base.OnSaveSuccess();
         }
 
         protected override async Task<bool> ExecuteForceSaveAsync()
@@ -274,7 +272,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 
         protected override void OnCancel()
         {
-            _parent.CloseDetailView();
+            base.OnCancel();
         }
 
         protected override string GetReportTitle() => $"Employee Profile: {Employee.DisplayName}";

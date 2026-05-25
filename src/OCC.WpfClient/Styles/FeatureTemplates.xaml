@@ -89,15 +89,15 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
         <procViews:ProcurementView/>
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type procVm:InventoryViewModel}">
-        <procViews:InventoryView/>
+    <DataTemplate DataType="{x:Type procVm:InventoryListViewModel}">
+        <procViews:InventoryListView/>
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type procVm:PurchaseOrderViewModel}">
-        <procViews:PurchaseOrderView/>
+    <DataTemplate DataType="{x:Type procVm:PurchaseOrderDetailViewModel}">
+        <procViews:PurchaseOrderDetailView/>
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type procVm:SupplierViewModel}">
+    <DataTemplate DataType="{x:Type procVm:SupplierListViewModel}">
         <procViews:SupplierListView/>
     </DataTemplate>
 
@@ -163,20 +163,20 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
         <projViews:ProjectGanttView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type projVm:ProjectHistoryViewModel}">
-        <projViews:ProjectHistoryView />
+    <DataTemplate DataType="{x:Type projVm:ProjectHistoryListViewModel}">
+        <projViews:ProjectHistoryListView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:ProjectVariationOrderListViewModel}">
         <projViews:ProjectVariationOrderListView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type projVm:CreateProjectViewModel}">
-        <projViews:CreateProjectView />
+    <DataTemplate DataType="{x:Type projVm:ProjectCreateDetailViewModel}">
+        <projViews:ProjectCreateDetailView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type projVm:ProjectEditorViewModel}">
-        <projViews:ProjectEditorView />
+    <DataTemplate DataType="{x:Type projVm:ProjectEditDetailViewModel}">
+        <projViews:ProjectEditDetailView />
     </DataTemplate>
 
     <!-- Partner Hub -->
@@ -201,23 +201,23 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
         <hseqViews:HealthSafetyDashboardView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type hseqVm:IncidentsViewModel}">
+    <DataTemplate DataType="{x:Type hseqVm:IncidentListViewModel}">
         <hseqViews:IncidentListView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type hseqVm:TrainingViewModel}">
+    <DataTemplate DataType="{x:Type hseqVm:TrainingListViewModel}">
         <hseqViews:TrainingListView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type hseqVm:PerformanceMonitoringViewModel}">
+    <DataTemplate DataType="{x:Type hseqVm:PerformanceMonitoringListViewModel}">
         <hseqViews:PerformanceMonitoringListView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type hseqVm:DocumentsViewModel}">
-        <hseqViews:DocumentsView />
+    <DataTemplate DataType="{x:Type hseqVm:DocumentsListViewModel}">
+        <hseqViews:DocumentsListView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type hseqVm:AuditsViewModel}">
+    <DataTemplate DataType="{x:Type hseqVm:AuditListViewModel}">
         <hseqViews:AuditListView />
     </DataTemplate>
 

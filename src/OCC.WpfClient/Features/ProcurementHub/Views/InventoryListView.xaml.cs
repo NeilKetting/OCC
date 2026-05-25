@@ -2,9 +2,9 @@ using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.ProcurementHub.Views
 {
-    public partial class InventoryView : ListViewBase
+    public partial class InventoryListView : ListViewBase
     {
-        public InventoryView()
+        public InventoryListView()
         {
             InitializeComponent();
         }

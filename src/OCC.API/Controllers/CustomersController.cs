@@ -39,7 +39,8 @@ namespace OCC.API.Controllers
                         Header = c.Header,
                         Email = c.Email,
                         Phone = c.Phone,
-                        Address = c.Address
+                        Address = c.Address,
+                        LogoUrl = c.LogoUrl
                     })
                     .AsNoTracking()
                     .ToListAsync();
@@ -176,6 +177,42 @@ namespace OCC.API.Controllers
                 _logger.LogError(ex, "Error deleting customer {Id}", id);
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        [HttpPost("{id}/upload-logo")]
+        public async Task<ActionResult<string>> UploadLogo(Guid id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null)
+            {
+                return NotFound("Customer not found.");
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "customer_logos");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{id}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            customer.LogoUrl = $"/uploads/customer_logos/{uniqueFileName}";
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Update", id);
+
+            return Ok(customer.LogoUrl);
         }
 
         private bool CustomerExists(Guid id) => _context.Customers.Any(e => e.Id == id);

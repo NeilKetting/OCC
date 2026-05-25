@@ -30,12 +30,6 @@
         </DrawingBrush.Drawing>
     </DrawingBrush>
 
-    <!-- Border Chevron Style -->
-    <Style x:Key="Border.Chevron" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource ChevronPatternBrush}" />
-        <Setter Property="MinHeight" Value="10" />
-        <Setter Property="VerticalAlignment" Value="Top" />
-    </Style>
 
     <!-- Glass Effect Style -->
     <Style x:Key="GlassCard" TargetType="Border">
@@ -77,14 +71,6 @@
         </Setter>
     </Style>
 
-    <!-- Content Stats Badge -->
-    <Style x:Key="StatsBadge" TargetType="Border">
-        <Setter Property="CornerRadius" Value="12"/>
-        <Setter Property="Padding" Value="10,4"/>
-        <Setter Property="Margin" Value="0,0,10,0"/>
-        <Setter Property="Background" Value="#20FFFFFF"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
 
     <!-- Loading Spinner Animation -->
     <Storyboard x:Key="BusySpinnerAnimation">

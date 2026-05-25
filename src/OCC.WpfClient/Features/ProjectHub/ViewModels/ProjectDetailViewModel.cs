@@ -22,7 +22,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
         private readonly ProjectTaskListViewModel _tasksVM;
         private readonly ProjectGanttViewModel _ganttVM;
-        private readonly ProjectHistoryViewModel _historyVM;
+        private readonly ProjectHistoryListViewModel _historyVM;
         private readonly IEmployeeService _employeeService;
         private readonly ProjectReportViewModel _reportVM;
         private readonly ProjectVariationOrderListViewModel _variationOrdersVM;
@@ -46,7 +46,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ProjectSpecificDashboardViewModel dashboardVM, 
             ProjectTaskListViewModel tasksVM, 
             ProjectGanttViewModel ganttVM, 
-            ProjectHistoryViewModel historyVM,
+            ProjectHistoryListViewModel historyVM,
             ProjectReportViewModel reportVM,
             ProjectVariationOrderListViewModel variationOrdersVM,
             IDialogService dialogService,

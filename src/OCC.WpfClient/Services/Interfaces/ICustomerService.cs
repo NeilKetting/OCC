@@ -13,5 +13,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<Customer> CreateCustomerAsync(Customer customer);
         Task<bool> UpdateCustomerAsync(Customer customer);
         Task<bool> DeleteCustomerAsync(Guid id);
+        Task<string> UploadLogoAsync(Guid customerId, string filePath);
     }
 }

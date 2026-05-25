@@ -46,7 +46,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _isCompanyVisible = false;
         [ObservableProperty] private bool _isCreatedDateVisible = false;
         
-        [ObservableProperty] private bool _isColumnPickerOpen;
+        
 
         private readonly LocalSettingsService _settingsService;
 
@@ -117,8 +117,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         partial void OnIsCompanyVisibleChanged(bool value) => SaveLayout();
         partial void OnIsCreatedDateVisibleChanged(bool value) => SaveLayout();
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+        
 
         public override async Task LoadDataAsync()
         {
@@ -146,7 +145,14 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         public void AddUser()
         {
             var user = new User();
-            OpenOverlay(new UserDetailViewModel(this, user, _userService, _dialogService, _logger, _pdfService));
+            var detailVm = new UserDetailViewModel(user, _userService, _dialogService, _logger, _pdfService);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
 
         [RelayCommand]
@@ -160,7 +166,14 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         {
             var target = parameter as User ?? SelectedItem;
             if (target == null) return;
-            OpenOverlay(new UserDetailViewModel(this, target, _userService, _dialogService, _logger, _pdfService));
+            var detailVm = new UserDetailViewModel(target, _userService, _dialogService, _logger, _pdfService);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
 
         [RelayCommand]
@@ -231,6 +244,6 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             AdminCount = result.Count(u => u.UserRole == UserRole.Admin);
         }
 
-        public void CloseDetailView() => CloseOverlay();
+        
     }
 }

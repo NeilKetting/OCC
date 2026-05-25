@@ -17,9 +17,9 @@ namespace OCC.WpfClient.Features.ProcurementHub
         public void RegisterServices(IServiceCollection services)
         {
             services.AddTransient<ProcurementViewModel>();
-            services.AddTransient<InventoryViewModel>();
-            services.AddTransient<PurchaseOrderViewModel>();
-            services.AddTransient<SupplierViewModel>();
+            services.AddTransient<InventoryListViewModel>();
+            services.AddTransient<PurchaseOrderDetailViewModel>();
+            services.AddTransient<SupplierListViewModel>();
             services.AddTransient<ViewModels.Dialogs.ReceiveStockViewModel>();
             services.AddTransient<ViewModels.Dialogs.FindOrderViewModel>();
 
@@ -31,9 +31,9 @@ namespace OCC.WpfClient.Features.ProcurementHub
         public void RegisterRoutes(INavigationService navigationService)
         {
             navigationService.RegisterRoute(NavigationRoutes.Procurement, typeof(ProcurementViewModel));
-            navigationService.RegisterRoute(NavigationRoutes.Inventory, typeof(InventoryViewModel));
-            navigationService.RegisterRoute(NavigationRoutes.PurchaseOrder, typeof(PurchaseOrderViewModel));
-            navigationService.RegisterRoute(NavigationRoutes.Suppliers, typeof(SupplierViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.Inventory, typeof(InventoryListViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.PurchaseOrder, typeof(PurchaseOrderDetailViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.Suppliers, typeof(SupplierListViewModel));
         }
 
         public IEnumerable<NavItem> GetNavigationItems()

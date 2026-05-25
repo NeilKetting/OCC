@@ -14,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class TrainingViewModel : ListViewModelBase<TrainingRecordViewModel>
+    public partial class TrainingListViewModel : ListViewModelBase<TrainingRecordViewModel>
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IDialogService _dialogService;
@@ -44,7 +44,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
         public ObservableCollection<string> Categories { get; } = new() { "All", "Training", "Medicals" };
 
-        public TrainingViewModel(
+        public TrainingListViewModel(
             IHealthSafetyService hseqService, 
             IDialogService dialogService, 
             IEmployeeService employeeService,

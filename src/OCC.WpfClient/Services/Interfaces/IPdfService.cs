@@ -64,6 +64,7 @@ namespace OCC.WpfClient.Services.Interfaces
         public List<ProjectReportPrintVendorRow> VendorReportRows { get; set; } = new();
         public List<ProjectVariationOrder> VariationOrders { get; set; } = new();
         public List<string> IncidentPhotoPaths { get; set; } = new();
+        public string? CustomerLogoPath { get; set; }
     }
 
     public class ProjectReportPrintVendorRow

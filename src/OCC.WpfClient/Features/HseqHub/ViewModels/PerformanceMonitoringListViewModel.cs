@@ -8,14 +8,14 @@ using System;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class PerformanceMonitoringViewModel : ViewModelBase
+    public partial class PerformanceMonitoringListViewModel : ViewModelBase
     {
         private readonly IHealthSafetyService _healthSafetyService;
 
         [ObservableProperty]
         private ObservableCollection<HseqSafeHourRecord> _safeHours = new();
 
-        public PerformanceMonitoringViewModel(IHealthSafetyService healthSafetyService)
+        public PerformanceMonitoringListViewModel(IHealthSafetyService healthSafetyService)
         {
             _healthSafetyService = healthSafetyService;
             Title = "Performance";
@@ -23,7 +23,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         // Design-time
-        public PerformanceMonitoringViewModel()
+        public PerformanceMonitoringListViewModel()
         {
             _healthSafetyService = null!;
         }

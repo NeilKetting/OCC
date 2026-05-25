@@ -831,18 +831,47 @@ namespace OCC.WpfClient.Services
                     }
                 });
 
-                // Center: Vivo Energy Logo / Placeholder
-                row.RelativeItem().AlignCenter().Column(col =>
-                {
-                    col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Background("#E30613").PaddingVertical(4).PaddingHorizontal(12).Text("VIVO ENERGY")
-                        .FontSize(10).ExtraBold().FontColor(Colors.White).LetterSpacing(0.1f);
-                });
-
-                // Right: Engen Logo / Placeholder
+                // Right: Customer Logo or Name
                 row.RelativeItem().AlignRight().Column(col =>
                 {
-                    col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Background("#005691").PaddingVertical(4).PaddingHorizontal(12).Text("ENGEN")
-                        .FontSize(10).ExtraBold().FontColor(Colors.White).LetterSpacing(0.1f);
+                    // 1. If custom customer logo is uploaded and downloaded, render it
+                    if (!string.IsNullOrEmpty(model.CustomerLogoPath) && File.Exists(model.CustomerLogoPath))
+                    {
+                        try
+                        {
+                            var logoBytes = File.ReadAllBytes(model.CustomerLogoPath);
+                            col.Item().Height(40).AlignRight().Image(logoBytes).FitArea();
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Failed to load customer logo from {model.CustomerLogoPath}: {ex.Message}");
+                        }
+                    }
+
+                    // 2. Otherwise fall back to pre-defined customers or text fallback
+                    var customerName = model.Project.CustomerEntity?.Name ?? model.Project.Customer;
+                    if (string.IsNullOrEmpty(customerName))
+                    {
+                        customerName = "CLIENT REPORT";
+                    }
+
+                    if (string.Equals(customerName, "Engen", StringComparison.OrdinalIgnoreCase))
+                    {
+                        col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Background("#005691").PaddingVertical(4).PaddingHorizontal(12).Text("ENGEN")
+                            .FontSize(10).ExtraBold().FontColor(Colors.White).LetterSpacing(0.1f);
+                    }
+                    else if (string.Equals(customerName, "Vivo Energy", StringComparison.OrdinalIgnoreCase) || string.Equals(customerName, "Vivo", StringComparison.OrdinalIgnoreCase))
+                    {
+                        col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Background("#E30613").PaddingVertical(4).PaddingHorizontal(12).Text("VIVO ENERGY")
+                            .FontSize(10).ExtraBold().FontColor(Colors.White).LetterSpacing(0.1f);
+                    }
+                    else
+                    {
+                        col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Background(Colors.Grey.Lighten3).PaddingVertical(4).PaddingHorizontal(12)
+                            .Text(customerName.ToUpper())
+                            .FontSize(10).ExtraBold().FontColor(ColorSecondary).LetterSpacing(0.1f);
+                    }
                 });
             });
         }
@@ -932,11 +961,9 @@ namespace OCC.WpfClient.Services
                               {
                                   table.ColumnsDefinition(cols =>
                                   {
-                                      cols.RelativeColumn(2.0f); // Milestone Name
+                                      cols.RelativeColumn(3.0f); // Milestone Name
                                       cols.RelativeColumn(1.0f); // Start Date
                                       cols.RelativeColumn(1.0f); // Due Date
-                                      cols.RelativeColumn(0.7f); // Progress
-                                      cols.RelativeColumn(0.9f); // Status
                                   });
 
                                   table.Header(h =>
@@ -944,8 +971,6 @@ namespace OCC.WpfClient.Services
                                       h.Cell().Background(ColorSecondary).Padding(3).Text("Milestone").SemiBold().FontSize(7).FontColor(Colors.White);
                                       h.Cell().Background(ColorSecondary).Padding(3).Text("Start Date").SemiBold().FontSize(7).FontColor(Colors.White);
                                       h.Cell().Background(ColorSecondary).Padding(3).Text("Due Date").SemiBold().FontSize(7).FontColor(Colors.White);
-                                      h.Cell().Background(ColorSecondary).Padding(3).AlignRight().Text("Prog").SemiBold().FontSize(7).FontColor(Colors.White);
-                                      h.Cell().Background(ColorSecondary).Padding(3).Text("Status").SemiBold().FontSize(7).FontColor(Colors.White);
                                   });
 
                                   foreach (var m in model.ThisWeekMilestones)
@@ -959,25 +984,8 @@ namespace OCC.WpfClient.Services
                                       table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(nameText).FontSize(7);
                                       table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.StartDate)).FontSize(7);
                                       table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.PlannedDate)).FontSize(7);
-                                      table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).AlignRight().Text($"{m.Progress}%").FontSize(7);
-                                     
-                                     var statusCell = table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3);
-                                     var isDone = m.IsComplete;
-                                     var isDelayed = m.PlannedDate < DateTime.Today && !isDone;
-                                     if (isDone)
-                                     {
-                                         statusCell.Background(Colors.Green.Lighten5).Text("Complete").FontSize(7).FontColor(Colors.Green.Darken3).SemiBold();
-                                     }
-                                     else if (isDelayed)
-                                     {
-                                         statusCell.Background(Colors.Red.Lighten5).Text("Delayed").FontSize(7).FontColor(Colors.Red.Darken3).SemiBold();
-                                     }
-                                     else
-                                     {
-                                         statusCell.Text(m.Status ?? "-").FontSize(7);
-                                     }
-                                 }
-                             });
+                                  }
+                              });
                          }
 
                          // Overdue Milestones Section

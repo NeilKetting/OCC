@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class DocumentsViewModel : OverlayHostViewModel
+    public partial class DocumentsListViewModel : OverlayHostViewModel
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IProjectService _projectService;
@@ -24,7 +24,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
         private List<Project> _allProjects = new();
 
-        public DocumentsViewModel(IHealthSafetyService hseqService, IProjectService projectService, IServiceProvider serviceProvider)
+        public DocumentsListViewModel(IHealthSafetyService hseqService, IProjectService projectService, IServiceProvider serviceProvider)
         {
             _hseqService = hseqService;
             _projectService = projectService;

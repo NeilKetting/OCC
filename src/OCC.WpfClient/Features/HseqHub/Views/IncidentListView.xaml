@@ -14,7 +14,7 @@
                xmlns:views="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
                mc:Ignorable="d" 
                d:DesignHeight="800" d:DesignWidth="1200"
-               d:DataContext="{d:DesignInstance vm:IncidentsViewModel}">
+               d:DataContext="{d:DesignInstance vm:IncidentListViewModel}">
 
     <UserControl.Resources>
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />

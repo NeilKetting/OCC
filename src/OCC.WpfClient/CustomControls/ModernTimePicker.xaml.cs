@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace OCC.WpfClient.Features.EmployeeHub.Views
+namespace OCC.WpfClient.CustomControls
 {
     public partial class ModernTimePicker : UserControl
     {

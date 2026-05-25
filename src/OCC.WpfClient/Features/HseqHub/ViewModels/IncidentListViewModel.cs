@@ -14,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class IncidentsViewModel : ListViewModelBase<IncidentSummaryDto>
+    public partial class IncidentListViewModel : ListViewModelBase<IncidentSummaryDto>
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IServiceProvider _serviceProvider;
@@ -37,7 +37,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         public override IRelayCommand<object>? EditCommand => EditIncidentCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteSelectedIncidentsCommand;
 
-        public IncidentsViewModel(IHealthSafetyService hseqService, IServiceProvider serviceProvider, IPdfService pdfService, IDialogService dialogService) : base(pdfService)
+        public IncidentListViewModel(IHealthSafetyService hseqService, IServiceProvider serviceProvider, IPdfService pdfService, IDialogService dialogService) : base(pdfService)
         {
             _hseqService = hseqService;
             _serviceProvider = serviceProvider;

@@ -11,14 +11,15 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
-    public partial class InventoryViewModel : ListViewModelBase<InventoryItem>
+    public partial class InventoryListViewModel : ListViewModelBase<InventoryItem>
     {
         private readonly IInventoryService _inventoryService;
         private readonly IToastService _toastService;
-        private readonly ILogger<InventoryViewModel> _logger;
+        private readonly ILogger<InventoryListViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
         private List<InventoryItem> _allInventory = new();
 
@@ -30,7 +31,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private bool _isLocationVisible = true;
         [ObservableProperty] private bool _isStatusVisible = true;
 
-        [ObservableProperty] private bool _isColumnPickerOpen;
+        
 
         [ObservableProperty] private int _lowStockCount;
 
@@ -45,10 +46,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         };
 
 
-        public InventoryViewModel(
+        public InventoryListViewModel(
             IInventoryService inventoryService, 
             IToastService toastService, 
-            ILogger<InventoryViewModel> logger,
+            ILogger<InventoryListViewModel> logger,
             LocalSettingsService settingsService,
             IPdfService pdfService) : base(pdfService)
         {
@@ -71,7 +72,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 }
             });
 
-            _logger.LogInformation("InventoryViewModel initialized");
+            _logger.LogInformation("InventoryListViewModel initialized");
             System.Windows.Application.Current.Dispatcher.InvokeAsync(LoadDataAsync);
         }
 
@@ -121,8 +122,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             Items = new ObservableCollection<InventoryItem>(filtered.ToList());
             TotalCount = Items.Count;
         }
-
-
 
         [RelayCommand]
         private async Task Refresh()
@@ -178,7 +177,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         partial void OnIsLocationVisibleChanged(bool value) => SaveLayout();
         partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+        
     }
 }

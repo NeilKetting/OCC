@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectEditorViewModel : OverlayViewModel
+    public partial class ProjectEditDetailViewModel : OverlayViewModel
     {
         private readonly IProjectService _projectService;
         private readonly ICustomerService _customerService;
@@ -38,7 +38,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public string[] Statuses { get; } = new[] { "Planning", "In Progress", "On Hold", "Completed" };
         public string[] Priorities { get; } = new[] { "Low", "Medium", "High", "Critical" };
 
-        public ProjectEditorViewModel(
+        public ProjectEditDetailViewModel(
             IProjectService projectService,
             ICustomerService customerService,
             IEmployeeService employeeService,

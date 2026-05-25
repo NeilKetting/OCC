@@ -10,7 +10,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
 {
     public partial class SubContractorDetailViewModel : DetailViewModelBase
     {
-        private readonly SubContractorListViewModel _parent;
+        
         private readonly ISubContractorService _subContractorService;
         private readonly IUserService _userService;
         private readonly SubContractor _model;
@@ -43,7 +43,6 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         public bool IsNew => _model.Id == Guid.Empty;
 
         public SubContractorDetailViewModel(
-            SubContractorListViewModel parent,
             SubContractor model,
             ISubContractorService subContractorService,
             IUserService userService,
@@ -51,7 +50,6 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             ILogger logger,
             IPdfService pdfService) : base(dialogService, logger, pdfService)
         {
-            _parent = parent;
             _model = model;
             _subContractorService = subContractorService;
             _userService = userService;
@@ -245,8 +243,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         protected override void OnSaveSuccess()
         {
             NotifySuccess("Success", $"Sub-contractor '{Name}' saved successfully.");
-            _parent.LoadDataAsync().ConfigureAwait(false);
-            _parent.CloseDetailView();
+            base.OnSaveSuccess();
         }
 
         protected override async Task ExecuteReloadAsync()
@@ -278,7 +275,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
 
         protected override void OnCancel()
         {
-            _parent.CloseDetailView();
+            base.OnCancel();
         }
 
         protected override string GetReportTitle() => $"Sub-Contractor Profile: {Name}";

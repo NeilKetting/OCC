@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace OCC.WpfClient.Features.EmployeeHub.Models
 {
     public class ColumnConfig

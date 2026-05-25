@@ -16,7 +16,7 @@ using System.Linq;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
-    public partial class PurchaseOrderViewModel : OverlayHostViewModel
+    public partial class PurchaseOrderDetailViewModel : OverlayHostViewModel
     {
         private readonly IOrderService _orderService;
         private readonly ISupplierService _supplierService;
@@ -25,7 +25,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IPdfService _pdfService;
         private readonly IToastService _toastService;
-        private readonly ILogger<PurchaseOrderViewModel> _logger;
+        private readonly ILogger<PurchaseOrderDetailViewModel> _logger;
 
         [ObservableProperty]
         private OrderWrapper? _currentOrder;
@@ -48,7 +48,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private List<Guid> _allOrderIds = new();
         private int _currentIndex = -1;
 
-        public PurchaseOrderViewModel(
+        public PurchaseOrderDetailViewModel(
             IOrderService orderService,
             ISupplierService supplierService,
             IProjectService projectService,
@@ -56,7 +56,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             INavigationService navigationService,
             IPdfService pdfService,
             IToastService toastService,
-            ILogger<PurchaseOrderViewModel> logger)
+            ILogger<PurchaseOrderDetailViewModel> logger)
         {
             _orderService = orderService;
             _supplierService = supplierService;

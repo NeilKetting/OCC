@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace OCC.WpfClient.Features.HseqHub.ViewModels
 {
-    public partial class AuditsViewModel : ListViewModelBase<AuditSummaryDto>
+    public partial class AuditListViewModel : ListViewModelBase<AuditSummaryDto>
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IServiceProvider _serviceProvider;
@@ -33,7 +33,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             new() { Header = "Status", PropertyName = "Status", Width = 1.2 }
         };
 
-        public AuditsViewModel(
+        public AuditListViewModel(
             IHealthSafetyService hseqService, 
             IServiceProvider serviceProvider,
             IPdfService pdfService) : base(pdfService)

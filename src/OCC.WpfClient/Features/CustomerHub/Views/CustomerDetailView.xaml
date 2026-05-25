@@ -65,6 +65,44 @@
                             <TextBlock Text="Billing Address" Style="{StaticResource FormLabelText}"/>
                             <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" MinHeight="80" Height="Auto" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" ap:WatermarkProperties.Watermark="Full address..."/>
                         </StackPanel>
+
+                        <!-- Customer Logo Upload & Preview -->
+                        <StackPanel Margin="0,10,0,12">
+                            <TextBlock Text="Customer Logo" Style="{StaticResource FormLabelText}"/>
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Logo preview container -->
+                                <Border Grid.Column="0" Width="100" Height="100" CornerRadius="8" 
+                                        BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" 
+                                        Background="#0AFFFFFF" Margin="0,0,15,0" ClipToBounds="True">
+                                    <Grid>
+                                        <!-- Placeholder when no logo is set -->
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                                    Visibility="{Binding LogoUrl, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="24" Foreground="{StaticResource TextSub}" Opacity="0.5" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="No Logo" FontSize="10" Foreground="{StaticResource TextSub}" Opacity="0.5" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                        
+                                        <!-- Image preview when logo is set -->
+                                        <Image Source="{Binding FullLogoUrl}" Stretch="Uniform" 
+                                               Visibility="{Binding LogoUrl, Converter={StaticResource VisibilityConverter}}"
+                                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    </Grid>
+                                </Border>
+                                
+                                <!-- Action Buttons & Instructions -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Button Command="{Binding UploadLogoCommand}" Style="{StaticResource CreateButton}" 
+                                            Content="UPLOAD LOGO" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Supports PNG, JPG, or JPEG. This logo will display on the generated project status report header." 
+                                               FontSize="11" Foreground="{StaticResource TextSub}" TextWrapping="Wrap" Opacity="0.7" LineHeight="15"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Section: Key Contacts -->

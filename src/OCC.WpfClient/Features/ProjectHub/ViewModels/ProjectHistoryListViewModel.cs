@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectHistoryViewModel : ViewModelBase
+    public partial class ProjectHistoryListViewModel : ViewModelBase
     {
         private readonly IProjectService _projectService;
         private Guid _projectId;
@@ -16,7 +16,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private ObservableCollection<PersonnelHistoryEntryDto> _entries = new();
         [ObservableProperty] private bool _isLoading;
 
-        public ProjectHistoryViewModel(IProjectService projectService)
+        public ProjectHistoryListViewModel(IProjectService projectService)
         {
             _projectService = projectService;
             Title = "Project History";

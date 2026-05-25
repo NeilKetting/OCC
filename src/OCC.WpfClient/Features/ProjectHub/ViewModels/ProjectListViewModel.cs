@@ -34,7 +34,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isUpdateVisible = true;
         [ObservableProperty] private bool _isStatusVisible = true;
 
-        [ObservableProperty] private bool _isColumnPickerOpen;
+        
         [ObservableProperty] private bool _showDeleted;
 
         partial void OnShowDeletedChanged(bool value) => _ = LoadDataAsync();
@@ -114,8 +114,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         partial void OnIsUpdateVisibleChanged(bool value) => SaveLayout();
         partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+        
 
         public override async Task LoadDataAsync()
         {
@@ -140,7 +139,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void AddProject()
         {
-            var vm = _serviceProvider.GetRequiredService<CreateProjectViewModel>();
+            var vm = _serviceProvider.GetRequiredService<ProjectCreateDetailViewModel>();
             OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }
 
@@ -161,7 +160,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             if (target == null) return;
 
 
-            var vm = _serviceProvider.GetRequiredService<ProjectEditorViewModel>();
+            var vm = _serviceProvider.GetRequiredService<ProjectEditDetailViewModel>();
             await vm.InitializeAsync(target.Id);
             OpenOverlay(vm, (res) => _ = LoadDataAsync());
         }

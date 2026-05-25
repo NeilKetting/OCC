@@ -1,4 +1,4 @@
-<UserControl x:Class="OCC.WpfClient.Features.ProjectHub.Views.ProjectEditorView"
+<UserControl x:Class="OCC.WpfClient.Features.ProjectHub.Views.ProjectEditDetailView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,7 +7,7 @@
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="900"
-             d:DataContext="{d:DesignInstance Type=vm:ProjectEditorViewModel}">
+             d:DataContext="{d:DesignInstance Type=vm:ProjectEditDetailViewModel}">
 
     <Grid Margin="30">
         <Grid.ColumnDefinitions>

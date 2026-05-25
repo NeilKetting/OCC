@@ -62,5 +62,33 @@ namespace OCC.Client.Services
             var response = await _httpClient.DeleteAsync($"api/Customers/{id}");
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<string> UploadLogoAsync(Guid customerId, string filePath)
+        {
+            EnsureAuthorization();
+            var url = $"api/Customers/{customerId}/upload-logo";
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                var fileStream = System.IO.File.OpenRead(filePath);
+                var streamContent = new StreamContent(fileStream);
+                var fileName = System.IO.Path.GetFileName(filePath);
+                
+                string contentType = fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg";
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                
+                content.Add(streamContent, "file", fileName);
+
+                var response = await _httpClient.PostAsync(url, content);
+                response.EnsureSuccessStatusCode();
+
+                var logoUrl = await response.Content.ReadAsStringAsync();
+                return logoUrl;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

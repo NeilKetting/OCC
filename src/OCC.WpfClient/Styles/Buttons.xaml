@@ -36,119 +36,6 @@
         </Setter>
     </Style>
 
-    <!-- Primary Action Button with smooth hover transition -->
-    <Style x:Key="ModernPrimaryButton" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource ModernPrimaryButtonBackgroundGradient}"/>
-        <Setter Property="Foreground" Value="#fffff2"/>
-        <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Padding" Value="20,10,20,12"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
-                        <Grid.RenderTransform>
-                            <ScaleTransform x:Name="buttonScale" ScaleX="1" ScaleY="1"/>
-                        </Grid.RenderTransform>
-
-                        <!-- Base Background Border -->
-                        <Border x:Name="border" 
-                                Background="{TemplateBinding Background}" 
-                                CornerRadius="20"
-                                BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}"
-                                BorderThickness="2" />
-
-                        <!-- Hover Overlay Border -->
-                        <Border x:Name="hoverOverlay" 
-                                Background="{StaticResource AccentBlueHover}" 
-                                CornerRadius="20"
-                                BorderBrush="{StaticResource ModernPrimaryButtonBorderGradient}"
-                                BorderThickness="2"
-                                Opacity="0" />
-
-                        <!-- Content Grid with Padding -->
-                        <Grid Margin="{TemplateBinding Padding}">
-                            <ContentPresenter x:Name="contentPresenter" 
-                                               HorizontalAlignment="Center" 
-                                               VerticalAlignment="Center"
-                                               Visibility="Visible" />
-                            <!-- Loading Spinner -->
-                            <Viewbox x:Name="spinnerView" Width="24" Height="24" Visibility="Collapsed">
-                                <Path x:Name="spinnerPath" Data="M 12 2 A 10 10 0 1 0 22 12" Stroke="{StaticResource OrangeBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
-                                    <Path.RenderTransform>
-                                        <RotateTransform x:Name="spinnerTransform" Angle="0" />
-                                    </Path.RenderTransform>
-                                </Path>
-                            </Viewbox>
-                        </Grid>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <!-- Hover State -->
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" 
-                                                         Storyboard.TargetProperty="Opacity" 
-                                                         To="1" Duration="0:0:0.2"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="hoverOverlay" 
-                                                         Storyboard.TargetProperty="Opacity" 
-                                                         To="0" Duration="0:0:0.15"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-
-                        <!-- Pressed State -->
-                        <Trigger Property="IsPressed" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0:0:0.05"/>
-                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0:0:0.05"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleX" To="1.0" Duration="0:0:0.05"/>
-                                        <DoubleAnimation Storyboard.TargetName="buttonScale" Storyboard.TargetProperty="ScaleY" To="1.0" Duration="0:0:0.05"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-
-                        <!-- Busy State triggered by Tag property -->
-                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
-                            <Setter TargetName="contentPresenter" Property="Visibility" Value="Collapsed"/>
-                            <Setter TargetName="spinnerView" Property="Visibility" Value="Visible"/>
-                            <Setter Property="IsEnabled" Value="False"/>
-                            <DataTrigger.EnterActions>
-                                <BeginStoryboard x:Name="SpinAnimation">
-                                    <Storyboard RepeatBehavior="Forever">
-                                        <DoubleAnimation Storyboard.TargetName="spinnerTransform"
-                                                         Storyboard.TargetProperty="Angle"
-                                                         From="0" To="360" Duration="0:0:1" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions>
-                                <StopStoryboard BeginStoryboardName="SpinAnimation"/>
-                            </DataTrigger.ExitActions>
-                        </DataTrigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!-- Primary Button (System Standard) -->
     <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource ModernPrimaryButtonBackgroundGradient}"/>
@@ -483,44 +370,6 @@
         </Setter>
     </Style>
 
-    <!-- Premium Button Style (used in Support Hub) -->
-    <Style x:Key="PremiumButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="12">
-                        <Grid>
-                            <ContentPresenter x:Name="content" Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBlueHover}"/>
-                            <Setter TargetName="border" Property="Effect">
-                                <Setter.Value>
-                                    <DropShadowEffect BlurRadius="15" ShadowDepth="0" Color="{StaticResource AccentBlueColor}" Opacity="0.4"/>
-                                </Setter.Value>
-                            </Setter>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBluePressed}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.5"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!-- Premium RadioButton Style -->
     <Style x:Key="PremiumRadioButtonStyle" TargetType="RadioButton">
         <Setter Property="Foreground" Value="White"/>
@@ -837,11 +686,12 @@
     <!-- Login Button -->
     <Style x:Key="LoginButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
         <Setter Property="Content" Value="Create"/>
-        <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="Background" Value="{StaticResource OrangeBrush}"/>
+        <Setter Property="Foreground" Value="Black"/>
         <Setter Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
-        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE8F4;"/>
-        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource AccentBlue}"/>
-        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE72E;"/>
+        <Setter Property="ap:ButtonProperties.IconForeground" Value="Black"/>
+        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource OrangeBrush}"/>
         <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource AccentBlue}"/>
         <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
         <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
@@ -879,19 +729,6 @@
         <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
         <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}"/>
         <Setter Property="ap:ButtonProperties.Icon" Value="&#xE10A;"/>
-        <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource ErrorRed}"/>
-        <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource ErrorRed}"/>
-        <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource ErrorRed}"/>
-        <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
-        <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
-    </Style>
-
-    <!-- Delete Button Style -->
-    <Style x:Key="DeleteButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
-        <Setter Property="Content" Value="Delete"/>
-        <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}"/>
-        <Setter Property="ap:ButtonProperties.Icon" Value="&#xE74D;"/>
         <Setter Property="ap:ButtonProperties.IconForeground" Value="{StaticResource ErrorRed}"/>
         <Setter Property="ap:ButtonProperties.HoverBackground" Value="{StaticResource ErrorRed}"/>
         <Setter Property="ap:ButtonProperties.HoverBorderBrush" Value="{StaticResource ErrorRed}"/>

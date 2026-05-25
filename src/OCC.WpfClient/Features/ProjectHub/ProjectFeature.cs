@@ -22,10 +22,10 @@ namespace OCC.WpfClient.Features.ProjectHub
             services.AddTransient<ProjectSpecificDashboardViewModel>();
             services.AddTransient<ProjectTaskListViewModel>();
             services.AddTransient<TaskDetailViewModel>();
-            services.AddTransient<CreateProjectViewModel>();
-            services.AddTransient<ProjectEditorViewModel>();
+            services.AddTransient<ProjectCreateDetailViewModel>();
+            services.AddTransient<ProjectEditDetailViewModel>();
             services.AddTransient<ProjectGanttViewModel>();
-            services.AddTransient<ProjectHistoryViewModel>();
+            services.AddTransient<ProjectHistoryListViewModel>();
             services.AddTransient<ProjectReportViewModel>();
             services.AddTransient<ProjectReportRunViewModel>();
             services.AddTransient<ProjectVariationOrderListViewModel>();

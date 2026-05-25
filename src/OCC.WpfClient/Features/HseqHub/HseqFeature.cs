@@ -19,15 +19,15 @@ namespace OCC.WpfClient.Features.HseqHub
             // ViewModels
             services.AddTransient<HealthSafetyMenuViewModel>();
             services.AddTransient<HealthSafetyDashboardViewModel>();
-            services.AddTransient<IncidentsViewModel>();
+            services.AddTransient<IncidentListViewModel>();
             services.AddTransient<IncidentDetailViewModel>();
-            services.AddTransient<TrainingViewModel>();
+            services.AddTransient<TrainingListViewModel>();
             services.AddTransient<TrainingDetailViewModel>();
-            services.AddTransient<AuditsViewModel>();
+            services.AddTransient<AuditListViewModel>();
             services.AddTransient<AuditDetailViewModel>();
             services.AddTransient<DeviationDetailViewModel>();
-            services.AddTransient<PerformanceMonitoringViewModel>();
-            services.AddTransient<DocumentsViewModel>();
+            services.AddTransient<PerformanceMonitoringListViewModel>();
+            services.AddTransient<DocumentsListViewModel>();
             services.AddTransient<DocumentDetailViewModel>();
             services.AddTransient<HealthSafetyViewModel>();
         }

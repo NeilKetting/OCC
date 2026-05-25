@@ -14,11 +14,11 @@ using OCC.WpfClient.Services.Infrastructure;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
-    public partial class SupplierViewModel : ListViewModelBase<SupplierSummaryDto>
+    public partial class SupplierListViewModel : ListViewModelBase<SupplierSummaryDto>
     {
         private readonly ISupplierService _supplierService;
         private readonly IDialogService _dialogService;
-        private readonly ILogger<SupplierViewModel> _logger;
+        private readonly ILogger<SupplierListViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
         private List<SupplierSummaryDto> _allSuppliers = new();
 
@@ -36,7 +36,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private bool _isContactVisible = true;
         [ObservableProperty] private bool _isPhoneVisible = true;
         
-        [ObservableProperty] private bool _isColumnPickerOpen;
+        
 
         [ObservableProperty] private string _selectedBranchFilter = "All";
 
@@ -47,11 +47,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         public override IRelayCommand<object>? EditCommand => EditSupplierCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteSelectedSuppliersCommand;
 
-        public SupplierViewModel(
+        public SupplierListViewModel(
             ISupplierService supplierService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
-            ILogger<SupplierViewModel> logger,
+            ILogger<SupplierListViewModel> logger,
             IPdfService pdfService) : base(pdfService)
         {
             _supplierService = supplierService;
@@ -94,8 +94,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         partial void OnIsContactVisibleChanged(bool value) => SaveLayout();
         partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
 
-        [RelayCommand]
-        private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
+        
 
         public override async Task LoadDataAsync()
         {
@@ -124,7 +123,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private void AddSupplier()
         {
             var supplier = new Supplier();
-            OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger, _pdfService));
+            var detailVm = new SupplierDetailViewModel(supplier, _supplierService, _dialogService, _logger, _pdfService);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
 
         [RelayCommand]
@@ -146,7 +152,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 var supplier = await _supplierService.GetSupplierAsync(target.Id);
                 if (supplier != null)
                 {
-                    OpenOverlay(new SupplierDetailViewModel(this, supplier, _supplierService, _dialogService, _logger, _pdfService));
+                    var detailVm = new SupplierDetailViewModel(supplier, _supplierService, _dialogService, _logger, _pdfService);
+                    OpenOverlay(detailVm, async (res) =>
+                    {
+                        if (res is bool saved && saved)
+                        {
+                            await LoadDataAsync();
+                        }
+                    });
                 }
             }
             catch (Exception ex)
@@ -210,7 +223,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         protected override void FilterItems()
         {
-            IEnumerable<SupplierSummaryDto> filtered = _allSuppliers;
+            var filtered = _allSuppliers.AsEnumerable();
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
@@ -233,6 +246,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             TotalCount = result.Count;
         }
 
-        public void CloseDetailView() => CloseOverlay();
+        
     }
 }

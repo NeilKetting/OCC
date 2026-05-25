@@ -1,8 +1,7 @@
-using System;
-using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OCC.Shared.DTOs;
 using OCC.Shared.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace OCC.WpfClient.Features.EmployeeHub.Models
 {
