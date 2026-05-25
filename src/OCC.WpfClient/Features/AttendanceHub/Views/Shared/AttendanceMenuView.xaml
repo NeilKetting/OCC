@@ -1,0 +1,79 @@
+<UserControl x:Class="OCC.WpfClient.Features.AttendanceHub.Views.Shared.AttendanceMenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="220">
+
+    <Border Style="{StaticResource ModernSidebar}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Section -->
+            <StackPanel Grid.Row="0" Margin="15,20,15,25">
+                <TextBlock Text="TIME &amp;" Foreground="{StaticResource OrangeBrush}" FontSize="22" FontWeight="Black"/>
+                <TextBlock Text="ATTENDANCE" Foreground="White" FontSize="13" FontWeight="Black"/>
+                <TextBlock Text="MANAGEMENT HUB" Foreground="White" FontSize="10" FontWeight="SemiBold" Opacity="0.5" Margin="2,-2,0,0"/>
+            </StackPanel>
+
+            <!-- Navigation Items -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Dashboard -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                 GroupName="AttendanceTabs"
+                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Dashboard', Mode=TwoWay}"
+                                 Command="{Binding SetActiveTabCommand}" CommandParameter="Dashboard">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <!-- Today's Roll Call / History -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                 GroupName="AttendanceTabs"
+                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='History', Mode=TwoWay}"
+                                 Command="{Binding SetActiveTabCommand}" CommandParameter="History">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE81C;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="History" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <!-- Team Management -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                 GroupName="AttendanceTabs"
+                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Teams', Mode=TwoWay}"
+                                 Command="{Binding SetActiveTabCommand}" CommandParameter="Teams">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE902;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="Team Management" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Bottom Status -->
+            <Border Grid.Row="2" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="15,20">
+                <StackPanel>
+                    <TextBlock Text="SA LABOUR COMPLIANCE" Foreground="White" FontSize="10" Opacity="0.4" HorizontalAlignment="Center"/>
+                    <TextBlock Text="SYSTEM ACTIVE" Foreground="{StaticResource PrimaryTeal}" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

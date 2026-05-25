@@ -29,6 +29,7 @@ using OCC.Shared.Interfaces;
 using OCC.Shared.Services;
 using System.Net.Http;
 using OCC.WpfClient.Features.HseqHub;
+using OCC.WpfClient.Features.AttendanceHub;
 
 
 
@@ -144,6 +145,7 @@ namespace OCC.WpfClient
                 new ProjectFeature(),
                 new SubContractorFeature(),
                 new SettingsFeature(),
+                new AttendanceFeature(),
                 new HseqFeature()
             };
 

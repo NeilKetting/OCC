@@ -124,6 +124,8 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- User App Access -->
+                        
                         <Border BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="0,15,0,0"
                                 Visibility="{Binding ShowModuleAccess, Converter={StaticResource VisibilityConverter}}">
                             <StackPanel>
@@ -131,17 +133,30 @@
                                 <UniformGrid Columns="1">
                                     <CheckBox IsChecked="{Binding HasChatAccess}" Content="Direct Messaging &amp; Channels" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasEmployeeManagementAccess}" Content="Employee &amp; Staff Records" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
-                                    <CheckBox IsChecked="{Binding HasCustomerAccess}" Content="Customer Hub" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                    <CheckBox IsChecked="{Binding HasAttendanceAccess}" Content="Time &amp; Attendance" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                    <CheckBox IsChecked="{Binding HasCustomerAccess}" Content="Customers" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasProjectsAccess}" Content="Project Management" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasHealthSafetyAccess}" Content="HSEQ Compliance" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                 </UniformGrid>
 
                                 <TextBlock Text="SUPPLY CHAIN" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,15,0,12"/>
                                 <UniformGrid Columns="1">
-                                    <CheckBox IsChecked="{Binding HasProcurementAccess}" Content="Procurement Module" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                    <CheckBox IsChecked="{Binding HasProcurementAccess}" Content="Procurement" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasInventoryAccess}" Content="Warehouse &amp; Inventory" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasPurchaseOrderAccess}" Content="Purchase Order Management" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasSuppliersAccess}" Content="Supplier Database" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                </UniformGrid>
+
+                                <TextBlock Text="PARTNERS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,15,0,12"/>
+                                <UniformGrid Columns="1">
+                                    <CheckBox IsChecked="{Binding HasPerformanceDashboardAccess}" Content="Performance Dashboard" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                    <CheckBox IsChecked="{Binding HasSubContractorsAccess}" Content="Sub-Contractors" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                    <CheckBox IsChecked="{Binding HasSnagListAccess}" Content="Snag List" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                </UniformGrid>
+
+                                <TextBlock Text="SUPPORT &amp; RESOURCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,15,0,12"/>
+                                <UniformGrid Columns="1">
+                                    <CheckBox IsChecked="{Binding HasSupportCenterAccess}" Content="Support Center" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                 </UniformGrid>
                             </StackPanel>
                         </Border>

@@ -1,0 +1,170 @@
+<UserControl x:Class="OCC.WpfClient.Features.AttendanceHub.Views.AttendanceDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="980"
+             d:DataContext="{d:DesignInstance vm:AttendanceDashboardViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Header bar -->
+            <RowDefinition Height="Auto"/>  <!-- Stats cards -->
+            <RowDefinition Height="*"/>     <!-- Roll-call grid -->
+        </Grid.RowDefinitions>
+
+        <!-- ══════════════════ HEADER ══════════════════ -->
+        <Border Grid.Row="0" Padding="20,12" Background="#06FFFFFF" 
+                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="TODAY'S ROLL CALL" Style="{StaticResource HeaderText}"/>
+                    <TextBlock Text="{Binding TodayDate}" Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,0">
+                    <Button Style="{StaticResource GhostButton}"
+                            Command="{Binding LoadDashboardDataCommand}"
+                            ToolTip="Refresh">
+                            <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" Margin="0,0,8,0"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ══════════════════ STATS CARDS ══════════════════ -->
+        <UniformGrid Grid.Row="1" Rows="1" Margin="16,14,16,0">
+            <!-- Present -->
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,8,0" Padding="16,14">
+                <StackPanel>
+                    <TextBlock Text="PRESENT" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding PresentCount}" Foreground="#4CAF50" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="{Binding AttendanceRate, StringFormat={}{0}% attendance rate}" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+            <!-- Absent -->
+            <Border Style="{StaticResource GlassCard}" Margin="4,0,4,0" Padding="16,14">
+                <StackPanel>
+                    <TextBlock Text="ABSENT" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding AbsentCount}" Foreground="#F44336" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="No show / unexcused" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+            <!-- Late -->
+            <Border Style="{StaticResource GlassCard}" Margin="4,0,4,0" Padding="16,14">
+                <StackPanel>
+                    <TextBlock Text="LATE ARRIVALS" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding LateCount}" Foreground="#FF9800" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="After shift start" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+            <!-- Total -->
+            <Border Style="{StaticResource GlassCard}" Margin="8,0,0,0" Padding="16,14">
+                <StackPanel>
+                    <TextBlock Text="TOTAL EMPLOYEES" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding TotalExpected}" Foreground="White" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="Active staff on record" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- ══════════════════ ROLL CALL GRID ══════════════════ -->
+        <Border Grid.Row="2" Margin="16,12,16,16" Style="{StaticResource GlassCard}" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="16,10" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+                    <TextBlock Text="EMPLOYEE STATUS" Foreground="{StaticResource AccentBlue}" 
+                               FontSize="11" FontWeight="Bold"/>
+                </Border>
+
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding TodayRows}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          SelectionMode="Single"
+                          RowBackground="Transparent"
+                          AlternatingRowBackground="#06FFFFFF"
+                          Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <!-- Employee -->
+                        <DataGridTextColumn Header="EMP #" Binding="{Binding EmployeeNumber}" Width="Auto"/>
+                        <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding EmployeeName}" Width="Auto"/>
+                        <DataGridTextColumn Header="ROLE" Binding="{Binding Role}" Width="Auto"/>
+                        <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto"/>
+
+                        <!-- Status badge (template column) -->
+                        <DataGridTemplateColumn Header="STATUS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" HorizontalAlignment="Center"
+                                            Background="{Binding StatusColor}" Opacity="0.9"
+                                            Padding="10,3">
+                                        <TextBlock Text="{Binding StatusLabel}" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="White" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="CLOCK IN" Binding="{Binding CheckInDisplay}" Width="Auto"/>
+                        <DataGridTextColumn Header="CLOCK OUT" Binding="{Binding CheckOutDisplay}" Width="Auto"/>
+                        <DataGridTextColumn Header="HOURS" Binding="{Binding HoursDisplay}" Width="Auto"/>
+
+                        <!-- Actions -->
+                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <!-- Clock In -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                ToolTip="Clock In"
+                                                Visibility="{Binding IsClocked, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"
+                                                Command="{Binding DataContext.ClockInEmployeeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Foreground="#4CAF50">
+                                            <TextBlock Text="&#xEA3A;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
+                                        <!-- Clock Out -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                ToolTip="Clock Out"
+                                                Visibility="{Binding IsClocked, Converter={StaticResource VisibilityConverter}}"
+                                                Command="{Binding DataContext.ClockOutEmployeeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Foreground="#FF5722">
+                                            <TextBlock Text="&#xEDA3;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Busy overlay -->
+                <Border Grid.Row="0" Grid.RowSpan="2" Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding BusyText}" Foreground="White" FontSize="14" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

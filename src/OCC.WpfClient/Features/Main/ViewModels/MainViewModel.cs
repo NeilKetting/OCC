@@ -138,6 +138,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // Permission Helper Properties for Menu Bindings
         public bool CanAccessChat => _permissionService.CanAccess(NavigationRoutes.Chat);
         public bool CanAccessStaff => _permissionService.CanAccess(NavigationRoutes.StaffManagement);
+        public bool CanAccessAttendance => _permissionService.CanAccess(NavigationRoutes.AttendanceLive);
         public bool CanAccessProjects => _permissionService.CanAccess(NavigationRoutes.Projects);
         public bool CanAccessCustomers => _permissionService.CanAccess(NavigationRoutes.Customers);
         public bool CanAccessInventory => _permissionService.CanAccess(NavigationRoutes.Inventory);

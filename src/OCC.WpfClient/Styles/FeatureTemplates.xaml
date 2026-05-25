@@ -29,7 +29,9 @@
                     xmlns:hseqVm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
                     xmlns:hseqViews="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
 xmlns:procDialogVm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs"
-xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views.Dialogs">
+xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views.Dialogs"
+xmlns:attndVm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
+xmlns:attndViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views">
 
     <!-- Auth -->
     <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
@@ -239,6 +241,23 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
 
     <DataTemplate DataType="{x:Type hseqVm:DeviationDetailViewModel}">
         <hseqViews:DeviationDetailView />
+    </DataTemplate>
+
+    <!-- Attendance Hub -->
+    <DataTemplate DataType="{x:Type attndVm:AttendanceViewModel}">
+        <attndViews:AttendanceView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type attndVm:AttendanceDashboardViewModel}">
+        <attndViews:AttendanceDashboardView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type attndVm:AttendanceHistoryListViewModel}">
+        <attndViews:AttendanceHistoryListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type attndVm:TeamManagementViewModel}">
+        <attndViews:TeamManagementListView />
     </DataTemplate>
 
     <!-- Splash -->

@@ -157,5 +157,63 @@ namespace OCC.API.Controllers
         {
             return _context.Teams.Any(e => e.Id == id);
         }
+
+        // POST: api/Teams/{teamId}/members/{employeeId}
+        [HttpPost("{teamId}/members/{employeeId}")]
+        public async Task<IActionResult> AddMember(Guid teamId, Guid employeeId)
+        {
+            try
+            {
+                var team = await _context.Teams.FindAsync(teamId);
+                if (team == null) return NotFound("Team not found");
+
+                var employee = await _context.Employees.FindAsync(employeeId);
+                if (employee == null) return NotFound("Employee not found");
+
+                bool alreadyMember = await _context.TeamMembers
+                    .AnyAsync(m => m.TeamId == teamId && m.EmployeeId == employeeId);
+
+                if (!alreadyMember)
+                {
+                    _context.TeamMembers.Add(new TeamMember
+                    {
+                        Id = Guid.NewGuid(),
+                        TeamId = teamId,
+                        EmployeeId = employeeId,
+                        DateAdded = DateTime.UtcNow
+                    });
+                    await _context.SaveChangesAsync();
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "Team", "Update", teamId.ToString());
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding member {EmpId} to team {TeamId}", employeeId, teamId);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        // DELETE: api/Teams/{teamId}/members/{employeeId}
+        [HttpDelete("{teamId}/members/{employeeId}")]
+        public async Task<IActionResult> RemoveMember(Guid teamId, Guid employeeId)
+        {
+            try
+            {
+                var member = await _context.TeamMembers
+                    .FirstOrDefaultAsync(m => m.TeamId == teamId && m.EmployeeId == employeeId);
+
+                if (member == null) return NotFound();
+                _context.TeamMembers.Remove(member);
+                await _context.SaveChangesAsync();
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Team", "Update", teamId.ToString());
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing member {EmpId} from team {TeamId}", employeeId, teamId);
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 }

@@ -39,7 +39,7 @@ namespace OCC.WpfClient.Features.HseqHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var hseq = new NavItem("HSEQ Hub", NavigationRoutes.HealthSafety, "HSEQ", iconColor: "#00FFFF", iconCode: "\uEA18");
+            var hseq = new NavItem("HSEQ", NavigationRoutes.HealthSafety, "HSEQ", iconColor: "#00FFFF", iconCode: "\uEA18");
 
 
             yield return hseq;

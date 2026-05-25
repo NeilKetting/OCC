@@ -44,6 +44,11 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _hasProjectsAccess;
         [ObservableProperty] private bool _hasSuppliersAccess;
         [ObservableProperty] private bool _hasHealthSafetyAccess;
+        [ObservableProperty] private bool _hasAttendanceAccess;
+        [ObservableProperty] private bool _hasSubContractorsAccess;
+        [ObservableProperty] private bool _hasSnagListAccess;
+        [ObservableProperty] private bool _hasPerformanceDashboardAccess;
+        [ObservableProperty] private bool _hasSupportCenterAccess;
 
         // Project Features
         [ObservableProperty] private bool _hasProjectCreationAccess;
@@ -104,6 +109,11 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 HasProjectsAccess = true;
                 HasSuppliersAccess = true;
                 HasHealthSafetyAccess = true;
+                HasAttendanceAccess = true;
+                HasSubContractorsAccess = true;
+                HasSnagListAccess = true;
+                HasPerformanceDashboardAccess = true;
+                HasSupportCenterAccess = true;
                 HasProjectCreationAccess = true;
                 HasProjectDeletionAccess = true;
                 HasCompanyProfileAccess = true;
@@ -138,6 +148,11 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             HasProjectsAccess = current.Contains(NavigationRoutes.Projects, StringComparer.OrdinalIgnoreCase);
             HasSuppliersAccess = current.Contains(NavigationRoutes.Suppliers, StringComparer.OrdinalIgnoreCase);
             HasHealthSafetyAccess = current.Contains(NavigationRoutes.HealthSafety, StringComparer.OrdinalIgnoreCase);
+            HasAttendanceAccess = current.Contains(NavigationRoutes.AttendanceLive, StringComparer.OrdinalIgnoreCase);
+            HasSubContractorsAccess = current.Contains(NavigationRoutes.SubContractors, StringComparer.OrdinalIgnoreCase);
+            HasSnagListAccess = current.Contains(NavigationRoutes.SnagList, StringComparer.OrdinalIgnoreCase);
+            HasPerformanceDashboardAccess = current.Contains(NavigationRoutes.PerformanceDashboard, StringComparer.OrdinalIgnoreCase);
+            HasSupportCenterAccess = current.Contains(NavigationRoutes.SupportCenter, StringComparer.OrdinalIgnoreCase);
 
             HasProjectCreationAccess = current.Contains(NavigationRoutes.Feature_ProjectCreation, StringComparer.OrdinalIgnoreCase);
             HasProjectDeletionAccess = current.Contains(NavigationRoutes.Feature_ProjectDeletion, StringComparer.OrdinalIgnoreCase);
@@ -161,6 +176,11 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             if (HasProjectsAccess) selected.Add(NavigationRoutes.Projects);
             if (HasSuppliersAccess) selected.Add(NavigationRoutes.Suppliers);
             if (HasHealthSafetyAccess) selected.Add(NavigationRoutes.HealthSafety);
+            if (HasAttendanceAccess) selected.Add(NavigationRoutes.AttendanceLive);
+            if (HasSubContractorsAccess) selected.Add(NavigationRoutes.SubContractors);
+            if (HasSnagListAccess) selected.Add(NavigationRoutes.SnagList);
+            if (HasPerformanceDashboardAccess) selected.Add(NavigationRoutes.PerformanceDashboard);
+            if (HasSupportCenterAccess) selected.Add(NavigationRoutes.SupportCenter);
 
             if (HasProjectCreationAccess) selected.Add(NavigationRoutes.Feature_ProjectCreation);
             if (HasProjectDeletionAccess) selected.Add(NavigationRoutes.Feature_ProjectDeletion);

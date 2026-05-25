@@ -123,7 +123,7 @@
                             <ItemsControl ItemsSource="{Binding RecentUpdates}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border BorderBrush="#10FFFFFF" BorderThickness="0,0,0,1" Padding="0,8">
+                                        <Border BorderBrush="#10FFFFFF" BorderThickness="0,0,0,1" Padding="0,8,30,8">
                                             <StackPanel>
                                                 <TextBlock Text="{Binding TaskName}" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
                                                 <TextBlock Text="{Binding ProjectName}" FontSize="11" Style="{StaticResource LabelText}"/>

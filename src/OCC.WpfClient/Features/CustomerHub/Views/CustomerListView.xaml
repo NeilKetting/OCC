@@ -137,8 +137,14 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" ToolTip="Open">
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SuccessGreen}" FontSize="14"/>
+                                        <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" 
+                                                Style="{StaticResource ToolbarIconButton}" 
+                                                ToolTip="Open">
+                                            <TextBlock Text="" 
+                                                       Style="{StaticResource SymbolIcon}" 
+                                                       Foreground="{StaticResource SuccessGreen}" 
+                                                       FontSize="14"/>
                                         </Button>
                                         <Button Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="8,0,0,0" ToolTip="Edit">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
