@@ -88,15 +88,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
         }
 
-        public async Task LoadProjectAsync(Guid projectId)
+        public async Task LoadProjectAsync(Guid projectId, bool silent = false)
         {
             ProjectId = projectId;
             
             try
             {
-                IsBusy = true;
-                BusyText = "Loading project details...";
-                UpdateStatus("Loading project details...");
+                if (!silent)
+                {
+                    IsBusy = true;
+                    BusyText = "Loading project details...";
+                    UpdateStatus("Loading project details...");
+                }
                 
                 Project = await _projectService.GetProjectAsync(projectId);
                 if (Project != null)
@@ -105,17 +108,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     UpdateHeaderInfo();
                     var tasks = await _projectService.GetProjectTasksAsync(projectId);
                     _dashboardVM.UpdateProjectData(Project, tasks);
-                    await _tasksVM.UpdateTasksAsync(ProjectId, tasks);
-                    await _ganttVM.UpdateTasksAsync(ProjectId, tasks.ToList());
+                    await _tasksVM.UpdateTasksAsync(ProjectId, tasks, silent);
+                    await _ganttVM.UpdateTasksAsync(ProjectId, tasks.ToList(), silent);
                     _ = _historyVM.LoadHistoryAsync(ProjectId);
                     await _reportVM.LoadReportDataAsync(ProjectId);
                     await _variationOrdersVM.LoadProjectAsync(ProjectId);
-                    UpdateStatus("Ready");
+                    if (!silent) UpdateStatus("Ready");
                 }
             }
             finally
             {
-                IsBusy = false;
+                if (!silent) IsBusy = false;
             }
         }
 
@@ -159,7 +162,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             if (ProjectId != Guid.Empty)
             {
-                _ = LoadProjectAsync(ProjectId);
+                _ = LoadProjectAsync(ProjectId, silent: true);
             }
         }
 
@@ -167,7 +170,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             if (ProjectId != Guid.Empty && (message.ProjectId == Guid.Empty || message.ProjectId == ProjectId))
             {
-                _ = LoadProjectAsync(ProjectId);
+                _ = LoadProjectAsync(ProjectId, silent: true);
             }
         }
 

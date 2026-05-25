@@ -248,5 +248,38 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 }
             }
         }
+
+        [RelayCommand]
+        private async Task RemoveLogoAsync()
+        {
+            if (IsNew) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Removing logo...";
+
+                _model.LogoUrl = string.Empty;
+                var success = await _customerService.UpdateCustomerAsync(_model);
+                if (success)
+                {
+                    LogoUrl = string.Empty;
+                    NotifySuccess("Success", "Logo removed successfully.");
+                }
+                else
+                {
+                    NotifyError("Error", "Failed to remove logo.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to remove logo");
+                NotifyError("Error", $"Failed to remove logo: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
     }
 }

@@ -25,6 +25,30 @@ namespace OCC.API.Data
                 logger.LogWarning("Manual schema patch skipped or failed: {Message}", ex.Message);
             }
 
+            // Standardize task IsGroup data integrity for existing/legacy database records
+            try
+            {
+                logger.LogInformation("Standardizing task IsGroup data integrity...");
+                var tasksToSetGroup = context.ProjectTasks
+                    .Where(t => !t.IsGroup && context.ProjectTasks.Any(child => child.ParentId == t.Id))
+                    .ToList();
+                
+                foreach (var t in tasksToSetGroup)
+                {
+                    t.IsGroup = true;
+                    logger.LogInformation("Data Integrity Standardizer: Set IsGroup = true for task '{Name}' ({Id})", t.Name, t.Id);
+                }
+
+                if (tasksToSetGroup.Any())
+                {
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Failed to standardize task IsGroup data integrity: {Message}", ex.Message);
+            }
+
             var adminEmail = "neil@mdk.co.za";
             var adminUser = context.Users.FirstOrDefault(u => u.Email == adminEmail);
 

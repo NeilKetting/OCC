@@ -258,6 +258,10 @@ namespace OCC.API.Controllers
                     project.ProjectManager = user?.DisplayName ?? user?.Email ?? userEmail;
                 }
 
+                // Avoid EF Core tracking/navigation issues with deserialized entities
+                project.SiteManager = null;
+                project.CustomerEntity = null;
+
                 _context.Projects.Add(project);
                 await _context.SaveChangesAsync();
                 
@@ -266,6 +270,7 @@ namespace OCC.API.Controllers
                 // Notify Site Manager if assigned during creation
                 if (project.SiteManagerId.HasValue)
                 {
+                    NotificationsController.LogPush($"[NOTIFY] PostProject triggered site manager assignment notification for manager: {project.SiteManagerId.Value}");
                     await NotifySiteManagerAssignmentAsync(project, project.SiteManagerId);
                 }
 

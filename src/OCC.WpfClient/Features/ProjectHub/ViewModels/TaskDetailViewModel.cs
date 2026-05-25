@@ -27,6 +27,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IAuthService _authService;
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
         private Guid _currentTaskId;
+        private bool _isSavingAndClosing;
 
         [ObservableProperty] private ProjectTaskWrapper _task;
         [ObservableProperty] private string _newCommentContent = string.Empty;
@@ -40,20 +41,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public bool IsProjectLinkVisible => IsCreateMode;
         public bool IsSubtask => Task?.Model?.ParentId != null;
         public bool IsParentTask => !IsSubtask;
-        public bool IsManualProgressEnabled => Task != null && !Task.HasSubtasks;
-        
-        public TimeSpan? StartTime
-        {
-            get => Task?.StartDate?.TimeOfDay;
-            set { if (Task != null && Task.StartDate.HasValue && value.HasValue) Task.StartDate = Task.StartDate.Value.Date + value.Value; OnPropertyChanged(nameof(StartTime)); }
-        }
-
-        public TimeSpan? FinishTime
-        {
-            get => Task?.FinishDate?.TimeOfDay;
-            set { if (Task != null && Task.FinishDate.HasValue && value.HasValue) Task.FinishDate = Task.FinishDate.Value.Date + value.Value; OnPropertyChanged(nameof(FinishTime)); }
-        }
-
+        public bool IsManualProgressEnabled => Task != null && SubtaskCount == 0;
         public event EventHandler? CloseInitiated;
         public event EventHandler? CloseFinished;
         public int CommentsCount => Comments.Count;
@@ -124,7 +112,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // Listen for real-time updates
             WeakReferenceMessenger.Default.Register<OCC.WpfClient.Infrastructure.Messages.TaskUpdatedMessage>(this, (r, m) =>
             {
-                if (m.TaskId == _currentTaskId)
+                if (m.TaskId == _currentTaskId && !_isSavingAndClosing)
                 {
                     App.Current.Dispatcher.Invoke(async () => 
                     {
@@ -134,8 +122,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             });
         }
 
+        [RelayCommand]
         public async Task LoadTaskById(Guid taskId)
         {
+            _isSavingAndClosing = false;
             try 
             {
                 UpdateStatus("Loading task details...");
@@ -155,15 +145,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public async Task InitializeForCreation(Guid? projectId = null, Guid? parentTaskId = null)
         {
+            _isSavingAndClosing = false;
             IsBusy = true;
             IsCreateMode = true;
             
-            if (parentTaskId.HasValue)
-            {
-                var parent = await _projectTaskService.GetTaskAsync(parentTaskId.Value);
-                ParentTaskName = parent?.Name ?? "Parent Task";
-            }
-
             var model = new ProjectTask
             {
                 Id = Guid.NewGuid(),
@@ -174,6 +159,33 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 StartDate = DateTime.UtcNow,
                 FinishDate = DateTime.UtcNow.AddDays(1)
             };
+
+            if (parentTaskId.HasValue)
+            {
+                var parent = await _projectTaskService.GetTaskAsync(parentTaskId.Value);
+                ParentTaskName = parent?.Name ?? "Parent Task";
+
+                if (parent != null)
+                {
+                    var parentAssignments = await _assignmentService.GetAssignmentsAsync(parent.Id);
+                    if (parentAssignments != null && parentAssignments.Any())
+                    {
+                        model.AssignedTo = string.Join(", ", parentAssignments.Select(a => a.AssigneeName));
+                        foreach (var pa in parentAssignments)
+                        {
+                            model.Assignments.Add(new TaskAssignment
+                            {
+                                Id = Guid.NewGuid(),
+                                TaskId = model.Id,
+                                AssigneeId = pa.AssigneeId,
+                                AssigneeName = pa.AssigneeName,
+                                AssigneeType = pa.AssigneeType
+                            });
+                        }
+                    }
+                }
+            }
+
             LoadTask(model);
             _currentTaskId = model.Id;
             await LoadAssignableResources();
@@ -195,9 +207,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var projectsTask = _projectService.GetProjectsAsync();
             var subContractorsTask = _subContractorService.GetSubContractorSummariesAsync();
             var commentsTask = _commentService.GetCommentsAsync(_currentTaskId);
-            var assignmentsTask = _assignmentService.GetAssignmentsAsync(_currentTaskId);
+            var assignmentsTask = IsCreateMode 
+                ? System.Threading.Tasks.Task.FromResult<IEnumerable<TaskAssignment>>(new List<TaskAssignment>()) 
+                : _assignmentService.GetAssignmentsAsync(_currentTaskId);
 
-            await System.Threading.Tasks.Task.WhenAll(staffTask, usersTask, projectsTask, subContractorsTask, commentsTask, assignmentsTask);
+            Task<IEnumerable<ProjectTask>>? tasksTask = null;
+            if (Task?.Model?.ProjectId != null && Task.Model.ProjectId != Guid.Empty)
+            {
+                tasksTask = _projectTaskService.GetTasksAsync(Task.Model.ProjectId);
+            }
+
+            if (tasksTask != null)
+            {
+                await System.Threading.Tasks.Task.WhenAll(staffTask, usersTask, projectsTask, subContractorsTask, commentsTask, assignmentsTask, tasksTask);
+            }
+            else
+            {
+                await System.Threading.Tasks.Task.WhenAll(staffTask, usersTask, projectsTask, subContractorsTask, commentsTask, assignmentsTask);
+            }
 
             // 1. Process Employees
             var staff = await staffTask;
@@ -219,9 +246,30 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             foreach (var c in (await commentsTask).OrderByDescending(x => x.CreatedAtUtc)) Comments.Add(c);
             OnPropertyChanged(nameof(CommentsCount));
 
+            // 4b. Process Subtasks
+            Subtasks.Clear();
+            if (tasksTask != null)
+            {
+                var allTasks = await tasksTask;
+                var childTasks = allTasks.Where(t => t.ParentId == _currentTaskId).OrderBy(t => t.OrderIndex);
+                foreach (var child in childTasks) Subtasks.Add(child);
+            }
+            OnPropertyChanged(nameof(SubtaskCount));
+            OnPropertyChanged(nameof(IsManualProgressEnabled));
+
             // 5. Process Assignments
             Assignments.Clear();
-            foreach (var a in await assignmentsTask) Assignments.Add(a);
+            if (IsCreateMode)
+            {
+                if (Task?.Model?.Assignments != null)
+                {
+                    foreach (var a in Task.Model.Assignments) Assignments.Add(a);
+                }
+            }
+            else
+            {
+                foreach (var a in await assignmentsTask) Assignments.Add(a);
+            }
 
             // 6. Load Potential Assignees using already fetched data
             await LoadPotentialAssigneesAsync(staff, await subContractorsTask);
@@ -306,7 +354,36 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 };
 
                 Assignments.Add(newAssignment);
-                if (!IsCreateMode) await _assignmentService.AddAssignmentAsync(newAssignment);
+                if (!IsCreateMode)
+                {
+                    await _assignmentService.AddAssignmentAsync(newAssignment);
+
+                    if (IsParentTask)
+                    {
+                        foreach (var child in Subtasks)
+                        {
+                            var childAssignments = (await _assignmentService.GetAssignmentsAsync(child.Id)).ToList();
+                            var hasAssignee = childAssignments.Any(a => a.AssigneeId == assignee.Id || (assignee.Id == Guid.Empty && a.AssigneeName == assignee.Name));
+                            if (!hasAssignee)
+                            {
+                                var childAssignment = new TaskAssignment
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TaskId = child.Id,
+                                    AssigneeId = assignee.Id,
+                                    AssigneeName = assignee.Name,
+                                    AssigneeType = assignee.Type
+                                };
+                                await _assignmentService.AddAssignmentAsync(childAssignment);
+                                childAssignments.Add(childAssignment);
+                            }
+
+                            // Keep child task's AssignedTo string in sync in the database
+                            child.AssignedTo = string.Join(", ", childAssignments.Select(a => a.AssigneeName));
+                            await _projectTaskService.UpdateTaskAsync(child);
+                        }
+                    }
+                }
             }
             else
             {
@@ -314,10 +391,36 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 if (existing != null)
                 {
                     Assignments.Remove(existing);
-                    if (!IsCreateMode) await _assignmentService.DeleteAssignmentAsync(existing.Id);
+                    if (!IsCreateMode)
+                    {
+                        await _assignmentService.DeleteAssignmentAsync(existing.Id);
+
+                        if (IsParentTask)
+                        {
+                            foreach (var child in Subtasks)
+                            {
+                                var childAssignments = (await _assignmentService.GetAssignmentsAsync(child.Id)).ToList();
+                                var existingChildAssignment = childAssignments.FirstOrDefault(a => a.AssigneeId == assignee.Id || (assignee.Id == Guid.Empty && a.AssigneeName == assignee.Name));
+                                if (existingChildAssignment != null)
+                                {
+                                    await _assignmentService.DeleteAssignmentAsync(existingChildAssignment.Id);
+                                    var updatedAssignments = childAssignments.Where(a => a.Id != existingChildAssignment.Id).ToList();
+                                    
+                                    // Keep child task's AssignedTo string in sync in the database
+                                    child.AssignedTo = string.Join(", ", updatedAssignments.Select(a => a.AssigneeName));
+                                    await _projectTaskService.UpdateTaskAsync(child);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             
+            // Keep Task wrapper, underlying model, and in-memory properties in sync
+            Task.AssignedTo = string.Join(", ", Assignments.Select(a => a.AssigneeName));
+            Task.Model.AssignedTo = Task.AssignedTo;
+            Task.Model.Assignments = Assignments.ToList();
+
             OnPropertyChanged(nameof(Task)); // Refresh initials etc
             Task.RefreshAssigneeInfo();
         }
@@ -384,11 +487,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public async void ConfirmClose()
         {
+            CloseFinished?.Invoke(this, EventArgs.Empty);
             if (!IsCreateMode)
             {
+                _isSavingAndClosing = true;
                 await UpdateTask();
             }
-            CloseFinished?.Invoke(this, EventArgs.Empty);
         }
 
         [RelayCommand]
@@ -416,13 +520,41 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [RelayCommand]
+        private async Task ToggleSubtaskComplete(ProjectTask subtask)
+        {
+            if (subtask == null) return;
+            try
+            {
+                await _projectTaskService.UpdateTaskAsync(subtask);
+                WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(subtask.Id));
+                await LoadTaskById(_currentTaskId);
+            }
+            catch (Exception ex)
+            {
+                NotifyError("Error", $"Failed to update subtask complete status: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
         private async Task CreateTask()
         {
             if (string.IsNullOrWhiteSpace(Task.Name)) return;
             Task.CommitToModel();
             Task.Model.Type = TaskType.Task;
             if (SelectedProject != null) Task.Model.ProjectId = SelectedProject.Id;
+
+            // Sync AssignedTo legacy string
+            Task.Model.AssignedTo = string.Join(", ", Assignments.Select(a => a.AssigneeName));
+
             await _projectTaskService.CreateTaskAsync(Task.Model);
+
+            // Persist the assignments in the database
+            foreach (var assignment in Assignments)
+            {
+                assignment.TaskId = Task.Model.Id;
+                await _assignmentService.AddAssignmentAsync(assignment);
+            }
+
             NotifySuccess("Task Created", $"Task '{Task.Name}' has been created successfully.");
             WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(Task.Model.Id));
             RequestClose();

@@ -339,7 +339,7 @@
                               MouseDoubleClick="OnTaskDoubleClick">
                         <DataGrid.Columns>
                             <!-- Status Icon -->
-                            <DataGridTemplateColumn Header="STATUS" Width="60">
+                            <DataGridTemplateColumn Header="STATUS" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Ellipse Width="10" Height="10" Fill="{Binding StatusColor}" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -507,29 +507,33 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                            <Button Style="{StaticResource ToolbarIconButton}" 
                                                     Command="{Binding Data.EditTaskCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
+                                                    Margin="5"
                                                     ToolTip="Edit Task">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource AccentBlue}"/>
+                                                <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource AccentBlue}"/>
                                             </Button>
-                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                            <Button Style="{StaticResource ToolbarIconButton}" 
                                                     Command="{Binding Data.CreateSubtaskCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
+                                                    Margin="5"
                                                     ToolTip="Add Subtask">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource SuccessGreen}"/>
+                                                <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource SuccessGreen}"/>
                                             </Button>
-                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                            <Button Style="{StaticResource ToolbarIconButton}" 
                                                     Command="{Binding Data.ShowAssignToCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
+                                                    Margin="5"
                                                     ToolTip="Assign To">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource OrangeBrush}"/>
+                                                <TextBlock Text="&#xE13D;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource OrangeBrush}"/>
                                             </Button>
-                                            <Button Style="{StaticResource ListActionButtonStyle}" 
+                                            <Button Style="{StaticResource ToolbarIconButton}" 
                                                     Command="{Binding Data.DeleteTaskCommand, Source={StaticResource Proxy}}" 
                                                     CommandParameter="{Binding}"
+                                                    Margin="5"
                                                     ToolTip="Delete Task">
-                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource ErrorRed}"/>
+                                                <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource ErrorRed}"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
@@ -603,7 +607,7 @@
                     </Border>
 
                     <StackPanel Grid.Row="1" Margin="20,15,20,0">
-                        <TextBlock Text="{Binding TaskToAssign.Name}" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,0,15"/>
+                        <TextBlock Text="Please select one or more." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,0,0,15"/>
                         <TextBox Text="{Binding SubContractorSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                                  Style="{StaticResource ModernInput}" Height="34" 
                                  ap:WatermarkProperties.Watermark="Search contractors..."/>

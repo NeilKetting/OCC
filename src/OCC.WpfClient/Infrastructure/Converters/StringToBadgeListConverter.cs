@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
 using System.Windows.Media;
+using OCC.Shared.Models;
 using OCC.WpfClient.Features.ProjectHub.ViewModels;
 
 namespace OCC.WpfClient.Infrastructure.Converters
@@ -12,13 +13,24 @@ namespace OCC.WpfClient.Infrastructure.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            List<string> names = null;
+
             if (value is string str && !string.IsNullOrWhiteSpace(str))
             {
-                var names = str.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                               .Select(s => s.Trim())
-                               .Where(s => !string.IsNullOrEmpty(s))
-                               .ToList();
+                names = str.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(s => s.Trim())
+                           .Where(s => !string.IsNullOrEmpty(s))
+                           .ToList();
+            }
+            else if (value is IEnumerable<TaskAssignment> assignments)
+            {
+                names = assignments.Select(a => a.AssigneeName)
+                                   .Where(s => !string.IsNullOrWhiteSpace(s))
+                                   .ToList();
+            }
 
+            if (names != null && names.Any())
+            {
                 var badges = new List<BadgeData>();
                 foreach (var name in names)
                 {

@@ -155,15 +155,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void ToggleColumnPicker() => IsColumnPickerOpen = !IsColumnPickerOpen;
 
-        public async Task UpdateTasksAsync(Guid projectId, IEnumerable<ProjectTask> tasks)
+        public async Task UpdateTasksAsync(Guid projectId, IEnumerable<ProjectTask> tasks, bool silent = false)
         {
             try
             {
-                IsBusy = true;
-                BusyText = "Processing tasks...";
-                
-                // Allow UI thread to show the spinner before we block it with heavy rendering
-                await Task.Delay(10);
+                if (!silent)
+                {
+                    IsBusy = true;
+                    BusyText = "Processing tasks...";
+                    
+                    // Allow UI thread to show the spinner before we block it with heavy rendering
+                    await Task.Delay(10);
+                }
 
                 ProjectId = projectId;
                 var taskList = tasks.ToList();
@@ -189,8 +192,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 CalculateSmartStats(taskList);
 
-                // Build hierarchy (Ported from legacy app)
-                foreach (var task in taskList) task.Children.Clear();
+                // Build hierarchy (Ported from legacy app) and sync AssignedTo legacy field
+                foreach (var task in taskList)
+                {
+                    task.Children.Clear();
+                    if (task.Assignments != null && task.Assignments.Any())
+                    {
+                        var expectedAssignedTo = string.Join(", ", task.Assignments.Select(a => a.AssigneeName));
+                        if (task.AssignedTo != expectedAssignedTo)
+                        {
+                            task.AssignedTo = expectedAssignedTo;
+                        }
+                    }
+                }
                 
                 var lookup = taskList.ToDictionary(t => t.Id);
                 var roots = new List<ProjectTask>();
@@ -218,7 +232,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             finally
             {
-                IsBusy = false;
+                if (!silent)
+                {
+                    IsBusy = false;
+                }
             }
         }
 
@@ -545,15 +562,86 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 }
             }
 
+            // Update in-memory Assignments collection for local responsiveness
+            TaskToAssign.Assignments.Clear();
+            foreach (var subbie in selectedSubbies)
+            {
+                TaskToAssign.Assignments.Add(new TaskAssignment
+                {
+                    TaskId = TaskToAssign.Id,
+                    AssigneeId = subbie.Id,
+                    AssigneeName = subbie.Name,
+                    AssigneeType = subbie.Type
+                });
+            }
+
             // Update legacy string
             TaskToAssign.AssignedTo = string.Join(", ", selectedSubbies.Select(x => x.Name));
             await _taskService.UpdateTaskAsync(TaskToAssign);
+
+            // Propagate assignments to all child tasks recursively
+            await PropagateAssignmentsToChildren(TaskToAssign, selectedSubbies);
             
             TaskToAssign.NotifyPropertyChanged(nameof(ProjectTask.AssigneeInitials));
             TaskToAssign.NotifyPropertyChanged(nameof(ProjectTask.AssignedTo));
 
             IsAssignPopupOpen = false;
             NotifySuccess("Assignments Saved", $"Task assignments for '{TaskToAssign.Name}' updated.");
+        }
+
+        private async Task PropagateAssignmentsToChildren(ProjectTask parent, List<SubContractorSelectionViewModel> selectedSubbies)
+        {
+            if (parent.Children == null || !parent.Children.Any()) return;
+
+            foreach (var child in parent.Children)
+            {
+                var childAssignments = (await _assignmentService.GetAssignmentsAsync(child.Id)).ToList();
+
+                // Remove assignments no longer in selectedSubbies
+                foreach (var assignment in childAssignments.ToList())
+                {
+                    if (!selectedSubbies.Any(x => x.Id == assignment.AssigneeId && (x.Id != Guid.Empty || x.Name == assignment.AssigneeName)))
+                    {
+                        await _assignmentService.DeleteAssignmentAsync(assignment.Id);
+                        childAssignments.Remove(assignment);
+                    }
+                }
+
+                // Add new assignments from selectedSubbies
+                foreach (var subbie in selectedSubbies)
+                {
+                    if (!childAssignments.Any(x => x.AssigneeId == subbie.Id && (subbie.Id != Guid.Empty || x.AssigneeName == subbie.Name)))
+                    {
+                        var newAss = new TaskAssignment
+                        {
+                            Id = Guid.NewGuid(),
+                            TaskId = child.Id,
+                            AssigneeId = subbie.Id,
+                            AssigneeName = subbie.Name,
+                            AssigneeType = subbie.Type
+                        };
+                        await _assignmentService.AddAssignmentAsync(newAss);
+                        childAssignments.Add(newAss);
+                    }
+                }
+
+                // Update in-memory Assignments collection for local responsiveness
+                child.Assignments.Clear();
+                foreach (var ass in childAssignments)
+                {
+                    child.Assignments.Add(ass);
+                }
+
+                // Update legacy string and persist
+                child.AssignedTo = string.Join(", ", selectedSubbies.Select(x => x.Name));
+                await _taskService.UpdateTaskAsync(child);
+                
+                child.NotifyPropertyChanged(nameof(ProjectTask.AssigneeInitials));
+                child.NotifyPropertyChanged(nameof(ProjectTask.AssignedTo));
+
+                // Recurse
+                await PropagateAssignmentsToChildren(child, selectedSubbies);
+            }
         }
 
         [RelayCommand]

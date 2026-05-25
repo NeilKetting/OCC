@@ -554,5 +554,86 @@ namespace OCC.Tests
             Assert.DoesNotContain("Engen Kroonvaal North", thisWeekNames);
             Assert.DoesNotContain("Quickshop", thisWeekNames);
         }
+
+        [Fact]
+        public async Task LoadReportDataAsync_ForQuickCreatedProject_DetectsRootGroupTasksAsMilestones()
+        {
+            // Arrange
+            var projectId = Guid.NewGuid();
+            var project = new Project
+            {
+                Id = projectId,
+                Name = "Kroonvaal North",
+                StartDate = DateTime.Today.AddDays(-20),
+                EndDate = DateTime.Today.AddDays(20)
+            };
+
+            var today = DateTime.Today;
+            var workingDays = new List<DateTime>();
+            var temp = today;
+            while (workingDays.Count < 5)
+            {
+                if (temp.DayOfWeek != DayOfWeek.Saturday && temp.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    workingDays.Add(temp);
+                }
+                temp = temp.AddDays(1);
+            }
+            var minWorkingDay = workingDays[0];
+            var maxWorkingDay = workingDays[4];
+
+            var milestone1Id = Guid.NewGuid();
+            var subTask1Id = Guid.NewGuid();
+
+            var tasks = new List<ProjectTask>
+            {
+                // Root task: "Site Establishment" (IsGroup = true, ParentId = null, does not match project name)
+                new ProjectTask
+                {
+                    Id = milestone1Id,
+                    Name = "Site Establishment",
+                    IsGroup = true,
+                    ParentId = null,
+                    StartDate = minWorkingDay,
+                    FinishDate = minWorkingDay.AddDays(2),
+                    PercentComplete = 10,
+                    IsComplete = false
+                },
+                // Child task of Site Establishment
+                new ProjectTask
+                {
+                    Id = subTask1Id,
+                    Name = "Set up fence",
+                    IsGroup = false,
+                    ParentId = milestone1Id,
+                    StartDate = minWorkingDay,
+                    FinishDate = minWorkingDay.AddDays(1),
+                    PercentComplete = 20,
+                    IsComplete = false
+                }
+            };
+
+            _mockProjectService.Setup(s => s.GetProjectAsync(projectId)).ReturnsAsync(project);
+            _mockProjectService.Setup(s => s.GetProjectTasksAsync(projectId)).ReturnsAsync(tasks);
+
+            var viewModel = new ProjectReportViewModel(
+                _mockProjectService.Object,
+                _mockHealthSafetyService.Object,
+                _mockSubContractorService.Object,
+                _mockHttpClientFactory.Object,
+                _mockAuthService.Object,
+                _connectionSettings,
+                _mockDialogService.Object,
+                NullLogger<ProjectReportViewModel>.Instance,
+                _mockPdfService.Object,
+                _mockProjectReportService.Object);
+
+            // Act
+            await viewModel.LoadReportDataAsync(projectId);
+
+            // Assert
+            Assert.Single(viewModel.ThisWeekMilestones);
+            Assert.Equal("Site Establishment", viewModel.ThisWeekMilestones.First().Name);
+        }
     }
 }

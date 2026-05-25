@@ -266,6 +266,12 @@ namespace OCC.API.Controllers
                 _context.ProjectTasks.Add(task);
                 await _context.SaveChangesAsync();
 
+                // Rollup / set IsGroup on parent if this is a subtask
+                if (task.ParentId.HasValue && task.ParentId.Value != Guid.Empty)
+                {
+                    await CalculateParentRollup(task.ParentId.Value);
+                }
+
                 // Standardize on string for ID and notify project
                 var idStr = task.Id.ToString();
                 _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: ProjectTask Create {Id}", idStr);
@@ -303,6 +309,8 @@ namespace OCC.API.Controllers
             {
                 return NotFound();
             }
+
+            var oldParentId = existingTask.ParentId;
 
             try
             {
@@ -363,6 +371,11 @@ namespace OCC.API.Controllers
                 if (existingTask.ParentId.HasValue)
                 {
                     await CalculateParentRollup(existingTask.ParentId.Value);
+                }
+
+                if (oldParentId.HasValue && oldParentId.Value != existingTask.ParentId)
+                {
+                    await CalculateParentRollup(oldParentId.Value);
                 }
 
                 if (existingTask.ProjectId.HasValue && existingTask.ProjectId.Value != Guid.Empty)
@@ -463,8 +476,16 @@ namespace OCC.API.Controllers
             {
                 var task = await _context.ProjectTasks.FindAsync(id);
                 if (task == null) return NotFound();
+
+                var parentId = task.ParentId;
+
                 _context.ProjectTasks.Remove(task);
                 await _context.SaveChangesAsync();
+
+                if (parentId.HasValue && parentId.Value != Guid.Empty)
+                {
+                    await CalculateParentRollup(parentId.Value);
+                }
 
                 // Standardize on string for ID
                 var idStr = id.ToString();
@@ -513,25 +534,49 @@ namespace OCC.API.Controllers
                     .Include(t => t.Children)
                     .FirstOrDefaultAsync(t => t.Id == parentId);
 
-                if (parent != null && parent.Children.Any())
+                if (parent != null)
                 {
-                    // Compute average progress of children
-                    // We only rollup progress for non-meeting tasks or handle based on business rules
-                    var children = parent.Children.ToList();
-                    double average = children.Average(c => (double)c.PercentComplete);
-                    int rounded = (int)Math.Round(average);
+                    bool parentChanged = false;
 
-                    if (parent.PercentComplete != rounded)
+                    if (parent.Children.Any())
                     {
-                        _logger.LogInformation("Rolling up progress for Parent {Id}: {Old}% -> {New}%", parentId, parent.PercentComplete, rounded);
-                        
-                        parent.PercentComplete = rounded;
+                        if (!parent.IsGroup)
+                        {
+                            parent.IsGroup = true;
+                            parentChanged = true;
+                        }
 
-                        // Sync Status if progress is 100% or just started
-                        if (rounded == 100) parent.Status = "Done";
-                        else if (rounded > 0 && (parent.Status == "To Do" || parent.Status == "Not Started")) 
-                            parent.Status = "Started";
+                        // Compute average progress of children
+                        // We only rollup progress for non-meeting tasks or handle based on business rules
+                        var children = parent.Children.ToList();
+                        double average = children.Average(c => (double)c.PercentComplete);
+                        int rounded = (int)Math.Round(average);
 
+                        if (parent.PercentComplete != rounded)
+                        {
+                            _logger.LogInformation("Rolling up progress for Parent {Id}: {Old}% -> {New}%", parentId, parent.PercentComplete, rounded);
+                            
+                            parent.PercentComplete = rounded;
+
+                            // Sync Status if progress is 100% or just started
+                            if (rounded == 100) parent.Status = "Done";
+                            else if (rounded > 0 && (parent.Status == "To Do" || parent.Status == "Not Started")) 
+                                parent.Status = "Started";
+
+                            parentChanged = true;
+                        }
+                    }
+                    else
+                    {
+                        if (parent.IsGroup)
+                        {
+                            parent.IsGroup = false;
+                            parentChanged = true;
+                        }
+                    }
+
+                    if (parentChanged)
+                    {
                         await _context.SaveChangesAsync();
                         
                         // Notify clients about parent update

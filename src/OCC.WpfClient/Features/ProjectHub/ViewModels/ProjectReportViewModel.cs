@@ -245,16 +245,30 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     if (roots.Count == 1)
                     {
                         var root = roots[0];
-                        var rootChildren = tasks.Where(t => t.ParentId == root.Id).ToList();
-                        var childGroups = rootChildren.Where(t => t.IsGroup).ToList();
-                        if (childGroups.Count == 1)
+                        bool nameMatchesProject = false;
+                        if (Project != null && !string.IsNullOrEmpty(Project.Name))
                         {
-                            var projectTaskCandidate = childGroups[0];
-                            parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == projectTaskCandidate.Id).ToList();
+                            nameMatchesProject = root.Name.Contains(Project.Name, StringComparison.OrdinalIgnoreCase) ||
+                                                 Project.Name.Contains(root.Name, StringComparison.OrdinalIgnoreCase);
+                        }
+
+                        if (!nameMatchesProject && root.IsGroup)
+                        {
+                            parentTasks = new List<ProjectTask> { root };
                         }
                         else
                         {
-                            parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == root.Id).ToList();
+                            var rootChildren = tasks.Where(t => t.ParentId == root.Id).ToList();
+                            var childGroups = rootChildren.Where(t => t.IsGroup).ToList();
+                            if (childGroups.Count == 1)
+                            {
+                                var projectTaskCandidate = childGroups[0];
+                                parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == projectTaskCandidate.Id).ToList();
+                            }
+                            else
+                            {
+                                parentTasks = tasks.Where(t => t.IsGroup && t.ParentId == root.Id).ToList();
+                            }
                         }
                     }
                     else

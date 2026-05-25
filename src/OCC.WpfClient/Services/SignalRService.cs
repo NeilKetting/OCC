@@ -120,13 +120,10 @@ namespace OCC.WpfClient.Services
                 if (string.IsNullOrEmpty(idStr) || !Guid.TryParse(idStr, out Guid id)) return;
 
                 App.Current.Dispatcher.Invoke(() => {
-                    // Only show a toast for the main task update to avoid "double" notifications
                     // Debounce by 1 second to handle parent rollups sending multiple events
                     if (entityType == "ProjectTask" && (DateTime.Now - _lastTaskToastTime).TotalSeconds > 1)
                     {
                         _lastTaskToastTime = DateTime.Now;
-                         WeakReferenceMessenger.Default.Send(new OCC.WpfClient.Infrastructure.Messages.ToastNotificationMessage(
-                            new Models.ToastMessage("Sync", "Realtime SYNC Completed", Models.ToastType.Info)));
                     }
 
                     // Send specific messages for Desktop ViewModels that listen for them

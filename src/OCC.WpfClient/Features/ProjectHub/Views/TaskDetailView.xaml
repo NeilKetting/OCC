@@ -106,7 +106,7 @@
                                 <UniformGrid Columns="2" Margin="0,0,0,20">
                                     <StackPanel Margin="0,0,10,0">
                                         <TextBlock Text="STATUS" Style="{StaticResource LabelText}"/>
-                                        <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding Task.Status}" Style="{StaticResource ModernComboBox}"/>
+                                        <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding Task.Status}" Style="{StaticResource ModernComboBox}" IsEnabled="{Binding IsManualProgressEnabled}"/>
                                     </StackPanel>
                                     <StackPanel Margin="10,0,0,0">
                                         <TextBlock Text="PRIORITY" Style="{StaticResource LabelText}"/>
@@ -236,12 +236,10 @@
                                     <StackPanel Margin="0,0,10,0">
                                         <TextBlock Text="START DATE" Style="{StaticResource LabelText}"/>
                                         <DatePicker SelectedDate="{Binding Task.StartDate}" Style="{StaticResource ModernDatePicker}"/>
-                                        <controls:ModernTimePicker SelectedTime="{Binding StartTime}" Margin="0,5,0,0"/>
                                     </StackPanel>
                                     <StackPanel Margin="10,0,0,0">
                                         <TextBlock Text="DUE DATE" Style="{StaticResource LabelText}"/>
                                         <DatePicker SelectedDate="{Binding Task.FinishDate}" Style="{StaticResource ModernDatePicker}"/>
-                                        <controls:ModernTimePicker SelectedTime="{Binding FinishTime}" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </UniformGrid>
 
@@ -255,13 +253,15 @@
                                                     <Border Background="#0DFFFFFF" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/>
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
-                                                            <CheckBox IsChecked="{Binding IsComplete}" VerticalAlignment="Center"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" Margin="10,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Grid.Column="2" Text="{Binding PercentComplete, StringFormat='{}{0}%'}" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding PercentComplete, StringFormat='{}{0}%'}" Foreground="{StaticResource TextSub}" FontSize="12" Margin="10,0" VerticalAlignment="Center"/>
+                                                            <Button Grid.Column="2" Style="{StaticResource IconButtonSmall}" Command="{Binding DataContext.LoadTaskByIdCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Id}" ToolTip="Open Task Details" VerticalAlignment="Center">
+                                                                <TextBlock Text="&#xE76C;" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="White"/>
+                                                            </Button>
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>

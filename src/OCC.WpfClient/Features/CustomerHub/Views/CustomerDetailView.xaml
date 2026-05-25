@@ -5,9 +5,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.CustomerHub.ViewModels"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+             xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
+             xmlns:views="clr-namespace:OCC.WpfClient.Features.CustomerHub.Views"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="900"
              d:DataContext="{d:DesignInstance Type=vm:CustomerDetailViewModel}">
+
+    <UserControl.Resources>
+        <infra:VisibilityConverter x:Key="VisibilityConverter" />
+        <utils:BindingProxy x:Key="BindingProxy" Data="{Binding}" />
+
+        <DataTemplate DataType="{x:Type vm:CustomerDetailViewModel}">
+            <views:CustomerDetailView />
+        </DataTemplate>
+    </UserControl.Resources>
 
     <Grid Background="{StaticResource BackgroundDark}">
         <Grid Margin="20">
@@ -96,8 +108,14 @@
                                 
                                 <!-- Action Buttons & Instructions -->
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <Button Command="{Binding UploadLogoCommand}" Style="{StaticResource CreateButton}" 
-                                            Content="UPLOAD LOGO" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Button Command="{Binding UploadLogoCommand}" Style="{StaticResource CreateButton}" 
+                                                Content="UPLOAD LOGO" Margin="0,0,8,0"/>
+                                        <Button Command="{Binding RemoveLogoCommand}"
+                                                Style="{StaticResource CancelButton}"
+                                                Content="REMOVE LOGO"
+                                                Visibility="{Binding LogoUrl, Converter={StaticResource VisibilityConverter}}"/>
+                                    </StackPanel>
                                     <TextBlock Text="Supports PNG, JPG, or JPEG. This logo will display on the generated project status report header." 
                                                FontSize="11" Foreground="{StaticResource TextSub}" TextWrapping="Wrap" Opacity="0.7" LineHeight="15"/>
                                 </StackPanel>
