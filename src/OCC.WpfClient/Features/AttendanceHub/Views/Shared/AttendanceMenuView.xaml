@@ -64,6 +64,19 @@
                         </StackPanel>
                     </RadioButton>
 
+                    <!-- Leave Management -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                 GroupName="AttendanceTabs"
+                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Leave', Mode=TwoWay}"
+                                 Command="{Binding SetActiveTabCommand}" CommandParameter="Leave">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE787;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="Leave" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
                 </StackPanel>
             </ScrollViewer>
 

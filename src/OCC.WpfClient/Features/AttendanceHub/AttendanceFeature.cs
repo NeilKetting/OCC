@@ -14,11 +14,13 @@ namespace OCC.WpfClient.Features.AttendanceHub
         public void RegisterServices(IServiceCollection services)
         {
             services.AddSingleton<IAttendanceService, AttendanceService>();
+            services.AddSingleton<ILeaveService, LeaveService>();
 
             services.AddTransient<AttendanceMenuViewModel>();
             services.AddTransient<AttendanceDashboardViewModel>();
             services.AddTransient<AttendanceHistoryListViewModel>();
             services.AddTransient<TeamManagementViewModel>();
+            services.AddTransient<LeaveManagementViewModel>();
             services.AddTransient<AttendanceViewModel>();
         }
 

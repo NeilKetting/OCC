@@ -1233,5 +1233,190 @@ namespace OCC.WpfClient.Services
                 row.RelativeItem().AlignRight().Text($"Orange Circle Construction © {DateTime.Now.Year} - Confidential Daily Project Status Report").FontSize(8).FontColor(Colors.Grey.Medium);
             });
         }
+
+        // ─── Leave Form PDF ───────────────────────────────────────────────────────
+
+        public async Task<string> GenerateLeaveFormPdfAsync(LeaveRequest request)
+        {
+            var company = new CompanyDetails();
+            var employee = request.Employee;
+            var empName   = employee != null ? $"{employee.FirstName} {employee.LastName}" : "Unknown";
+            var empNo     = employee?.EmployeeNumber ?? "—";
+            var empBranch = employee?.Branch ?? "—";
+            var empRole   = employee?.Role.ToString() ?? "—";
+
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(40);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeLeaveHeader(c, company));
+
+                        page.Content().PaddingVertical(16).Column(col =>
+                        {
+                            // ── Employee Details ──
+                            col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Column(box =>
+                            {
+                                box.Item().Background(ColorPrimary).Padding(8)
+                                   .Text("EMPLOYEE DETAILS").SemiBold().FontColor(Colors.White).FontSize(10);
+                                box.Item().Padding(12).Row(row =>
+                                {
+                                    row.RelativeItem().Column(c2 =>
+                                    {
+                                        c2.Item().Text(t => { t.Span("Full Name:  ").SemiBold(); t.Span(empName); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Employee No: ").SemiBold(); t.Span(empNo); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Role / Trade:  ").SemiBold(); t.Span(empRole); });
+                                    });
+                                    row.RelativeItem().Column(c2 =>
+                                    {
+                                        c2.Item().Text(t => { t.Span("Branch:  ").SemiBold(); t.Span(empBranch); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Date Submitted: ").SemiBold(); t.Span(request.CreatedDate.ToString("dd MMM yyyy")); });
+                                    });
+                                });
+                            });
+
+                            col.Item().Height(14);
+
+                            // ── Leave Details Table ──
+                            col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Column(box =>
+                            {
+                                box.Item().Background(ColorSecondary).Padding(8)
+                                   .Text("LEAVE DETAILS").SemiBold().FontColor(Colors.White).FontSize(10);
+                                box.Item().Padding(12).Table(table =>
+                                {
+                                    table.ColumnsDefinition(cols =>
+                                    {
+                                        cols.RelativeColumn(); cols.RelativeColumn();
+                                        cols.RelativeColumn(); cols.RelativeColumn();
+                                    });
+                                    table.Header(h =>
+                                    {
+                                        foreach (var hdr in new[] { "LEAVE TYPE", "FROM", "TO", "WORKING DAYS" })
+                                            h.Cell().Background(ColorLightOrange).BorderBottom(1)
+                                             .BorderColor(Colors.Grey.Lighten2).Padding(6)
+                                             .Text(hdr).SemiBold().FontSize(9).FontColor(ColorSecondary);
+                                    });
+                                    table.Cell().Padding(6).Text(request.LeaveType.ToString());
+                                    table.Cell().Padding(6).Text(request.StartDate.ToString("dd MMM yyyy"));
+                                    table.Cell().Padding(6).Text(request.EndDate.ToString("dd MMM yyyy"));
+                                    table.Cell().Padding(6).Text(request.NumberOfDays.ToString()).Bold().FontColor(ColorPrimary);
+                                });
+                                box.Item().Padding(12).Row(row =>
+                                {
+                                    row.RelativeItem().Text(t => { t.Span("Paid Leave: ").SemiBold(); t.Span(request.IsUnpaid ? "No (Unpaid)" : "Yes"); });
+                                    row.RelativeItem().Text(t =>
+                                    {
+                                        t.Span("Status: ").SemiBold();
+                                        t.Span(request.Status.ToString()).FontColor(
+                                            request.Status == LeaveStatus.Approved ? "#4CAF50" :
+                                            request.Status == LeaveStatus.Rejected ? "#F44336" : ColorPrimary);
+                                    });
+                                });
+                            });
+
+                            col.Item().Height(14);
+
+                            // ── Reason ──
+                            col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Column(box =>
+                            {
+                                box.Item().Background(ColorLightOrange).Padding(8)
+                                   .Text("REASON FOR LEAVE").SemiBold().FontSize(10).FontColor(ColorSecondary);
+                                box.Item().MinHeight(70).Padding(12)
+                                   .Text(string.IsNullOrWhiteSpace(request.Reason) ? "(No reason provided)" : request.Reason)
+                                   .FontColor(Colors.Grey.Darken3);
+                            });
+
+                            if (!string.IsNullOrWhiteSpace(request.AdminComment))
+                            {
+                                col.Item().Height(10);
+                                col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Column(box =>
+                                {
+                                    box.Item().Background(Colors.Grey.Lighten4).Padding(8)
+                                       .Text("MANAGEMENT COMMENT").SemiBold().FontSize(10).FontColor(ColorSecondary);
+                                    box.Item().Padding(12).Text(request.AdminComment).Italic();
+                                });
+                            }
+
+                            col.Item().Height(30);
+
+                            // ── Signature Blocks ──
+                            col.Item().Row(row =>
+                            {
+                                row.RelativeItem().Column(sig =>
+                                {
+                                    sig.Item().Text("EMPLOYEE DECLARATION").FontSize(9).SemiBold().FontColor(Colors.Grey.Darken2);
+                                    sig.Item().PaddingTop(3).Text("I confirm the details above are correct and I am applying for leave as stated.")
+                                       .FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                                    sig.Item().PaddingTop(40).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                                    sig.Item().PaddingTop(4).Row(r =>
+                                    {
+                                        r.RelativeItem().Text("Signature").FontSize(8).FontColor(Colors.Grey.Medium);
+                                        r.RelativeItem().AlignRight().Text("Date: ___/___/______").FontSize(8).FontColor(Colors.Grey.Medium);
+                                    });
+                                    sig.Item().PaddingTop(12).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                                    sig.Item().PaddingTop(4).Text("Print Name").FontSize(8).FontColor(Colors.Grey.Medium);
+                                });
+
+                                row.ConstantItem(40);
+
+                                row.RelativeItem().Column(sig =>
+                                {
+                                    sig.Item().Text("MANAGER / HR APPROVAL").FontSize(9).SemiBold().FontColor(Colors.Grey.Darken2);
+                                    sig.Item().PaddingTop(3).Text($"Approved  /  Rejected  (circle)  —  Ref: {request.Id.ToString()[..8].ToUpper()}")
+                                       .FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                                    sig.Item().PaddingTop(40).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                                    sig.Item().PaddingTop(4).Row(r =>
+                                    {
+                                        r.RelativeItem().Text("Signature").FontSize(8).FontColor(Colors.Grey.Medium);
+                                        r.RelativeItem().AlignRight().Text("Date: ___/___/______").FontSize(8).FontColor(Colors.Grey.Medium);
+                                    });
+                                    sig.Item().PaddingTop(12).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                                    sig.Item().PaddingTop(4).Text("Print Name").FontSize(8).FontColor(Colors.Grey.Medium);
+                                });
+                            });
+                        });
+
+                        page.Footer().BorderTop(1).BorderColor(Colors.Grey.Lighten2).PaddingTop(6).Row(row =>
+                        {
+                            row.RelativeItem().Text("Orange Circle Construction — Leave Application Form — Human Resources Confidential")
+                               .FontSize(7).FontColor(Colors.Grey.Medium);
+                            row.RelativeItem().AlignRight()
+                               .Text($"Ref: {request.Id.ToString()[..8].ToUpper()} — {DateTime.Now:dd MMM yyyy}")
+                               .FontSize(7).FontColor(Colors.Grey.Medium);
+                        });
+                    });
+                });
+
+                var safeEmpName = empName.Replace(",", "").Replace(" ", "_");
+                var fileName = $"LeaveForm_{safeEmpName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
+                doc.GeneratePdf(filePath);
+                return filePath;
+            });
+        }
+
+        private void ComposeLeaveHeader(IContainer container, CompanyDetails company)
+        {
+            container.PaddingBottom(10).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text(company.CompanyName).FontSize(22).ExtraBold().FontColor(ColorPrimary);
+                    col.Item().Text("LEAVE APPLICATION").FontSize(14).SemiBold().FontColor(ColorSecondary);
+                    col.Item().PaddingTop(2).Text("Human Resources — Confidential").FontSize(8).FontColor(Colors.Grey.Medium);
+                });
+                row.RelativeItem().AlignRight().Column(c =>
+                {
+                    var logoBytes = GetLogoBytes();
+                    if (logoBytes != null)
+                        c.Item().Height(60).AlignRight().Image(logoBytes).FitArea();
+                });
+            });
+        }
     }
 }

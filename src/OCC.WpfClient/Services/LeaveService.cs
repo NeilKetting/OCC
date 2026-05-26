@@ -1,0 +1,231 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using OCC.Shared.Models;
+using OCC.WpfClient.Services.Infrastructure;
+using OCC.WpfClient.Services.Interfaces;
+
+namespace OCC.WpfClient.Services
+{
+    public class LeaveService : ILeaveService
+    {
+        private readonly ILogger<LeaveService> _logger;
+        private readonly HttpClient _httpClient;
+        private readonly ConnectionSettings _connectionSettings;
+        private readonly IAuthService _authService;
+        private readonly IEmployeeService _employeeService;
+        private readonly JsonSerializerOptions _options;
+
+        public LeaveService(
+            ILogger<LeaveService> logger,
+            IHttpClientFactory httpClientFactory,
+            ConnectionSettings connectionSettings,
+            IAuthService authService,
+            IEmployeeService employeeService)
+        {
+            _logger = logger;
+            _httpClient = httpClientFactory.CreateClient();
+            _connectionSettings = connectionSettings;
+            _authService = authService;
+            _employeeService = employeeService;
+            _options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+            };
+        }
+
+        private void EnsureAuthorization()
+        {
+            var token = _authService.CurrentToken;
+            if (!string.IsNullOrEmpty(token))
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        private string GetFullUrl(string path)
+        {
+            var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5000/";
+            if (!baseUrl.EndsWith("/")) baseUrl += "/";
+            return $"{baseUrl}{path}";
+        }
+
+        public async Task<IEnumerable<LeaveRequest>> GetLeaveRequestsAsync()
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl("api/LeaveRequests");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<IEnumerable<LeaveRequest>>(url, _options) ?? [];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching leave requests");
+                return [];
+            }
+        }
+
+        public async Task<LeaveRequest?> SubmitLeaveRequestAsync(LeaveRequest request)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl("api/LeaveRequests");
+            try
+            {
+                if (request.Id == Guid.Empty) request.Id = Guid.NewGuid();
+                request.CreatedDate = DateTime.UtcNow;
+                request.Status = LeaveStatus.Pending;
+
+                var response = await _httpClient.PostAsJsonAsync(url, request, _options);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<LeaveRequest>(_options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error submitting leave request");
+                throw;
+            }
+        }
+
+        public async Task<bool> ApproveLeaveAsync(Guid requestId, string? comment = null)
+        {
+            EnsureAuthorization();
+            try
+            {
+                // 1. Fetch the leave request
+                var getUrl = GetFullUrl($"api/LeaveRequests/{requestId}");
+                var request = await _httpClient.GetFromJsonAsync<LeaveRequest>(getUrl, _options);
+                if (request == null) return false;
+
+                // 2. Update status
+                request.Status = LeaveStatus.Approved;
+                request.ActionedDate = DateTime.UtcNow;
+                request.AdminComment = comment;
+
+                var putUrl = GetFullUrl($"api/LeaveRequests/{requestId}");
+                var putResponse = await _httpClient.PutAsJsonAsync(putUrl, request, _options);
+                if (!putResponse.IsSuccessStatusCode) return false;
+
+                // 3. Deduct balance from employee immediately
+                await DeductLeaveBalanceAsync(request);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving leave request {Id}", requestId);
+                return false;
+            }
+        }
+
+        public async Task<bool> RejectLeaveAsync(Guid requestId, string? comment = null)
+        {
+            EnsureAuthorization();
+            try
+            {
+                var getUrl = GetFullUrl($"api/LeaveRequests/{requestId}");
+                var request = await _httpClient.GetFromJsonAsync<LeaveRequest>(getUrl, _options);
+                if (request == null) return false;
+
+                request.Status = LeaveStatus.Rejected;
+                request.ActionedDate = DateTime.UtcNow;
+                request.AdminComment = comment;
+
+                var putUrl = GetFullUrl($"api/LeaveRequests/{requestId}");
+                var response = await _httpClient.PutAsJsonAsync(putUrl, request, _options);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting leave request {Id}", requestId);
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteLeaveRequestAsync(Guid requestId)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl($"api/LeaveRequests/{requestId}");
+            try
+            {
+                var response = await _httpClient.DeleteAsync(url);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting leave request {Id}", requestId);
+                return false;
+            }
+        }
+
+        public int CalculateBusinessDays(DateTime start, DateTime end)
+        {
+            if (end < start) return 0;
+            int days = 0;
+            for (var d = start.Date; d <= end.Date; d = d.AddDays(1))
+            {
+                if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday)
+                    days++;
+            }
+            return days;
+        }
+
+        // ─── Private Helpers ──────────────────────────────────────────────────
+
+        private async Task DeductLeaveBalanceAsync(LeaveRequest request)
+        {
+            try
+            {
+                var emp = await _employeeService.GetEmployeeAsync(request.EmployeeId);
+                if (emp == null) return;
+
+                int days = request.NumberOfDays > 0
+                    ? request.NumberOfDays
+                    : CalculateBusinessDays(request.StartDate, request.EndDate);
+
+                if (days <= 0) return;
+
+                var updateEmp = new Employee
+                {
+                    Id = emp.Id,
+                    FirstName = emp.FirstName,
+                    LastName = emp.LastName,
+                    EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
+                    IdNumber = emp.IdNumber,
+                    Email = emp.Email,
+                    Phone = emp.Phone,
+                    Branch = emp.Branch,
+                    Role = emp.Role,
+                    Status = emp.Status,
+                    HourlyRate = emp.HourlyRate,
+                    SickLeaveBalance = emp.SickLeaveBalance,
+                    AnnualLeaveBalance = emp.AnnualLeaveBalance,
+                    ShiftStartTime = emp.ShiftStartTime,
+                    ShiftEndTime = emp.ShiftEndTime,
+                    RowVersion = emp.RowVersion
+                };
+
+                switch (request.LeaveType)
+                {
+                    case LeaveType.Annual:
+                        updateEmp.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - days);
+                        break;
+                    case LeaveType.Sick:
+                        updateEmp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - days);
+                        break;
+                    // Maternity, Study, FamilyResponsibility, Unpaid — no balance to deduct
+                }
+
+                await _employeeService.UpdateEmployeeAsync(updateEmp);
+                _logger.LogInformation("Deducted {Days} {Type} leave day(s) from employee {Id}", days, request.LeaveType, emp.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not deduct leave balance for employee {Id} on approval", request.EmployeeId);
+            }
+        }
+    }
+}

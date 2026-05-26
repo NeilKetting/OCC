@@ -173,7 +173,28 @@
                     <TextBlock Text="Notes" Style="{StaticResource LabelText}"/>
                     <TextBox Text="{Binding EditingRecord.Notes, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ModernInput}" Height="80" TextWrapping="Wrap"
-                             AcceptsReturn="True" Margin="0,4,0,24"/>
+                             AcceptsReturn="True" Margin="0,4,0,16"/>
+
+                    <!-- Sick Note Upload — visible when Status is Sick / UnpaidSick -->
+                    <Border Padding="12" CornerRadius="6"
+                            Background="#0A4CAF50" BorderBrush="#304CAF50" BorderThickness="1"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding HasSickNote, Converter={StaticResource VisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="SICK NOTE ATTACHED" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding SickNoteFilePath}" Foreground="{StaticResource TextSub}"
+                                       FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Style="{StaticResource SecondaryButton}" Margin="0,0,0,16"
+                            Command="{Binding UploadSickNoteCommand}"
+                            HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE8A5;" Style="{StaticResource SymbolIcon}" FontSize="14" Margin="0,0,8,0"/>
+                            <TextBlock Text="UPLOAD SICK NOTE / DOCTOR'S CERT" VerticalAlignment="Center" FontSize="11"/>
+                        </StackPanel>
+                    </Button>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Style="{StaticResource SecondaryButton}" Content="CANCEL"
