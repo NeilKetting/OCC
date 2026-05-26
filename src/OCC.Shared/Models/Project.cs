@@ -90,8 +90,11 @@ namespace OCC.Shared.Models
                 if (Math.Round(Progress) >= 100 && _status != "Archived" && _status != "OnHold" && _status != "Cancelled")
                     return "Completed";
                 
-                if (Progress > 0 && (_status == "Planning" || _status == "Not Started"))
+                if (Math.Round(Progress) > 0 && Math.Round(Progress) < 100 && (_status == "Planning" || _status == "Not Started" || _status == "Completed" || _status == "Active"))
                     return "In Progress";
+
+                if (Math.Round(Progress) == 0 && _status == "Completed")
+                    return "Not Started";
                     
                 return _status;
             }

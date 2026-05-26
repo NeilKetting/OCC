@@ -15,8 +15,11 @@ namespace OCC.Shared.DTOs
                 if (Progress >= 100 && _status != "Archived" && _status != "OnHold" && _status != "Cancelled")
                     return "Completed";
 
-                if (Progress > 0 && (_status == "Planning" || _status == "Not Started"))
+                if (Progress > 0 && Progress < 100 && (_status == "Planning" || _status == "Not Started" || _status == "Completed" || _status == "Active"))
                     return "In Progress";
+
+                if (Progress == 0 && (_status == "Completed" || _status == "Active"))
+                    return "Not Started";
 
                 return _status;
             }
