@@ -53,7 +53,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var rows = new List<AttendanceStatusRow>();
                 foreach (var emp in activeEmployees)
                 {
-                    var record = records.FirstOrDefault(r => r.EmployeeId == emp.Id);
+                    var empRecords = records.Where(r => r.EmployeeId == emp.Id).ToList();
+
+                    // Prefer the open (active) record so IsClocked is always accurate.
+                    // An employee may have a closed morning record + an open afternoon shift,
+                    // or vice-versa – we always surface the open one if it exists.
+                    var openRecord = empRecords.FirstOrDefault(r => r.CheckInTime.HasValue && r.CheckOutTime == null);
+                    var record = openRecord ?? empRecords.OrderByDescending(r => r.CheckInTime).FirstOrDefault();
+
                     rows.Add(new AttendanceStatusRow
                     {
                         EmployeeId = emp.Id,
@@ -66,7 +73,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         CheckOutTime = record?.CheckOutTime,
                         HoursWorked = record?.HoursWorked ?? 0,
                         RecordId = record?.Id,
-                        IsClocked = record != null && record.CheckInTime.HasValue && !record.CheckOutTime.HasValue
+                        IsClocked = openRecord != null
                     });
                 }
 
@@ -94,6 +101,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private async Task ClockInEmployee(AttendanceStatusRow? row)
         {
             if (row == null) return;
+
+            // Guard: if the row is already showing as clocked in the UI should have hidden
+            // the button, but protect against race conditions / stale data.
+            if (row.IsClocked)
+            {
+                NotifyError("Already Clocked In", $"{row.EmployeeName} already has an active shift. Please clock them out first.");
+                await LoadDashboardDataAsync(); // Refresh so the UI reflects reality.
+                return;
+            }
+
             try
             {
                 await _attendanceService.ClockInAsync(row.EmployeeId, row.Branch);
@@ -104,6 +121,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 _logger.LogError(ex, "Error clocking in employee {Id}", row.EmployeeId);
                 NotifyError("Clock-In Failed", ex.Message);
+                await LoadDashboardDataAsync(); // Refresh so stale state doesn't persist.
             }
         }
 

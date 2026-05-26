@@ -12,7 +12,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     /// List-based view of historical attendance records with date range filter,
     /// branch filter, search, and inline edit/delete support.
     /// </summary>
-    public partial class AttendanceHistoryListViewModel : ListViewModelBase<AttendanceRecord>
+    public partial class AttendanceHistoryListViewModel : ListViewModelBase<AttendanceHistoryRow>
     {
         private readonly IAttendanceService _attendanceService;
         private readonly IEmployeeService _employeeService;
@@ -22,13 +22,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public override string ReportTitle => "Attendance History Report";
         public override List<ReportColumnDefinition> ReportColumns => new()
         {
-            new() { Header = "Employee ID", PropertyName = "EmployeeId", Width = 1.5 },
-            new() { Header = "Date", PropertyName = "Date", Width = 1 },
-            new() { Header = "Status", PropertyName = "Status", Width = 1 },
-            new() { Header = "Clock In", PropertyName = "CheckInTime", Width = 1 },
-            new() { Header = "Clock Out", PropertyName = "CheckOutTime", Width = 1 },
-            new() { Header = "Hours", PropertyName = "HoursWorked", Width = 0.8 },
-            new() { Header = "Branch", PropertyName = "Branch", Width = 1 },
+            new() { Header = "Employee",   PropertyName = "EmployeeName",  Width = 1.8 },
+            new() { Header = "Date",       PropertyName = "Date",          Width = 1 },
+            new() { Header = "Status",     PropertyName = "Status",        Width = 1 },
+            new() { Header = "Clock In",   PropertyName = "CheckInTime",   Width = 1 },
+            new() { Header = "Clock Out",  PropertyName = "CheckOutTime",  Width = 1 },
+            new() { Header = "Hours",      PropertyName = "HoursWorked",   Width = 0.8 },
+            new() { Header = "Branch",     PropertyName = "Branch",        Width = 1 },
         };
 
         public override IRelayCommand<object>? OpenCommand => EditRecordCommand;
@@ -115,10 +115,17 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 _ => filtered
             };
 
-            var result = filtered.OrderByDescending(r => r.Date).ToList();
-            Items = new ObservableCollection<AttendanceRecord>(result);
+            var result = filtered
+                .OrderByDescending(r => r.Date)
+                .Select(r => new AttendanceHistoryRow
+                {
+                    Record       = r,
+                    EmployeeName = GetEmployeeName(r.EmployeeId)
+                })
+                .ToList();
+            Items = new ObservableCollection<AttendanceHistoryRow>(result);
             TotalCount = result.Count;
-            TotalHours = (int)result.Sum(r => r.HoursWorked);
+            TotalHours = (int)result.Sum(r => r.Record.HoursWorked);
         }
 
         public string GetEmployeeName(Guid? id) =>
@@ -127,7 +134,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [RelayCommand]
         private void EditRecord(object? parameter)
         {
-            var record = parameter as AttendanceRecord ?? SelectedItem;
+            var row = parameter as AttendanceHistoryRow ?? SelectedItem;
+            var record = row?.Record;
             if (record == null) return;
             EditingRecord = new AttendanceRecord
             {
@@ -168,7 +176,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [RelayCommand]
         private async Task DeleteRecord(object? parameter)
         {
-            var record = parameter as AttendanceRecord ?? SelectedItem;
+            var row = parameter as AttendanceHistoryRow ?? SelectedItem;
+            var record = row?.Record;
             if (record == null) return;
             try
             {
@@ -191,5 +200,28 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             IsEditPanelOpen = false;
             EditingRecord = null;
         }
+    }
+
+    /// <summary>
+    /// View-model row that pairs an <see cref="AttendanceRecord"/> with its
+    /// resolved employee name so the DataGrid can bind directly to <c>EmployeeName</c>.
+    /// All other properties are forwarded to the underlying record so existing
+    /// XAML column bindings continue to work without modification.
+    /// </summary>
+    public class AttendanceHistoryRow
+    {
+        public AttendanceRecord Record { get; set; } = null!;
+
+        // Resolved display name (filled by the VM from _employeeNameMap)
+        public string EmployeeName { get; set; } = string.Empty;
+
+        // Forwarded record properties — keeps XAML bindings intact
+        public DateTime        Date          => Record.Date;
+        public AttendanceStatus Status        => Record.Status;
+        public DateTime?       CheckInTime    => Record.CheckInTime;
+        public DateTime?       CheckOutTime   => Record.CheckOutTime;
+        public double          HoursWorked    => Record.HoursWorked;
+        public string?         Branch         => Record.Branch;
+        public string?         Notes          => Record.Notes;
     }
 }
