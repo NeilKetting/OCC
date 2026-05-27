@@ -7,7 +7,8 @@
              xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              Loaded="OnAuthViewLoaded"
-             Unloaded="OnAuthViewUnloaded">
+             Unloaded="OnAuthViewUnloaded"
+             xmlns:helpers="clr-namespace:OCC.WpfClient.Infrastructure">
 
     <UserControl.Resources>
         <Storyboard x:Key="FlipToRegister">
@@ -288,12 +289,21 @@
                             <StackPanel Margin="0,15,0,0">
                                 <PasswordBox Name="RegisterPasswordBox" 
                                              ap:WatermarkProperties.Watermark="Password"
+                                             helpers:PasswordHelper.Attach="True"
+                                             helpers:PasswordHelper.Password="{Binding RegisterModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource ModernPasswordInput}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,15,0,0">
+                                <PasswordBox Name="RegisterConfirmPasswordBox"
+                                             ap:WatermarkProperties.Watermark="Confirm Password"
+                                             helpers:PasswordHelper.Attach="True"
+                                             helpers:PasswordHelper.Password="{Binding RegisterModel.ConfirmPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              Style="{StaticResource ModernPasswordInput}"/>
                             </StackPanel>
 
                             <Button Style="{StaticResource LoginButton}" 
                                     Command="{Binding RegisterCommand}"
-                                    CommandParameter="{Binding ElementName=RegisterPasswordBox}"
                                     Tag="{Binding IsBusy}"
                                     Content="Create Account" Margin="0,15,0,0" />
 

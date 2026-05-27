@@ -30,5 +30,20 @@ namespace OCC.WpfClient.Services
             dialog.ShowDialog();
             return Task.FromResult(dialog.Result);
         }
+
+        public string? ShowOpenFileDialog(string filter, string title)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = filter,
+                Title = title
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                return dialog.FileName;
+            }
+            return null;
+        }
     }
 }

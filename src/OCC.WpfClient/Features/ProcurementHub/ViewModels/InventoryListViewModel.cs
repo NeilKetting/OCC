@@ -154,9 +154,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private void SaveLayout()
         {
-            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            var layout = new OCC.WpfClient.Infrastructure.Models.ListLayout
             {
-                Columns = new System.Collections.Generic.List<Features.EmployeeHub.Models.ColumnConfig>
+                Columns = new System.Collections.Generic.List<OCC.WpfClient.Infrastructure.Models.ColumnConfig>
                 {
                     new() { Header = "SKU", IsVisible = IsSkuVisible },
                     new() { Header = "Description", IsVisible = IsDescriptionVisible },

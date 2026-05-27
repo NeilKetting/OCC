@@ -25,9 +25,9 @@
             <TextBlock x:Name="MessageText" Grid.Row="1" Text="Message goes here." Foreground="{StaticResource TextSub}" TextWrapping="Wrap" FontSize="14" />
             
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                <Button x:Name="BtnCancel" Content="Cancel" Style="{StaticResource CancelButton}" Width="80" Height="35" Margin="0,0,10,0" Click="BtnCancel_Click"/>
-                <Button x:Name="BtnSecondary" Content="Reload" Style="{StaticResource SecondaryButton}" Width="150" Height="35" Margin="0,0,10,0" Click="BtnSecondary_Click" />
-                <Button x:Name="BtnPrimary" Content="Force Save" Style="{StaticResource PrimaryButton}" Width="150" Height="35" Click="BtnPrimary_Click" />
+                <Button x:Name="BtnCancel" Content="Cancel" Style="{StaticResource SecondaryButton}" Padding="10,5" Height="35" Margin="0,0,10,0" Click="BtnCancel_Click" BorderBrush="{StaticResource ErrorRed}"/>
+                <Button x:Name="BtnSecondary" Content="Reload" Style="{StaticResource SecondaryButton}" Padding="10,5" Height="35" Margin="0,0,10,0" Click="BtnSecondary_Click" BorderBrush="{StaticResource AccentBlue}"/>
+                <Button x:Name="BtnPrimary" Content="Force Save" Style="{StaticResource ActionButtonSecondary}" Padding="10,5" Height="35" Click="BtnPrimary_Click" BorderBrush="{StaticResource SuccessGreen}"/>
             </StackPanel>
         </Grid>
     </Border>

@@ -74,20 +74,7 @@ namespace OCC.WpfClient.Features.AuthHub.Views
 
         private void OnAuthViewUnloaded(object sender, RoutedEventArgs e)
         {
-            // Aggressively clear large resources when the view is no longer needed
-            if (BackgroundImage != null) BackgroundImage.Source = null;
-            if (LogoImage != null) LogoImage.Source = null;
-            
-            this.DataContext = null;
-            
-            // Suggest a garbage collection after a short delay
-            System.Threading.Tasks.Task.Run(async () =>
-            {
-                await System.Threading.Tasks.Task.Delay(1000);
-                System.GC.Collect();
-                System.GC.WaitForPendingFinalizers();
-                System.GC.Collect();
-            });
+            WeakReferenceMessenger.Default.Unregister<AuthFlipMessage>(this);
         }
 
         private void OnForgotPasswordClick(object sender, RoutedEventArgs e)

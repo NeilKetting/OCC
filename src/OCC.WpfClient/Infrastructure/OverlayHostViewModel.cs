@@ -46,7 +46,8 @@ namespace OCC.WpfClient.Infrastructure
             void OnClose(object? sender, object? result)
             {
                 viewModel.CloseRequested -= OnClose;
-                CloseOverlay();
+                // Directly close the overlay visually since the VM has already requested and confirmed closure.
+                IsOverlayVisible = false;
                 callback?.Invoke(result);
             }
 
@@ -56,11 +57,20 @@ namespace OCC.WpfClient.Infrastructure
 
         /// <summary>
         /// Standardized method to close the current overlay.
+        /// If the active overlay is an OverlayViewModel, it delegates to its Close logic
+        /// to ensure dirty checks and closing confirmations are performed.
         /// </summary>
         [RelayCommand]
         public virtual void CloseOverlay()
         {
-            IsOverlayVisible = false;
+            if (OverlayViewModel is OverlayViewModel ovm)
+            {
+                ovm.Close();
+            }
+            else
+            {
+                IsOverlayVisible = false;
+            }
         }
 
         /// <summary>

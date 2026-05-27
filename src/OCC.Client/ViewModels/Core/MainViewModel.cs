@@ -21,25 +21,29 @@ using OCC.Client.Mobile.Shell;
 
 namespace OCC.Client.ViewModels.Core
 {
+    /// <summary>
+    /// The MainViewModel for the core cross-platform desktop/mobile client.
+    /// Manages top-level navigation routes and controls the currently displayed ViewModel.
+    /// </summary>
     public partial class MainViewModel : ViewModelBase, IRecipient<NavigationMessage>
     {
         #region Private Members
 
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider; // Injected service provider to resolve view models dynamically
 
         #endregion
 
         #region Observables
 
         [ObservableProperty]
-        private ViewModelBase _currentViewModel;
+        private ViewModelBase _currentViewModel; // The active view model presented in the main window content area
 
 
         [ObservableProperty]
-        private bool _isChangeEmailVisible;
+        private bool _isChangeEmailVisible; // Toggles visibility of the change email overlay/dialog
 
         [ObservableProperty]
-        private Shared.ChangeEmailPopupViewModel? _changeEmailPopup;
+        private Shared.ChangeEmailPopupViewModel? _changeEmailPopup; // Context for the change email popup overlay
 
         #endregion
 
@@ -57,7 +61,7 @@ namespace OCC.Client.ViewModels.Core
         public MainViewModel(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _currentViewModel = _serviceProvider.GetRequiredService<LoginViewModel>();
+            _currentViewModel = _serviceProvider.GetRequiredService<LoginViewModel>(); // Default to Login view on load
 
             WeakReferenceMessenger.Default.RegisterAll(this);
         }
@@ -66,15 +70,27 @@ namespace OCC.Client.ViewModels.Core
 
         #region Commands
 
+        /// <summary>
+        /// Navigates the main display to the Login ViewModel.
+        /// </summary>
         [RelayCommand]
         public void NavigateToLogin() => CurrentViewModel = _serviceProvider.GetRequiredService<LoginViewModel>();
 
+        /// <summary>
+        /// Navigates the main display to the Register ViewModel.
+        /// </summary>
         [RelayCommand]
         public void NavigateToRegister() => CurrentViewModel = _serviceProvider.GetRequiredService<RegisterViewModel>();
 
+        /// <summary>
+        /// Navigates the main display to the main application Shell (Home) ViewModel.
+        /// </summary>
         [RelayCommand]
         public void NavigateToHome() => CurrentViewModel = _serviceProvider.GetRequiredService<ShellViewModel>();
 
+        /// <summary>
+        /// Navigates the main display to the Mobile Hub ViewModel.
+        /// </summary>
         [RelayCommand]
         public void NavigateToMobileHub() => CurrentViewModel = _serviceProvider.GetRequiredService<MobileHubViewModel>();
 
@@ -82,6 +98,9 @@ namespace OCC.Client.ViewModels.Core
 
         #region Methods
 
+        /// <summary>
+        /// Handles incoming navigation messages to switch the active ViewModel context.
+        /// </summary>
         public void Receive(NavigationMessage message)
         {
             CurrentViewModel = message.Value;

@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="950" d:DesignWidth="1100"
              d:DataContext="{d:DesignInstance vm:ProjectReportViewModel}">
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -33,9 +33,11 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0">
+                <StackPanel Grid.Column="0" Height="80">
                     <TextBlock Text="DAILY SITE PROJECT REPORT" Foreground="{StaticResource SecondaryGold}" FontSize="12" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding Project.Name}" Foreground="White" FontSize="28" FontWeight="Light" Margin="0,5,0,0"/>
+                    <Viewbox>
+                        <TextBlock Text="{Binding Project.Name}" Foreground="White" FontSize="28" FontWeight="Light" Margin="0,5,0,0"/>
+                    </Viewbox>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <Border Background="#20FFFFFF" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
@@ -50,8 +52,8 @@
                 </StackPanel>
 
                 <!-- Action Buttons -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <Button Command="{Binding SaveCommand}" Style="{StaticResource IconButton}" Margin="0,0,15,0" Padding="12,8">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,20,0">
+                    <Button Command="{Binding SaveCommand}" Style="{StaticResource IconButton}" Margin="0,0,15,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Margin="0,0,8,0" FontSize="14" VerticalAlignment="Center"/>
                             <TextBlock Text="Save Changes" Foreground="White" FontSize="13" VerticalAlignment="Center"/>
@@ -79,7 +81,7 @@
 
                 <!-- LEFT SIDE COLUMN -->
                 <StackPanel Grid.Column="0" Margin="0,0,25,0">
-                    
+
                     <!-- Program of Works Card -->
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
@@ -103,7 +105,7 @@
                                     <TextBlock Text="{Binding CompletedTasks}" Foreground="{StaticResource SuccessGreen}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </Grid>
-                            
+
                             <TextBlock Text="Overall Progress" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,5"/>
                             <Grid>
                                 <ProgressBar Value="{Binding OverallProgress}" Maximum="100" Height="8" Foreground="{StaticResource SuccessGreen}" Background="#20FFFFFF"/>
@@ -148,7 +150,7 @@
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
                             <TextBlock Text="CONTRACT DATES &amp; MILESTONES" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
-                            
+
                             <!-- Project Dates -->
                             <Grid Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
@@ -171,7 +173,7 @@
 
                             <!-- This Week's Milestones -->
                             <TextBlock Text="THIS WEEK'S MILESTONES" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" Margin="0,0,0,10"/>
-                            
+
                             <!-- No This Week Milestones Message -->
                             <TextBlock Text="No milestones scheduled for this week." 
                                        Foreground="{StaticResource TextSub}" 
@@ -179,7 +181,7 @@
                                        FontStyle="Italic"
                                        Margin="0,0,0,15"
                                        Visibility="{Binding NoThisWeekMilestones, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            
+
                             <!-- This Week Milestones List -->
                             <ItemsControl ItemsSource="{Binding ThisWeekMilestones}" Visibility="{Binding HasThisWeekMilestones, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,15">
                                 <ItemsControl.ItemTemplate>
@@ -203,7 +205,7 @@
                                                     <TextBlock Text="{Binding StartDate, StringFormat='Start: {0:yyyy/MM/dd}'}" Foreground="{StaticResource TextSub}" FontSize="10" Margin="0,0,10,0"/>
                                                     <TextBlock Text="{Binding PlannedDate, StringFormat='Due: {0:yyyy/MM/dd}'}" Foreground="{StaticResource TextSub}" FontSize="10"/>
                                                 </StackPanel>
-                                                
+
                                                 <!-- Delay Reason Input -->
                                                 <StackPanel Margin="0,8,0,0" Visibility="{Binding IsOverdue, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Text="Reason for Delay" Foreground="{StaticResource SecondaryGold}" FontSize="9" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -217,7 +219,7 @@
 
                             <!-- Overdue Milestones -->
                             <TextBlock Text="OVERDUE MILESTONES" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" Margin="0,10,0,10"/>
-                            
+
                             <!-- No Overdue Milestones Message -->
                             <TextBlock Text="No overdue milestones." 
                                        Foreground="{StaticResource TextSub}" 
@@ -225,7 +227,7 @@
                                        FontStyle="Italic"
                                        Margin="0,0,0,10"
                                        Visibility="{Binding NoOverdueMilestones, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            
+
                             <!-- Overdue Milestones List -->
                             <ItemsControl ItemsSource="{Binding OverdueMilestones}" Visibility="{Binding HasOverdueMilestones, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <ItemsControl.ItemTemplate>
@@ -249,7 +251,7 @@
                                                     <TextBlock Text="{Binding StartDate, StringFormat='Start: {0:yyyy/MM/dd}'}" Foreground="{StaticResource TextSub}" FontSize="10" Margin="0,0,10,0"/>
                                                     <TextBlock Text="{Binding PlannedDate, StringFormat='Due: {0:yyyy/MM/dd}'}" Foreground="{StaticResource TextSub}" FontSize="10"/>
                                                 </StackPanel>
-                                                
+
                                                 <!-- Delay Reason Input (Always shown for overdue tasks since IsOverdue is true) -->
                                                 <StackPanel Margin="0,8,0,0" Visibility="{Binding IsOverdue, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Text="Reason for Delay" Foreground="{StaticResource SecondaryGold}" FontSize="9" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -267,7 +269,7 @@
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
                             <TextBlock Text="WASTE DISPOSAL" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
-                            
+
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -310,7 +312,7 @@
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
                             <TextBlock Text="REPORT RUN HISTORY" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
-                            
+
                             <!-- No History Message -->
                             <TextBlock Text="No historical reports generated." 
                                        Foreground="{StaticResource TextSub}" 
@@ -319,7 +321,7 @@
                                        HorizontalAlignment="Center" 
                                        Margin="0,10" 
                                        Visibility="{Binding ReportHistory, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
-                            
+
                             <ItemsControl ItemsSource="{Binding ReportHistory}" Visibility="{Binding ReportHistory, Converter={StaticResource VisibilityConverter}}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -357,7 +359,7 @@
 
                 <!-- RIGHT SIDE COLUMN -->
                 <StackPanel Grid.Column="1">
-                    
+
                     <!-- Project Status Summary Card -->
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
@@ -477,7 +479,7 @@
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
                             <TextBlock Text="SITE INSTRUCTIONS / VARIATION ORDERS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
-                            
+
                             <!-- No Variation Orders Message -->
                             <TextBlock Text="No variation orders registered for this project." 
                                        Foreground="{StaticResource TextSub}" 
@@ -557,7 +559,7 @@
                     <Border Style="{StaticResource GlassCard}" Padding="20">
                         <StackPanel>
                             <TextBlock Text="INCIDENT &amp; PROGRESS PHOTOS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
-                            
+
                             <!-- No Photos Message -->
                             <TextBlock Text="No site photos registered for this project." 
                                        Foreground="{StaticResource TextSub}" 

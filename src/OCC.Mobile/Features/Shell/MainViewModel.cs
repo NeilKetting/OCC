@@ -3,17 +3,29 @@ using OCC.Mobile.ViewModels;
 using OCC.Mobile.Services;
 using System;
 using CommunityToolkit.Mvvm.Messaging;
+using System.Threading.Tasks;
 
 namespace OCC.Mobile.Features.Shell
 {
+    /// <summary>
+    /// The MainViewModel for the Mobile Client. Handles shell visibility, mobile app updates,
+    /// and routing commands between the dashboard, active projects, tasks, profile, and login.
+    /// </summary>
     public partial class MainViewModel : ViewModelBase
     {
+        #region Observables & Properties
+
+        // --- View & Navigation Observables ---
+        
+        // Tracks the current screen/view displayed in the mobile client
         [ObservableProperty]
         private ViewModelBase? _currentView;
 
+        // Controlled by whether the user is on Login/Register or an authenticated dashboard screen
         [ObservableProperty]
         private bool _isShellVisible;
  
+        // --- Over-The-Air Update Observables ---
         [ObservableProperty]
         private bool _isUpdateAvailable;
 
@@ -34,14 +46,27 @@ namespace OCC.Mobile.Features.Shell
 
         [ObservableProperty]
         private string _downloadSpeed = string.Empty;
+
+        #endregion
+
+        #region Private Fields & Services
         
+        // Reference containing metadata for the pending mobile app package
         private UpdateCheckResult? _pendingUpdate;
  
+        // --- Dependency Injected Services ---
         private readonly INavigationService _navigationService;
         private readonly IAuthService _authService;
         private readonly IUpdateService? _updateService;
         private readonly IAppInstaller? _appInstaller;
+
+        #endregion
+
+        #region Constructors
  
+        /// <summary>
+        /// Initializes the mobile main shell. Triggers initial app update checks and registers message hooks.
+        /// </summary>
         public MainViewModel(
             INavigationService navigationService, 
             IAuthService authService, 
@@ -61,16 +86,23 @@ namespace OCC.Mobile.Features.Shell
                 signalRService.StartAsync().FireAndForget();
             }
 
-            // Listen for manual update checks
+            // Listen for manual update check events (e.g. from a settings page check button)
             WeakReferenceMessenger.Default.Register<UpdateCheckMessage>(this, (r, m) => 
             {
                 ((MainViewModel)r).CheckForUpdatesAsync(true).FireAndForget();
             });
 
-            // Check for updates automatically
+            // Check for updates automatically in the background on startup
             CheckForUpdatesAsync().FireAndForget();
         }
 
+        #endregion
+
+        #region Methods & Update Logic
+ 
+        /// <summary>
+        /// Contacts the update repository to see if a newer version of the mobile package is available.
+        /// </summary>
         private async Task CheckForUpdatesAsync(bool isManual = false)
         {
             if (_updateService == null || _appInstaller == null) return;
@@ -100,6 +132,13 @@ namespace OCC.Mobile.Features.Shell
             }
         }
 
+        #endregion
+
+        #region Commands
+
+        /// <summary>
+        /// Downloads the mobile application package OTA and invokes the platform package installer.
+        /// </summary>
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         private async Task StartUpdate()
         {
@@ -145,8 +184,6 @@ namespace OCC.Mobile.Features.Shell
                 IsDownloadingUpdate = false;
             }
         }
-
- 
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         private void NavigateToDashboard() => _navigationService.NavigateTo<Dashboard.DashboardViewModel>();
@@ -163,6 +200,9 @@ namespace OCC.Mobile.Features.Shell
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         private void NavigateToProfile() => _navigationService.NavigateTo<Profile.ProfileViewModel>();
  
+        /// <summary>
+        /// Logs the user out of the mobile application session.
+        /// </summary>
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         private void Logout()
         {
@@ -170,12 +210,21 @@ namespace OCC.Mobile.Features.Shell
             IsShellVisible = false;
             _navigationService.NavigateTo<Login.LoginViewModel>();
         }
+
+        #endregion
+
+        #region Event Handlers
  
+        /// <summary>
+        /// Automatically manages shell navigation layout visibility based on active view type name.
+        /// </summary>
         partial void OnCurrentViewChanged(ViewModelBase? value)
         {
             // Shell is visible if we're not on Login or Register screens
             var typeName = value?.GetType().Name;
             IsShellVisible = typeName != "LoginViewModel" && typeName != "RegisterViewModel";
         }
+
+        #endregion
     }
 }

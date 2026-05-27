@@ -91,9 +91,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 
         private void SaveLayout()
         {
-            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            var layout = new OCC.WpfClient.Infrastructure.Models.ListLayout
             {
-                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
+                Columns = new List<OCC.WpfClient.Infrastructure.Models.ColumnConfig>
                 {
                     new() { Header = "Email", IsVisible = IsEmailVisible },
                     new() { Header = "Role", IsVisible = IsRoleVisible },
@@ -242,8 +242,6 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             TotalCount = result.Count;
             PendingApprovalCount = result.Count(u => !u.IsApproved);
             AdminCount = result.Count(u => u.UserRole == UserRole.Admin);
-        }
-
-        
+        }        
     }
 }

@@ -95,9 +95,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private void SaveLayout()
         {
-            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
+            var layout = new OCC.WpfClient.Infrastructure.Models.ListLayout
             {
-                Columns = new System.Collections.Generic.List<Features.EmployeeHub.Models.ColumnConfig>
+                Columns = new System.Collections.Generic.List<OCC.WpfClient.Infrastructure.Models.ColumnConfig>
                 {
                     new() { Header = "Progress", IsVisible = IsProgressVisible },
                     new() { Header = "Manager", IsVisible = IsManagerVisible },

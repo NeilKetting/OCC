@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using OCC.Shared.Models;
@@ -13,7 +14,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            List<string> names = null;
+            List<string>? names = null;
 
             if (value is string str && !string.IsNullOrWhiteSpace(str))
             {
@@ -35,7 +36,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
                 foreach (var name in names)
                 {
                     string bgColor = "#2E9DFF"; // Default
-                    string fgColor = null;
+                    string? fgColor = null;
 
                     if (name.Equals("OCC", StringComparison.OrdinalIgnoreCase) || 
                         name.StartsWith("Orange Circle", StringComparison.OrdinalIgnoreCase))
@@ -102,7 +103,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            return DependencyProperty.UnsetValue;
         }
     }
 }

@@ -156,12 +156,6 @@ namespace OCC.API.Controllers
                 return Ok(new { SessionId = existingSession.Id });
             }
 
-            if (request == null || string.IsNullOrEmpty(request.MyEncryptedAesKey) || string.IsNullOrEmpty(request.TargetEncryptedAesKey))
-            {
-                // Indicate to client that session doesn't exist and keys are required
-                return Ok(new { RequiresKeys = true });
-            }
-
             // Create new direct session
             var newSession = new ChatSession
             {

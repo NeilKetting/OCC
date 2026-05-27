@@ -16,14 +16,34 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 {
     public partial class CustomerListViewModel : ListViewModelBase<CustomerSummaryDto>
     {
+        #region Private Fields
+
+        // Service for managing customer database operations and API calls
         private readonly ICustomerService _customerService;
+
+        // Displays alerts and confirmation dialogs
         private readonly IDialogService _dialogService;
+
+        // Logger for customer list telemetry and exception tracking
         private readonly ILogger<CustomerListViewModel> _logger;
+
+        // Manages local workspace preferences, including list layouts
         private readonly LocalSettingsService _settingsService;
+
+        // Holds connection settings, like API base URLs
         private readonly ConnectionSettings _connectionSettings;
+
+        // Backing collection of all customers retrieved from the service
         private List<CustomerSummaryDto> _allCustomers = new();
 
+        #endregion
+
+        #region Properties & Observables
+
+        // Title of the customer report when printed
         public override string ReportTitle => "Customer Directory";
+
+        // Definition of the columns in the printed customer report
         public override List<ReportColumnDefinition> ReportColumns => new()
         {
             new() { Header = "Name", PropertyName = "Name", Width = 2 },
@@ -32,18 +52,34 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             new() { Header = "Contact Person", PropertyName = "ContactPerson", Width = 1.5 }
         };
 
-        [ObservableProperty] private bool _isNameVisible = true;
-        [ObservableProperty] private bool _isEmailVisible = true;
-        [ObservableProperty] private bool _isPhoneVisible = true;
-        [ObservableProperty] private bool _isActionsVisible = true;
-        
-        
+        // Controls visibility of the customer Name column in the list view
+        [ObservableProperty]
+        private bool _isNameVisible = true;
 
-        // Standard commands for centralized UI
+        // Controls visibility of the customer Email column in the list view
+        [ObservableProperty]
+        private bool _isEmailVisible = true;
+
+        // Controls visibility of the customer Phone column in the list view
+        [ObservableProperty]
+        private bool _isPhoneVisible = true;
+
+        // Controls visibility of actions (Edit, Delete) in the list view
+        [ObservableProperty]
+        private bool _isActionsVisible = true;
+
+        // Centralized UI commands mapped to the shell action bar
         public override IRelayCommand<object>? OpenCommand => OpenCustomerCommand;
         public override IRelayCommand<object>? EditCommand => EditCustomerCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteSelectedCustomersCommand;
 
+        #endregion
+
+        #region Constructors
+
+        /// <summary>
+        /// Initializes the customer list view model, loads layout preferences, and starts background data load.
+        /// </summary>
         public CustomerListViewModel(
             ICustomerService customerService,
             IDialogService dialogService,
@@ -63,63 +99,13 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             _ = LoadDataAsync();
         }
 
-        private void LoadLayout()
-        {
-            var layout = _settingsService.Settings.CustomerListLayout;
-            if (layout?.Columns != null && layout.Columns.Any())
-            {
-                IsNameVisible = layout.Columns.FirstOrDefault(c => c.Header == "Name")?.IsVisible ?? true;
-                IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
-                IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
-                IsActionsVisible = layout.Columns.FirstOrDefault(c => c.Header == "Actions")?.IsVisible ?? true;
-            }
-        }
+        #endregion
 
-        private void SaveLayout()
-        {
-            var layout = new Features.EmployeeHub.Models.EmployeeListLayout
-            {
-                Columns = new List<Features.EmployeeHub.Models.ColumnConfig>
-                {
-                    new() { Header = "Name", IsVisible = IsNameVisible },
-                    new() { Header = "Email", IsVisible = IsEmailVisible },
-                    new() { Header = "Phone", IsVisible = IsPhoneVisible },
-                    new() { Header = "Actions", IsVisible = IsActionsVisible }
-                }
-            };
-            _settingsService.Settings.CustomerListLayout = layout;
-            _settingsService.Save();
-        }
+        #region Commands
 
-        partial void OnIsNameVisibleChanged(bool value) => SaveLayout();
-        partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
-        partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
-        partial void OnIsActionsVisibleChanged(bool value) => SaveLayout();
-
-        
-
-        public override async Task LoadDataAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                BusyText = "Loading customers...";
-                
-                var customers = await _customerService.GetCustomerSummariesAsync();
-                _allCustomers = customers.OrderBy(c => c.Name).ToList();
-                
-                FilterItems();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading customers");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
+        /// <summary>
+        /// Opens the overlay to add a new customer record.
+        /// </summary>
         [RelayCommand]
         private void AddCustomer()
         {
@@ -134,12 +120,18 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             });
         }
 
+        /// <summary>
+        /// Command alias for editing the customer record.
+        /// </summary>
         [RelayCommand]
         private void OpenCustomer(object? parameter)
         {
             _ = EditCustomer(parameter);
         }
 
+        /// <summary>
+        /// Resolves customer details and opens the details overlay for editing.
+        /// </summary>
         [RelayCommand]
         private async Task EditCustomer(object? parameter)
         {
@@ -169,6 +161,9 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             }
         }
 
+        /// <summary>
+        /// Deletes the selected customer or bulk list of selected customers after prompting for confirmation.
+        /// </summary>
         [RelayCommand]
         private async Task DeleteSelectedCustomers(object? parameter)
         {
@@ -215,6 +210,38 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             }
         }
 
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Asynchronously fetches customer summary records from the database and triggers display filtering.
+        /// </summary>
+        public override async Task LoadDataAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Loading customers...";
+                
+                var customers = await _customerService.GetCustomerSummariesAsync();
+                _allCustomers = customers.OrderBy(c => c.Name).ToList();
+                
+                FilterItems();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading customers");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// Filters the cached list of customers based on the user's active search query.
+        /// </summary>
         protected override void FilterItems()
         {
             var filtered = _allCustomers.AsEnumerable();
@@ -233,6 +260,45 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
             TotalCount = result.Count;
         }
 
-        
+        /// <summary>
+        /// Reads custom column layout configuration from settings and applies it to column visibility toggles.
+        /// </summary>
+        private void LoadLayout()
+        {
+            var layout = _settingsService.Settings.CustomerListLayout;
+            if (layout?.Columns != null && layout.Columns.Any())
+            {
+                IsNameVisible = layout.Columns.FirstOrDefault(c => c.Header == "Name")?.IsVisible ?? true;
+                IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
+                IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
+                IsActionsVisible = layout.Columns.FirstOrDefault(c => c.Header == "Actions")?.IsVisible ?? true;
+            }
+        }
+
+        /// <summary>
+        /// Builds layout model representing visible columns and saves it to local settings.
+        /// </summary>
+        private void SaveLayout()
+        {
+            var layout = new OCC.WpfClient.Infrastructure.Models.ListLayout
+            {
+                Columns = new List<OCC.WpfClient.Infrastructure.Models.ColumnConfig>
+                {
+                    new() { Header = "Name", IsVisible = IsNameVisible },
+                    new() { Header = "Email", IsVisible = IsEmailVisible },
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible },
+                    new() { Header = "Actions", IsVisible = IsActionsVisible }
+                }
+            };
+            _settingsService.Settings.CustomerListLayout = layout;
+            _settingsService.Save();
+        }
+
+        partial void OnIsNameVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsActionsVisibleChanged(bool value) => SaveLayout();
+
+        #endregion
     }
 }

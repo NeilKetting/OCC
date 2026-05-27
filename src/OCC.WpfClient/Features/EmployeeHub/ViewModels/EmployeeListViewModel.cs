@@ -120,9 +120,9 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [RelayCommand]
         private void SaveLayout()
         {
-            var layout = new Models.EmployeeListLayout
+            var layout = new OCC.WpfClient.Infrastructure.Models.ListLayout
             {
-                Columns = new List<Models.ColumnConfig>
+                Columns = new List<OCC.WpfClient.Infrastructure.Models.ColumnConfig>
                 {
                     new() { Header = "Number", IsVisible = IsNumberVisible },
                     new() { Header = "Position", IsVisible = IsPositionVisible },

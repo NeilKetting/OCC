@@ -200,16 +200,8 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
         }
 
         [RelayCommand]
-        private async Task RegisterAsync(object? parameter)
+        private async Task RegisterAsync()
         {
-            if (parameter is not System.Windows.Controls.PasswordBox passwordBox)
-                return;
-
-            RegisterModel.Password = passwordBox.Password;
-            // Note: ConfirmPassword would need its own passwordbox for full validation, 
-            // for now we match it to simplify the demo or assume it's set elsewhere.
-            RegisterModel.ConfirmPassword = passwordBox.Password; 
-            
             RegisterModel.Validate();
 
             if (RegisterModel.HasErrors)
@@ -238,7 +230,8 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
                 if (success)
                 {
                     ErrorMessage = "Registration successful! You can now login.";
-                    passwordBox.Clear();
+                    RegisterModel.Password = string.Empty;
+                    RegisterModel.ConfirmPassword = string.Empty;
                     
                     // Small delay then flip back to login
                     await Task.Delay(2000);

@@ -14,5 +14,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task ShowAlertAsync(string title, string message);
         Task<bool> ShowConfirmationAsync(string title, string message);
         Task<CustomDialogResult> ShowConflictResolutionAsync(string title, string message);
+        string? ShowOpenFileDialog(string filter, string title);
     }
 }

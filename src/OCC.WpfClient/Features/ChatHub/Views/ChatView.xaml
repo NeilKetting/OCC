@@ -445,7 +445,7 @@
                              <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Border Padding="10" Margin="0,2">
-                                        <Button Command="{Binding DataContext.StartNewChatFromSearchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                        <Button Command="{Binding Data.StartNewChatFromSearchCommand, Source={StaticResource Proxy}}" 
                                                 CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">

@@ -16,6 +16,8 @@ namespace OCC.WpfClient.Infrastructure
         protected readonly ILogger _logger;
         protected readonly IPdfService _pdfService;
 
+        public virtual bool IsDirty => false;
+
         [ObservableProperty] private int _animationPulse;
         [ObservableProperty] private bool _hasErrors;
         public ObservableCollection<string> ValidationErrors { get; } = new();
@@ -109,6 +111,22 @@ namespace OCC.WpfClient.Infrastructure
         public void Cancel()
         {
             OnCancel();
+        }
+
+        /// <summary>
+        /// Overrides the base parameterless Close to check if the ViewModel has unsaved changes.
+        /// Prompts the user with a confirmation dialog before proceeding.
+        /// </summary>
+        public override async void Close()
+        {
+            if (IsDirty)
+            {
+                var confirm = await _dialogService.ShowConfirmationAsync(
+                    "Unsaved Changes",
+                    "You have unsaved changes. Are you sure you want to discard them?");
+                if (!confirm) return;
+            }
+            base.Close();
         }
 
         protected abstract Task ExecuteSaveAsync();

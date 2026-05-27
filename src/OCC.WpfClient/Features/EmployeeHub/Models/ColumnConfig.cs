@@ -1,15 +1,14 @@
+using System;
+
 namespace OCC.WpfClient.Features.EmployeeHub.Models
 {
-    public class ColumnConfig
+    [Obsolete("Use OCC.WpfClient.Infrastructure.Models.ColumnConfig instead")]
+    public class ColumnConfig : OCC.WpfClient.Infrastructure.Models.ColumnConfig
     {
-        public string Header { get; set; } = string.Empty;
-        public bool IsVisible { get; set; } = true;
-        public int DisplayIndex { get; set; }
-        public double Width { get; set; } = 150;
     }
 
-    public class EmployeeListLayout
+    [Obsolete("Use OCC.WpfClient.Infrastructure.Models.ListLayout instead")]
+    public class EmployeeListLayout : OCC.WpfClient.Infrastructure.Models.ListLayout
     {
-        public List<ColumnConfig> Columns { get; set; } = new();
     }
 }

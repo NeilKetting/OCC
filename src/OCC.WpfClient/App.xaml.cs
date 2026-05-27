@@ -119,6 +119,8 @@ namespace OCC.WpfClient
             });
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<IPermissionService, PermissionService>();
+            services.AddSingleton<IDatabaseStatusService, DatabaseStatusService>();
+            services.AddSingleton<IShellTimingService, ShellTimingService>();
             services.AddSingleton<IUpdateService, UpdateService>();
             services.AddSingleton<IToastService, ToastService>();
             services.AddSingleton<ISignalRService, SignalRService>();

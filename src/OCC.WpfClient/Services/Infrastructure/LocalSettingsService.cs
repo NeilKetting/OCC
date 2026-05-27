@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Services.Infrastructure
 {
@@ -13,34 +15,44 @@ namespace OCC.WpfClient.Services.Infrastructure
         public double ThemeBrightness { get; set; } = 0.5;
         public bool UsePlainMenuIcons { get; set; } = false;
         public bool AutoCheckUpdates { get; set; } = true;
-        public Features.EmployeeHub.Models.EmployeeListLayout? EmployeeListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? EmployeeListLayout { get; set; }
 
         // Layouts for other List Views
-        public Features.EmployeeHub.Models.EmployeeListLayout? UserListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? CustomerListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? InventoryListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? PurchaseOrderListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? SupplierListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? ProjectTaskListLayout { get; set; }
-        public Features.EmployeeHub.Models.EmployeeListLayout? SubContractorListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? UserListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? CustomerListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? InventoryListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? PurchaseOrderListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? SupplierListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? ProjectListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? ProjectTaskListLayout { get; set; }
+        public OCC.WpfClient.Infrastructure.Models.ListLayout? SubContractorListLayout { get; set; }
     }
 
     public class LocalSettingsService
     {
+        private readonly ILogger<LocalSettingsService> _logger;
+        private readonly IToastService _toastService;
         private readonly string _filePath;
         private LocalSettings _settings;
 
         public LocalSettings Settings => _settings;
 
-        public LocalSettingsService()
+        public LocalSettingsService(ILogger<LocalSettingsService> logger, IToastService toastService)
         {
+            _logger = logger;
+            _toastService = toastService;
+
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OCC.WpfClient");
             _filePath = Path.Combine(folder, "settings.json");
-            
-            if (!Directory.Exists(folder))
+
+            try
             {
                 Directory.CreateDirectory(folder);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create local settings folder at {Folder}.", folder);
+                _toastService.ShowWarning("Settings warning", "Local settings may not be saved on this device.");
             }
 
             _settings = LoadSettings();
@@ -56,9 +68,10 @@ namespace OCC.WpfClient.Services.Infrastructure
                     return JsonSerializer.Deserialize<LocalSettings>(json) ?? new LocalSettings();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore errors, start fresh
+                _logger.LogWarning(ex, "Failed to load local settings from {FilePath}. Using defaults.", _filePath);
+                _toastService.ShowWarning("Settings reset", "Local settings could not be loaded, so defaults were used.");
             }
             return new LocalSettings();
         }
@@ -70,9 +83,10 @@ namespace OCC.WpfClient.Services.Infrastructure
                 var json = JsonSerializer.Serialize(_settings);
                 File.WriteAllText(_filePath, json);
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore save errors
+                _logger.LogWarning(ex, "Failed to save local settings to {FilePath}.", _filePath);
+                _toastService.ShowWarning("Settings not saved", "Your local settings could not be saved.");
             }
         }
     }
