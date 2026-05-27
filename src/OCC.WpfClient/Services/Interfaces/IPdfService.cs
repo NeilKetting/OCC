@@ -22,6 +22,11 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a branded replica Project Hub report.
         /// </summary>
         Task<string> GenerateProjectReportPdfAsync(ProjectReportPrintModel model);
+
+        /// <summary>
+        /// Generates a printable portrait A4 leave application form with OCC branding and employee/manager signature blocks.
+        /// </summary>
+        Task<string> GenerateLeaveFormPdfAsync(OCC.Shared.Models.LeaveRequest request);
     }
 
     public class ReportColumnDefinition

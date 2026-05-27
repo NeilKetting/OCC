@@ -12,6 +12,12 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<bool> UpdateAttendanceRecordAsync(AttendanceRecord record);
         Task<bool> DeleteAttendanceRecordAsync(Guid id);
 
+        /// <summary>Marks an employee absent for today — removes any open auto-clockin and creates a closed Absent record.</summary>
+        Task<bool> MarkAbsentAsync(Guid employeeId, string branch);
+
+        /// <summary>Uploads a sick note / doctor's note file and returns the server path.</summary>
+        Task<string?> UploadSickNoteAsync(string localFilePath);
+
         Task<IEnumerable<Team>> GetTeamsAsync();
         Task<Team?> GetTeamAsync(Guid id);
         Task<Team?> CreateTeamAsync(Team team);

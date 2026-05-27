@@ -18,6 +18,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly IEmployeeService _employeeService;
         private readonly ILogger<AttendanceDashboardViewModel> _logger;
 
+        private List<AttendanceStatusRow> _allRows = new();
+
         [ObservableProperty] private ObservableCollection<AttendanceStatusRow> _todayRows = new();
         [ObservableProperty] private int _presentCount;
         [ObservableProperty] private int _absentCount;
@@ -25,6 +27,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private int _totalExpected;
         [ObservableProperty] private double _attendanceRate;
         [ObservableProperty] private string _todayDate = DateTime.Today.ToString("dddd, dd MMMM yyyy");
+        [ObservableProperty] private bool _showNotPresentOnly;
+
+        partial void OnShowNotPresentOnlyChanged(bool value) => ApplyFilter();
 
         public AttendanceDashboardViewModel(
             IAttendanceService attendanceService,
@@ -73,13 +78,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         CheckOutTime = record?.CheckOutTime,
                         HoursWorked = record?.HoursWorked ?? 0,
                         RecordId = record?.Id,
-                        IsClocked = openRecord != null
+                        IsClocked = openRecord != null,
+                        IsAutoClockIn = record?.IsAutoClockIn ?? false
                     });
                 }
 
-                TodayRows = new ObservableCollection<AttendanceStatusRow>(
-                    rows.OrderBy(r => r.Status == AttendanceStatus.Absent ? 1 : 0)
-                        .ThenBy(r => r.EmployeeName));
+                _allRows = rows;
+                ApplyFilter();
 
                 TotalExpected = rows.Count;
                 PresentCount = rows.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late);
@@ -94,6 +99,44 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        private void ApplyFilter()
+        {
+            var filtered = ShowNotPresentOnly
+                ? _allRows.Where(r => r.Status == AttendanceStatus.Absent || (r.IsClocked && r.IsAutoClockIn))
+                : _allRows.AsEnumerable();
+
+            TodayRows = new ObservableCollection<AttendanceStatusRow>(
+                filtered.OrderBy(r => r.Status == AttendanceStatus.Absent ? 1 : 0)
+                        .ThenBy(r => r.EmployeeName));
+        }
+
+        [RelayCommand]
+        private void ToggleNotPresentFilter() => ShowNotPresentOnly = !ShowNotPresentOnly;
+
+        [RelayCommand]
+        private async Task MarkAbsentEmployee(AttendanceStatusRow? row)
+        {
+            if (row == null) return;
+            try
+            {
+                var success = await _attendanceService.MarkAbsentAsync(row.EmployeeId, row.Branch);
+                if (success)
+                {
+                    NotifySuccess("Marked Absent", $"{row.EmployeeName} has been marked absent.");
+                    await LoadDashboardDataAsync();
+                }
+                else
+                {
+                    NotifyError("Failed", $"Could not mark {row.EmployeeName} as absent.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking employee {Id} absent", row.EmployeeId);
+                NotifyError("Error", ex.Message);
             }
         }
 
@@ -156,6 +199,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public DateTime? CheckOutTime { get; set; }
         public double HoursWorked { get; set; }
         public bool IsClocked { get; set; }
+        public bool IsAutoClockIn { get; set; }
+        public bool IsAbsent => Status == AttendanceStatus.Absent;
 
         public string StatusLabel => Status switch
         {

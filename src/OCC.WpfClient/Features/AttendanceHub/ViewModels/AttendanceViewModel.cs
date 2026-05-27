@@ -15,17 +15,20 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private AttendanceDashboardViewModel _dashboardView;
         [ObservableProperty] private AttendanceHistoryListViewModel _historyView;
         [ObservableProperty] private TeamManagementViewModel _teamsView;
+        [ObservableProperty] private LeaveManagementViewModel _leaveView;
 
         public AttendanceViewModel(
             AttendanceMenuViewModel menuViewModel,
             AttendanceDashboardViewModel dashboardView,
             AttendanceHistoryListViewModel historyView,
-            TeamManagementViewModel teamsView)
+            TeamManagementViewModel teamsView,
+            LeaveManagementViewModel leaveView)
         {
             MenuViewModel = menuViewModel;
             DashboardView = dashboardView;
             HistoryView = historyView;
             TeamsView = teamsView;
+            LeaveView = leaveView;
             Title = "Time & Attendance";
 
             CurrentView = DashboardView;
@@ -49,6 +52,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 case "Teams":
                     CurrentView = TeamsView;
                     TeamsView.LoadDataCommand.Execute(null);
+                    break;
+                case "Leave":
+                    CurrentView = LeaveView;
+                    LeaveView.LoadDataCommand.Execute(null);
                     break;
                 case "Dashboard":
                 default:

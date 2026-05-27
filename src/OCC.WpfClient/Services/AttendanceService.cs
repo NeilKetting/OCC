@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -162,6 +164,70 @@ namespace OCC.WpfClient.Services
             {
                 _logger.LogError(ex, "Error deleting attendance record {Id}", id);
                 return false;
+            }
+        }
+
+        public async Task<bool> MarkAbsentAsync(Guid employeeId, string branch)
+        {
+            EnsureAuthorization();
+            try
+            {
+                // 1. Delete any open (auto-clocked) record for today
+                var today = DateTime.Today;
+                var todayRecords = await GetAttendanceRecordsAsync(today, today);
+                var openRecord = todayRecords.FirstOrDefault(r => r.EmployeeId == employeeId && r.CheckOutTime == null);
+                if (openRecord != null)
+                {
+                    await DeleteAttendanceRecordAsync(openRecord.Id);
+                }
+
+                // 2. Check there's not already a closed record for today (avoid duplicates)
+                var existingClosed = todayRecords.FirstOrDefault(r => r.EmployeeId == employeeId && r.CheckOutTime != null);
+                if (existingClosed != null && existingClosed.Status == AttendanceStatus.Absent)
+                    return true; // Already marked absent
+
+                // 3. Create a closed Absent record
+                var absentRecord = new AttendanceRecord
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = employeeId,
+                    Date = today,
+                    Branch = branch,
+                    Status = AttendanceStatus.Absent,
+                    CheckInTime = null,
+                    CheckOutTime = today, // Closed immediately — won't show as live
+                    HoursWorked = 0,
+                    Notes = "Marked absent by office."
+                };
+                await CreateAttendanceRecordAsync(absentRecord);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking employee {Id} absent", employeeId);
+                return false;
+            }
+        }
+
+        public async Task<string?> UploadSickNoteAsync(string localFilePath)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl("api/AttendanceRecords/upload");
+            try
+            {
+                using var form = new MultipartFormDataContent();
+                var fileBytes = await File.ReadAllBytesAsync(localFilePath);
+                var fileName = Path.GetFileName(localFilePath);
+                form.Add(new ByteArrayContent(fileBytes), "file", fileName);
+
+                var response = await _httpClient.PostAsync(url, form);
+                if (!response.IsSuccessStatusCode) return null;
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading sick note from {Path}", localFilePath);
+                return null;
             }
         }
 
