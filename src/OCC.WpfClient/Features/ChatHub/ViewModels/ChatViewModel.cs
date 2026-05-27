@@ -575,7 +575,9 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                 var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
                 
                 // Simple session creation (Server handles keys)
-                var checkResponse = await _httpClient.PostAsync($"{baseUrl}/api/messages/direct/{targetUserId}", null);
+                // Pass dummy payload to satisfy legacy server-side validation on existing deployments
+                var payload = new { MyEncryptedAesKey = "dummy", TargetEncryptedAesKey = "dummy" };
+                var checkResponse = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/messages/direct/{targetUserId}", payload);
                 if (checkResponse.IsSuccessStatusCode)
                 {
                     var result = await checkResponse.Content.ReadFromJsonAsync<DirectSessionResponse>();
