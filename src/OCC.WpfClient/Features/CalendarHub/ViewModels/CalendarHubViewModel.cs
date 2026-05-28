@@ -216,6 +216,11 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
         private async Task GoToToday()
         {
             CurrentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            if (SelectedDay != null)
+            {
+                SelectedDay.IsSelected = false;
+                SelectedDay = null;
+            }
             await GenerateCalendarAsync();
         }
 

@@ -38,19 +38,7 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
         private readonly ILeaveService       _leaveService;
         private readonly ILogger<CalendarService> _logger;
 
-        // Colour palette used to assign a stable colour to each task based on its ID hash.
-        // Using hash ensures the same task always gets the same colour across refreshes.
-        private static readonly string[] TaskColourPalette =
-        {
-            "#2E9DFF", // Blue  (accent)
-            "#10B981", // Emerald
-            "#8B5CF6", // Purple
-            "#F59E0B", // Amber
-            "#F43F5E", // Rose
-            "#06B6D4", // Cyan
-            "#6366F1", // Indigo
-            "#14B8A6"  // Teal
-        };
+
 
         #endregion
 
@@ -162,7 +150,7 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
                         Description    = t.Description ?? string.Empty,
                         StartDate      = t.StartDate,
                         EndDate        = t.FinishDate,
-                        Color          = GetTaskColour(t.Id),
+                        Color          = "#2E9DFF",
                         IsCompleted    = t.ActualCompleteDate.HasValue,
                         ProjectName    = projectMap.TryGetValue(t.ProjectId ?? Guid.Empty, out var pName) ? pName : string.Empty,
                         OriginalSource = t
@@ -311,19 +299,6 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
 
         #endregion
 
-        #region Private — Colour Helpers
 
-        /// <summary>
-        /// Derives a stable colour from a task's ID so the same task always
-        /// renders with the same colour bar, even after a data refresh.
-        /// </summary>
-        private static string GetTaskColour(Guid taskId)
-        {
-            // Use absolute hash to avoid negative modulo on some runtimes
-            int index = Math.Abs(taskId.GetHashCode()) % TaskColourPalette.Length;
-            return TaskColourPalette[index];
-        }
-
-        #endregion
     }
 }

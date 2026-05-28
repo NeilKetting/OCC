@@ -84,7 +84,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var loadTasks = activeSummaries.Select(async summary =>
                 {
                     var item = new ProjectReportRunItemViewModel(summary, _projectService, _projectReportService, _loggerFactory.CreateLogger<ProjectReportRunItemViewModel>());
-                    await item.LoadDetailsAsync();
+                    await item.LoadDetailsAsync(autoGenerate: true);
                     return item;
                 });
 
@@ -179,7 +179,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         await item.SaveLocalReportDataAsync();
 
                         // Reload details to recalculate milestones, POW, etc. based on DateTime.Today!
-                        await item.LoadDetailsAsync();
+                        await item.LoadDetailsAsync(autoGenerate: false);
 
                         // 1. Fetch Safe Working Hours
                         var safeHours = await FetchSafeWorkingHoursAsync(item.ProjectSummary.Id);
@@ -559,7 +559,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _logger = logger;
         }
 
-        public async Task LoadDetailsAsync()
+        public async Task LoadDetailsAsync(bool autoGenerate = false)
         {
             try
             {
@@ -807,6 +807,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 NoThisWeekMilestones = !HasThisWeekMilestones;
                 HasOverdueMilestones = OverdueMilestones.Any();
                 NoOverdueMilestones = !HasOverdueMilestones;
+
+                if (autoGenerate)
+                {
+                    AutoGenerateSummary();
+                }
             }
             catch (Exception ex)
             {
@@ -866,9 +871,27 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             if (ProjectDetails == null) return;
 
-            var completedList = LoadedTasks?.Where(t => t.Status == "Completed" || t.Status == "Done" || t.PercentComplete == 100).Select(t => t.Name).Take(3).ToList() ?? new();
-            var inProgressList = LoadedTasks?.Where(t => t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100)).Select(t => t.Name).Take(3).ToList() ?? new();
-            var upcomingList = LoadedTasks?.Where(t => t.Status != "Completed" && t.Status != "Done" && t.PercentComplete == 0).Select(t => t.Name).Take(3).ToList() ?? new();
+            var completedList = LoadedTasks?
+                .Where(t => t.IsComplete)
+                .OrderByDescending(t => t.ActualCompleteDate ?? t.FinishDate)
+                .Select(t => t.Name)
+                .Take(3)
+                .ToList() ?? new();
+
+            var inProgressList = LoadedTasks?
+                .Where(t => !t.IsComplete && (t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100)))
+                .OrderByDescending(t => t.PercentComplete)
+                .ThenByDescending(t => t.StartDate)
+                .Select(t => t.Name)
+                .Take(3)
+                .ToList() ?? new();
+
+            var upcomingList = LoadedTasks?
+                .Where(t => !t.IsComplete && t.PercentComplete == 0 && t.Status != "In Progress" && t.Status != "Started")
+                .OrderBy(t => t.StartDate)
+                .Select(t => t.Name)
+                .Take(3)
+                .ToList() ?? new();
 
             var summaryParts = new List<string>();
 

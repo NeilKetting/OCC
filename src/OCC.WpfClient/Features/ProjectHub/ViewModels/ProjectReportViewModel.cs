@@ -86,7 +86,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Project Report";
         }
 
-        public async Task LoadReportDataAsync(Guid projectId)
+        public async Task LoadReportDataAsync(Guid projectId, bool autoGenerate = false)
         {
             ProjectId = projectId;
             try
@@ -359,6 +359,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 // Fetch variation orders
                 await FetchVariationOrdersAsync();
+
+                if (autoGenerate)
+                {
+                    AutoGenerateSummary();
+                }
             }
             catch (Exception ex)
             {
@@ -666,7 +671,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         protected override async Task ExecuteReloadAsync()
         {
-            await LoadReportDataAsync(ProjectId);
+            await LoadReportDataAsync(ProjectId, autoGenerate: true);
         }
 
         public override async Task PrintAsync()
@@ -865,9 +870,27 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             if (Project == null) return;
             
-            var completedList = _loadedTasks?.Where(t => t.Status == "Completed" || t.Status == "Done" || t.PercentComplete == 100).Select(t => t.Name).Take(3).ToList() ?? new();
-            var inProgressList = _loadedTasks?.Where(t => t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100)).Select(t => t.Name).Take(3).ToList() ?? new();
-            var upcomingList = _loadedTasks?.Where(t => t.Status != "Completed" && t.Status != "Done" && t.PercentComplete == 0).Select(t => t.Name).Take(3).ToList() ?? new();
+            var completedList = _loadedTasks?
+                .Where(t => t.IsComplete)
+                .OrderByDescending(t => t.ActualCompleteDate ?? t.FinishDate)
+                .Select(t => t.Name)
+                .Take(3)
+                .ToList() ?? new();
+
+            var inProgressList = _loadedTasks?
+                .Where(t => !t.IsComplete && (t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100)))
+                .OrderByDescending(t => t.PercentComplete)
+                .ThenByDescending(t => t.StartDate)
+                .Select(t => t.Name)
+                .Take(3)
+                .ToList() ?? new();
+
+            var upcomingList = _loadedTasks?
+                .Where(t => !t.IsComplete && t.PercentComplete == 0 && t.Status != "In Progress" && t.Status != "Started")
+                .OrderBy(t => t.StartDate)
+                .Select(t => t.Name)
+                .Take(3)
+                .ToList() ?? new();
 
             var summaryParts = new List<string>();
 

@@ -35,9 +35,7 @@
 
                 <StackPanel Grid.Column="0" Height="80">
                     <TextBlock Text="DAILY SITE PROJECT REPORT" Foreground="{StaticResource SecondaryGold}" FontSize="12" FontWeight="Bold"/>
-                    <Viewbox>
                         <TextBlock Text="{Binding Project.Name}" Foreground="White" FontSize="28" FontWeight="Light" Margin="0,5,0,0"/>
-                    </Viewbox>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <Border Background="#20FFFFFF" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
