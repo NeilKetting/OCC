@@ -31,7 +31,9 @@
 xmlns:procDialogVm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs"
 xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views.Dialogs"
 xmlns:attndVm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
-xmlns:attndViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views">
+xmlns:attndViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views"
+xmlns:calVm="clr-namespace:OCC.WpfClient.Features.CalendarHub.ViewModels"
+xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
 
     <!-- Auth -->
     <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
@@ -263,6 +265,11 @@ xmlns:attndViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views">
     <!-- Splash -->
     <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
         <splashViews:SplashView />
+    </DataTemplate>
+
+    <!-- Calendar Hub -->
+    <DataTemplate DataType="{x:Type calVm:CalendarHubViewModel}">
+        <calViews:CalendarHubView />
     </DataTemplate>
 
 </ResourceDictionary>

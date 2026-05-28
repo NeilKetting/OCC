@@ -10,6 +10,7 @@ namespace OCC.WpfClient.Models
         public string Message { get; set; } = string.Empty;
         public ToastType Type { get; set; } = ToastType.Info;
         public DateTime CreatedAt { get; } = DateTime.Now;
+        public bool IsSticky { get; set; } = false;
 
         public ToastMessage() { }
 

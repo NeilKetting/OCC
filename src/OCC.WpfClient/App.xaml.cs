@@ -30,6 +30,7 @@ using OCC.Shared.Services;
 using System.Net.Http;
 using OCC.WpfClient.Features.HseqHub;
 using OCC.WpfClient.Features.AttendanceHub;
+using OCC.WpfClient.Features.CalendarHub;
 
 
 
@@ -106,7 +107,6 @@ namespace OCC.WpfClient
             services.AddSingleton<UserActivityService>();
 
             // Services
-            // Services
             services.AddTransient<EnvironmentHeaderHandler>();
             services.AddHttpClient("")
                 .AddHttpMessageHandler<EnvironmentHeaderHandler>();
@@ -148,7 +148,8 @@ namespace OCC.WpfClient
                 new SubContractorFeature(),
                 new SettingsFeature(),
                 new AttendanceFeature(),
-                new HseqFeature()
+                new HseqFeature(),
+                new CalendarFeature()       // ← Unified calendar: Tasks, Holidays, Birthdays, Leave
             };
 
             foreach (var feature in features)

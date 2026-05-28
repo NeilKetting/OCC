@@ -55,7 +55,8 @@ namespace OCC.API.Controllers
                         TaxNumber = e.TaxNumber,
                         BankName = e.BankName,
                         LeaveBalance = e.LeaveBalance,
-                        EmploymentDate = e.EmploymentDate
+                        EmploymentDate = e.EmploymentDate,
+                        DoB = e.DoB
                     })
                     .ToListAsync();
 
@@ -219,7 +220,8 @@ namespace OCC.API.Controllers
                 TaxNumber = employee.TaxNumber,
                 BankName = employee.BankName,
                 LeaveBalance = employee.LeaveBalance,
-                EmploymentDate = employee.EmploymentDate
+                EmploymentDate = employee.EmploymentDate,
+                DoB = employee.DoB
             };
         }
 

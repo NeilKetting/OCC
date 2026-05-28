@@ -691,7 +691,9 @@
 
 
                 <!-- Active Content -->
-                <ContentControl Grid.Row="1" Content="{Binding ActiveHub}" Margin="0"/>
+                <ContentControl Grid.Row="1" Content="{Binding ActiveHub}" Margin="0"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"/>
 
                 <!-- Status Bar (Complete Parity) -->
                 <Border Grid.Row="2" Background="#1A000000" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="15,0"

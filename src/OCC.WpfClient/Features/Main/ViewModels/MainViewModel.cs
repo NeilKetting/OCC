@@ -696,6 +696,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             ActiveHub = referenceHub;
         }
 
+        /// <summary>
+        /// Manually removes a toast notification from the overlay list.
+        /// </summary>
+        [RelayCommand]
+        private void CloseToast(ToastMessage toast)
+        {
+            if (toast == null) return;
+            System.Windows.Application.Current.Dispatcher.Invoke(() => Toasts.Remove(toast));
+        }
+
         #endregion
 
         #region Navigation & Routing Logic
@@ -1010,7 +1020,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                  Toasts.Add(toast);
             });
 
-            _ = _shellTimingService.FadeOutToastAsync(toast, item => Toasts.Remove(item), _shellTimingCts?.Token ?? CancellationToken.None);
+            if (!toast.IsSticky)
+            {
+                _ = _shellTimingService.FadeOutToastAsync(toast, item => Toasts.Remove(item), _shellTimingCts?.Token ?? CancellationToken.None);
+            }
         }
 
         /// <summary>

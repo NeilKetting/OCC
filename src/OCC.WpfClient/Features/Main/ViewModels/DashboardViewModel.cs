@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using System;
+using System.Linq;
 
 namespace OCC.WpfClient.Features.Main.ViewModels
 {
@@ -24,6 +26,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         // Retrieves project and personal tasks
         private readonly IProjectTaskService _taskService;
+
+        // Manages employee querying (specifically birthdays)
+        private readonly IEmployeeService _employeeService;
 
         #endregion
 
@@ -65,12 +70,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             IUserService userService, 
             IToastService toastService, 
             IAuthService authService,
-            IProjectTaskService taskService)
+            IProjectTaskService taskService,
+            IEmployeeService employeeService)
         {
             _userService = userService;
             _toastService = toastService;
             _authService = authService;
             _taskService = taskService;
+            _employeeService = employeeService;
             Title = "Dashboard";
             
             UserName = _authService.CurrentUser?.DisplayName ?? "User";
@@ -99,6 +106,27 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 TodoCount = taskList.Count(t => t.Type == TaskType.PersonalToDo && !t.IsComplete);
 
                 _toastService.ShowSuccess("System Active", "Toast Notification System is now live!");
+
+                // Check for employee birthdays today and trigger sticky toasts
+                try
+                {
+                    var today = DateTime.Today;
+                    var employees = await _employeeService.GetEmployeesAsync();
+                    var birthdayEmployees = employees
+                        .Where(e => e.Status == EmployeeStatus.Active &&
+                                    e.DoB.Month == today.Month &&
+                                    e.DoB.Day == today.Day)
+                        .ToList();
+
+                    foreach (var emp in birthdayEmployees)
+                    {
+                        _toastService.ShowInfo("Employee Birthday 🎉", $"Happy Birthday to {emp.DisplayName}! 🎂", isSticky: true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Non-critical background failure
+                }
             }
             catch 
             { 

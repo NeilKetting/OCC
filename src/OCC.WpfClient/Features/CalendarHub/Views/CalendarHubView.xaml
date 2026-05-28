@@ -1,0 +1,565 @@
+<UserControl x:Class="OCC.WpfClient.Features.CalendarHub.Views.CalendarHubView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.CalendarHub.ViewModels"
+             xmlns:models="clr-namespace:OCC.WpfClient.Features.CalendarHub.Models"
+             mc:Ignorable="d"
+             d:DesignWidth="1280"
+             d:DesignHeight="900"
+             d:DataContext="{d:DesignInstance vm:CalendarHubViewModel, IsDesignTimeCreatable=False}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- ═══════════════════════════════════════════════════════
+             Styles — Day Cell
+        ═══════════════════════════════════════════════════════ -->
+        <Style x:Key="DayCellBorder" TargetType="Border">
+            <Setter Property="Background"          Value="#1A1F2B"/>
+            <Setter Property="BorderBrush"         Value="#252D3D"/>
+            <Setter Property="BorderThickness"     Value="0,0,1,1"/>
+            <Setter Property="MinHeight"           Value="50"/>
+            <Setter Property="Cursor"              Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1E2535"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════════
+             Styles — Event Bar
+        ═══════════════════════════════════════════════════════ -->
+        <Style x:Key="EventBarBase" TargetType="Border">
+            <Setter Property="Height"              Value="16"/>
+            <Setter Property="Margin"              Value="2,1"/>
+            <Setter Property="CornerRadius"        Value="3"/>
+            <Setter Property="Cursor"              Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.85"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════════
+             Styles — Sidebar Checkboxes
+        ═══════════════════════════════════════════════════════ -->
+        <Style x:Key="FilterCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#D0D5E0"/>
+            <Setter Property="FontSize"   Value="12"/>
+            <Setter Property="Margin"     Value="0,4"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+
+        <Style x:Key="ProjectFilterItem" TargetType="CheckBox" BasedOn="{StaticResource FilterCheckBox}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin"   Value="0,2"/>
+        </Style>
+
+    </UserControl.Resources>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Root layout: sidebar (220px) | main calendar area (*)
+    ═══════════════════════════════════════════════════════════ -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             LEFT SIDEBAR — filters, legend, project list
+        ═══════════════════════════════════════════════════════════ -->
+        <Border Grid.Column="0"
+                Background="#141925"
+                BorderBrush="#252D3D"
+                BorderThickness="0,0,1,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="16,20,16,16">
+
+                    <!-- Section: Event Type Filters -->
+                    <TextBlock Text="SHOW ON CALENDAR"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="#5A6580"
+                               Margin="0,0,0,12"/>
+
+                    <CheckBox Content="Tasks"
+                              Style="{StaticResource FilterCheckBox}"
+                              IsChecked="{Binding ShowTasks}"/>
+                    <CheckBox Content="Public Holidays"
+                              Style="{StaticResource FilterCheckBox}"
+                              IsChecked="{Binding ShowPublicHolidays}"/>
+                    <CheckBox Content="Birthdays"
+                              Style="{StaticResource FilterCheckBox}"
+                              IsChecked="{Binding ShowBirthdays}"/>
+                    <CheckBox Content="Leave / Absence"
+                              Style="{StaticResource FilterCheckBox}"
+                              IsChecked="{Binding ShowLeave}"/>
+
+                    <Separator Margin="0,16" Background="#252D3D"/>
+
+                    <!-- Section: Colour Legend -->
+                    <TextBlock Text="LEGEND"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="#5A6580"
+                               Margin="0,0,0,10"/>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Border Width="12" Height="12" Background="#2E9DFF" CornerRadius="2"/>
+                            <TextBlock Text="Task" FontSize="11" Foreground="#D0D5E0"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Border Width="12" Height="12" Background="#EF4444" CornerRadius="2"/>
+                            <TextBlock Text="Public Holiday" FontSize="11" Foreground="#D0D5E0"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <Border Width="12" Height="12" Background="#EC4899" CornerRadius="2"/>
+                            <TextBlock Text="Birthday" FontSize="11" Foreground="#D0D5E0"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="12" Height="12" Background="#10B981" CornerRadius="2"/>
+                            <TextBlock Text="Leave / Absence" FontSize="11" Foreground="#D0D5E0"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Separator Margin="0,16" Background="#252D3D"/>
+
+                    <!-- Section: Project Filter -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="PROJECTS"
+                                   FontSize="10"
+                                   FontWeight="SemiBold"
+                                   Foreground="#5A6580"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="1"
+                                Content="Clear"
+                                FontSize="10"
+                                Foreground="#2E9DFF"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Padding="0"
+                                Command="{Binding ClearProjectFilterCommand}"
+                                VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Project checklist -->
+                    <ItemsControl ItemsSource="{Binding AvailableProjects}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:ProjectFilterItem}">
+                                <CheckBox Content="{Binding Name}"
+                                          IsChecked="{Binding IsSelected}"
+                                          Style="{StaticResource ProjectFilterItem}"
+                                          Command="{Binding DataContext.ToggleProjectFilterCommand,
+                                                   RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             RIGHT AREA — header + calendar grid
+        ═══════════════════════════════════════════════════════════ -->
+        <Grid Grid.Column="1" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ─────────────────────────────────────────────────
+                 HEADER — month/year, navigation, Today button
+            ───────────────────────────────────────────────────── -->
+            <Border Grid.Row="0"
+                    Background="#141925"
+                    BorderBrush="#252D3D"
+                    BorderThickness="0,0,0,1"
+                    Padding="20,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Previous / Month+Year / Next -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+                        <Button Command="{Binding PreviousMonthCommand}"
+                                Background="Transparent" BorderThickness="0"
+                                Cursor="Hand" Padding="6" Margin="0,0,4,0"
+                                ToolTip="Previous month">
+                            <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="14" Foreground="#D0D5E0"/>
+                        </Button>
+
+                        <TextBlock VerticalAlignment="Center" FontSize="20"
+                                   FontWeight="SemiBold" Foreground="White">
+                            <Run Text="{Binding MonthName}"/>
+                            <Run Text=" "/>
+                            <Run Text="{Binding YearName}"/>
+                        </TextBlock>
+
+                        <Button Command="{Binding NextMonthCommand}"
+                                Background="Transparent" BorderThickness="0"
+                                Cursor="Hand" Padding="6" Margin="4,0,0,0"
+                                ToolTip="Next month">
+                            <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="14" Foreground="#D0D5E0"/>
+                        </Button>
+
+                        <!-- Refreshing spinner -->
+                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Foreground="#2E9DFF"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   Visibility="{Binding IsRefreshing, Converter={StaticResource BoolToVis}}"
+                                   ToolTip="Refreshing calendar..."/>
+                    </StackPanel>
+
+                    <!-- Today button -->
+                    <Button Grid.Column="2"
+                            Content="Today"
+                            Command="{Binding GoToTodayCommand}"
+                            Padding="14,6" FontSize="12" FontWeight="SemiBold"
+                            Background="#2E9DFF" Foreground="White"
+                            BorderThickness="0" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="4"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#49AEFF"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#1A7DD9"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ─────────────────────────────────────────────────
+                 WEEKDAY HEADERS — Mon Tue Wed Thu Fri Sat Sun
+            ───────────────────────────────────────────────────── -->
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding WeekDays}" >
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" Columns="7"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#141925"
+                                BorderBrush="#252D3D"
+                                BorderThickness="0,0,1,1"
+                                Padding="0,8">
+                            <TextBlock Text="{Binding}"
+                                       HorizontalAlignment="Center"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#5A6580"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- ─────────────────────────────────────────────────
+                 DAY CELLS — 42-cell UniformGrid (6 rows × 7 cols)
+            ───────────────────────────────────────────────────── -->
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding Days}" ClipToBounds="True">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="6" Columns="7"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:CalendarDayViewModel}">
+
+                        <!-- Day cell outer border — style applied via Border.Style only -->
+                        <Border ClipToBounds="True">
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource DayCellBorder}">
+                                    <Style.Triggers>
+                                        <!-- Selected: blue border -->
+                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="BorderBrush"     Value="#2E9DFF"/>
+                                            <Setter Property="BorderThickness" Value="2"/>
+                                        </DataTrigger>
+                                        <!-- Weekend: slightly darker background -->
+                                        <DataTrigger Binding="{Binding IsWeekend}" Value="True">
+                                            <Setter Property="Background" Value="#12171F"/>
+                                        </DataTrigger>
+                                        <!-- Non-current-month: dimmed -->
+                                        <DataTrigger Binding="{Binding IsNotCurrentMonth}" Value="True">
+                                            <Setter Property="Opacity" Value="0.45"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <!-- Click to select this day -->
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding DataContext.SelectDayCommand,
+                                                       RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              CommandParameter="{Binding}"/>
+                            </Border.InputBindings>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Day number row -->
+                                <Grid Grid.Row="0" Margin="6,4,6,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Day number — blue and bold for today, red for holiday -->
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding DayNumber}"
+                                               FontSize="13"
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="Normal"/>
+                                                <Setter Property="Foreground" Value="#A0B0C8"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="Foreground" Value="#2E9DFF"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsHoliday}" Value="True">
+                                                        <Setter Property="Foreground" Value="#EF4444"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Today indicator dot -->
+                                    <Border Grid.Column="1"
+                                            Width="6" Height="6"
+                                            CornerRadius="3"
+                                            Background="#2E9DFF"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsToday, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Today"/>
+                                </Grid>
+
+                                <!-- Holiday name below day number -->
+                                <TextBlock Grid.Row="0"
+                                           Text="{Binding HolidayName}"
+                                           FontSize="9"
+                                           Foreground="#EF4444"
+                                           Margin="6,20,4,0"
+                                           TextTrimming="CharacterEllipsis"
+                                           Visibility="{Binding IsHoliday, Converter={StaticResource BoolToVis}}"/>
+
+                                <!-- Event bars area -->
+                                <StackPanel Grid.Row="1" Margin="0,2,0,2">
+
+                                    <!-- Up to MaxVisibleEvents (4) event bars -->
+                                    <ItemsControl ItemsSource="{Binding VisibleEvents}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type models:CalendarEvent}">
+
+                                                <!-- Event bar — style only (no inline Style + Border.Style conflict) -->
+                                                <Border>
+                                                    <Border.Style>
+                                                        <Style TargetType="Border" BasedOn="{StaticResource EventBarBase}">
+                                                            <!-- Bind background colour from the CalendarEvent.Color property -->
+                                                            <Setter Property="Background" Value="{Binding Color}"/>
+                                                            <!-- Span-aware corner rounding for multi-day events -->
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Span}"
+                                                                             Value="{x:Static models:CalendarEventSpan.Start}">
+                                                                    <Setter Property="CornerRadius" Value="3,0,0,3"/>
+                                                                    <Setter Property="Margin"       Value="2,1,0,1"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Span}"
+                                                                             Value="{x:Static models:CalendarEventSpan.Middle}">
+                                                                    <Setter Property="CornerRadius" Value="0"/>
+                                                                    <Setter Property="Margin"       Value="0,1"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Span}"
+                                                                             Value="{x:Static models:CalendarEventSpan.End}">
+                                                                    <Setter Property="CornerRadius" Value="0,3,3,0"/>
+                                                                    <Setter Property="Margin"       Value="0,1,2,1"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+
+                                                    <!-- Rich tooltip: title, type, dates, project, description -->
+                                                    <Border.ToolTip>
+                                                        <StackPanel Margin="4">
+                                                            <TextBlock Text="{Binding Title}"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="#2E9DFF"
+                                                                       FontSize="12"/>
+                                                            <TextBlock Text="{Binding Type}"
+                                                                       Foreground="#8A9BC0"
+                                                                       FontSize="10"
+                                                                       Margin="0,2,0,0"/>
+                                                            <TextBlock Foreground="#D0D5E0"
+                                                                       FontSize="10"
+                                                                       Margin="0,2,0,0">
+                                                                <Run Text="{Binding StartDate, StringFormat={}{0:dd MMM}}"/>
+                                                                <Run Text="–"/>
+                                                                <Run Text="{Binding EndDate, StringFormat={}{0:dd MMM}}"/>
+                                                            </TextBlock>
+                                                            <!-- Project name (Tasks only) -->
+                                                            <TextBlock Text="{Binding ProjectName}"
+                                                                       Foreground="#8A9BC0"
+                                                                       FontSize="10"
+                                                                       Margin="0,2,0,0">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding ProjectName}" Value="">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                            <!-- Description -->
+                                                            <TextBlock Text="{Binding Description}"
+                                                                       Foreground="#D0D5E0"
+                                                                       FontSize="10"
+                                                                       TextWrapping="Wrap"
+                                                                       MaxWidth="280"
+                                                                       Margin="0,4,0,0">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Description}" Value="">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </Border.ToolTip>
+
+                                                    <!-- Event title label (trimmed to fit) -->
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontSize="10"
+                                                               Foreground="White"
+                                                               Padding="4,1"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- "+N more" overflow button (shown when HasOverflow is true) -->
+                                    <Button Margin="2,1,2,0"
+                                            Padding="4,1"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            HorizontalAlignment="Left"
+                                            Visibility="{Binding HasOverflow, Converter={StaticResource BoolToVis}}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="Transparent"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+
+                                        <!-- Clicking also selects the day so the detail panel updates -->
+                                        <Button.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick"
+                                                          Command="{Binding DataContext.SelectDayCommand,
+                                                                   RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                          CommandParameter="{Binding}"/>
+                                        </Button.InputBindings>
+
+                                        <!-- "+N more" label -->
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock FontSize="10" Foreground="#5A7DB0">
+                                                <Run Text="+"/>
+                                                <Run Text="{Binding OverflowCount, Mode=OneWay}"/>
+                                                <Run Text=" more"/>
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <!-- Overflow context menu listing hidden events -->
+                                        <Button.ContextMenu>
+                                            <ContextMenu ItemsSource="{Binding OverflowEvents}">
+                                                <ContextMenu.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type models:CalendarEvent}">
+                                                        <StackPanel Orientation="Horizontal" Margin="2">
+                                                            <Border Width="8" Height="8"
+                                                                    Background="{Binding Color}"
+                                                                    CornerRadius="2"
+                                                                    VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Title}"
+                                                                       FontSize="11"
+                                                                       Foreground="#D0D5E0"
+                                                                       VerticalAlignment="Center"
+                                                                       Margin="6,0,0,0"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ContextMenu.ItemTemplate>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                    </Button>
+
+                                </StackPanel>
+                                <!-- End event bars area -->
+
+                            </Grid>
+                        </Border>
+                        <!-- End day cell -->
+
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <!-- End day cells UniformGrid -->
+
+        </Grid>
+        <!-- End right area -->
+
+    </Grid>
+    <!-- End root grid -->
+
+</UserControl>

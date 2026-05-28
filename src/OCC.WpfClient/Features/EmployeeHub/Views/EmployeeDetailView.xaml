@@ -107,7 +107,7 @@
                             <TextBox Text="{Binding Employee.PermitNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Work Permit No. (if applicable)"/>
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,0,12" Visibility="{Binding IsPassportVisible, Converter={StaticResource VisibilityConverter}}">
+                        <StackPanel Margin="0,0,0,12">
                             <TextBlock Text="Date of Birth" Style="{StaticResource FormLabelText}"/>
                             <DatePicker SelectedDate="{Binding Employee.DoB}" Style="{StaticResource ModernDatePicker}"/>
                         </StackPanel>                                        

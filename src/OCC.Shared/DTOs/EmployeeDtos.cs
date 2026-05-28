@@ -27,6 +27,7 @@ namespace OCC.Shared.DTOs
         public string? BankName { get; set; }
         public double LeaveBalance { get; set; }
         public DateTime EmploymentDate { get; set; }
+        public DateTime DoB { get; set; }
     }
 
     public class EmployeeDto
