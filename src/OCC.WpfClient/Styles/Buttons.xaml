@@ -192,6 +192,12 @@
         </Setter>
     </Style>
 
+    <!-- Danger Button (Inherits from SecondaryButton but with ErrorRed) -->
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+        <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ErrorRed}"/>
+    </Style>
+
     <!-- Window Control Buttons (Minimize, Maximize, Close) -->
     <Style x:Key="WindowControlButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>

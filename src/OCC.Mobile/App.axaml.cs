@@ -113,6 +113,8 @@ namespace OCC.Mobile
             services.AddTransient<InventoryViewModel>();
             services.AddTransient<TeamViewModel>();
             services.AddTransient<Features.Profile.ProfileViewModel>();
+            services.AddTransient<ReceiveCrewViewModel>();
+            services.AddTransient<Features.HSEQ.HseqListViewModel>();
             
             // Add HttpClient for update service
             services.AddHttpClient<IUpdateService, GitHubUpdateService>();
@@ -131,6 +133,7 @@ namespace OCC.Mobile
             services.AddSingleton<ITeamService, TeamService>();
             services.AddSingleton<ITaskCommentService, TaskCommentService>();
             services.AddSingleton<IHseqService, HseqService>();
+            services.AddSingleton<ISiteDeploymentService, SiteDeploymentService>();
             services.AddSingleton<ISignalRService, SignalRService>();
             services.AddSingleton<Func<MainViewModel>>(s => () => s.GetRequiredService<MainViewModel>());
         }

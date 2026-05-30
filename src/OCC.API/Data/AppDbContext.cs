@@ -89,6 +89,10 @@ namespace OCC.API.Data
         public DbSet<ChatMessageReadReceipt> ChatMessageReadReceipts { get; set; }
         public DbSet<SnagJob> SnagJobs { get; set; }
 
+        // Crew Deployment
+        public DbSet<SiteDeployment> SiteDeployments { get; set; }
+        public DbSet<SiteDeploymentMember> SiteDeploymentMembers { get; set; }
+
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var auditEntries = OnBeforeSaveChanges();
@@ -491,6 +495,36 @@ namespace OCC.API.Data
                     .WithMany()
                     .HasForeignKey(tm => tm.EmployeeId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Site Deployment Configuration
+            modelBuilder.Entity<SiteDeployment>(entity =>
+            {
+                entity.HasOne(sd => sd.Project)
+                    .WithMany()
+                    .HasForeignKey(sd => sd.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(sd => sd.ReceivedBySiteManager)
+                    .WithMany()
+                    .HasForeignKey(sd => sd.ReceivedBySiteManagerId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
+
+                entity.HasMany(sd => sd.Members)
+                    .WithOne(m => m.SiteDeployment)
+                    .HasForeignKey(m => m.SiteDeploymentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(e => e.Status).HasConversion<string>();
+            });
+
+            modelBuilder.Entity<SiteDeploymentMember>(entity =>
+            {
+                entity.HasOne(m => m.Employee)
+                    .WithMany()
+                    .HasForeignKey(m => m.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<SnagJob>(entity =>

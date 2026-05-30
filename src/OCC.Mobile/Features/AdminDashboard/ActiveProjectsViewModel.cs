@@ -135,7 +135,7 @@ namespace OCC.Mobile.Features.AdminDashboard
         {
             if (project != null)
             {
-                _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
+                _navigationService.NavigateTo<HSEQ.HseqListViewModel>(vm => vm.ProjectId = project.Id);
             }
         }
     }

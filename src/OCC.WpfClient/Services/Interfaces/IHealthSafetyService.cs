@@ -40,7 +40,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<bool> DeleteTrainingRecordAsync(Guid id);
 
         // Documents
-        Task<IEnumerable<HseqDocument>> GetDocumentsAsync();
+        Task<IEnumerable<HseqDocument>> GetDocumentsAsync(Guid? projectId = null);
         Task<HseqDocument?> UploadDocumentAsync(HseqDocument metadata, System.IO.Stream fileStream, string fileName);
         Task<bool> DeleteDocumentAsync(Guid id);
 

@@ -37,7 +37,7 @@
                 </ComboBox>
 
                 <TextBlock Text="ASSOCIATED PROJECT (OPTIONAL)" Style="{StaticResource FormLabelText}"/>
-                <ComboBox ItemsSource="{Binding AvailableProjects}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20"/>
+                <ComboBox ItemsSource="{Binding AvailableProjects}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20" IsEnabled="{Binding IsProjectSelectionEnabled}"/>
 
                 <TextBlock Text="SELECT FILE" Style="{StaticResource FormLabelText}"/>
                 <Grid Margin="0,0,0,10">

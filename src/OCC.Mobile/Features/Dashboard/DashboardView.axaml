@@ -26,6 +26,27 @@
                            FontSize="16"/>
             </StackPanel>
 
+            <!-- Incoming Crew Alert Banner -->
+            <Border IsVisible="{Binding !!PendingCrewCount}" 
+                    Background="#1E203B" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="16" Padding="20">
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="👥" Foreground="#FFB900" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="INCOMING DAILY CREW" Foreground="#FFB900" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding PendingCrewCount, StringFormat='{}You have {0} crew allocation(s) waiting to be received.'}" 
+                                   Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Review and confirm their attendance for today." Foreground="#94A3B8" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <Button Grid.Column="1" Command="{Binding NavigateToReceiveCrewCommand}" 
+                            Background="#FFB900" Foreground="#1E1E2E" Padding="16,10" CornerRadius="8" VerticalAlignment="Center">
+                        <TextBlock Text="Clock In Crew" FontWeight="Bold" FontSize="13" Foreground="#1E1E2E"/>
+                    </Button>
+                </Grid>
+            </Border>
+
             <!-- Radial Progress Area (Doughnut Charts) -->
             <Border Background="#1E293B" CornerRadius="20" Padding="20" BoxShadow="0 4 20 0 #40000000">
                 <StackPanel Spacing="20">

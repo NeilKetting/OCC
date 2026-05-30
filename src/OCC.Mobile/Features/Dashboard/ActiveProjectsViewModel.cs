@@ -119,7 +119,7 @@ namespace OCC.Mobile.Features.Dashboard
         [RelayCommand]
         private void NavigateToProjectHseq(OCC.Shared.Models.Project project)
         {
-            _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
+            _navigationService.NavigateTo<HSEQ.HseqListViewModel>(vm => vm.ProjectId = project.Id);
         }
     }
 }

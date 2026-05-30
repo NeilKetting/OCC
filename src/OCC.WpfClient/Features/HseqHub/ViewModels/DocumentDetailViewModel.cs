@@ -29,6 +29,9 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         [ObservableProperty]
         private Project? _selectedProject;
 
+        [ObservableProperty]
+        private bool _isProjectSelectionEnabled = true;
+
         public ObservableCollection<Project> AvailableProjects { get; } = new();
 
         public DocumentCategory[] Categories { get; } = 
@@ -40,7 +43,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             Title = "Upload Document";
         }
 
-        public void Initialize(IEnumerable<Project> projects)
+        public void Initialize(IEnumerable<Project> projects, Guid? preSelectedProjectId = null)
         {
             AvailableProjects.Clear();
             foreach (var p in projects.OrderBy(x => x.Name)) AvailableProjects.Add(p);
@@ -48,7 +51,17 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             NewDocTitle = "";
             NewDocCategory = DocumentCategory.Policy;
             SelectedFilePath = "";
-            SelectedProject = null;
+            
+            if (preSelectedProjectId.HasValue)
+            {
+                SelectedProject = AvailableProjects.FirstOrDefault(p => p.Id == preSelectedProjectId.Value);
+                IsProjectSelectionEnabled = false;
+            }
+            else
+            {
+                SelectedProject = null;
+                IsProjectSelectionEnabled = true;
+            }
         }
 
         [RelayCommand]

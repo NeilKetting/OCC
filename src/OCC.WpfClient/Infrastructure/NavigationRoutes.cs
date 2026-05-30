@@ -27,6 +27,7 @@ namespace OCC.WpfClient.Infrastructure
         public const string SnagList = "SnagList";
         public const string PerformanceDashboard = "PerformanceDashboard";
         public const string ProjectReportRun = "ProjectReportRun";
+        public const string DailyCrewBuilder = "DailyCrewBuilder";
         
         // System Routes
         public const string AccessDenied = "AccessDenied";

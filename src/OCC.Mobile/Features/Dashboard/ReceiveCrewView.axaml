@@ -1,0 +1,231 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:OCC.Mobile.Features.Dashboard"
+             xmlns:dtos="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
+             x:DataType="vm:ReceiveCrewViewModel"
+             x:Class="OCC.Mobile.Features.Dashboard.ReceiveCrewView">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource BrandDarkerBrush}" Padding="20">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Background="Transparent" Padding="5">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Path Fill="White" Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Stretch="Uniform" Width="20" Height="20"/>
+                        <TextBlock Text="Back" Foreground="White" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                
+                <TextBlock Grid.Column="1" Text="{Binding Title}" 
+                           Foreground="White" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+
+                <Button Grid.Column="2" Command="{Binding LoadDataCommand}" Background="Transparent" Padding="5">
+                    <Path Fill="White" Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Stretch="Uniform" Width="20" Height="20"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" Background="{DynamicResource BrandDarkBrush}">
+            <!-- Empty State (when no selected deployment) -->
+            <Border IsVisible="{Binding !HasSelectedDeployment}" Padding="40" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel Spacing="20" HorizontalAlignment="Center">
+                    <TextBlock Text="👥" FontSize="64" HorizontalAlignment="Center"/>
+                    <TextBlock Text="No Pending Crew Allocations" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="There are no active or pending daily crews allocated to you to receive." Foreground="#94A3B8" FontSize="14" HorizontalAlignment="Center"/>
+                    <Button Command="{Binding LoadDataCommand}" Content="Check Again" Background="{DynamicResource BrandOrangeBrush}" Foreground="White" HorizontalAlignment="Center" Padding="15,10" CornerRadius="8"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Content State (when SelectedDeployment is present) -->
+            <Grid IsVisible="{Binding HasSelectedDeployment}" ColumnDefinitions="2*, 20, 1.2*" Margin="20">
+                <!-- Left Column: Crew Members list -->
+                <Grid RowDefinitions="Auto, *" Grid.Column="0">
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12" Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="CREW ALLOCATION:" Foreground="#94A3B8" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding PendingDeployments}" 
+                                  SelectedItem="{Binding SelectedDeployment}" 
+                                  Width="280">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="dtos:SiteDeploymentDto">
+                                    <TextBlock Text="{Binding Label}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="CREW MEMBERS" Foreground="#94A3B8" FontSize="11" FontWeight="Bold" Margin="0,5,0,5"/>
+                            <ItemsControl ItemsSource="{Binding CrewMembers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dtos:SiteDeploymentMemberDto">
+                                        <Border Tag="{Binding IsAbsent}" Background="#1E293B" CornerRadius="12" Padding="15" Margin="0,0,0,8">
+                                            <Border.Styles>
+                                                <Style Selector="Border[Tag=True]">
+                                                    <Setter Property="Opacity" Value="0.5"/>
+                                                </Style>
+                                            </Border.Styles>
+                                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                                <!-- Avatar initials circle -->
+                                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#3B82F6" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding Initials}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- Name & Role -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding FullName}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Role}" Foreground="#94A3B8" FontSize="13"/>
+                                                </StackPanel>
+
+                                                <!-- Present/Absent Toggle Switch / Button -->
+                                                <Button Grid.Column="2" 
+                                                        Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).ToggleAbsentCommand}" 
+                                                        CommandParameter="{Binding}" 
+                                                        Tag="{Binding IsAbsent}" 
+                                                        Padding="16,8" 
+                                                        CornerRadius="8" 
+                                                        VerticalAlignment="Center">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button[Tag=False]">
+                                                            <Setter Property="Background" Value="#10B981"/>
+                                                            <Setter Property="Content" Value="Present"/>
+                                                        </Style>
+                                                        <Style Selector="Button[Tag=True]">
+                                                            <Setter Property="Background" Value="#EF4444"/>
+                                                            <Setter Property="Content" Value="Absent"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- Right Column: Verification & Confirmation Actions -->
+                <Grid RowDefinitions="*, Auto" Grid.Column="2">
+                    <ScrollViewer Grid.Row="0">
+                        <StackPanel Spacing="16">
+                            <!-- Project Details Info Box -->
+                            <Border Background="#1E293B" CornerRadius="16" Padding="15">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="DETAILS" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Project Site:" Foreground="#94A3B8" FontSize="12"/>
+                                        <TextBlock Text="{Binding SelectedDeployment.ProjectName}" Foreground="White" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Date:" Foreground="#94A3B8" FontSize="12"/>
+                                        <TextBlock Text="{Binding SelectedDeployment.DeploymentDate, StringFormat='{}{0:dd MMM yyyy}'}" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Summary Statistics Box -->
+                            <Border Background="#1E293B" CornerRadius="16" Padding="15">
+                                <Grid ColumnDefinitions="*, *">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Text="PRESENT" Foreground="#10B981" FontSize="10" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding PresentCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Text="ABSENT" Foreground="#EF4444" FontSize="10" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding AbsentCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- GPS Geofence Warning Box -->
+                            <Border Background="#1E293B" CornerRadius="16" Padding="15">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="GEOFENCE VALIDATION" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
+
+                                    <!-- Status Indicator Badge -->
+                                    <Border Tag="{Binding HasGpsWarning}" CornerRadius="8" Padding="10">
+                                        <Border.Styles>
+                                            <Style Selector="Border[Tag=False]">
+                                                <Setter Property="Background" Value="#10B981"/>
+                                            </Style>
+                                            <Style Selector="Border[Tag=True]">
+                                                <Setter Property="Background" Value="#F59E0B"/>
+                                            </Style>
+                                        </Border.Styles>
+                                        <Grid ColumnDefinitions="Auto, *">
+                                            <!-- Checked/Verified Icon (Visible when no warning) -->
+                                            <Path Grid.Column="0" Fill="White" Width="18" Height="18" 
+                                                  Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" 
+                                                  Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" 
+                                                  IsVisible="{Binding !HasGpsWarning}"/>
+                                            <!-- Alert/Warning Icon (Visible when has warning) -->
+                                            <Path Grid.Column="0" Fill="White" Width="18" Height="18" 
+                                                  Data="M12,2L1,21H23L12,2M12,6C12.75,6 13.5,6.75 13.5,7.5V13.5C13.5,14.25 12.75,15 12,15C11.25,15 10.5,14.25 10.5,13.5V7.5C10.5,6.75 11.25,6 12,6M12,16.5A1.5,1.5 0 0,1 13.5,18A1.5,1.5 0 0,1 12,19.5A1.5,1.5 0 0,1 10.5,18A1.5,1.5 0 0,1 12,16.5Z" 
+                                                  Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" 
+                                                  IsVisible="{Binding HasGpsWarning}"/>
+                                            
+                                            <TextBlock Grid.Column="1" Text="{Binding GpsStatusText}" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Warning Message -->
+                                    <TextBlock Text="{Binding GpsWarningMessage}" Foreground="#F59E0B" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding HasGpsWarning}"/>
+
+                                    <!-- Simulate GPS Toggle -->
+                                    <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
+                                        <TextBlock Text="Simulate GPS Offset (Geofence Warning)" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center"/>
+                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding SimulateGpsError}" OnContent="On" OffContent="Off"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Bottom Confirm & Success State Area -->
+                    <StackPanel Grid.Row="1" Spacing="12" Margin="0,15,0,0">
+                        <!-- Status/Error/Info message -->
+                        <TextBlock Text="{Binding StatusMessage}" Tag="{Binding ShowSuccessState}" FontSize="13" TextWrapping="Wrap" HorizontalAlignment="Center" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock.Styles>
+                                <Style Selector="TextBlock[Tag=False]">
+                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                </Style>
+                                <Style Selector="TextBlock[Tag=True]">
+                                    <Setter Property="Foreground" Value="#10B981"/>
+                                </Style>
+                            </TextBlock.Styles>
+                        </TextBlock>
+
+                        <!-- Success state badge -->
+                        <Border IsVisible="{Binding ShowSuccessState}" Background="#10B981" CornerRadius="12" Padding="15" HorizontalAlignment="Stretch">
+                          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                              <TextBlock Text="✓" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                              <TextBlock Text="Crew Received &amp; Clocked In Successfully!" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                          </StackPanel>
+                      </Border>
+
+                        <!-- Main confirmation button -->
+                        <Button Command="{Binding ConfirmReceivedCommand}" 
+                                IsVisible="{Binding !ShowSuccessState}" 
+                                IsEnabled="{Binding !IsLoading}" 
+                                Background="#FFB900" 
+                                Foreground="#1E1E2E" 
+                                Padding="20,15" 
+                                CornerRadius="10" 
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Grid.Column="0" Text="Confirm Receipt &amp; Clock In Crew" FontWeight="Bold" FontSize="14" Foreground="#1E1E2E" HorizontalAlignment="Center"/>
+                                <ProgressBar Grid.Column="1" IsIndeterminate="True" Width="20" Height="20" IsVisible="{Binding IsLoading}" Foreground="#1E1E2E" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

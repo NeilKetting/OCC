@@ -183,6 +183,22 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
         <projViews:ProjectEditDetailView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type projVm:CrewDeploymentListViewModel}">
+        <projViews:CrewDeploymentListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:CrewBuilderViewModel}">
+        <projViews:CrewBuilderView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:DailyCrewBuilderViewModel}">
+        <projViews:DailyCrewBuilderView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type projVm:ProjectHseqViewModel}">
+        <projViews:ProjectHseqView />
+    </DataTemplate>
+
     <!-- Partner Hub -->
     <DataTemplate DataType="{x:Type subHubVm:PerformanceDashboardViewModel}">
         <subHubViews:PerformanceDashboardView />

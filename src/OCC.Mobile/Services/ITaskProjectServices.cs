@@ -35,4 +35,12 @@ namespace OCC.Mobile.Services
         Task<IEnumerable<TaskComment>> GetCommentsAsync(Guid taskId);
         Task AddCommentAsync(TaskComment comment);
     }
+
+    public interface ISiteDeploymentService
+    {
+        /// <summary> Fetch pending deployments for the site manager (today's date). </summary>
+        Task<IEnumerable<SiteDeploymentDto>> GetPendingDeploymentsAsync(Guid siteManagerId, DateTime? date = null);
+        /// <summary> Confirm receipt of a crew deployment. </summary>
+        Task<bool> ReceiveDeploymentAsync(Guid deploymentId, ReceiveDeploymentRequest request);
+    }
 }

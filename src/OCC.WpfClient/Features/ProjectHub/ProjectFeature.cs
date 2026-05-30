@@ -30,8 +30,13 @@ namespace OCC.WpfClient.Features.ProjectHub
             services.AddTransient<ProjectReportRunViewModel>();
             services.AddTransient<ProjectVariationOrderListViewModel>();
             services.AddTransient<ProjectVariationOrderDetailViewModel>();
+            services.AddTransient<ProjectHseqViewModel>();
+            services.AddTransient<CrewDeploymentListViewModel>();
+            services.AddTransient<CrewBuilderViewModel>();
+            services.AddTransient<DailyCrewBuilderViewModel>();
             services.AddTransient<IProjectVariationOrderService, ProjectVariationOrderService>();
             services.AddTransient<IProjectReportService, ProjectReportService>();
+            services.AddSingleton<ICrewDeploymentService, CrewDeploymentService>();
         }
  
         public void RegisterRoutes(INavigationService navigationService)
@@ -40,6 +45,7 @@ namespace OCC.WpfClient.Features.ProjectHub
             navigationService.RegisterRoute(NavigationRoutes.Projects, typeof(ProjectListViewModel));
             navigationService.RegisterRoute(NavigationRoutes.ProjectDetail, typeof(ProjectDetailViewModel));
             navigationService.RegisterRoute(NavigationRoutes.ProjectReportRun, typeof(ProjectReportRunViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.DailyCrewBuilder, typeof(DailyCrewBuilderViewModel));
         }
  
         public IEnumerable<NavItem> GetNavigationItems()
@@ -59,6 +65,13 @@ namespace OCC.WpfClient.Features.ProjectHub
                 "Operations",
                 iconColor: "#5C2D91",
                 iconCode: "\uEA37"));
+
+            projects.Children.Add(new NavItem(
+                "Daily Crew Builder",
+                NavigationRoutes.DailyCrewBuilder,
+                "Operations",
+                iconColor: "#FFB900",
+                iconCode: "\uE77B"));
 
             projects.Children.Add(new NavItem(
                 "Report Run",

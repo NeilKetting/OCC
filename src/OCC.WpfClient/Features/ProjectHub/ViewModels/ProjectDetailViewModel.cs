@@ -26,6 +26,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IEmployeeService _employeeService;
         private readonly ProjectReportViewModel _reportVM;
         private readonly ProjectVariationOrderListViewModel _variationOrdersVM;
+        private readonly ProjectHseqViewModel _projectHseqVM;
+        private readonly CrewDeploymentListViewModel _crewDeploymentVM;
 
         [ObservableProperty] private Project? _project;
         [ObservableProperty] private ViewModelBase _currentView;
@@ -49,6 +51,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ProjectHistoryListViewModel historyVM,
             ProjectReportViewModel reportVM,
             ProjectVariationOrderListViewModel variationOrdersVM,
+            ProjectHseqViewModel projectHseqVM,
+            CrewDeploymentListViewModel crewDeploymentVM,
             IDialogService dialogService,
             ILogger<ProjectDetailViewModel> logger,
             IPdfService pdfService) : base(dialogService, logger, pdfService)
@@ -61,6 +65,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _historyVM = historyVM;
             _reportVM = reportVM;
             _variationOrdersVM = variationOrdersVM;
+            _projectHseqVM = projectHseqVM;
+            _crewDeploymentVM = crewDeploymentVM;
             _currentView = _dashboardVM;
             Title = "Project Detail";
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
@@ -113,6 +119,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     _ = _historyVM.LoadHistoryAsync(ProjectId);
                     await _reportVM.LoadReportDataAsync(ProjectId, autoGenerate: true);
                     await _variationOrdersVM.LoadProjectAsync(ProjectId);
+                    _projectHseqVM.Initialize(ProjectId);
+                    _crewDeploymentVM.Initialize(ProjectId, Project.Name);
                     if (!silent) UpdateStatus("Ready");
                 }
             }
@@ -216,6 +224,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void ShowVariationOrders() => CurrentView = _variationOrdersVM;
 
+        [RelayCommand]
+        private void ShowProjectHseq()
+        {
+            CurrentView = _projectHseqVM;
+        }
+
+        [RelayCommand]
+        private void ShowCrewDeployments()
+        {
+            CurrentView = _crewDeploymentVM;
+            _ = _crewDeploymentVM.LoadDeploymentsAsync();
+        }
         protected override string GetReportTitle() => $"Project Profile: {Project?.Name}";
         protected override object GetReportItem() => new
         {

@@ -22,6 +22,9 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         [ObservableProperty]
         private ObservableCollection<HseqDocument> _documents = new();
 
+        [ObservableProperty]
+        private Guid? _projectId;
+
         private List<Project> _allProjects = new();
 
         public DocumentsListViewModel(IHealthSafetyService hseqService, IProjectService projectService, IServiceProvider serviceProvider)
@@ -48,13 +51,14 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         }
 
         [RelayCommand]
-        public async Task LoadDocuments()
+        public async Task LoadDocuments(Guid? projectId = null)
         {
+            ProjectId = projectId;
             if (_hseqService == null) return;
             IsBusy = true;
             try
             {
-                var docs = await _hseqService.GetDocumentsAsync();
+                var docs = await _hseqService.GetDocumentsAsync(projectId);
                 if (docs != null)
                 {
                     Documents = new ObservableCollection<HseqDocument>(docs.OrderByDescending(d => d.UploadDate));
@@ -74,7 +78,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         private void OpenUpload()
         {
             var vm = _serviceProvider.GetRequiredService<DocumentDetailViewModel>();
-            vm.Initialize(_allProjects);
+            vm.Initialize(_allProjects, ProjectId);
             OpenOverlay(vm, OnDocumentUploaded);
         }
 

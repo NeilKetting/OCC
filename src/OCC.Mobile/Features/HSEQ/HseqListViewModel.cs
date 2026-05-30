@@ -17,6 +17,9 @@ namespace OCC.Mobile.Features.HSEQ
         private readonly INavigationService _navigationService;
 
         [ObservableProperty]
+        private Guid? _projectId;
+
+        [ObservableProperty]
         private ObservableCollection<HseqDocument> _documents = new();
 
         [ObservableProperty]
@@ -28,7 +31,13 @@ namespace OCC.Mobile.Features.HSEQ
             _navigationService = navigationService;
             Title = "HSEQ Documents";
             
-            LoadDataCommand.Execute(null);
+            InitializeAsync().FireAndForget();
+        }
+
+        private async Task InitializeAsync()
+        {
+            await Task.Yield();
+            await LoadDataCommand.ExecuteAsync(null);
         }
 
         [RelayCommand]
@@ -39,9 +48,7 @@ namespace OCC.Mobile.Features.HSEQ
 
             try
             {
-                // In a future version, we can filter by the currently active projects
-                // For now, we fetch all documents available to the user
-                var docs = await _hseqService.GetDocumentsAsync();
+                var docs = await _hseqService.GetDocumentsAsync(ProjectId);
                 Documents = new ObservableCollection<HseqDocument>(docs.OrderByDescending(d => d.UploadDate));
             }
             finally

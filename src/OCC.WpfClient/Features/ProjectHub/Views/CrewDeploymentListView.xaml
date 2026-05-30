@@ -1,0 +1,229 @@
+<UserControl x:Class="OCC.WpfClient.Features.ProjectHub.Views.CrewDeploymentListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
+             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+             xmlns:dtos="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="900"
+             d:DataContext="{d:DesignInstance vm:CrewDeploymentListViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="StatusBadge" TargetType="Border">
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="8,3"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="*"/>
+            <!-- Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Header Bar -->
+        <Border Grid.Row="0" Background="#0AFFFFFF" BorderBrush="#15FFFFFF" BorderThickness="0,0,0,1" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="DAILY CREW DEPLOYMENTS" Foreground="#FFB900" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding SelectedDate, StringFormat='Deployments for {0:dddd, dd MMMM yyyy}'}" 
+                               Foreground="{StaticResource TextMain}" FontSize="18" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="↻ Refresh" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding LoadDeploymentsCommand}" Padding="12,8" Margin="0,0,12,0"/>
+                    <Button Style="{StaticResource PrimaryButton}"
+                            Command="{Binding CreateCrewCommand}" Padding="16,8">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="＋" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Create Crew" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+ 
+        <!-- Content -->
+        <Grid Grid.Row="1">
+            <!-- Loading -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Margin="0,0,0,12"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
+            </StackPanel>
+ 
+            <!-- Empty State -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding Deployments.Count, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}">
+                <TextBlock Text="&#xE902;" FontFamily="Segoe Fluent Icons" FontSize="48" Foreground="#20FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <TextBlock Text="No crews deployed today" Foreground="{StaticResource TextSub}" FontSize="16" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <TextBlock Text="Click 'Create Crew' to allocate employees to this project site." 
+                           Foreground="{StaticResource TextSub}" FontSize="13" HorizontalAlignment="Center" Opacity="0.6" Margin="0,0,0,16"/>
+                <Button Content="Create First Crew" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding CreateCrewCommand}" HorizontalAlignment="Center" Padding="20,10"/>
+            </StackPanel>
+
+            <!-- Deployment Cards -->
+            <ScrollViewer Padding="20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding Deployments.Count, Converter={StaticResource VisibilityConverter}}">
+                <ItemsControl ItemsSource="{Binding Deployments}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type dtos:SiteDeploymentDto}">
+                            <Border Style="{StaticResource GlassCard}" Padding="20" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Header Row -->
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE902;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="#FFB900" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextMain}" FontSize="16" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Members.Count, StringFormat='{}{0} members'}" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <!-- Status Badge -->
+                                            <Border Margin="0,0,8,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                                <Setter Property="Background" Value="#1FFFB900"/>
+                                                                <Setter Property="BorderBrush" Value="#40FFB900"/>
+                                                                <Setter Property="BorderThickness" Value="1"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Received">
+                                                                <Setter Property="Background" Value="#1F10B981"/>
+                                                                <Setter Property="BorderBrush" Value="#4010B981"/>
+                                                                <Setter Property="BorderThickness" Value="1"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                                <Setter Property="Background" Value="#1FEF4444"/>
+                                                                <Setter Property="BorderBrush" Value="#40EF4444"/>
+                                                                <Setter Property="BorderThickness" Value="1"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                                    <Setter Property="Foreground" Value="#FFB900"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Received">
+                                                                    <Setter Property="Foreground" Value="#10B981"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                            <!-- Cancel Button (only for Pending) -->
+                                            <Button Content="Cancel" FontSize="11" Padding="10,4"
+                                                    Command="{Binding DataContext.CancelDeploymentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Divider -->
+                                    <Separator Grid.Row="1" Background="#15FFFFFF" Margin="0,12"/>
+
+                                    <!-- Members and Received Row -->
+                                    <StackPanel Grid.Row="2">
+                                        <WrapPanel Orientation="Horizontal">
+                                            <ItemsControl ItemsSource="{Binding Members}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,4,12,4" VerticalAlignment="Center">
+                                                            <Border Width="32" Height="32" CornerRadius="16" Background="#334155" Margin="0,0,8,0">
+                                                                <TextBlock Text="{Binding Initials}" FontSize="11" FontWeight="Bold" 
+                                                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding FullName}" Foreground="{StaticResource TextMain}" FontSize="12"/>
+                                                                <TextBlock Text="{Binding Role}" Foreground="{StaticResource TextSub}" FontSize="10"/>
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </WrapPanel>
+
+                                        <!-- Received info row (if received) -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                                    Visibility="{Binding ReceivedAt, Converter={StaticResource VisibilityConverter}}">
+                                            <TextBlock Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="#10B981" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Foreground="{StaticResource TextSub}" FontSize="12">
+                                                <Run Text="Received by "/>
+                                                <Run Text="{Binding ReceivedBySiteManagerName}" FontWeight="SemiBold"/>
+                                                <Run Text=" at "/>
+                                                <Run Text="{Binding ReceivedAt, StringFormat='{}{0:HH:mm}'}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Overlay -->
+        <Border Grid.RowSpan="2" Background="#80000000" Visibility="{Binding IsOverlayActive, Converter={StaticResource VisibilityConverter}}">
+            <ContentControl Content="{Binding ActiveOverlay}" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="700" MaxHeight="700"/>
+        </Border>
+    </Grid>
+</UserControl>

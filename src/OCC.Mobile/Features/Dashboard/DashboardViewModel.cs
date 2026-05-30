@@ -1,4 +1,7 @@
+using System;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,6 +10,7 @@ using OCC.Mobile.ViewModels;
 using OCC.Mobile.Services;
 using OCC.Mobile.Features.Notifications;
 using Microsoft.Extensions.DependencyInjection;
+using OCC.Shared.DTOs;
 
 namespace OCC.Mobile.Features.Dashboard
 {
@@ -17,6 +21,7 @@ namespace OCC.Mobile.Features.Dashboard
         private readonly IProjectTaskService _taskService;
         private readonly ISignalRService _signalRService;
         private readonly IAuthService _authService;
+        private readonly ISiteDeploymentService _deploymentService;
         private readonly IPushNotificationService? _pushNotificationService;
         private readonly System.Threading.SemaphoreSlim _loadSemaphore = new(1, 1);
 
@@ -80,13 +85,27 @@ namespace OCC.Mobile.Features.Dashboard
         [ObservableProperty]
         private string _etaStatus = "Calculating...";
 
-        public DashboardViewModel(INavigationService navigationService, IProjectService projectService, IProjectTaskService taskService, ISignalRService signalRService, IAuthService authService)
+        private readonly ILocalSettingsService _settingsService;
+
+        [ObservableProperty]
+        private int _pendingCrewCount;
+
+        public DashboardViewModel(
+            INavigationService navigationService,
+            IProjectService projectService,
+            IProjectTaskService taskService,
+            ISignalRService signalRService,
+            IAuthService authService,
+            ISiteDeploymentService deploymentService,
+            ILocalSettingsService settingsService)
         {
             _navigationService = navigationService;
             _projectService = projectService;
             _taskService = taskService;
             _signalRService = signalRService;
             _authService = authService;
+            _deploymentService = deploymentService;
+            _settingsService = settingsService;
             _pushNotificationService = App.Services?.GetService<IPushNotificationService>()!;
             
             PushStatus = _pushNotificationService?.Status ?? "N/A";
@@ -112,6 +131,17 @@ namespace OCC.Mobile.Features.Dashboard
             {
                 LoadData().FireAndForget();
             }
+            // Refresh crew count if a deployment was created/received
+            if (entityType == "SiteDeployment")
+            {
+                LoadPendingCrewCount().FireAndForget();
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToReceiveCrew()
+        {
+            _navigationService.NavigateTo<ReceiveCrewViewModel>();
         }
 
         public override void Dispose()
@@ -235,6 +265,7 @@ namespace OCC.Mobile.Features.Dashboard
                         RecentActivity.Add(update);
                     }
                 });
+                LoadPendingCrewCount().FireAndForget();
             }
             finally
             {
@@ -252,6 +283,66 @@ namespace OCC.Mobile.Features.Dashboard
         private void NavigateToHseq()
         {
             _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
+        }
+
+        private Guid? _siteManagerEmployeeId;
+
+        private async Task<Guid?> GetSiteManagerEmployeeIdAsync()
+        {
+            if (_siteManagerEmployeeId.HasValue)
+                return _siteManagerEmployeeId;
+
+            if (_authService.CurrentUser == null) return null;
+
+            try
+            {
+                var baseUrl = _authService.GetBaseUrl();
+                using var client = new HttpClient();
+                var token = _authService.CurrentToken;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+                client.DefaultRequestHeaders.Add("X-Environment", _settingsService.Settings.SelectedEnvironment.ToString());
+
+                var employees = await client.GetFromJsonAsync<List<EmployeeSummaryDto>>($"{baseUrl}api/Employees");
+                if (employees != null)
+                {
+                    var currentEmployee = employees.FirstOrDefault(e => e.LinkedUserId == _authService.CurrentUser.Id);
+                    if (currentEmployee != null)
+                    {
+                        _siteManagerEmployeeId = currentEmployee.Id;
+                        return _siteManagerEmployeeId;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error resolving Site Manager Employee ID: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        private async Task LoadPendingCrewCount()
+        {
+            var smId = await GetSiteManagerEmployeeIdAsync();
+            if (!smId.HasValue) return;
+
+            try
+            {
+                var pending = await _deploymentService.GetPendingDeploymentsAsync(smId.Value);
+                var count = pending.Count();
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    PendingCrewCount = count;
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading pending crew count: {ex.Message}");
+            }
         }
     }
 }

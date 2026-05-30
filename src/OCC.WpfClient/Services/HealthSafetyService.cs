@@ -284,10 +284,12 @@ namespace OCC.WpfClient.Services
         }
 
         // --- Documents ---
-        public async Task<IEnumerable<HseqDocument>> GetDocumentsAsync()
+        public async Task<IEnumerable<HseqDocument>> GetDocumentsAsync(Guid? projectId = null)
         {
             EnsureAuthorization();
-            return await _httpClient.GetFromJsonAsync<IEnumerable<HseqDocument>>(GetFullUrl("api/HseqDocuments"), _options) ?? new List<HseqDocument>();
+            var url = "api/HseqDocuments";
+            if (projectId.HasValue) url += $"?projectId={projectId.Value}";
+            return await _httpClient.GetFromJsonAsync<IEnumerable<HseqDocument>>(GetFullUrl(url), _options) ?? new List<HseqDocument>();
         }
 
         public async Task<HseqDocument?> UploadDocumentAsync(HseqDocument metadata, System.IO.Stream fileStream, string fileName)
