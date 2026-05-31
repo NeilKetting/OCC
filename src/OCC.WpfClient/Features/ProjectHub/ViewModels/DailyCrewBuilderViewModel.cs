@@ -17,10 +17,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ICrewDeploymentService _crewService;
         private readonly IProjectService _projectService;
         private readonly IDialogService _dialogService;
+        private readonly IEmployeeService _employeeService;
 
         [ObservableProperty] private ObservableCollection<ProjectSummaryDto> _projects = new();
         [ObservableProperty] private ProjectSummaryDto? _selectedProject;
         [ObservableProperty] private DateTime _deploymentDate = DateTime.Today;
+        [ObservableProperty] private DateTime _assignmentEndDate = DateTime.Today;
+        [ObservableProperty] private bool _excludeWeekends = true;
         [ObservableProperty] private string _crewLabel = string.Empty;
         [ObservableProperty] private ObservableCollection<SelectableDailyEmployee> _availableEmployees = new();
         [ObservableProperty] private ObservableCollection<SiteDeploymentDto> _activeDeployments = new();
@@ -35,14 +38,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public DailyCrewBuilderViewModel(
             ICrewDeploymentService crewService,
             IProjectService projectService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            IEmployeeService employeeService)
         {
             _crewService = crewService;
             _projectService = projectService;
             _dialogService = dialogService;
+            _employeeService = employeeService;
             
             Title = "Daily Crew Builder";
             _crewLabel = $"Crew — {DeploymentDate:dd MMM yyyy}";
+            _assignmentEndDate = DeploymentDate;
 
             _ = LoadDataAsync();
         }
@@ -50,6 +56,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         partial void OnDeploymentDateChanged(DateTime value)
         {
             CrewLabel = $"Crew — {value:dd MMM yyyy}";
+            if (AssignmentEndDate < value)
+            {
+                AssignmentEndDate = value;
+            }
             _ = LoadDataAsync();
         }
 
@@ -71,12 +81,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsLoading = true;
                 ValidationMessage = string.Empty;
 
-                // Load active projects, today's clocked-in employees, and today's deployments in parallel
+                // Load active projects, all active employees, and today's deployments in parallel
                 var projectsTask = _projectService.GetProjectSummariesAsync(false);
-                var clockedInTask = _crewService.GetTodayClockedInAsync();
+                var employeesTask = _employeeService.GetEmployeesAsync();
                 var deploymentsTask = _crewService.GetDeploymentsAsync(null, DeploymentDate);
 
-                await Task.WhenAll(projectsTask, clockedInTask, deploymentsTask);
+                await Task.WhenAll(projectsTask, employeesTask, deploymentsTask);
 
                 // 1. Projects combobox source
                 Projects = new ObservableCollection<ProjectSummaryDto>(
@@ -96,38 +106,40 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 ActiveDeployments = new ObservableCollection<SiteDeploymentDto>(activeDeps);
 
                 // 3. Available employees list with assignment status mapping
-                var employees = clockedInTask.Result;
-                _allEmployees = employees.Select(emp =>
-                {
-                    var selectable = new SelectableDailyEmployee(emp);
-                    
-                    // Check if employee is in any active deployment today
-                    var matchingDeployment = activeDeps.FirstOrDefault(d => 
-                        d.Members.Any(m => m.EmployeeId == emp.Id));
+                var employees = employeesTask.Result;
+                _allEmployees = employees
+                    .Where(e => e.Status == EmployeeStatus.Active)
+                    .Select(emp =>
+                    {
+                        var selectable = new SelectableDailyEmployee(emp);
+                        
+                        // Check if employee is in any active deployment today
+                        var matchingDeployment = activeDeps.FirstOrDefault(d => 
+                            d.Members.Any(m => m.EmployeeId == emp.Id));
 
-                    if (matchingDeployment != null)
-                    {
-                        selectable.IsDeployed = true;
-                        selectable.DeployedProjectName = matchingDeployment.ProjectName;
-                        selectable.DeployedCrewLabel = matchingDeployment.Label;
-                    }
-                    else
-                    {
-                        selectable.IsDeployed = false;
-                        selectable.DeployedProjectName = string.Empty;
-                        selectable.DeployedCrewLabel = string.Empty;
-                    }
-
-                    selectable.PropertyChanged += (_, e) =>
-                    {
-                        if (e.PropertyName == nameof(SelectableDailyEmployee.IsSelected))
+                        if (matchingDeployment != null)
                         {
-                            OnPropertyChanged(nameof(SelectedCount));
+                            selectable.IsDeployed = true;
+                            selectable.DeployedProjectName = matchingDeployment.ProjectName;
+                            selectable.DeployedCrewLabel = matchingDeployment.Label;
                         }
-                    };
+                        else
+                        {
+                            selectable.IsDeployed = false;
+                            selectable.DeployedProjectName = string.Empty;
+                            selectable.DeployedCrewLabel = string.Empty;
+                        }
 
-                    return selectable;
-                }).ToList();
+                        selectable.PropertyChanged += (_, e) =>
+                        {
+                            if (e.PropertyName == nameof(SelectableDailyEmployee.IsSelected))
+                            {
+                                OnPropertyChanged(nameof(SelectedCount));
+                            }
+                        };
+
+                        return selectable;
+                    }).ToList();
 
                 ApplyFilter();
             }
@@ -149,9 +161,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 var q = SearchQuery.ToLower();
                 filtered = filtered.Where(e =>
-                    e.FullName.ToLower().Contains(q) ||
-                    e.Role.ToLower().Contains(q) ||
-                    e.AssignmentStatusText.ToLower().Contains(q));
+                    (e.FullName?.ToLower().Contains(q) ?? false) ||
+                    (e.Role?.ToLower().Contains(q) ?? false) ||
+                    (e.AssignmentStatusText?.ToLower().Contains(q) ?? false));
             }
             AvailableEmployees = new ObservableCollection<SelectableDailyEmployee>(filtered);
             OnPropertyChanged(nameof(SelectedCount));
@@ -201,23 +213,59 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 return;
             }
 
+            if (AssignmentEndDate < DeploymentDate)
+            {
+                ValidationMessage = "End date cannot be before start date.";
+                return;
+            }
+
             try
             {
                 IsBusy = true;
                 BusyText = "Deploying crew...";
 
-                var request = new CreateSiteDeploymentRequest
+                var datesToDeploy = new List<DateTime>();
+                for (var date = DeploymentDate.Date; date <= AssignmentEndDate.Date; date = date.AddDays(1))
                 {
-                    ProjectId = SelectedProject.Id,
-                    DeploymentDate = DeploymentDate,
-                    Label = CrewLabel,
-                    MemberEmployeeIds = selected.Select(e => e.Id).ToList()
-                };
+                    if (ExcludeWeekends && (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday))
+                    {
+                        continue;
+                    }
+                    datesToDeploy.Add(date);
+                }
 
-                var created = await _crewService.CreateDeploymentAsync(request);
-                if (created != null)
+                if (!datesToDeploy.Any())
                 {
-                    NotifySuccess("Crew Deployed", $"'{created.Label}' has been deployed to {SelectedProject.Name} ({selected.Count} members).");
+                    ValidationMessage = "No valid dates selected to deploy (check weekend exclusions).";
+                    return;
+                }
+
+                int successCount = 0;
+
+                foreach (var date in datesToDeploy)
+                {
+                    var label = datesToDeploy.Count > 1 
+                        ? $"{CrewLabel} ({date:dd MMM})"
+                        : CrewLabel;
+
+                    var request = new CreateSiteDeploymentRequest
+                    {
+                        ProjectId = SelectedProject.Id,
+                        DeploymentDate = date,
+                        Label = label,
+                        MemberEmployeeIds = selected.Select(e => e.Id).ToList()
+                    };
+
+                    var created = await _crewService.CreateDeploymentAsync(request);
+                    if (created != null)
+                    {
+                        successCount++;
+                    }
+                }
+
+                if (successCount > 0)
+                {
+                    NotifySuccess("Crew Deployed", $"Deployed crew to {SelectedProject.Name} for {successCount} day(s) ({selected.Count} members).");
                     ClearSelection();
                     await LoadDataAsync();
                 }

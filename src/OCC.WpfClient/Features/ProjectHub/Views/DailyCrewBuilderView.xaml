@@ -38,7 +38,7 @@
                 <StackPanel Grid.Row="0" Margin="0,0,0,16">
                     <TextBlock Text="DAILY OPERATIONS" Foreground="#FFB900" FontSize="10" FontWeight="Bold"/>
                     <TextBlock Text="Available Employees" Foreground="{StaticResource TextMain}" FontSize="22" FontWeight="SemiBold" Margin="0,2,0,0"/>
-                    <TextBlock Text="Workers clocked in today and their assignment status" Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0"/>
+                    <TextBlock Text="List of active employees and their assignment status" Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <!-- Search & Select All/Clear Buttons -->
@@ -72,7 +72,7 @@
                         </Grid.ColumnDefinitions>
                         
                         <TextBlock Grid.Column="0" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center">
-                            <Run Text="Clocked-in workers: "/>
+                            <Run Text="Active employees: "/>
                             <Run Text="{Binding AvailableEmployees.Count, Mode=OneWay, FallbackValue=0}" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
                         </TextBlock>
                         
@@ -166,7 +166,14 @@
 
                                             <!-- Name / Role -->
                                             <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding FullName}" Foreground="{StaticResource TextMain}" FontSize="14" FontWeight="Medium"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding FullName}" Foreground="{StaticResource TextMain}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <Border Margin="8,0,0,0" Padding="6,2" CornerRadius="4" Background="#12EF6C00" BorderBrush="#30EF6C00" BorderThickness="1"
+                                                            Visibility="{Binding IsDeployed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="{Binding DeployedProjectName, StringFormat='Already Assigned - {0}'}" 
+                                                                   Foreground="#EF6C00" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </StackPanel>
                                                 <TextBlock Text="{Binding Role}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,1,0,0"/>
                                             </StackPanel>
 
@@ -237,7 +244,8 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/> <!-- Project selector -->
                             <RowDefinition Height="Auto"/> <!-- Crew label -->
-                            <RowDefinition Height="Auto"/> <!-- Date -->
+                            <RowDefinition Height="Auto"/> <!-- Dates -->
+                            <RowDefinition Height="Auto"/> <!-- Options -->
                             <RowDefinition Height="Auto"/> <!-- Validation msg -->
                             <RowDefinition Height="Auto"/> <!-- Deploy button -->
                         </Grid.RowDefinitions>
@@ -261,20 +269,41 @@
                                      Height="38"/>
                         </StackPanel>
 
-                        <!-- Date -->
-                        <StackPanel Grid.Row="2" Margin="0,0,0,16">
-                            <TextBlock Text="DEPLOYMENT DATE" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                            <DatePicker SelectedDate="{Binding DeploymentDate, Mode=TwoWay}"
-                                        Style="{StaticResource ModernDatePicker}"
-                                        Height="38"/>
-                        </StackPanel>
+                        <!-- Dates (Start and End) -->
+                        <Grid Grid.Row="2" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Start Date -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DEPLOYMENT DATE" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <DatePicker SelectedDate="{Binding DeploymentDate, Mode=TwoWay}"
+                                            Style="{StaticResource ModernDatePicker}"
+                                            Height="38"/>
+                            </StackPanel>
+                            
+                            <!-- End Date -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="ASSIGN UNTIL (END DATE)" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <DatePicker SelectedDate="{Binding AssignmentEndDate, Mode=TwoWay}"
+                                            Style="{StaticResource ModernDatePicker}"
+                                            Height="38"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Options -->
+                        <CheckBox Grid.Row="3" Content="Exclude Weekends" IsChecked="{Binding ExcludeWeekends, Mode=TwoWay}"
+                                  Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,0,0,12" VerticalAlignment="Center"/>
 
                         <!-- Validation Message -->
-                        <TextBlock Grid.Row="3" Text="{Binding ValidationMessage}" Foreground="#EF4444" FontSize="12" Margin="0,0,0,12"
+                        <TextBlock Grid.Row="4" Text="{Binding ValidationMessage}" Foreground="#EF4444" FontSize="12" Margin="0,0,0,12"
                                    Visibility="{Binding ValidationMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
 
                         <!-- Deploy Button -->
-                        <Button Grid.Row="4" Style="{StaticResource PrimaryButton}" 
+                        <Button Grid.Row="5" Style="{StaticResource PrimaryButton}" 
                                 Command="{Binding DeployCrewCommand}" 
                                 Height="40" HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal">
