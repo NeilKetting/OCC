@@ -53,6 +53,9 @@ namespace OCC.Mobile.Features.Shell
         
         // Reference containing metadata for the pending mobile app package
         private UpdateCheckResult? _pendingUpdate;
+
+        // Guard to ensure update check only runs once per process lifetime
+        private static bool _hasCheckedForUpdates;
  
         // --- Dependency Injected Services ---
         private readonly INavigationService _navigationService;
@@ -106,6 +109,19 @@ namespace OCC.Mobile.Features.Shell
         private async Task CheckForUpdatesAsync(bool isManual = false)
         {
             if (_updateService == null || _appInstaller == null) return;
+
+            // On automatic startup check, skip if we've already checked this process lifetime.
+            // This prevents an infinite loop: install update → app restarts → detects same update again.
+            if (!isManual)
+            {
+                if (_hasCheckedForUpdates) return;
+                _hasCheckedForUpdates = true;
+            }
+            else
+            {
+                // Manual check: reset so user can force a fresh check
+                _hasCheckedForUpdates = false;
+            }
             
             // Give the network a few seconds to initialize
             await Task.Delay(3000);
