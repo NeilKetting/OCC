@@ -6,7 +6,7 @@
     <ApplicationId>OrangeCircleConstruction.Mobile.Fresh</ApplicationId>
     <ApplicationVersion>6</ApplicationVersion>
     <ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
-    <Version>1.0.3</Version>
+    <Version>1.0.7</Version>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
     <!-- Modern AOT and runtime settings -->
