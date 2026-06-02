@@ -7,7 +7,7 @@ namespace OCC.WpfClient.Services.Interfaces
 {
     public interface IProjectTaskService
     {
-        Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false, int take = 100);
+        Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false, int take = 1000);
         Task<ProjectTask?> GetTaskAsync(Guid id);
         Task<ProjectTask> CreateTaskAsync(ProjectTask task);
         Task UpdateTaskAsync(ProjectTask task);

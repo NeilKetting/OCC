@@ -126,6 +126,18 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,20,0">
+                        <Button Command="{Binding ExpandAllCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Expand All" VerticalAlignment="Center" Style="{StaticResource LabelText}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding CollapseAllCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Collapse All" VerticalAlignment="Center" Style="{StaticResource LabelText}"/>
+                            </StackPanel>
+                        </Button>
                         <Button Command="{Binding NewTaskCommand}" Style="{StaticResource IconButton}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>

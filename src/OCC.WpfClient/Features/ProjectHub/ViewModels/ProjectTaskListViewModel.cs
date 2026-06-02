@@ -409,6 +409,32 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [RelayCommand]
+        private void ExpandAll()
+        {
+            SetExpansionState(_rootTasks, true);
+            RefreshDisplayList();
+        }
+
+        [RelayCommand]
+        private void CollapseAll()
+        {
+            SetExpansionState(_rootTasks, false);
+            RefreshDisplayList();
+        }
+
+        private void SetExpansionState(IEnumerable<ProjectTask> tasks, bool isExpanded)
+        {
+            foreach (var task in tasks)
+            {
+                task.IsExpanded = isExpanded;
+                if (task.Children != null && task.Children.Any())
+                {
+                    SetExpansionState(task.Children, isExpanded);
+                }
+            }
+        }
+
+        [RelayCommand]
         private async Task NewTask()
         {
             var toastService = _serviceProvider.GetRequiredService<IToastService>();

@@ -46,7 +46,7 @@ namespace OCC.WpfClient.Services
         public ProjectTaskService(IHttpClientFactory httpClientFactory, IAuthService authService, ConnectionSettings connectionSettings, ILogger<ProjectTaskService> logger) 
             : base(httpClientFactory, authService, connectionSettings) { _logger = logger; }
 
-        public async Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false, int take = 100)
+        public async Task<IEnumerable<ProjectTask>> GetTasksAsync(Guid? projectId = null, bool assignedToMe = false, int take = 1000)
         {
             var client = HttpClientFactory.CreateClient();
             EnsureAuthorization(client);
