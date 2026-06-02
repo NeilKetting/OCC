@@ -14,6 +14,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task AddCommentAsync(Guid bugId, string comment, string? status);
         Task DeleteCommentAsync(Guid commentId);
         Task MarkAsSolutionAsync(Guid commentId);
-        Task DeleteBugAsync(Guid bugId);
+        Task DeleteBugAsync(Guid bugId, bool permanent = false);
     }
 }

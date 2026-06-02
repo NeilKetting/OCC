@@ -190,12 +190,12 @@ namespace OCC.WpfClient.Services
             }
         }
 
-        public async Task DeleteBugAsync(Guid bugId)
+        public async Task DeleteBugAsync(Guid bugId, bool permanent = false)
         {
             try
             {
                 EnsureAuthorization();
-                var url = GetFullUrl($"api/BugReports/{bugId}");
+                var url = GetFullUrl($"api/BugReports/{bugId}?permanent={permanent}");
                 var response = await _httpClient.DeleteAsync(url);
                 response.EnsureSuccessStatusCode();
             }

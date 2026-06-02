@@ -31,6 +31,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         private readonly IBugReportService _bugService;
         private readonly IAuthService _authService;
         private readonly IPermissionService _permissionService;
+        private readonly IDialogService _dialogService;
         private readonly ILogger<SupportViewModel> _logger;
         private List<BugReport> _allBugsCache = new();
         private bool _isSelectingBug;
@@ -52,7 +53,12 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         private bool _isDev;
 
         [ObservableProperty]
+        private bool _isAdmin;
+
+        [ObservableProperty]
         private bool _isReporter;
+
+        public bool CanDeleteSelectedBug => IsDev || IsAdmin || IsReporter;
 
         [ObservableProperty]
         private string _searchText = string.Empty;
@@ -83,26 +89,29 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             IBugReportService bugService, 
             IAuthService authService, 
             IPermissionService permissionService,
+            IDialogService dialogService,
             ILogger<SupportViewModel> logger)
         {
             _bugService = bugService;
             _authService = authService;
             _permissionService = permissionService;
+            _dialogService = dialogService;
             _logger = logger;
             
             Title = "Support Hub";
             
-            // Permissions: "Dev" check based on email
-            var email = _authService.CurrentUser?.Email?.ToLowerInvariant();
-            IsDev = email == "neil@mdk.co.za";
+            // Permissions
+            IsDev = _permissionService.IsDev;
+            IsAdmin = _authService.CurrentUser?.UserRole == UserRole.Admin;
+            IncludeArchived = IsDev;
 
             LoadBugsCommand.Execute(null);
         }
 
         partial void OnSearchTextChanged(string value) => ApplyFilters();
-        partial void OnStatusFilterChanged(string value) => ApplyFilters();
-        partial void OnSortOptionChanged(string value) => ApplyFilters();
-        partial void OnShowOnlyMyBugsChanged(bool value) => ApplyFilters();
+        partial void OnStatusFilterChanged(string value) => _ = LoadBugs();
+        partial void OnSortOptionChanged(string value) => _ = LoadBugs();
+        partial void OnShowOnlyMyBugsChanged(bool value) => _ = LoadBugs();
         partial void OnIncludeArchivedChanged(bool value) => _ = LoadBugs();
 
         private void ApplyFilters()
@@ -176,6 +185,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             if (_isSelectingBug) return;
 
             IsReporter = value?.ReporterId == _authService.CurrentUser?.Id;
+            OnPropertyChanged(nameof(CanDeleteSelectedBug));
 
             if (value != null)
             {
@@ -277,7 +287,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         {
             if (SelectedBug == null || !IsDev) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to In Progress.", "In Progress");
-            await RefreshSelectedBug();
+            await LoadBugs();
         }
 
         [RelayCommand]
@@ -285,7 +295,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         {
             if (SelectedBug == null || !IsDev) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to Planning stage.", "Planning");
-            await RefreshSelectedBug();
+            await LoadBugs();
         }
 
         [RelayCommand]
@@ -293,7 +303,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         {
             if (SelectedBug == null || !IsDev) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Reclassified as a Feature Update.", "Feature Update");
-            await RefreshSelectedBug();
+            await LoadBugs();
         }
 
         [RelayCommand]
@@ -301,7 +311,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         {
             if (SelectedBug == null || !IsDev) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Developer marked this issue as Fixed.", "Fixed");
-            await RefreshSelectedBug();
+            await LoadBugs();
         }
 
         [RelayCommand]
@@ -309,7 +319,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         {
             if (SelectedBug == null || !IsDev) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Developer requested more information.", "Waiting for Client");
-            await RefreshSelectedBug();
+            await LoadBugs();
         }
 
         [RelayCommand]
@@ -317,16 +327,26 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         {
             if (SelectedBug == null || !IsDev) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Developer closed the bug.", "Closed");
-            await RefreshSelectedBug();
+            await LoadBugs();
         }
 
         [RelayCommand]
         private async Task DeleteBugAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanDeleteSelectedBug) return;
             try
             {
-                await _bugService.DeleteBugAsync(SelectedBug.Id);
+                var title = "Delete Bug Report";
+                var message = IsDev || IsAdmin 
+                    ? "Are you sure you want to permanently delete this bug report from the database?"
+                    : "Are you sure you want to delete your bug report?";
+                
+                var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+                if (!confirmed) return;
+
+                var permanent = IsDev || IsAdmin;
+                await _bugService.DeleteBugAsync(SelectedBug.Id, permanent);
+                
                 SelectedBug = null;
                 await LoadBugs();
             }
@@ -342,7 +362,18 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             var fresh = await _bugService.GetBugReportAsync(SelectedBug.Id);
             if (fresh != null)
             {
+                var cacheIndex = _allBugsCache.FindIndex(b => b.Id == fresh.Id);
+                if (cacheIndex >= 0)
+                {
+                    _allBugsCache[cacheIndex] = fresh;
+                }
+                else
+                {
+                    _allBugsCache.Add(fresh);
+                }
+                
                 SelectedBug = fresh;
+                ApplyFilters();
             }
         }
 

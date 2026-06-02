@@ -41,14 +41,7 @@
                         <Border Padding="20,15" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
                             <StackPanel>
                                 <Grid Margin="0,0,0,15">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="Support Hub" FontSize="22" FontFamily="{StaticResource MichromaFont}" Foreground="White" />
-                                    <Button Grid.Column="1" HorizontalAlignment="Right" Command="{Binding LoadBugsCommand}" Style="{StaticResource RoundIconButtonStyle}" Width="32" Height="32" Padding="0">
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
-                                    </Button>
                                 </Grid>
 
                                 <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
@@ -293,14 +286,16 @@
                         </ScrollViewer>
 
                         <Border Grid.Row="2" Padding="30,15" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Background="#08FFFFFF"
-                                Visibility="{Binding IsDev, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                Visibility="{Binding CanDeleteSelectedBug, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Command="{Binding MoveToInProgressCommand}" Style="{StaticResource SecondaryButton}" Content="In Progress" Margin="0,0,10,0" Foreground="Orange" />
-                                <Button Command="{Binding MoveToPlanningCommand}" Style="{StaticResource SecondaryButton}" Content="Planning" Margin="0,0,10,0" Foreground="SlateGray" />
-                                <Button Command="{Binding MoveToFeatureUpdateCommand}" Style="{StaticResource SecondaryButton}" Content="Feature Update" Margin="0,0,10,0" Foreground="DeepSkyBlue" />
-                                <Button Command="{Binding RequestInfoCommand}" Style="{StaticResource SecondaryButton}" Content="Request Info" Margin="0,0,10,0" />
-                                <Button Command="{Binding MarkFixedCommand}" Style="{StaticResource SecondaryButton}" Content="Mark Fixed" Margin="0,0,10,0" Foreground="#00FF88" />
-                                <Button Command="{Binding CloseBugCommand}" Style="{StaticResource SecondaryButton}" Content="Close Bug" Margin="0,0,20,0" />
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding IsDev, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Button Command="{Binding MoveToInProgressCommand}" Style="{StaticResource SecondaryButton}" Content="In Progress" Margin="0,0,10,0" Foreground="Orange" />
+                                    <Button Command="{Binding MoveToPlanningCommand}" Style="{StaticResource SecondaryButton}" Content="Planning" Margin="0,0,10,0" Foreground="SlateGray" />
+                                    <Button Command="{Binding MoveToFeatureUpdateCommand}" Style="{StaticResource SecondaryButton}" Content="Feature Update" Margin="0,0,10,0" Foreground="DeepSkyBlue" />
+                                    <Button Command="{Binding RequestInfoCommand}" Style="{StaticResource SecondaryButton}" Content="Request Info" Margin="0,0,10,0" />
+                                    <Button Command="{Binding MarkFixedCommand}" Style="{StaticResource SecondaryButton}" Content="Mark Fixed" Margin="0,0,10,0" Foreground="#00FF88" />
+                                    <Button Command="{Binding CloseBugCommand}" Style="{StaticResource SecondaryButton}" Content="Close Bug" Margin="0,0,20,0" />
+                                </StackPanel>
                                 <Button Command="{Binding DeleteBugCommand}" Style="{StaticResource CancelButton}" Content="Delete Bug" />
                             </StackPanel>
                         </Border>

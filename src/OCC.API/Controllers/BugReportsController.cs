@@ -131,17 +131,46 @@ namespace OCC.API.Controllers
         // DELETE: api/BugReports/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> DeleteBugReport(Guid id)
+        public async Task<IActionResult> DeleteBugReport(Guid id, [FromQuery] bool permanent = false)
         {
-            if (!IsNeilDev())
+            var isDev = IsNeilDev();
+            var isAdmin = IsAdmin();
+
+            var query = _context.BugReports.AsQueryable();
+            if (permanent && (isDev || isAdmin))
             {
-                return StatusCode(StatusCodes.Status403Forbidden, "Only the Developer (Neil) can delete bug reports.");
+                query = query.IgnoreQueryFilters();
             }
 
-            var bugReport = await _context.BugReports.FindAsync(id);
+            var bugReport = await query
+                .Include(b => b.Comments)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (bugReport == null)
             {
                 return NotFound();
+            }
+
+            var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var isReporter = bugReport.ReporterId.HasValue && currentUserIdStr == bugReport.ReporterId.Value.ToString();
+
+            // Developer and Admin can delete any bug.
+            // Regular users can delete ONLY their own bug.
+            if (!isDev && !isAdmin && !isReporter)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete this bug report.");
+            }
+
+            // Only developer (Neil) or Admin can do a permanent delete.
+            var shouldPermanent = permanent && (isDev || isAdmin);
+
+            if (shouldPermanent)
+            {
+                _context.SupressSoftDelete = true;
+                if (bugReport.Comments != null && bugReport.Comments.Any())
+                {
+                    _context.BugComments.RemoveRange(bugReport.Comments);
+                }
             }
 
             _context.BugReports.Remove(bugReport);
@@ -318,6 +347,16 @@ namespace OCC.API.Controllers
         #endregion
 
         #region Helpers
+
+        private bool IsAdmin()
+        {
+            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.IsNullOrEmpty(roleClaim))
+            {
+                roleClaim = User.FindFirst("role")?.Value;
+            }
+            return roleClaim == "Admin" || roleClaim == "0";
+        }
 
         private bool IsNeilDev()
         {
