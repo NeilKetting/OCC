@@ -31,6 +31,9 @@ namespace OCC.Mobile
 
         public override void OnFrameworkInitializationCompleted()
         {
+            // Register global exception catching
+            OCC.Mobile.Infrastructure.CrashDetector.RegisterGlobalHandlers();
+
             try
             {
                 var serviceCollection = new ServiceCollection();
@@ -90,7 +93,8 @@ namespace OCC.Mobile
         private void ConfigureServices(IServiceCollection services)
         {
             // Configure Serilog for file logging
-            var logPath = Path.Combine(AppContext.BaseDirectory, "logs", "mobile-log-.txt");
+            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OCC.Mobile");
+            var logPath = Path.Combine(folder, "logs", "mobile-log-.txt");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .WriteTo.Console()

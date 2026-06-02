@@ -97,6 +97,13 @@ namespace OCC.Mobile.Features.Shell
 
             // Check for updates automatically in the background on startup
             CheckForUpdatesAsync().FireAndForget();
+
+            // Check and upload any pending crashes asynchronously after startup
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(5000); // Give the app a few seconds to settle
+                await OCC.Mobile.Infrastructure.CrashDetector.UploadPendingCrashesAsync(App.Services);
+            });
         }
 
         #endregion

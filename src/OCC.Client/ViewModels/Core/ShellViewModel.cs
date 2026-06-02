@@ -318,6 +318,13 @@ namespace OCC.Client.ViewModels.Core
 
             // Start DB Polling
             StartDbPolling();
+
+            // Check and upload any pending crash reports asynchronously
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(5000); // Settle time
+                await OCC.Client.Infrastructure.CrashDetector.UploadPendingCrashesAsync(_serviceProvider);
+            });
         }
 
         private async void StartDbPolling()

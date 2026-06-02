@@ -31,6 +31,7 @@ namespace OCC.Client.Converters
                     BugReportType.Bug => SolidColorBrush.Parse("#EF4444"),       // Red
                     BugReportType.Suggestion => SolidColorBrush.Parse("#06B6D4"), // Cyan/Teal
                     BugReportType.Question => SolidColorBrush.Parse("#8B5CF6"),   // Purple
+                    BugReportType.Crash => SolidColorBrush.Parse("#881337"),      // Crimson
                     _ => SolidColorBrush.Parse("#64748B")                         // Gray (Other)
                 };
             }

@@ -273,6 +273,30 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         }
 
         [RelayCommand]
+        private async Task MoveToInProgressAsync()
+        {
+            if (SelectedBug == null || !IsDev) return;
+            await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to In Progress.", "In Progress");
+            await RefreshSelectedBug();
+        }
+
+        [RelayCommand]
+        private async Task MoveToPlanningAsync()
+        {
+            if (SelectedBug == null || !IsDev) return;
+            await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to Planning stage.", "Planning");
+            await RefreshSelectedBug();
+        }
+
+        [RelayCommand]
+        private async Task MoveToFeatureUpdateAsync()
+        {
+            if (SelectedBug == null || !IsDev) return;
+            await _bugService.AddCommentAsync(SelectedBug.Id, "Reclassified as a Feature Update.", "Feature Update");
+            await RefreshSelectedBug();
+        }
+
+        [RelayCommand]
         private async Task MarkFixedAsync()
         {
             if (SelectedBug == null || !IsDev) return;

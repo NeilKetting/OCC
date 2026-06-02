@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Avalonia;
 using Serilog;
 
@@ -30,17 +30,24 @@ namespace OCC.Client.Desktop
             AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
             {
                 var ex = error.ExceptionObject as Exception;
-                Log.Fatal(ex, "AppDomain Unhandled Exception");
                 if (ex != null)
                 {
+                    OCC.Client.Infrastructure.CrashDetector.HandleCrash(ex, "AppDomain.UnhandledException");
                     ShowFatalError("An unhandled exception occurred.", ex);
                 }
-                Log.CloseAndFlush();
+                else
+                {
+                    Log.Fatal("AppDomain Unhandled Exception: Unknown Exception Object");
+                    Log.CloseAndFlush();
+                }
             };
 
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, error) =>
             {
-                Log.Error(error.Exception, "TaskScheduler Unobserved Task Exception");
+                if (error.Exception != null)
+                {
+                    OCC.Client.Infrastructure.CrashDetector.HandleCrash(error.Exception, "TaskScheduler.UnobservedTaskException");
+                }
                 error.SetObserved();
             };
 

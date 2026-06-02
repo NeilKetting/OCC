@@ -40,6 +40,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
                         BugReportType.Bug => new BrushConverter().ConvertFrom("#EF4444") as Brush ?? Brushes.Red,
                         BugReportType.Suggestion => new BrushConverter().ConvertFrom("#06B6D4") as Brush ?? Brushes.Cyan,
                         BugReportType.Question => new BrushConverter().ConvertFrom("#8B5CF6") as Brush ?? Brushes.Violet,
+                        BugReportType.Crash => new BrushConverter().ConvertFrom("#881337") as Brush ?? Brushes.Crimson,
                         _ => new BrushConverter().ConvertFrom("#64748B") as Brush ?? Brushes.SlateGray
                     };
                 }

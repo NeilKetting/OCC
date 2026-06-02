@@ -154,6 +154,15 @@ namespace OCC.Mobile.Android
     {
         static AndroidApp()
         {
+            // Register Android Mono-VM unhandled exception handler
+            global::Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) =>
+            {
+                if (e.Exception != null)
+                {
+                    OCC.Mobile.Infrastructure.CrashDetector.HandleCrash(e.Exception, "AndroidEnvironment.UnhandledExceptionRaiser");
+                }
+            };
+
             // Register Android-specific services the VERY moment the app process starts
             OCC.Mobile.App.RegisterPlatformServices = services =>
             {

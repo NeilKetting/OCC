@@ -27,7 +27,7 @@ namespace OCC.API.Controllers
 
         // GET: api/ProjectTasks
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectTask>>> GetProjectTasks(Guid? projectId = null, bool assignedToMe = false, int skip = 0, int take = 100)
+        public async Task<ActionResult<IEnumerable<ProjectTask>>> GetProjectTasks(Guid? projectId = null, bool assignedToMe = false, int skip = 0, int take = 1000)
         {
             try
             {

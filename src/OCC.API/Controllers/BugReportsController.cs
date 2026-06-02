@@ -117,6 +117,7 @@ namespace OCC.API.Controllers
                     BugReportType.Bug => "🚨 New BUG",
                     BugReportType.Suggestion => "💡 New SUGGESTION",
                     BugReportType.Question => "❓ New QUESTION",
+                    BugReportType.Crash => "💥 New CRASH",
                     _ => "📝 New FEEDBACK"
                 };
                 string message = $"{prefix} from {bugReport.ReporterName} on {bugReport.ViewName}";
@@ -239,6 +240,7 @@ namespace OCC.API.Controllers
                         BugReportType.Bug => "🐞",
                         BugReportType.Suggestion => "💡",
                         BugReportType.Question => "❓",
+                        BugReportType.Crash => "💥",
                         _ => "💬"
                     };
                     await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"{typeIcon} {message}");

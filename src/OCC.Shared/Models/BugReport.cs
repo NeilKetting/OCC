@@ -17,7 +17,8 @@ namespace OCC.Shared.Models
         Bug,
         Suggestion,
         Question,
-        Other
+        Other,
+        Crash
     }
 
     public class BugReport : BaseEntity

@@ -76,7 +76,8 @@
                         </StackPanel>
                         
                         <StackPanel Orientation="Horizontal" Margin="0,20,0,0" Visibility="{Binding HasScreenshot, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
-                            <TextBlock Text=" No screenshot captured" Style="{StaticResource SymbolIcon}" Foreground="#EA6A06" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EA6A06" FontSize="12" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="No screenshot captured" Foreground="#EA6A06" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
