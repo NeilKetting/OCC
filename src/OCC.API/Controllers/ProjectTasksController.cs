@@ -365,17 +365,18 @@ namespace OCC.API.Controllers
 
                 // Signal automated project status if progress starts
                 _context.Entry(existingTask).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
+
+                var updatedTaskIds = new List<Guid> { id };
 
                 // 2. Perform Rollup: Update parent task progress based on child changes
                 if (existingTask.ParentId.HasValue)
                 {
-                    await CalculateParentRollup(existingTask.ParentId.Value);
+                    await CalculateParentRollup(existingTask.ParentId.Value, updatedTaskIds);
                 }
 
                 if (oldParentId.HasValue && oldParentId.Value != existingTask.ParentId)
                 {
-                    await CalculateParentRollup(oldParentId.Value);
+                    await CalculateParentRollup(oldParentId.Value, updatedTaskIds);
                 }
 
                 if (existingTask.ProjectId.HasValue && existingTask.ProjectId.Value != Guid.Empty)
@@ -390,10 +391,13 @@ namespace OCC.API.Controllers
                 // Wrap SignalR in try-catch to avoid 500 if broadcast fails
                 try
                 {
-                    // Standardize on string for ID to ensure cross-platform SignalR compatibility
-                    var idStr = id.ToString();
-                    _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: ProjectTask Update {Id}", idStr);
-                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", idStr);
+                    // Notify clients for each updated task in the hierarchy
+                    foreach (var updatedId in updatedTaskIds)
+                    {
+                        var idStr = updatedId.ToString();
+                        _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: ProjectTask Update {Id}", idStr);
+                        await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", idStr);
+                    }
                     
                     // Also notify that the project itself has changed (e.g. for rollup values)
                     // Use existingTask.ProjectId as it is definitely populated from DB
@@ -526,7 +530,7 @@ namespace OCC.API.Controllers
             }
         }
 
-        private async Task CalculateParentRollup(Guid parentId)
+        private async Task CalculateParentRollup(Guid parentId, List<Guid>? updatedTaskIds = null)
         {
             try
             {
@@ -577,15 +581,31 @@ namespace OCC.API.Controllers
 
                     if (parentChanged)
                     {
-                        await _context.SaveChangesAsync();
-                        
-                        // Notify clients about parent update
-                        await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", parent.Id);
-
-                        // Recurse up the tree
-                        if (parent.ParentId.HasValue)
+                        if (updatedTaskIds != null)
                         {
-                            await CalculateParentRollup(parent.ParentId.Value);
+                            if (!updatedTaskIds.Contains(parent.Id))
+                            {
+                                updatedTaskIds.Add(parent.Id);
+                            }
+
+                            // Recurse up the tree
+                            if (parent.ParentId.HasValue)
+                            {
+                                await CalculateParentRollup(parent.ParentId.Value, updatedTaskIds);
+                            }
+                        }
+                        else
+                        {
+                            await _context.SaveChangesAsync();
+                            
+                            // Notify clients about parent update
+                            await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", parent.Id);
+
+                            // Recurse up the tree
+                            if (parent.ParentId.HasValue)
+                            {
+                                await CalculateParentRollup(parent.ParentId.Value);
+                            }
                         }
                     }
                 }
@@ -665,13 +685,24 @@ namespace OCC.API.Controllers
         {
             try
             {
-                var project = await _context.Projects
-                    .Include(p => p.Tasks)
-                    .FirstOrDefaultAsync(p => p.Id == projectId);
+                var taskData = await _context.ProjectTasks
+                    .Where(t => t.ProjectId == projectId && t.IsActive)
+                    .Select(t => new { t.PercentComplete, t.FinishDate })
+                    .ToListAsync();
 
-                if (project != null && project.Tasks.Any())
+                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+
+                if (project != null && taskData.Any())
                 {
-                    var averageProgress = project.Tasks.Average(t => (double)t.PercentComplete);
+                    // Stub Tasks collection so getters (like Status and Progress) compute correctly 
+                    // without needing to eager load all ProjectTask records.
+                    project.Tasks = taskData.Select(td => new ProjectTask
+                    {
+                        PercentComplete = td.PercentComplete,
+                        FinishDate = td.FinishDate
+                    }).ToList();
+
+                    var averageProgress = project.Progress;
                     var oldStatus = project.Status;
                     var oldEndDate = project.EndDate;
 

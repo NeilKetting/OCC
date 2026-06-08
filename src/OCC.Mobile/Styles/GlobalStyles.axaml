@@ -23,6 +23,8 @@
                     <SolidColorBrush x:Key="BrandSubTextBrush" Color="#A0FFFFFF"/>
                     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#1A1F2B"/>
                     <SolidColorBrush x:Key="InputBorderBrush" Color="#33475A6B"/>
+                    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#15FFFFFF"/>
+                    <SolidColorBrush x:Key="ButtonPressedBrush" Color="#25FFFFFF"/>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="BrandOrangeBrush" Color="#FF8F00"/>
@@ -34,6 +36,8 @@
                     <SolidColorBrush x:Key="BrandSubTextBrush" Color="#64748B"/>
                     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
                     <SolidColorBrush x:Key="InputBorderBrush" Color="#CBD5E1"/>
+                    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#0D000000"/>
+                    <SolidColorBrush x:Key="ButtonPressedBrush" Color="#1A000000"/>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -69,6 +73,40 @@
     </Style>
     <Style Selector="Button.primary:pressed">
         <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+
+    <!-- Navigation Buttons -->
+    <Style Selector="Button.Nav">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                <BrushTransition Property="Background" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.Nav:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+        <Setter Property="RenderTransform" Value="scale(1.02)"/>
+    </Style>
+    <Style Selector="Button.Nav:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+    <Style Selector="Button.Nav:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+    </Style>
+    <Style Selector="Button.Nav Path">
+        <Setter Property="Fill" Value="{DynamicResource BrandTextBrush}"/>
+    </Style>
+    <Style Selector="Button.Nav TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <!-- Global TextBox Styles -->

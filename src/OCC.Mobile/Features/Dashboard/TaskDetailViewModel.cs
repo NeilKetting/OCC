@@ -66,6 +66,8 @@ namespace OCC.Mobile.Features.Dashboard
             }
             else if (entityType == "ProjectTask" && id == Task?.Id)
             {
+                if (IsBusy) return; // Skip redundant background refresh while updating
+                
                 // Refresh comments and task data if this specific task was updated
                 LoadComments().FireAndForget();
                 
