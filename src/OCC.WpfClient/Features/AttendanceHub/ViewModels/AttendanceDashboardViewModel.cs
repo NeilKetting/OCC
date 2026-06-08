@@ -28,8 +28,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private double _attendanceRate;
         [ObservableProperty] private string _todayDate = DateTime.Today.ToString("dddd, dd MMMM yyyy");
         [ObservableProperty] private bool _showNotPresentOnly;
+        [ObservableProperty] private string _searchQuery = string.Empty;
+        [ObservableProperty] private int _selectedBranchIndex = 0;
+        [ObservableProperty] private string _selectedCardFilter = "All";
 
         partial void OnShowNotPresentOnlyChanged(bool value) => ApplyFilter();
+        partial void OnSearchQueryChanged(string value) => ApplyFilter();
+        partial void OnSelectedBranchIndexChanged(int value) => ApplyFilter();
+        partial void OnSelectedCardFilterChanged(string value) => ApplyFilter();
 
         public AttendanceDashboardViewModel(
             IAttendanceService attendanceService,
@@ -53,7 +59,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var employees = await _employeeService.GetEmployeesAsync();
                 var activeEmployees = employees.ToList();
 
-                var records = (await _attendanceService.GetTodaysAttendanceAsync()).ToList();
+                var today = DateTime.Today;
+                var records = (await _attendanceService.GetTodaysAttendanceAsync())
+                    .Where(r => r.Date.Date == today)
+                    .ToList();
 
                 var rows = new List<AttendanceStatusRow>();
                 foreach (var emp in activeEmployees)
@@ -104,9 +113,45 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private void ApplyFilter()
         {
-            var filtered = ShowNotPresentOnly
-                ? _allRows.Where(r => r.Status == AttendanceStatus.Absent || (r.IsClocked && r.IsAutoClockIn))
-                : _allRows.AsEnumerable();
+            var filtered = _allRows.AsEnumerable();
+
+            // Card filter
+            if (SelectedCardFilter == "Present")
+            {
+                filtered = filtered.Where(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late);
+            }
+            else if (SelectedCardFilter == "Absent")
+            {
+                filtered = filtered.Where(r => r.Status == AttendanceStatus.Absent);
+            }
+            else if (SelectedCardFilter == "Late")
+            {
+                filtered = filtered.Where(r => r.Status == AttendanceStatus.Late);
+            }
+
+            // Search query
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var q = SearchQuery.ToLower();
+                filtered = filtered.Where(r => 
+                    r.EmployeeName.ToLower().Contains(q) || 
+                    r.EmployeeNumber.ToLower().Contains(q) || 
+                    r.Role.ToLower().Contains(q));
+            }
+
+            // Branch filter
+            filtered = SelectedBranchIndex switch
+            {
+                1 => filtered.Where(r => r.Branch == "Johannesburg"),
+                2 => filtered.Where(r => r.Branch == "Cape Town"),
+                _ => filtered
+            };
+
+            // Not Present filter
+            if (ShowNotPresentOnly)
+            {
+                filtered = filtered.Where(r => r.Status == AttendanceStatus.Absent || (r.IsClocked && r.IsAutoClockIn));
+            }
 
             TodayRows = new ObservableCollection<AttendanceStatusRow>(
                 filtered.OrderBy(r => r.Status == AttendanceStatus.Absent ? 1 : 0)
@@ -115,6 +160,23 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         [RelayCommand]
         private void ToggleNotPresentFilter() => ShowNotPresentOnly = !ShowNotPresentOnly;
+
+        [RelayCommand]
+        private void FilterByCard(string filterType)
+        {
+            if (filterType == "All")
+            {
+                SelectedCardFilter = "All";
+            }
+            else if (SelectedCardFilter == filterType)
+            {
+                SelectedCardFilter = "All";
+            }
+            else
+            {
+                SelectedCardFilter = filterType;
+            }
+        }
 
         [RelayCommand]
         private async Task MarkAbsentEmployee(AttendanceStatusRow? row)
@@ -225,8 +287,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _ => "#607D8B"
         };
 
-        public string CheckInDisplay => CheckInTime.HasValue ? CheckInTime.Value.ToString("HH:mm") : "--:--";
-        public string CheckOutDisplay => CheckOutTime.HasValue ? CheckOutTime.Value.ToString("HH:mm") : IsClocked ? "Active" : "--:--";
+        public string CheckInDisplay => (Status == AttendanceStatus.Absent || !CheckInTime.HasValue) ? "--:--" : CheckInTime.Value.ToString("HH:mm");
+        public string CheckOutDisplay => (Status == AttendanceStatus.Absent || !CheckOutTime.HasValue) ? (IsClocked ? "Active" : "--:--") : CheckOutTime.Value.ToString("HH:mm");
         public string HoursDisplay => HoursWorked > 0 ? $"{HoursWorked:F1}h" : IsClocked ? "Active" : "-";
     }
 }

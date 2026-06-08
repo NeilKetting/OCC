@@ -123,7 +123,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private void RefreshMemberList(Team team)
         {
-            var memberIds = team.Members.Select(m => m.EmployeeId).ToHashSet();
+            SelectedTeam = team;
+            var memberIds = (team.Members ?? new List<TeamMember>()).Select(m => m.EmployeeId).ToHashSet();
             TeamMembers = new ObservableCollection<TeamMemberRow>(
                 _allEmployees
                     .Where(e => memberIds.Contains(e.Id))
@@ -131,6 +132,22 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
             AvailableEmployees = new ObservableCollection<EmployeeSummaryDto>(
                 _allEmployees.Where(e => !memberIds.Contains(e.Id)).OrderBy(e => e.FirstName));
+
+            // Sync the updated team object back into our list collections to update the Datagrid in real-time
+            var indexAll = _allTeams.FindIndex(t => t.Id == team.Id);
+            if (indexAll >= 0)
+            {
+                _allTeams[indexAll] = team;
+            }
+
+            for (int i = 0; i < Items.Count; i++)
+            {
+                if (Items[i].Id == team.Id)
+                {
+                    Items[i] = team;
+                    break;
+                }
+            }
         }
 
         [RelayCommand]
@@ -163,6 +180,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     NotifySuccess("Saved", $"Team '{EditName}' updated.");
                 }
                 await LoadDataAsync();
+                if (SelectedTeam != null)
+                {
+                    RefreshMemberList(SelectedTeam);
+                }
             }
             catch (Exception ex)
             {
@@ -176,12 +197,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private async Task AddMember()
         {
             if (SelectedTeam == null || SelectedAvailableEmployee == null) return;
+            var employeeName = SelectedAvailableEmployee.FirstName;
             try
             {
                 await _attendanceService.AddTeamMemberAsync(SelectedTeam.Id, SelectedAvailableEmployee.Id);
                 var fresh = await _attendanceService.GetTeamAsync(SelectedTeam.Id);
                 if (fresh != null) RefreshMemberList(fresh);
-                NotifySuccess("Member Added", $"{SelectedAvailableEmployee.FirstName} added to team.");
+                NotifySuccess("Member Added", $"{employeeName} added to team.");
                 SelectedAvailableEmployee = null;
             }
             catch (Exception ex)

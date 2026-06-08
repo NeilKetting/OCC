@@ -26,11 +26,22 @@ namespace OCC.API.Controllers
 
         // GET: api/AttendanceRecords
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AttendanceRecord>>> GetAttendanceRecords()
+        public async Task<ActionResult<IEnumerable<AttendanceRecord>>> GetAttendanceRecords([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
         {
             try
             {
-                return await _context.AttendanceRecords.AsNoTracking().ToListAsync();
+                var query = _context.AttendanceRecords.AsNoTracking();
+                if (from.HasValue)
+                {
+                    var fromDate = from.Value.Date;
+                    query = query.Where(r => r.Date >= fromDate);
+                }
+                if (to.HasValue)
+                {
+                    var toDate = to.Value.Date;
+                    query = query.Where(r => r.Date <= toDate);
+                }
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {

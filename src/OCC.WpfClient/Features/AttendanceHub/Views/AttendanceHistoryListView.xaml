@@ -122,12 +122,12 @@
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Edit Record"
                                         Command="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="{StaticResource AccentBlue}" Margin="0,0,10,0">
+                                        CommandParameter="{Binding}" Foreground="{StaticResource AccentBlue}" Margin="5">
                                     <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                 </Button>
                                 <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Delete Record"
                                         Command="{Binding DataContext.DeleteRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}">
+                                        CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}" Margin="5">
                                     <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                 </Button>
                             </StackPanel>

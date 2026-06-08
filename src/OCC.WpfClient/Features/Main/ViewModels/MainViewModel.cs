@@ -471,13 +471,34 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         {
             var currentVM = (ViewModelBase?)ActiveHub;
             
-            // Recursively find the topmost active overlay (e.g. detailed dialogs)
-            while (currentVM is IOverlayProvider overlayProvider && overlayProvider.ActiveOverlay != null)
+            // Recursively find the topmost active overlay or nested view (e.g. CurrentView)
+            while (currentVM != null)
             {
-                currentVM = overlayProvider.ActiveOverlay;
+                if (currentVM is IOverlayProvider overlayProvider && overlayProvider.ActiveOverlay != null)
+                {
+                    currentVM = overlayProvider.ActiveOverlay;
+                    continue;
+                }
+
+                var currentViewProp = currentVM.GetType().GetProperty("CurrentView");
+                if (currentViewProp != null)
+                {
+                    var nestedVM = currentViewProp.GetValue(currentVM) as ViewModelBase;
+                    if (nestedVM != null)
+                    {
+                        currentVM = nestedVM;
+                        continue;
+                    }
+                }
+
+                break;
             }
 
             var viewName = currentVM?.GetType().Name.Replace("ViewModel", "View") ?? "Main Shell";
+            if (viewName == "TeamManagementView")
+            {
+                viewName = "TeamManagementListView";
+            }
             var viewModelType = Navigation.GetViewModelTypeForRoute("Support.ReportBug");
             if (viewModelType == null) return;
 

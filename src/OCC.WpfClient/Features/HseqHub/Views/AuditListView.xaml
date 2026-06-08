@@ -104,16 +104,16 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource GhostButton}" Command="{Binding DataContext.OpenDeviationsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" ToolTip="Deviation Sheet">
+                                        <Button Style="{StaticResource GhostButton}" Margin="5" Command="{Binding DataContext.OpenDeviationsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" ToolTip="Deviation Sheet">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource PrimaryTeal}" FontSize="12" Margin="0,0,5,0"/>
                                                 <TextBlock Text="DEVIATIONS" FontSize="10" Foreground="{StaticResource PrimaryTeal}"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource ToolbarIconButton}" Command="{Binding DataContext.EditAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                        <Button Style="{StaticResource ToolbarIconButton}" Margin="5" Command="{Binding DataContext.EditAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14"/>
                                         </Button>
-                                        <Button Style="{StaticResource ToolbarIconButton}" Command="{Binding DataContext.DeleteAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                        <Button Style="{StaticResource ToolbarIconButton}" Margin="5" Command="{Binding DataContext.DeleteAuditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
                                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="14"/>
                                         </Button>
                                     </StackPanel>

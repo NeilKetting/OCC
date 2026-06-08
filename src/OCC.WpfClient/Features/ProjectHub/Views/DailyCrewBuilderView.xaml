@@ -41,10 +41,12 @@
                     <TextBlock Text="List of active employees and their assignment status" Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0"/>
                 </StackPanel>
 
-                <!-- Search & Select All/Clear Buttons -->
+                <!-- Search, Team & Select All/Clear Buttons -->
                 <Grid Grid.Row="1" Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="180"/>
                         <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="8"/>
@@ -52,14 +54,21 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBox Grid.Column="0" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernInput}" 
-                             ap:WatermarkProperties.Watermark="&#xE721;  Search workers by name, role or status..."
-                             Height="38"/>
+                              Style="{StaticResource ModernInput}" 
+                              ap:WatermarkProperties.Watermark="&#xE721;  Search workers by name, role or status..."
+                              Height="38"/>
 
-                    <Button Grid.Column="2" Content="Select All" Style="{StaticResource SecondaryButton}"
+                    <ComboBox Grid.Column="2" ItemsSource="{Binding Teams}"
+                              SelectedItem="{Binding SelectedTeam}"
+                              Style="{StaticResource ModernComboBox}"
+                              DisplayMemberPath="Name"
+                              Height="38"
+                              ap:WatermarkProperties.Watermark="Select Team..."/>
+
+                    <Button Grid.Column="4" Content="Select All" Style="{StaticResource SecondaryButton}"
                             Command="{Binding SelectAllCommand}" Padding="12,0" FontSize="12" Height="38"/>
 
-                    <Button Grid.Column="4" Content="Clear" Style="{StaticResource SecondaryButton}"
+                    <Button Grid.Column="6" Content="Clear" Style="{StaticResource SecondaryButton}"
                             Command="{Binding ClearSelectionCommand}" Padding="12,0" FontSize="12" Height="38"/>
                 </Grid>
 
@@ -169,7 +178,13 @@
                                                                    Foreground="#EF6C00" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                     </Border>
                                                 </StackPanel>
-                                                <TextBlock Text="{Binding Role}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,1,0,0"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                                                    <TextBlock Text="{Binding Role}" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                                                    <StackPanel Orientation="Horizontal" Visibility="{Binding HasTeams, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="  •  " Foreground="{StaticResource TextSub}" FontSize="11" Opacity="0.5"/>
+                                                        <TextBlock Text="{Binding TeamsText}" Foreground="#FFB900" FontSize="11"/>
+                                                    </StackPanel>
+                                                </StackPanel>
                                             </StackPanel>
 
                                             <!-- Status Tag (Unassigned vs Deployed) -->
@@ -203,7 +218,10 @@
                                             </Border>
 
                                             <!-- Checkbox for Selection -->
-                                            <CheckBox Grid.Column="6" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                            <CheckBox Grid.Column="6" 
+                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                                      IsEnabled="{Binding IsDeployed, Converter={StaticResource InverseBooleanConverter}}"
+                                                      VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -298,13 +316,9 @@
                                    Visibility="{Binding ValidationMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
 
                         <!-- Deploy Button -->
-                        <Button Grid.Row="5" Style="{StaticResource PrimaryButton}" 
+                        <Button Grid.Row="5" Style="{StaticResource CreateButton}" Content="Deploy Crew" BorderBrush="{StaticResource OrangeBrush}"
                                 Command="{Binding DeployCrewCommand}" 
-                                Height="40" HorizontalAlignment="Stretch">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE724;" FontFamily="Segoe Fluent Icons" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding SelectedCount, StringFormat='Deploy {0} Selected to Site'}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                            </StackPanel>
+                                Height="40" HorizontalAlignment="Stretch">                           
                         </Button>
                     </Grid>
                 </Grid>

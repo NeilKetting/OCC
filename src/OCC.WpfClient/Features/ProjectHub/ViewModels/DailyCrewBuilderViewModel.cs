@@ -18,8 +18,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly IProjectService _projectService;
         private readonly IDialogService _dialogService;
         private readonly IEmployeeService _employeeService;
+        private readonly IAttendanceService _attendanceService;
 
         [ObservableProperty] private ObservableCollection<ProjectSummaryDto> _projects = new();
+        [ObservableProperty] private ObservableCollection<Team> _teams = new();
+        [ObservableProperty] private Team? _selectedTeam;
         [ObservableProperty] private ProjectSummaryDto? _selectedProject;
         [ObservableProperty] private DateTime _deploymentDate = DateTime.Today;
         [ObservableProperty] private DateTime _assignmentEndDate = DateTime.Today;
@@ -39,12 +42,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ICrewDeploymentService crewService,
             IProjectService projectService,
             IDialogService dialogService,
-            IEmployeeService employeeService)
+            IEmployeeService employeeService,
+            IAttendanceService attendanceService)
         {
             _crewService = crewService;
             _projectService = projectService;
             _dialogService = dialogService;
             _employeeService = employeeService;
+            _attendanceService = attendanceService;
             
             Title = "Daily Crew Builder";
             _crewLabel = $"Crew — {DeploymentDate:dd MMM yyyy}";
@@ -73,6 +78,26 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         partial void OnSearchQueryChanged(string value) => ApplyFilter();
 
+        partial void OnSelectedTeamChanged(Team? value)
+        {
+            if (value == null) return;
+
+            var memberEmployeeIds = value.Members.Select(m => m.EmployeeId).ToHashSet();
+            foreach (var emp in _allEmployees)
+            {
+                if (memberEmployeeIds.Contains(emp.Id) && !emp.IsDeployed)
+                {
+                    emp.IsSelected = true;
+                }
+            }
+            OnPropertyChanged(nameof(SelectedCount));
+
+            App.Current?.Dispatcher?.BeginInvoke(() =>
+            {
+                SelectedTeam = null;
+            });
+        }
+
         [RelayCommand]
         public async Task LoadDataAsync()
         {
@@ -81,12 +106,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsLoading = true;
                 ValidationMessage = string.Empty;
 
-                // Load active projects, all active employees, and today's deployments in parallel
+                // Load active projects, all active employees, today's deployments, and teams in parallel
                 var projectsTask = _projectService.GetProjectSummariesAsync(false);
                 var employeesTask = _employeeService.GetEmployeesAsync();
                 var deploymentsTask = _crewService.GetDeploymentsAsync(null, DeploymentDate);
+                var teamsTask = _attendanceService.GetTeamsAsync();
 
-                await Task.WhenAll(projectsTask, employeesTask, deploymentsTask);
+                await Task.WhenAll(projectsTask, employeesTask, deploymentsTask, teamsTask);
 
                 // 1. Projects combobox source
                 Projects = new ObservableCollection<ProjectSummaryDto>(
@@ -96,6 +122,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 {
                     SelectedProject = Projects.First();
                 }
+
+                // Load teams
+                Teams = new ObservableCollection<Team>(teamsTask.Result.OrderBy(t => t.Name));
 
                 // 2. Active deployments list
                 var activeDeps = deploymentsTask.Result
@@ -107,11 +136,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 // 3. Available employees list with assignment status mapping
                 var employees = employeesTask.Result;
+                var teamsList = teamsTask.Result.ToList();
                 _allEmployees = employees
                     .Where(e => e.Status == EmployeeStatus.Active)
                     .Select(emp =>
                     {
                         var selectable = new SelectableDailyEmployee(emp);
+                        
+                        // Map teams
+                        var empTeams = teamsList
+                            .Where(t => t.Members.Any(m => m.EmployeeId == emp.Id))
+                            .Select(t => t.Name)
+                            .ToList();
+                        selectable.TeamsText = empTeams.Any() ? string.Join(", ", empTeams) : string.Empty;
                         
                         // Check if employee is in any active deployment today
                         var matchingDeployment = activeDeps.FirstOrDefault(d => 
@@ -174,7 +211,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             foreach (var e in AvailableEmployees)
             {
-                e.IsSelected = true;
+                if (!e.IsDeployed)
+                {
+                    e.IsSelected = true;
+                }
             }
             OnPropertyChanged(nameof(SelectedCount));
         }
@@ -344,6 +384,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(AssignmentStatusText))]
         private string _deployedCrewLabel = string.Empty;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasTeams))]
+        private string _teamsText = string.Empty;
+
+        public bool HasTeams => !string.IsNullOrEmpty(TeamsText);
 
         public string AssignmentStatusText => IsDeployed
             ? $"Deployed to {DeployedProjectName} ({DeployedCrewLabel})"

@@ -165,28 +165,28 @@
                                         <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Approve Leave"
                                                 Command="{Binding DataContext.ApproveLeaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Foreground="#4CAF50" Margin="0,0,4,0">
+                                                Foreground="#4CAF50" Margin="5">
                                             <TextBlock Text="&#xE930;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                         </Button>
                                         <!-- Reject -->
                                         <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Reject Leave"
                                                 Command="{Binding DataContext.RejectLeaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Foreground="{StaticResource ErrorRed}" Margin="0,0,4,0">
+                                                Foreground="{StaticResource ErrorRed}" Margin="5">
                                             <TextBlock Text="&#xE8BB;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                         </Button>
                                         <!-- Print PDF -->
                                         <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Print Leave Form"
                                                 Command="{Binding DataContext.PrintLeaveFormCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Foreground="{StaticResource AccentBlue}" Margin="0,0,4,0">
+                                                Foreground="{StaticResource AccentBlue}" Margin="5">
                                             <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                         </Button>
                                         <!-- Delete -->
                                         <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Delete"
                                                 Command="{Binding DataContext.DeleteLeaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Foreground="{StaticResource ErrorRed}">
+                                                Foreground="{StaticResource ErrorRed}" Margin="5">
                                             <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                         </Button>
                                     </StackPanel>
