@@ -120,7 +120,8 @@
                               Style="{StaticResource ModernDataGrid}" 
                               ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
-                              ScrollViewer.CanContentScroll="False"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.ScrollUnit="Pixel"
                               Visibility="{Binding Items.Count, Converter={StaticResource VisibilityConverter}}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=\{0:dd MMM yyyy\}}" Width="Auto" Foreground="{StaticResource TextSub}"/>

@@ -19,6 +19,9 @@
     <conv:UserColorConverter x:Key="UserColorConverter" />
     <conv:CollectionToBooleanConverter x:Key="CollectionToBooleanConverter" />
     <conv:BrightnessToOverlayBrushConverter x:Key="BrightnessToOverlayBrushConverter" />
+    <conv:LeaveTypeColorConverter x:Key="LeaveTypeColorConverter" />
+    <conv:LeaveStatusColorConverter x:Key="LeaveStatusColorConverter" />
+    <conv:OrderStatusColorConverter x:Key="OrderStatusColorConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
 </ResourceDictionary>

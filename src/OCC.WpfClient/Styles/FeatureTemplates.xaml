@@ -278,6 +278,18 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
         <attndViews:TeamManagementListView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type attndVm:LeaveManagementViewModel}">
+        <attndViews:LeaveManagementView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type attndVm:WageRunViewModel}">
+        <attndViews:WageRunView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type attndVm:LoansManagementViewModel}">
+        <attndViews:LoansManagementView />
+    </DataTemplate>
+
     <!-- Splash -->
     <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
         <splashViews:SplashView />

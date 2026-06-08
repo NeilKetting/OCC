@@ -27,6 +27,17 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a printable portrait A4 leave application form with OCC branding and employee/manager signature blocks.
         /// </summary>
         Task<string> GenerateLeaveFormPdfAsync(OCC.Shared.Models.LeaveRequest request);
+
+        /// <summary>
+        /// Generates a landscape A4 wage run sheet identical to the OCC.Client PDF, 
+        /// including all 24 columns (BAS, name, rate, hours, deductions, totals, days).
+        /// </summary>
+        Task<string> GenerateWageRunPdfAsync(WageRun wageRun);
+
+        /// <summary>
+        /// Generates an A4 employee loan agreement with repayment schedule and signature blocks.
+        /// </summary>
+        Task<string> GenerateLoanSchedulePdfAsync(EmployeeLoan loan, Employee employee);
     }
 
     public class ReportColumnDefinition

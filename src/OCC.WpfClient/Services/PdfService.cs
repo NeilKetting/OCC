@@ -1418,5 +1418,456 @@ namespace OCC.WpfClient.Services
                 });
             });
         }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  WAGE RUN PDF — ported from OCC.Client PdfService_WageRun.cs
+        // ═══════════════════════════════════════════════════════════════════
+
+        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun)
+        {
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(10);
+                        page.Size(PageSizes.A4.Landscape());
+                        page.DefaultTextStyle(x => x.FontSize(6.5f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
+
+                        page.Header().Element(c => ComposeWageHeader(c, wageRun));
+                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun));
+                        page.Footer().PaddingTop(5).Element(c => ComposeWageRunFooter(c));
+                    });
+                });
+
+                string docsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OCC", "WageRuns");
+                if (!Directory.Exists(docsPath)) Directory.CreateDirectory(docsPath);
+
+                string filename = $"WageRun_{wageRun.Branch}_{wageRun.EndDate:yyyyMMdd}_{DateTime.Now:HHmmss}.pdf";
+                string fullPath = Path.Combine(docsPath, filename);
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        private void ComposeWageHeader(IContainer container, WageRun wageRun)
+        {
+            container.Column(col =>
+            {
+                col.Item().Row(row =>
+                {
+                    row.RelativeItem().Text("ORANGE CIRCLE CONSTRUCTION Ltd").FontSize(10).ExtraBold();
+                    row.RelativeItem().AlignCenter().Text("STAFF WAGES (OCC)").FontSize(10).SemiBold();
+                    row.RelativeItem().AlignRight().Text(t =>
+                    {
+                        t.Span("Date: ").SemiBold();
+                        t.Span(wageRun.EndDate.ToString("dd/MM/yyyy")).Underline();
+                    });
+                });
+            });
+        }
+
+        private void ComposeWageContent(IContainer container, WageRun wageRun)
+        {
+            container.Column(col =>
+            {
+                var allLines = wageRun.Lines.OrderBy(l => l.EmployeeName).ToList();
+
+                if (allLines.Any())
+                {
+                    col.Item().PaddingTop(5).Text("OCC STAFF WAGES").FontSize(8).ExtraBold();
+                    col.Item().Element(c => ComposeWageTable(c, allLines));
+                }
+
+                // Summary tables at the bottom
+                col.Item().PaddingTop(20).Row(row =>
+                {
+                    row.ConstantItem(150).Element(c => ComposeLoanSummary(c));
+                    row.RelativeItem();
+                    row.ConstantItem(300).Element(c => ComposeWageTotalsTable(c, wageRun));
+                });
+            });
+        }
+
+        private void ComposeWageTable(IContainer container, List<WageRunLine> lines)
+        {
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(12);   // #
+                    columns.ConstantColumn(22);   // BAS
+                    columns.RelativeColumn(2.2f); // NAME
+                    columns.ConstantColumn(28);   // RATE P/HR
+                    columns.ConstantColumn(20);   // HRS
+                    columns.ConstantColumn(28);   // STD O/T RATE
+                    columns.ConstantColumn(28);   // SAT O/T RATE
+                    columns.ConstantColumn(28);   // SUN P/H RATE
+                    columns.ConstantColumn(20);   // STD O/T HRS
+                    columns.ConstantColumn(20);   // SAT O/T HRS
+                    columns.ConstantColumn(20);   // SUN O/T HRS
+                    columns.ConstantColumn(28);   // LOANS
+                    columns.ConstantColumn(28);   // WASHING
+                    columns.ConstantColumn(28);   // GAS
+                    columns.ConstantColumn(28);   // OTHER
+                    columns.ConstantColumn(35);   // TOTAL NETT
+                    columns.ConstantColumn(35);   // BANK
+                    columns.RelativeColumn(1.8f); // COMMENTS
+                    columns.ConstantColumn(35);   // TOTAL REM
+                    columns.ConstantColumn(30);   // RATE P/DAY
+                    columns.ConstantColumn(20);   // W1
+                    columns.ConstantColumn(20);   // W2
+                    columns.ConstantColumn(20);   // TOT D
+                    columns.ConstantColumn(22);   // H/D
+                });
+
+                table.Header(header =>
+                {
+                    header.Cell().Element(WageHeaderStyle).Text("#");
+                    header.Cell().Element(WageHeaderStyle).Text("BAS");
+                    header.Cell().Element(WageHeaderStyle).Text("NAME");
+                    header.Cell().Element(WageHeaderStyle).Text("RATE\nP/HR");
+                    header.Cell().Element(WageHeaderStyle).Text("HRS");
+                    header.Cell().Element(WageHeaderStyle).Text("STD O/T\nRATE");
+                    header.Cell().Element(WageHeaderStyle).Text("SAT O/T\nRATE");
+                    header.Cell().Element(WageHeaderStyle).Text("SUN P/H\nRATE");
+                    header.Cell().Element(WageHeaderStyle).Text("STD\nO/T");
+                    header.Cell().Element(WageHeaderStyle).Text("SAT\nO/T");
+                    header.Cell().Element(WageHeaderStyle).Text("SUN\nO/T");
+                    header.Cell().Element(WageHeaderStyle).Text("LOANS");
+                    header.Cell().Element(WageHeaderStyle).Text("WASH-\nING");
+                    header.Cell().Element(WageHeaderStyle).Text("GAS");
+                    header.Cell().Element(WageHeaderStyle).Text("OTHER");
+                    header.Cell().Element(WageHeaderStyle).Text("TOTAL\nNETT");
+                    header.Cell().Element(WageHeaderStyle).Text("BANK");
+                    header.Cell().Element(WageHeaderStyle).Text("COMMENTS");
+                    header.Cell().Element(WageHeaderStyle).Text("TOTAL\nREM");
+                    header.Cell().Element(WageHeaderStyle).Text("RATE\nP/DAY");
+                    header.Cell().Element(WageHeaderStyle).Text("W1");
+                    header.Cell().Element(WageHeaderStyle).Text("W2");
+                    header.Cell().Element(WageHeaderStyle).Text("TOT\nD");
+                    header.Cell().Element(WageHeaderStyle).Text("H/D");
+
+                    static IContainer WageHeaderStyle(IContainer c) =>
+                        c.Border(0.5f).Background(Colors.Grey.Lighten4).Padding(1)
+                         .AlignCenter().AlignMiddle()
+                         .DefaultTextStyle(x => x.Bold().FontSize(5.5f));
+                });
+
+                int index = 1;
+                foreach (var line in lines)
+                {
+                    table.Cell().Element(WageCellStyle).Text(index++.ToString());
+                    table.Cell().Element(WageCellStyle).Text(line.EmployeeNumber ?? "");
+                    table.Cell().Element(WageCellStyle).Text(line.EmployeeName ?? "");
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2"));
+
+                    // Standard Hours = Normal + Projected + Variance
+                    decimal stdHours = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours);
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(stdHours.ToString("F2"));
+
+                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
+                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
+                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 2.0m).ToString("F2"));
+
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime15Hours.ToString("F2"));
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00"); // SAT O/T (Sat = OT15, not separate)
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime20Hours.ToString("F2"));
+
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionLoan.ToString("F2"));
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionWashing.ToString("F2"));
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionGas.ToString("F2"));
+
+                    // OTHER = PPE + Other
+                    decimal otherTotal = line.DeductionOther + line.DeductionPPE;
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(otherTotal.ToString("F2"));
+
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.NetPay.ToString("F2")).SemiBold();
+                    table.Cell().Element(WageCellStyle).Text(line.BankName ?? "");
+
+                    var comments = line.VarianceNotes ?? "";
+                    if (line.IncentiveSupervisor > 0) comments = "SUPERVISOR FEE " + comments;
+                    table.Cell().Element(WageCellStyle).Text(comments.Trim());
+
+                    // Total Rem = NetPay + IncentiveSupervisor
+                    decimal totalRem = line.NetPay + line.IncentiveSupervisor;
+                    table.Cell().Element(WageCellStyle).AlignRight().Text(totalRem.ToString("F2"));
+
+                    // Rate per day = HourlyRate × 8.75
+                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 8.75m).ToString("F2"));
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek1.ToString("0"));
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek2.ToString("0"));
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.TotalDaysWorked.ToString("0"));
+
+                    double totalHrs = line.NormalHours + line.Overtime15Hours + line.Overtime20Hours + line.ProjectedHours;
+                    double hpd = line.TotalDaysWorked > 0 ? totalHrs / line.TotalDaysWorked : 0;
+                    table.Cell().Element(WageCellStyle).AlignCenter().Text(hpd.ToString("F1"));
+
+                    static IContainer WageCellStyle(IContainer c) =>
+                        c.Border(0.5f).Padding(1).AlignMiddle();
+                }
+
+                // Footer totals row
+                table.Footer(footer =>
+                {
+                    footer.Cell().ColumnSpan(15).Element(c => c.AlignRight().PaddingRight(5).Text("TOTAL:").Bold());
+                    footer.Cell().Element(c => c.Border(0.5f).Padding(1).AlignRight()
+                        .Text(lines.Sum(x => x.NetPay).ToString("F2")).Bold());
+                    footer.Cell().ColumnSpan(8).Element(c => c.Border(0.5f));
+                });
+            });
+        }
+
+        private void ComposeLoanSummary(IContainer container)
+        {
+            container.Column(col =>
+            {
+                col.Item().PaddingBottom(2).Text("LOANS DESCRIPTION").FontSize(7).Bold();
+                col.Item().Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn();
+                        columns.ConstantColumn(40);
+                    });
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        table.Cell().Border(0.5f).Height(10);
+                        table.Cell().Border(0.5f).Height(10);
+                    }
+                });
+            });
+        }
+
+        private void ComposeWageTotalsTable(IContainer container, WageRun wageRun)
+        {
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn();
+                    columns.ConstantColumn(50);
+                    columns.ConstantColumn(50);
+                    columns.ConstantColumn(50);
+                    columns.ConstantColumn(50);
+                    columns.ConstantColumn(60);
+                });
+
+                table.Header(header =>
+                {
+                    header.Cell().Element(c => c.Border(0.5f));
+                    header.Cell().Element(WageTotStyle).Text("LOANS");
+                    header.Cell().Element(WageTotStyle).Text("WASHING");
+                    header.Cell().Element(WageTotStyle).Text("GAS");
+                    header.Cell().Element(WageTotStyle).Text("LIVING OUT");
+                    header.Cell().Element(WageTotStyle).Text("TOTAL");
+
+                    static IContainer WageTotStyle(IContainer c) =>
+                        c.Border(0.5f).AlignCenter().DefaultTextStyle(x => x.Bold());
+                });
+
+                var permLines   = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").ToList();
+                var casualLines = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").ToList();
+
+                AddWageTotalRow(table, "Permanent Staff", permLines);
+                AddWageTotalRow(table, "Casual Staff",    casualLines);
+
+                // Grand Total
+                table.Cell().Element(WageTotLineStyle).Text("Total").Bold();
+                table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionLoan).ToString("F2")).Bold();
+                table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionWashing).ToString("F2")).Bold();
+                table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionGas).ToString("F2")).Bold();
+                table.Cell().Element(WageTotLineStyle).AlignRight().Text("0.00").Bold();
+                table.Cell().Element(WageTotLineStyle).Background(Colors.Grey.Lighten3).AlignRight()
+                    .Text(wageRun.Lines.Sum(x => x.NetPay).ToString("F2")).Bold();
+
+                static void AddWageTotalRow(TableDescriptor t, string label, List<WageRunLine> ls)
+                {
+                    t.Cell().Element(WageTotLineStyle).Text(label);
+                    t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionLoan).ToString("F2"));
+                    t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionWashing).ToString("F2"));
+                    t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionGas).ToString("F2"));
+                    t.Cell().Element(WageTotLineStyle).AlignRight().Text("0.00");
+                    t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.NetPay).ToString("F2"));
+                }
+
+                static IContainer WageTotLineStyle(IContainer c) =>
+                    c.Border(0.5f).PaddingHorizontal(2).AlignMiddle();
+            });
+        }
+
+        private void ComposeWageRunFooter(IContainer container)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem().Text(x =>
+                {
+                    x.Span("Page ");
+                    x.CurrentPageNumber();
+                    x.Span(" of ");
+                    x.TotalPages();
+                });
+                row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - Orange Circle Construction");
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  LOAN SCHEDULE PDF — ported from OCC.Client PdfService_Loan.cs
+        // ═══════════════════════════════════════════════════════════════════
+
+        public async Task<string> GenerateLoanSchedulePdfAsync(EmployeeLoan loan, Employee employee)
+        {
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+                        page.Size(PageSizes.A4);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeLoanHeader(c, employee, loan));
+                        page.Content().PaddingVertical(20).Element(c => ComposeLoanContent(c, employee, loan));
+                        page.Footer().Element(c => ComposeLoanFooter(c));
+                    });
+                });
+
+                string tempPath = Path.GetTempPath();
+                string filename = $"Loan_{employee.LastName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                string fullPath = Path.Combine(tempPath, filename);
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        private void ComposeLoanHeader(IContainer container, Employee employee, EmployeeLoan loan)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem(3).Column(col =>
+                {
+                    col.Item().Text("Orange Circle Construction").FontSize(22).ExtraBold().FontColor(ColorPrimary);
+                    col.Item().Text("Employee Loan Agreement").FontSize(12).FontColor(Colors.Grey.Medium);
+                });
+                row.RelativeItem(2).AlignRight().Column(col =>
+                {
+                    col.Item().Text($"Date: {loan.StartDate:dd MMM yyyy}").FontSize(14).SemiBold().FontColor(ColorSecondary);
+                    col.Item().Text($"Ref: {employee.EmployeeNumber ?? "N/A"}").FontSize(9).FontColor(Colors.Grey.Medium);
+                });
+            });
+        }
+
+        private void ComposeLoanContent(IContainer container, Employee employee, EmployeeLoan loan)
+        {
+            container.Column(col =>
+            {
+                // Employee info block
+                col.Item().Background(Colors.Grey.Lighten5).Padding(15).Row(row =>
+                {
+                    row.RelativeItem().Column(c =>
+                    {
+                        c.Item().Text(employee.DisplayName).FontSize(16).Bold().FontColor(ColorSecondary);
+                        c.Item().Text(employee.IdNumber ?? "").FontSize(10).FontColor(Colors.Grey.Darken1);
+                    });
+                    row.RelativeItem().AlignRight().Column(c =>
+                    {
+                        c.Item().Text(employee.Branch ?? "No Branch").FontSize(12).SemiBold().FontColor(Colors.Grey.Darken2);
+                    });
+                });
+
+                // Loan details grid
+                col.Item().PaddingTop(20).Element(c => ComposeLoanDetails(c, loan));
+
+                // Terms
+                col.Item().PaddingTop(30).Text("Terms and Conditions").FontSize(12).Bold().Underline();
+                col.Item().PaddingTop(10).Text("1. The employee acknowledges the debt and agrees to repay the loan in the installments specified above.");
+                col.Item().Text("2. Installments will be deducted directly from the employee's salary/wages.");
+                col.Item().Text("3. Interest is calculated as specified. Early repayment is permitted without penalty.");
+                col.Item().Text("4. If employment is terminated, the outstanding balance becomes immediately due and payable.");
+
+                // Signatures
+                col.Item().PaddingTop(50).Row(row =>
+                {
+                    row.RelativeItem().Column(c =>
+                    {
+                        c.Item().LineHorizontal(1).LineColor(Colors.Grey.Medium);
+                        c.Item().PaddingTop(5).Text("Employee Signature").FontSize(10);
+                    });
+                    row.ConstantItem(50);
+                    row.RelativeItem().Column(c =>
+                    {
+                        c.Item().LineHorizontal(1).LineColor(Colors.Grey.Medium);
+                        c.Item().PaddingTop(5).Text("Employer Signature").FontSize(10);
+                    });
+                });
+            });
+        }
+
+        private void ComposeLoanDetails(IContainer container, EmployeeLoan loan)
+        {
+            container.Background(Colors.Grey.Lighten5).Border(1).BorderColor(Colors.Grey.Lighten3).Padding(15).Column(col =>
+            {
+                col.Item().PaddingBottom(10).Text("Loan Details").FontSize(12).SemiBold();
+
+                col.Item().Row(row =>
+                {
+                    row.RelativeItem().Text("Principal Amount:").SemiBold();
+                    row.RelativeItem().AlignRight().Text($"{loan.PrincipalAmount:C}");
+                });
+                col.Item().PaddingTop(5).Row(row =>
+                {
+                    row.RelativeItem().Text("Interest Rate:").SemiBold();
+                    row.RelativeItem().AlignRight().Text($"{loan.InterestRate}%");
+                });
+                col.Item().PaddingTop(5).Row(row =>
+                {
+                    row.RelativeItem().Text("Installment Amount:").SemiBold();
+                    row.RelativeItem().AlignRight().Text($"{loan.MonthlyInstallment:C}");
+                });
+
+                col.Item().PaddingVertical(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+
+                decimal totalRepayable = CalculateLoanTotalRepayable(loan.PrincipalAmount, loan.MonthlyInstallment, loan.InterestRate);
+                col.Item().Row(row =>
+                {
+                    row.RelativeItem().Text("ESTIMATED TOTAL REPAYABLE:").Bold();
+                    row.RelativeItem().AlignRight().Text($"{totalRepayable:C}").Bold();
+                });
+            });
+        }
+
+        private void ComposeLoanFooter(IContainer container)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem().Text(x =>
+                {
+                    x.Span("Page ");
+                    x.CurrentPageNumber();
+                    x.Span(" of ");
+                    x.TotalPages();
+                });
+                row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - Orange Circle Construction");
+            });
+        }
+
+        /// <summary>
+        /// Amortized total repayable: n = -log(1 - r*P/I) / log(1+r);  Total = n*I
+        /// </summary>
+        private decimal CalculateLoanTotalRepayable(decimal principal, decimal installment, decimal annualRate)
+        {
+            if (installment <= 0 || principal <= 0) return 0;
+            if (annualRate <= 0) return principal;
+
+            double r = (double)annualRate / 100.0 / 12.0;
+            double p = (double)principal;
+            double i = (double)installment;
+            if (i <= p * r) return 0;
+
+            double n = -Math.Log(1 - (r * p) / i) / Math.Log(1 + r);
+            return (decimal)(n * i);
+        }
     }
 }

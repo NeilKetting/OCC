@@ -77,6 +77,32 @@
                         </StackPanel>
                     </RadioButton>
 
+                    <!-- Wages -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                 GroupName="AttendanceTabs"
+                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Wages', Mode=TwoWay}"
+                                 Command="{Binding SetActiveTabCommand}" CommandParameter="Wages">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE7C0;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="Wages" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <!-- Loans -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                 GroupName="AttendanceTabs"
+                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Loans', Mode=TwoWay}"
+                                 Command="{Binding SetActiveTabCommand}" CommandParameter="Loans">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE1D0;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="Loans" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
                 </StackPanel>
             </ScrollViewer>
 

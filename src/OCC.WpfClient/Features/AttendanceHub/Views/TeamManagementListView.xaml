@@ -224,6 +224,10 @@
                       SelectionMode="Single"
                       RowBackground="Transparent"
                       AlternatingRowBackground="#06FFFFFF"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.ScrollUnit="Pixel"
                       Style="{StaticResource ModernDataGrid}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="TEAM NAME" Binding="{Binding Name}" Width="Auto"/>

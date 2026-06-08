@@ -120,7 +120,7 @@
 
             <!-- List View -->
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="20,0,20,20" CornerRadius="0">
-                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" Style="{StaticResource ModernDataGrid}">
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="SNAG TITLE" Binding="{Binding Title}" Width="*" FontWeight="SemiBold"/>
                         <DataGridTemplateColumn Header="PARTNER" Width="180" Visibility="{Binding Data.IsPartnerVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">

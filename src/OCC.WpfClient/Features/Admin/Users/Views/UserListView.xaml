@@ -134,7 +134,7 @@
 
             <!-- User Grid -->
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" CornerRadius="0">
-                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" Style="{StaticResource ModernDataGrid}">
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NAME" Binding="{Binding FullName}" Width="Auto" FontWeight="SemiBold" />
                         <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}" />

@@ -5,67 +5,302 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views"
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:converters="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=vm:ProcurementViewModel}"
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <Border Background="{StaticResource CardBackground}" Padding="10">
-            <StackPanel>
-                <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderText}"/>
-                <TextBlock Text="This is the new Procurement Hub. Here you will manage Orders, Inventory, and Suppliers." 
-                           Style="{StaticResource LabelText}" TextWrapping="Wrap"/>
-                
-                <Grid Margin="0,40,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Placeholder Cards -->
-                    <Border Grid.Column="0" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,10,0">
-                        <StackPanel>
-                            <Grid>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18" Margin="0,0,8,10"/>
-                                    <TextBlock Text="ORDERS" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <Button HorizontalAlignment="Right" Content="+ New PO" Style="{StaticResource CreateButton}"
-                                        Command="{Binding NavigateToPurchaseOrderCommand}"/>
-                            </Grid>
-                            <TextBlock Text="12 Active" Foreground="White" FontSize="20"/>
-                        </StackPanel>
-                    </Border>
+             d:DesignHeight="768" d:DesignWidth="1024">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:OrderStatusColorConverter x:Key="OrderStatusColorConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
 
-                    <Border Grid.Column="1" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="10" Margin="10,0,10,0">
-                        <StackPanel>
-                            <Grid>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18" Margin="0,0,8,10"/>
-                                    <TextBlock Text="INVENTORY" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <Button HorizontalAlignment="Right" Content="+ Receive Stock" Style="{StaticResource CreateButton}"
-                                        
-                                        Command="{Binding ReceiveStockCommand}"/>
-                            </Grid>
-                            <TextBlock Text="5 Low Stock" Foreground="White" FontSize="20"/>
-                        </StackPanel>
-                    </Border>
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Header bar -->
+            <RowDefinition Height="Auto"/>  <!-- Stats cards -->
+            <RowDefinition Height="Auto"/>  <!-- Filter Toolbar -->
+            <RowDefinition Height="*"/>     <!-- Recent Orders grid -->
+        </Grid.RowDefinitions>
 
-                    <Border Grid.Column="2" Background="#1500FF88" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="8" Padding="20" Margin="10,0,0,0">
-                        <StackPanel>
+        <!-- ══════════════════ HEADER ══════════════════ -->
+        <Border Grid.Row="0" Padding="20,12" Background="#06FFFFFF" 
+                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="PROCUREMENT DASHBOARD" Style="{StaticResource HeaderText}"/>
+                    <TextBlock Text="Manage purchase orders, inventory, and supplier activities" Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButton}"
+                            Command="{Binding LoadDashboardDataCommand}"
+                            ToolTip="Refresh" Margin="8,0,0,0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18" Margin="0,0,8,10"/>
-                            <TextBlock Text="SUPPLIERS" Foreground="#00FF88" FontWeight="Bold" Margin="0,0,0,10" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="REFRESH" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource AccentBlue}"/>
                         </StackPanel>
-                            <TextBlock Text="48 Active" Foreground="White" FontSize="20"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-            </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ══════════════════ STATS CARDS ══════════════════ -->
+        <UniformGrid Grid.Row="1" Rows="1" Margin="16,14,16,0">
+            <!-- Active Orders -->
+            <Border Margin="0,0,8,0" Padding="16,14" Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#15FFFFFF"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedCardFilter}" Value="Active">
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                                <Setter Property="BorderThickness" Value="2"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding FilterByCardCommand}" CommandParameter="Active"/>
+                </Border.InputBindings>
+                <StackPanel>
+                    <TextBlock Text="ACTIVE ORDERS" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding ActiveOrdersCount}" Foreground="#2196F3" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="Ordered or Partial Delivery" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Draft Orders -->
+            <Border Margin="4,0,4,0" Padding="16,14" Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#15FFFFFF"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedCardFilter}" Value="Draft">
+                                <Setter Property="BorderBrush" Value="#9E9E9E"/>
+                                <Setter Property="BorderThickness" Value="2"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding FilterByCardCommand}" CommandParameter="Draft"/>
+                </Border.InputBindings>
+                <StackPanel>
+                    <TextBlock Text="DRAFT ORDERS" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding DraftOrdersCount}" Foreground="#9E9E9E" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="Work in progress / pending" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Completed Orders -->
+            <Border Margin="4,0,4,0" Padding="16,14" Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#15FFFFFF"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedCardFilter}" Value="Completed">
+                                <Setter Property="BorderBrush" Value="#4CAF50"/>
+                                <Setter Property="BorderThickness" Value="2"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding FilterByCardCommand}" CommandParameter="Completed"/>
+                </Border.InputBindings>
+                <StackPanel>
+                    <TextBlock Text="COMPLETED ORDERS" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding CompletedOrdersCount}" Foreground="#4CAF50" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="Delivered and finalised" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Total Orders -->
+            <Border Margin="8,0,0,0" Padding="16,14" Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource GlassCard}">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#15FFFFFF"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedCardFilter}" Value="All">
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                <Setter Property="BorderThickness" Value="2"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding FilterByCardCommand}" CommandParameter="All"/>
+                </Border.InputBindings>
+                <StackPanel>
+                    <TextBlock Text="TOTAL ORDERS" Foreground="{StaticResource TextSub}" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding AllOrdersCount}" Foreground="White" FontSize="32" FontWeight="Black" Margin="0,4,0,2"/>
+                    <TextBlock Text="Total purchase history" Foreground="{StaticResource TextSub}" FontSize="11"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- ══════════════════ FILTER TOOLBAR ══════════════════ -->
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,12,16,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="160" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Search -->
+                <TextBlock Grid.Column="0" Text="&#xE721;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                          Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
+                          ap:WatermarkProperties.Watermark="Search orders..."/>
+
+                <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+
+                <!-- Branch Filter -->
+                <TextBlock Grid.Column="3" Text="BRANCH" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,10,0" Opacity="0.8"/>
+                <ComboBox Grid.Column="4" SelectedIndex="{Binding SelectedBranchIndex}" Style="{StaticResource ModernComboBox}" Height="30" VerticalAlignment="Center">
+                    <ComboBoxItem Content="All Branches" />
+                    <ComboBoxItem Content="Johannesburg" />
+                    <ComboBoxItem Content="Cape Town" />
+                </ComboBox>
+
+                <!-- New PO Button -->
+                <Button Grid.Column="6" Command="{Binding NavigateToPurchaseOrderCommand}"
+                        Style="{StaticResource RoundIconButtonStyle}" Height="32" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal" Margin="10,0">
+                        <TextBlock Text="&#xE7BF;" Style="{StaticResource SymbolIcon}" FontSize="14" Margin="0,0,6,0"
+                                   Foreground="{StaticResource AccentBlue}"/>
+                        <TextBlock Text="NEW ORDER" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{StaticResource AccentBlue}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Receive Stock Button -->
+                <Button Grid.Column="7" Command="{Binding ReceiveStockCommand}"
+                        Style="{StaticResource RoundIconButtonStyle}" Height="32" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="10,0">
+                        <TextBlock Text="&#xE74C;" Style="{StaticResource SymbolIcon}" FontSize="14" Margin="0,0,6,0"
+                                   Foreground="{StaticResource OrangeBrush}"/>
+                        <TextBlock Text="RECEIVE STOCK" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{StaticResource OrangeBrush}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ══════════════════ RECENT ORDERS GRID ══════════════════ -->
+        <Border Grid.Row="3" Margin="16,12,16,16" Style="{StaticResource GlassCard}" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="16,10" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+                    <TextBlock Text="RECENT ORDERS" Foreground="{StaticResource AccentBlue}" 
+                               FontSize="11" FontWeight="Bold"/>
+                </Border>
+
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding DisplayOrders}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          SelectionMode="Single"
+                          RowBackground="Transparent"
+                          AlternatingRowBackground="#06FFFFFF"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.ScrollUnit="Pixel"
+                          Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ORDER #" Binding="{Binding OrderNumber}" Width="Auto"/>
+                        <DataGridTextColumn Header="DATE" Binding="{Binding OrderDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="Auto"/>
+                        <DataGridTextColumn Header="DESTINATION" Binding="{Binding DestinationDisplay}" Width="Auto"/>
+                        <DataGridTextColumn Header="SUPPLIER" Binding="{Binding SupplierName}" Width="*"/>
+                        <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="*"/>
+                        <DataGridTextColumn Header="TOTAL" Binding="{Binding TotalAmount, StringFormat=\{0:C\}}" Width="Auto"/>
+
+                        <!-- Status badge -->
+                        <DataGridTemplateColumn Header="STATUS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" HorizontalAlignment="Center"
+                                            Background="{Binding Status, Converter={StaticResource OrderStatusColorConverter}}" Opacity="0.9"
+                                            Padding="10,3">
+                                        <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="White" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Actions -->
+                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <!-- View/Edit Order -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                ToolTip="View/Edit Order"
+                                                Command="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Foreground="{StaticResource AccentBlue}" Margin="5">
+                                            <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
+                                        <!-- Receive Stock -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                ToolTip="Receive Stock"
+                                                Command="{Binding DataContext.ReceiveOrderStockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Foreground="{StaticResource SuccessGreen}" Margin="5">
+                                            <TextBlock Text="&#xE8F4;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
+
+                <!-- Busy overlay -->
+                <Border Grid.Row="0" Grid.RowSpan="2" Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding BusyText}" Foreground="White" FontSize="14" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- Modal Dialog Overlay -->
-        <ContentControl Content="{Binding OverlayViewModel}" Panel.ZIndex="1000"/>
+        <ContentControl Content="{Binding OverlayViewModel}" Panel.ZIndex="1000" Grid.Row="0" Grid.RowSpan="4"/>
     </Grid>
 </UserControl>

@@ -1,0 +1,406 @@
+<UserControl x:Class="OCC.WpfClient.Features.AttendanceHub.Views.WageRunView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1200"
+             d:DataContext="{d:DesignInstance vm:WageRunViewModel}">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Toolbar -->
+            <RowDefinition Height="Auto"/>  <!-- Config bar -->
+            <RowDefinition Height="*"/>     <!-- Content tabs (grid / history) -->
+            <RowDefinition Height="Auto"/>  <!-- Footer grand total -->
+        </Grid.RowDefinitions>
+
+        <!-- ══════════════════ TOOLBAR ══════════════════ -->
+        <Border Grid.Row="0" Padding="16,10" Background="#06FFFFFF"
+                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="WAGE RUN" Style="{StaticResource HeaderText}"/>
+                    <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
+                        <Run Text="{Binding StartDate, StringFormat='dd MMM yyyy'}"/>
+                        <Run Text=" — "/>
+                        <Run Text="{Binding EndDate, StringFormat='dd MMM yyyy'}"/>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+                    <!-- Refresh / Load history -->
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh history">
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
+                    </Button>
+                    <!-- Print PDF -->
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding PrintPdfCommand}" ToolTip="Print Wage Run PDF"
+                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource OrangeBrush}"/>
+                    </Button>
+                    <!-- Finalize -->
+                    <Button Command="{Binding FinalizeRunCommand}" Margin="8,0,0,0"
+                            Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource PrimaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE930;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
+                            <TextBlock Text="FINALISE RUN"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ══════════════════ CONFIG BAR ══════════════════ -->
+        <Border Grid.Row="1" Padding="16,10" Background="#04FFFFFF"
+                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+            <WrapPanel Orientation="Horizontal">
+
+                <!-- Start Date -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" 
+                                Style="{StaticResource ModernDatePicker}" Width="140"/>
+                </StackPanel>
+
+                <!-- End Date (auto-filled) -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="END DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
+                                Style="{StaticResource ModernDatePicker}" Width="140"/>
+                </StackPanel>
+
+                <!-- Pay Type -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="PAY TYPE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}"
+                              Style="{StaticResource ModernComboBox}" Width="140"/>
+                </StackPanel>
+
+                <!-- Branch -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="BRANCH" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}"
+                              Style="{StaticResource ModernComboBox}" Width="140"/>
+                </StackPanel>
+
+                <!-- Gas Charge -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="GAS (TOTAL R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding TotalGasCharge, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                             Style="{StaticResource ModernInput}" Width="100" TextAlignment="Right"/>
+                </StackPanel>
+
+                <!-- Washing Fee -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="WASHING (R/PERSON)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding CompanyHousingWashingFee, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                             Style="{StaticResource ModernInput}" Width="100" TextAlignment="Right"/>
+                </StackPanel>
+
+                <!-- Supervisor Fee -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="SUPERVISOR FEE (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding DefaultSupervisorFee, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                             Style="{StaticResource ModernInput}" Width="100" TextAlignment="Right"/>
+                </StackPanel>
+
+                <!-- Notes -->
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernInput}" Width="200"/>
+                </StackPanel>
+
+                <!-- Generate Button -->
+                <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,0">
+                    <Button Command="{Binding GenerateDraftCommand}" Style="{StaticResource PrimaryButton}" Height="34">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8FD;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
+                            <TextBlock Text="GENERATE DRAFT"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </WrapPanel>
+        </Border>
+
+        <!-- ══════════════════ MAIN CONTENT AREA ══════════════════ -->
+        <Grid Grid.Row="2">
+            <!-- If no lines generated yet, show history -->
+            <Grid Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                <!-- Wage Run Spreadsheet DataGrid -->
+                <DataGrid ItemsSource="{Binding Lines}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          Style="{StaticResource ModernDataGrid}"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.IsDeferredScrollingEnabled="False"
+                          FontSize="11">
+
+                    <DataGrid.Columns>
+                        <!-- # -->
+                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="30" IsReadOnly="True"/>
+                        <!-- BAS -->
+                        <DataGridTextColumn Header="BAS" Binding="{Binding EmployeeNumber}" Width="50" IsReadOnly="True"/>
+                        <!-- NAME -->
+                        <DataGridTextColumn Header="NAME" Binding="{Binding EmployeeName}" Width="160" IsReadOnly="True"/>
+                        <!-- RATE P/HR -->
+                        <DataGridTextColumn Header="RATE/HR" Binding="{Binding RatePHrDisplay, StringFormat='F2'}" Width="65" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- HRS (Normal + Projected + Variance) — editable -->
+                        <DataGridTemplateColumn Header="HRS" Width="60">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding StdHoursDisplay, StringFormat='F2'}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding NormalHours, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- STD O/T RATE -->
+                        <DataGridTextColumn Header="STD OT RATE" Binding="{Binding StdOtRate, StringFormat='F2'}" Width="70" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- SAT O/T RATE -->
+                        <DataGridTextColumn Header="SAT OT RATE" Binding="{Binding SatOtRate, StringFormat='F2'}" Width="70" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- SUN RATE -->
+                        <DataGridTextColumn Header="SUN/HOL RATE" Binding="{Binding SunPHolRate, StringFormat='F2'}" Width="70" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- STD O/T HRS — editable -->
+                        <DataGridTemplateColumn Header="STD OT" Width="55">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Overtime15Hours, StringFormat='F2'}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Overtime15Hours, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- SUN O/T HRS — editable -->
+                        <DataGridTemplateColumn Header="SUN OT" Width="55">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Overtime20Hours, StringFormat='F2'}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Overtime20Hours, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- LOAN — editable -->
+                        <DataGridTemplateColumn Header="LOAN" Width="65">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DeductionLoanDisplay}" HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding DeductionLoan, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- WASHING — editable -->
+                        <DataGridTemplateColumn Header="WASHING" Width="65">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DeductionWashingDisplay}" HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding DeductionWashing, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- GAS — editable -->
+                        <DataGridTemplateColumn Header="GAS" Width="65">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DeductionGasDisplay}" HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding DeductionGas, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- OTHER — editable -->
+                        <DataGridTemplateColumn Header="OTHER" Width="65">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OtherDisplay}" HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding DeductionOther, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- SUPERVISOR FEE — editable -->
+                        <DataGridTemplateColumn Header="SUP FEE" Width="65">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding IncentiveSupervisor, StringFormat='F2'}" HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding IncentiveSupervisor, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- TOTAL NETT — read-only, highlighted -->
+                        <DataGridTextColumn Header="TOTAL NETT" Binding="{Binding NetPay, StringFormat='R #,##0.00'}" Width="90" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="{StaticResource OrangeBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- TOTAL REM -->
+                        <DataGridTextColumn Header="TOTAL REM" Binding="{Binding TotalRem, StringFormat='R #,##0.00'}" Width="90" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- RATE P/DAY -->
+                        <DataGridTextColumn Header="R/DAY" Binding="{Binding RatePDayDisplay, StringFormat='F2'}" Width="65" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- W1, W2, TOT D -->
+                        <DataGridTextColumn Header="W1" Binding="{Binding DaysWeek1Display}" Width="35" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="W2" Binding="{Binding DaysWeek2Display}" Width="35" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="TOT D" Binding="{Binding TotalDaysDisplay}" Width="45" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- VARIANCE NOTES -->
+                        <DataGridTextColumn Header="NOTES" Binding="{Binding VarianceNotes}" MinWidth="80" Width="*" IsReadOnly="True"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <!-- Past Runs (when no draft generated) -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="16,8" Background="#04FFFFFF">
+                    <TextBlock Text="PAST RUNS" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                </Border>
+
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding PastRuns}"
+                          SelectedItem="{Binding SelectedPastRun}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          Style="{StaticResource ModernDataGrid}"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Branch" Binding="{Binding Branch}" Width="120"/>
+                        <DataGridTextColumn Header="Pay Type" Binding="{Binding PayType}" Width="120"/>
+                        <DataGridTextColumn Header="Period Start" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="120"/>
+                        <DataGridTextColumn Header="Period End" Binding="{Binding EndDate, StringFormat='dd MMM yyyy'}" Width="120"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                        <DataGridTextColumn Header="Lines" Binding="{Binding Lines.Count}" Width="60">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Actions" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource ToolbarIconButton}"
+                                            Command="{Binding DataContext.DeletePastRunCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Delete Run">
+                                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolButtonIcon}" Foreground="#EF4444"/>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+
+        <!-- ══════════════════ GRAND TOTAL FOOTER ══════════════════ -->
+        <Border Grid.Row="3" Padding="16,10" Background="#0AFFFFFF"
+                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0"
+                Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="GRAND TOTAL NET PAY:" Style="{StaticResource LabelText}" 
+                           VerticalAlignment="Center" Margin="0,0,16,0" Opacity="0.7"/>
+                <TextBlock Text="{Binding GrandTotalWage, StringFormat='R #,##0.00'}"
+                           FontSize="20" FontWeight="Bold" Foreground="{StaticResource OrangeBrush}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Busy Overlay -->
+        <Border Grid.RowSpan="4" Background="#88000000" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4"
+                             Foreground="{StaticResource OrangeBrush}" BorderThickness="0"/>
+                <TextBlock Text="{Binding BusyText}" Foreground="White" FontSize="13"
+                           HorizontalAlignment="Center" Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

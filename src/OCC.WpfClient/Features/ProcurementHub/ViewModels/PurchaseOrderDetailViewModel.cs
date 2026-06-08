@@ -361,6 +361,52 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
         }
 
+        public async Task LoadOrderAsync(Guid id)
+        {
+            try
+            {
+                IsBusy = true;
+                
+                // Ensure lookups are loaded first
+                if (!Suppliers.Any() || !Projects.Any())
+                {
+                    var suppliers = await _supplierService.GetSuppliersAsync();
+                    var projects = await _projectService.GetProjectsAsync();
+                    var inventory = await _inventoryService.GetInventoryAsync();
+
+                    Suppliers.Clear();
+                    foreach (var s in suppliers) Suppliers.Add(s);
+
+                    Projects.Clear();
+                    foreach (var p in projects) Projects.Add(p);
+
+                    InventoryItems.Clear();
+                    foreach (var i in inventory) InventoryItems.Add(i);
+                    
+                    var allOrders = await _orderService.GetOrdersAsync();
+                    _allOrderIds = allOrders.OrderByDescending(o => o.OrderDate).Select(o => o.Id).ToList();
+                }
+
+                var order = await _orderService.GetOrderAsync(id);
+                if (order != null)
+                {
+                    CurrentOrder = new OrderWrapper(order);
+                    SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                    SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
+                    _currentIndex = _allOrderIds.IndexOf(order.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading order {Id} in detail view", id);
+                ErrorMessage = "Failed to load order details.";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         private async Task LoadOrderByIdAsync(Guid id)
         {
             try

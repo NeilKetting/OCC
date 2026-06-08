@@ -97,7 +97,7 @@
 
             <!-- Main Grid -->
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="0" Margin="15,0,20,20" CornerRadius="0">
-                <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" Style="{StaticResource ModernDataGrid}">
+                <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="Employee" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>

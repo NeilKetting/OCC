@@ -348,6 +348,10 @@
                               GridLinesVisibility="None"
                               BorderThickness="0"
                               Background="Transparent"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.ScrollUnit="Pixel"
                               MouseDoubleClick="OnTaskDoubleClick">
                         <DataGrid.Columns>
                             <!-- Status Icon -->

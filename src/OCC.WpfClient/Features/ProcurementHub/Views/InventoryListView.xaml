@@ -138,7 +138,7 @@
                     Margin="10,0,10,10">
                 <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" 
                           Background="Transparent" BorderThickness="0" CanUserAddRows="False"
-                          IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False"
+                          IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
                           Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="150" Visibility="{Binding Data.IsSkuVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>

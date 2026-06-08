@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OCC.WpfClient.Features.ProjectHub.ViewModels;
+using OCC.WpfClient.Features.ProcurementHub.ViewModels;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Models;
@@ -18,7 +19,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
     /// It coordinates navigation, multi-tab (Hubs) management, real-time communications (SignalR),
     /// database health polling, user activity/inactivity session monitoring, and app-wide toasts/messages.
     /// </summary>
-    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>
     {
         #region Private Fields & Services
 
@@ -358,6 +359,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             WeakReferenceMessenger.Default.Register<CloseHubMessage>(this);
             WeakReferenceMessenger.Default.Register<OpenHubMessage>(this);
             WeakReferenceMessenger.Default.Register<OpenProjectMessage>(this);
+            WeakReferenceMessenger.Default.Register<OpenOrderMessage>(this);
             WeakReferenceMessenger.Default.Register<StatusUpdateMessage>(this);
             WeakReferenceMessenger.Default.Register<PreferenceChangedMessage>(this);
             WeakReferenceMessenger.Default.Register<ImportProgressMessage>(this);
@@ -1025,6 +1027,27 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
             var hub = _serviceProvider.GetRequiredService<ProjectDetailViewModel>();
             _ = hub.LoadProjectAsync(projectId);
+            OpenHubs.Add(hub);
+            ActiveHub = hub;
+        }
+
+        /// <summary>
+        /// Handles OpenOrderMessages by loading the specific order ID in a PurchaseOrderDetailViewModel tab.
+        /// </summary>
+        public void Receive(OpenOrderMessage message)
+        {
+            var orderId = message.Value;
+            
+            // Check if order tab is already open
+            var existing = OpenHubs.OfType<PurchaseOrderDetailViewModel>().FirstOrDefault(o => o.CurrentOrder?.Id == orderId);
+            if (existing != null)
+            {
+                ActiveHub = existing;
+                return;
+            }
+
+            var hub = _serviceProvider.GetRequiredService<PurchaseOrderDetailViewModel>();
+            _ = hub.LoadOrderAsync(orderId);
             OpenHubs.Add(hub);
             ActiveHub = hub;
         }

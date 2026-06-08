@@ -324,5 +324,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
             finally { IsBusy = false; }
         }
+
+        public override void CloseOverlay()
+        {
+            base.CloseOverlay();
+            IsApplyPanelOpen = false;
+        }
     }
 }

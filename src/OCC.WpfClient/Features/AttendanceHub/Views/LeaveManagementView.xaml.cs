@@ -1,8 +1,8 @@
-using System.Windows.Controls;
+using OCC.WpfClient.Infrastructure;
 
 namespace OCC.WpfClient.Features.AttendanceHub.Views
 {
-    public partial class LeaveManagementView : UserControl
+    public partial class LeaveManagementView : ListViewBase
     {
         public LeaveManagementView()
         {

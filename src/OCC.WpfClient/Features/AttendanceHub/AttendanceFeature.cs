@@ -15,12 +15,16 @@ namespace OCC.WpfClient.Features.AttendanceHub
         {
             services.AddSingleton<IAttendanceService, AttendanceService>();
             services.AddSingleton<ILeaveService, LeaveService>();
+            services.AddSingleton<IWageService, WageService>();
+            services.AddSingleton<IEmployeeLoanService, EmployeeLoanService>();
 
             services.AddTransient<AttendanceMenuViewModel>();
             services.AddTransient<AttendanceDashboardViewModel>();
             services.AddTransient<AttendanceHistoryListViewModel>();
             services.AddTransient<TeamManagementViewModel>();
             services.AddTransient<LeaveManagementViewModel>();
+            services.AddTransient<WageRunViewModel>();
+            services.AddTransient<LoansManagementViewModel>();
             services.AddTransient<AttendanceViewModel>();
         }
 

@@ -413,6 +413,7 @@
         <Setter Property="Background" Value="#1AFFFFFF"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Padding" Value="4,2"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -879,5 +880,6 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
 </ResourceDictionary>
 

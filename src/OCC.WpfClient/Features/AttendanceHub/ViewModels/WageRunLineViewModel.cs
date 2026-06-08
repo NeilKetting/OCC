@@ -1,0 +1,189 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using OCC.Shared.Models;
+using System;
+
+namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
+{
+    /// <summary>
+    /// Wraps a single WageRunLine for spreadsheet-style editing in the WageRunView DataGrid.
+    /// All formulas ported from OCC.Client WageRunLineViewModel.
+    /// </summary>
+    public partial class WageRunLineViewModel : ObservableObject
+    {
+        public WageRunLine Model { get; }
+
+        private int? _indexNum;
+        public int? IndexNum
+        {
+            get => _indexNum;
+            set => SetProperty(ref _indexNum, value);
+        }
+
+        public WageRunLineViewModel(WageRunLine model)
+        {
+            Model = model ?? throw new ArgumentNullException(nameof(model));
+        }
+
+        // ─── Display (Read-only columns) ──────────────────────────────────────
+
+        public string Index          => IndexNum?.ToString() ?? string.Empty;
+        public string EmployeeNumber => Model.EmployeeNumber ?? string.Empty;
+        public string EmployeeName   => Model.EmployeeName?.ToUpper() ?? string.Empty;
+        public string Branch         => Model.Branch ?? string.Empty;
+
+        // Rate columns
+        public decimal? RatePHrDisplay  => Model.HourlyRate;
+        public decimal? StdOtRate       => Model.HourlyRate * 1.5m;
+        public decimal? SatOtRate       => Model.HourlyRate * 1.5m;
+        public decimal? SunPHolRate     => Model.HourlyRate * 2.0m;
+
+        /// <summary>Rate per day = HourlyRate × 8.75 standard hours</summary>
+        public decimal? RatePDayDisplay => Model.HourlyRate * 8.75m;
+
+        // Day counts — double in model, show as integer for display
+        public int DaysWeek1Display  => (int)Model.DaysWorkedWeek1;
+        public int DaysWeek2Display  => (int)Model.DaysWorkedWeek2;
+        public int TotalDaysDisplay  => (int)Model.TotalDaysWorked;
+
+        // Hours per day (standard)
+        public double HrsPDayDisplay => 8.75;
+
+        // Sat OT column is always 0 in current payroll logic (Sat = OT15)
+        public double SatOt => 0;
+
+        // Deduction display strings (blank if zero, for cleaner grid)
+        public string DeductionLoanDisplay    => Model.DeductionLoan    > 0 ? Model.DeductionLoan.ToString("F2")    : string.Empty;
+        public string DeductionWashingDisplay => Model.DeductionWashing > 0 ? Model.DeductionWashing.ToString("F2") : string.Empty;
+        public string DeductionGasDisplay     => Model.DeductionGas     > 0 ? Model.DeductionGas.ToString("F2")     : string.Empty;
+        public string OtherDisplay            => Model.DeductionOther   > 0 ? Model.DeductionOther.ToString("F2")   : string.Empty;
+        public string DeductionPPEDisplay     => Model.DeductionPPE     > 0 ? Model.DeductionPPE.ToString("F2")     : string.Empty;
+        public bool   HasSupervisorFee        => Model.IncentiveSupervisor > 0;
+        public string VarianceNotes           => Model.VarianceNotes ?? string.Empty;
+
+        // Computed financials
+        /// <summary>TotalRem = NetPay + IncentiveSupervisor (gross before net deductions)</summary>
+        public decimal TotalRem     => (Model.NetPay) + Model.IncentiveSupervisor;
+        public decimal NetPay       => Model.NetPay;
+        public decimal TotalWage    => Model.TotalWage;
+        public decimal HourlyRate   => Model.HourlyRate;
+        public double  VarianceHours => Model.VarianceHours;
+
+        // ─── Editable Properties (trigger recalc) ─────────────────────────────
+
+        /// <summary>Normal weekday hours within shift. Recalculates TotalWage/NetPay.</summary>
+        public double NormalHours
+        {
+            get => Model.NormalHours;
+            set
+            {
+                if (Math.Abs(Model.NormalHours - value) > 0.001)
+                {
+                    Model.NormalHours = value;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>Weekday after-shift overtime hours (1.5×).</summary>
+        public double Overtime15Hours
+        {
+            get => Model.Overtime15Hours;
+            set
+            {
+                if (Math.Abs(Model.Overtime15Hours - value) > 0.001)
+                {
+                    Model.Overtime15Hours = value;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(StdOt));
+                }
+            }
+        }
+
+        /// <summary>Sunday / public holiday overtime hours (2.0×).</summary>
+        public double Overtime20Hours
+        {
+            get => Model.Overtime20Hours;
+            set
+            {
+                if (Math.Abs(Model.Overtime20Hours - value) > 0.001)
+                {
+                    Model.Overtime20Hours = value;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SunOt));
+                }
+            }
+        }
+
+        public decimal DeductionLoan
+        {
+            get => Model.DeductionLoan;
+            set { if (Model.DeductionLoan != value) { Model.DeductionLoan = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(DeductionLoanDisplay)); } }
+        }
+
+        public decimal DeductionWashing
+        {
+            get => Model.DeductionWashing;
+            set { if (Model.DeductionWashing != value) { Model.DeductionWashing = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(DeductionWashingDisplay)); } }
+        }
+
+        public decimal DeductionGas
+        {
+            get => Model.DeductionGas;
+            set { if (Model.DeductionGas != value) { Model.DeductionGas = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(DeductionGasDisplay)); } }
+        }
+
+        public decimal DeductionOther
+        {
+            get => Model.DeductionOther;
+            set { if (Model.DeductionOther != value) { Model.DeductionOther = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(OtherDisplay)); } }
+        }
+
+        public decimal DeductionPPE
+        {
+            get => Model.DeductionPPE;
+            set { if (Model.DeductionPPE != value) { Model.DeductionPPE = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(DeductionPPEDisplay)); } }
+        }
+
+        public decimal IncentiveSupervisor
+        {
+            get => Model.IncentiveSupervisor;
+            set { if (Model.IncentiveSupervisor != value) { Model.IncentiveSupervisor = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(HasSupervisorFee)); } }
+        }
+
+        // ─── Std OT display (read-only summary column) ──────────────────────
+        public double StdOt => Model.Overtime15Hours;
+        public double SunOt => Model.Overtime20Hours;
+
+        // ─── Standard hours = Normal + Projected + Variance (for display) ────
+        public double StdHoursDisplay => Model.NormalHours + Model.ProjectedHours + Model.VarianceHours;
+
+        // ─── Recalculation ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Re-notifies NetPay (computed on the model from all fields) and dependent totals.
+        /// Model formula: NetPay = (TotalWage + IncentiveSupervisor) - (Loan + Tax + Washing + Gas + Other + PPE)
+        /// where TotalWage = ((NormalHours + ProjectedHours + VarianceHours) × HourlyRate)
+        ///                 + (OT15Hours × HourlyRate × 1.5)
+        ///                 + (OT20Hours × HourlyRate × 2.0)
+        /// </summary>
+        private void RecalculateAndNotify()
+        {
+            if (Model == null) return;
+
+            // Recalculate TotalWage on the model (NetPay is derived from it)
+            Model.TotalWage =
+                (decimal)(Model.NormalHours + Model.ProjectedHours + Model.VarianceHours) * Model.HourlyRate
+                + (decimal)Model.Overtime15Hours * Model.HourlyRate * 1.5m
+                + (decimal)Model.Overtime20Hours * Model.HourlyRate * 2.0m;
+
+            // NetPay is a computed property on the model — re-notify all display properties
+            OnPropertyChanged(nameof(NetPay));
+            OnPropertyChanged(nameof(TotalRem));
+            OnPropertyChanged(nameof(TotalWage));
+            OnPropertyChanged(nameof(StdHoursDisplay));
+        }
+    }
+}
