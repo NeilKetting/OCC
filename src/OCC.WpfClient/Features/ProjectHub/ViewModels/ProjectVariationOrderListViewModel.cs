@@ -165,27 +165,32 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private async Task DeleteOrder(object? parameter)
         {
-            var target = parameter as ProjectVariationOrderWrapper ?? SelectedItem;
-            if (target == null) return;
+            var targets = GetDeleteTargets(parameter);
+            if (!targets.Any()) return;
 
-            var confirmed = await _dialogService.ShowConfirmationAsync(
-                "Delete Variation Order",
-                "Are you sure you want to delete this variation order? This action cannot be undone.");
+            string title = targets.Count > 1 ? "Delete Multiple Variation Orders" : "Delete Variation Order";
+            string message = targets.Count > 1
+                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
+                : "Are you sure you want to delete this variation order? This action cannot be undone.";
 
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;
 
             IsBusy = true;
-            BusyText = "Deleting variation order...";
+            BusyText = targets.Count > 1 ? "Deleting variation orders..." : "Deleting variation order...";
             try
             {
-                await _variationOrderService.DeleteVariationOrderAsync(target.Id);
-                NotifySuccess("Success", "Variation order deleted.");
+                foreach (var target in targets)
+                {
+                    await _variationOrderService.DeleteVariationOrderAsync(target.Id);
+                }
+                NotifySuccess("Success", targets.Count > 1 ? $"{targets.Count} variation orders deleted." : "Variation order deleted.");
                 await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete variation order");
-                NotifyError("Failed to delete variation order", ex.Message);
+                _logger.LogError(ex, "Failed to delete variation order(s)");
+                NotifyError("Failed to delete variation order(s)", ex.Message);
             }
             finally
             {

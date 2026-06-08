@@ -264,28 +264,32 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public bool IsAutoClockIn { get; set; }
         public bool IsAbsent => Status == AttendanceStatus.Absent;
 
-        public string StatusLabel => Status switch
-        {
-            AttendanceStatus.Present => "Present",
-            AttendanceStatus.Late => "Late",
-            AttendanceStatus.Absent => "Absent",
-            AttendanceStatus.Sick => "Sick",
-            AttendanceStatus.LeaveAuthorized => "Leave",
-            AttendanceStatus.LeaveEarly => "Left Early",
-            AttendanceStatus.UnpaidSick => "Unpaid Sick",
-            _ => "Unknown"
-        };
+        public string StatusLabel => (CheckInTime.HasValue && CheckOutTime.HasValue && Status != AttendanceStatus.Absent)
+            ? "Clocked Out"
+            : Status switch
+            {
+                AttendanceStatus.Present => "Present",
+                AttendanceStatus.Late => "Late",
+                AttendanceStatus.Absent => "Absent",
+                AttendanceStatus.Sick => "Sick",
+                AttendanceStatus.LeaveAuthorized => "Leave",
+                AttendanceStatus.LeaveEarly => "Left Early",
+                AttendanceStatus.UnpaidSick => "Unpaid Sick",
+                _ => "Unknown"
+            };
 
-        public string StatusColor => Status switch
-        {
-            AttendanceStatus.Present => "#2E7D32",
-            AttendanceStatus.Late => "#F57F17",
-            AttendanceStatus.Absent => "#C62828",
-            AttendanceStatus.Sick => "#0288D1",
-            AttendanceStatus.LeaveAuthorized => "#6A1B9A",
-            AttendanceStatus.LeaveEarly => "#E65100",
-            _ => "#607D8B"
-        };
+        public string StatusColor => (CheckInTime.HasValue && CheckOutTime.HasValue && Status != AttendanceStatus.Absent)
+            ? "#78909C" // Blue-grey for clocked out
+            : Status switch
+            {
+                AttendanceStatus.Present => "#2E7D32",
+                AttendanceStatus.Late => "#F57F17",
+                AttendanceStatus.Absent => "#C62828",
+                AttendanceStatus.Sick => "#0288D1",
+                AttendanceStatus.LeaveAuthorized => "#6A1B9A",
+                AttendanceStatus.LeaveEarly => "#E65100",
+                _ => "#607D8B"
+            };
 
         public string CheckInDisplay => (Status == AttendanceStatus.Absent || !CheckInTime.HasValue) ? "--:--" : CheckInTime.Value.ToString("HH:mm");
         public string CheckOutDisplay => (Status == AttendanceStatus.Absent || !CheckOutTime.HasValue) ? (IsClocked ? "Active" : "--:--") : CheckOutTime.Value.ToString("HH:mm");

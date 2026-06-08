@@ -16,6 +16,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly ILeaveService _leaveService;
         private readonly IEmployeeService _employeeService;
         private readonly IAttendanceService _attendanceService;
+        private readonly IDialogService _dialogService;
         private readonly ILogger<LeaveManagementViewModel> _logger;
 
         private List<LeaveRequest> _allRequests = new();
@@ -66,12 +67,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             ILeaveService leaveService,
             IEmployeeService employeeService,
             IAttendanceService attendanceService,
+            IDialogService dialogService,
             IPdfService pdfService,
             ILogger<LeaveManagementViewModel> logger) : base(pdfService)
         {
             _leaveService = leaveService;
             _employeeService = employeeService;
             _attendanceService = attendanceService;
+            _dialogService = dialogService;
             _logger = logger;
             Title = "Leave Management";
         }
@@ -272,18 +275,31 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [RelayCommand]
         private async Task DeleteLeave(object? parameter)
         {
-            var request = parameter as LeaveRequest ?? SelectedItem;
-            if (request == null) return;
+            var targets = GetDeleteTargets(parameter);
+            if (!targets.Any()) return;
+
+            string title = targets.Count > 1 ? "Delete Multiple Leave Requests" : "Delete Leave Request";
+            string message = targets.Count > 1
+                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
+                : "Are you sure you want to delete this leave request? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+            if (!confirmed) return;
+
             try
             {
                 IsBusy = true;
-                await _leaveService.DeleteLeaveRequestAsync(request.Id);
-                NotifySuccess("Deleted", "Leave request removed.");
+                BusyText = targets.Count > 1 ? "Deleting leave requests..." : "Deleting leave request...";
+                foreach (var target in targets)
+                {
+                    await _leaveService.DeleteLeaveRequestAsync(target.Id);
+                }
+                NotifySuccess("Deleted", targets.Count > 1 ? $"{targets.Count} leave requests deleted." : "Leave request removed.");
                 await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting leave {Id}", request?.Id);
+                _logger.LogError(ex, "Error deleting leave request(s)");
                 NotifyError("Error", ex.Message);
             }
             finally { IsBusy = false; }

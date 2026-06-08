@@ -168,20 +168,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private async Task DeleteProject(object? parameter)
         {
-            List<ProjectSummaryDto> targets = new();
-            if (parameter is System.Collections.IList list)
-            {
-                targets = list.Cast<ProjectSummaryDto>().ToList();
-            }
-            else if (parameter is ProjectSummaryDto summary)
-            {
-                targets.Add(summary);
-            }
-            else if (SelectedItem != null)
-            {
-                targets.Add(SelectedItem);
-            }
-
+            var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
             if (targets.Count == 1)
@@ -221,8 +208,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             else
             {
-                string message = $"Are you sure you want to archive {targets.Count} selected projects?";
-                var confirm = await _dialogService.ShowConfirmationAsync("Bulk Delete", message);
+                string message = $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?";
+                var confirm = await _dialogService.ShowConfirmationAsync("Delete Multiple Projects", message);
 
                 if (confirm)
                 {

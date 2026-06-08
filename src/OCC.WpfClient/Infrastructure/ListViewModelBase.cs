@@ -103,5 +103,32 @@ namespace OCC.WpfClient.Infrastructure
         {
             FilterItems();
         }
+
+        /// <summary>
+        /// Resolves the delete target list from the command parameter (IList for multi-selection, T for single item) or SelectedItem.
+        /// </summary>
+        protected List<T> GetDeleteTargets(object? parameter)
+        {
+            var targets = new List<T>();
+            if (parameter is System.Collections.IList list)
+            {
+                foreach (var item in list)
+                {
+                    if (item is T typedItem)
+                    {
+                        targets.Add(typedItem);
+                    }
+                }
+            }
+            else if (parameter is T item)
+            {
+                targets.Add(item);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
+            return targets;
+        }
     }
 }

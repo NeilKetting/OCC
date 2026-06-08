@@ -176,33 +176,21 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task DeleteSelectedSuppliers(object? parameter)
         {
-            List<SupplierSummaryDto> targets = new();
-            if (parameter is System.Collections.IList list)
-            {
-                targets = list.Cast<SupplierSummaryDto>().ToList();
-            }
-            else if (parameter is SupplierSummaryDto summary)
-            {
-                targets.Add(summary);
-            }
-            else if (SelectedItem != null)
-            {
-                targets.Add(SelectedItem);
-            }
-
+            var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
+            string title = targets.Count > 1 ? "Delete Multiple Suppliers" : "Delete Supplier";
             string message = targets.Count > 1 
-                ? $"Are you sure you want to delete {targets.Count} selected suppliers? This action cannot be undone."
+                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
                 : $"Are you sure you want to delete supplier '{targets[0].Name}'? This action cannot be undone.";
 
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Supplier", message);
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting...";
+                BusyText = targets.Count > 1 ? "Deleting suppliers..." : "Deleting supplier...";
                 foreach (var t in targets)
                 {
                     await _supplierService.DeleteSupplierAsync(t.Id);

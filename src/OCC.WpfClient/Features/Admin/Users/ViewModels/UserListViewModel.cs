@@ -182,20 +182,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [RelayCommand]
         private async Task DeleteSelectedUsers(object? parameter)
         {
-            List<User> targets = new();
-            if (parameter is System.Collections.IList list)
-            {
-                targets = list.Cast<User>().ToList();
-            }
-            else if (parameter is User user)
-            {
-                targets.Add(user);
-            }
-            else if (SelectedItem != null)
-            {
-                targets.Add(SelectedItem);
-            }
-
+            var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
             // Check if any of the target users are linked to employee records
@@ -215,6 +202,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 _logger.LogError(ex, "Failed to load employee records for dependency validation.");
             }
 
+            string title = targets.Count > 1 ? "Delete Multiple Users" : "Delete User";
             string message;
             if (anyLinked)
             {
@@ -225,17 +213,17 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             else
             {
                 message = targets.Count > 1 
-                    ? $"Are you sure you want to delete {targets.Count} selected users? This action cannot be undone."
+                    ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
                     : $"Are you sure you want to delete user '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
             }
 
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete User", message);
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting...";
+                BusyText = targets.Count > 1 ? "Deleting users..." : "Deleting user...";
                 foreach (var t in targets)
                 {
                     await _userService.DeleteUserAsync(t.Id);

@@ -210,25 +210,12 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         [RelayCommand]
         private async Task DeleteSubContractor(object? parameter)
         {
-            List<SubContractorSummaryDto> targets = new();
-            if (parameter is System.Collections.IList list)
-            {
-                targets = list.Cast<SubContractorSummaryDto>().ToList();
-            }
-            else if (parameter is SubContractorSummaryDto summary)
-            {
-                targets.Add(summary);
-            }
-            else if (SelectedItem != null)
-            {
-                targets.Add(SelectedItem);
-            }
-
+            var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
             string title = targets.Count > 1 ? "Delete Multiple Sub-Contractors" : "Delete Sub-Contractor";
             string message = targets.Count > 1 
-                ? $"Are you sure you want to delete {targets.Count} selected sub-contractors? This action cannot be undone."
+                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
                 : $"Are you sure you want to delete '{targets[0].Name}'? This action cannot be undone.";
 
             var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
@@ -237,7 +224,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             try
             {
                 IsBusy = true;
-                BusyText = targets.Count > 1 ? "Deleting records..." : "Deleting sub-contractor...";
+                BusyText = targets.Count > 1 ? "Deleting sub-contractors..." : "Deleting sub-contractor...";
                 
                 foreach (var target in targets)
                 {

@@ -222,33 +222,21 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [RelayCommand]
         private async Task DeleteSelectedEmployees(object? parameter)
         {
-            List<EmployeeSummaryDto> targets = new();
-            if (parameter is System.Collections.IList list)
-            {
-                targets = list.Cast<EmployeeSummaryDto>().ToList();
-            }
-            else if (parameter is EmployeeSummaryDto summary)
-            {
-                targets.Add(summary);
-            }
-            else if (SelectedItem != null)
-            {
-                targets.Add(SelectedItem);
-            }
-
+            var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
+            string title = targets.Count > 1 ? "Delete Multiple Employees" : "Delete Employee";
             string message = targets.Count > 1 
-                ? $"Are you sure you want to delete {targets.Count} selected employees? This action cannot be undone."
+                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
                 : $"Are you sure you want to delete '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
 
-            var confirmed = await _dialogService.ShowConfirmationAsync("Delete Employee", message);
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Deleting...";
+                BusyText = targets.Count > 1 ? "Deleting employees..." : "Deleting employee...";
                 foreach (var t in targets)
                 {
                     await _employeeService.DeleteEmployeeAsync(t.Id);

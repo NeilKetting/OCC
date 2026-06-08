@@ -16,6 +16,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     {
         private readonly IAttendanceService _attendanceService;
         private readonly IEmployeeService _employeeService;
+        private readonly IDialogService _dialogService;
         private readonly ILogger<AttendanceHistoryListViewModel> _logger;
         private List<AttendanceRecord> _allRecords = new();
 
@@ -53,11 +54,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public AttendanceHistoryListViewModel(
             IAttendanceService attendanceService,
             IEmployeeService employeeService,
+            IDialogService dialogService,
             IPdfService pdfService,
             ILogger<AttendanceHistoryListViewModel> logger) : base(pdfService)
         {
             _attendanceService = attendanceService;
             _employeeService = employeeService;
+            _dialogService = dialogService;
             _logger = logger;
             Title = "Attendance History";
         }
@@ -263,19 +266,31 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [RelayCommand]
         private async Task DeleteRecord(object? parameter)
         {
-            var row = parameter as AttendanceHistoryRow ?? SelectedItem;
-            var record = row?.Record;
-            if (record == null) return;
+            var targets = GetDeleteTargets(parameter);
+            if (!targets.Any()) return;
+
+            string title = targets.Count > 1 ? "Delete Multiple Records" : "Delete Attendance Record";
+            string message = targets.Count > 1
+                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
+                : $"Are you sure you want to delete the attendance record for '{targets[0].EmployeeName}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+            if (!confirmed) return;
+
             try
             {
                 IsBusy = true;
-                await _attendanceService.DeleteAttendanceRecordAsync(record.Id);
-                NotifySuccess("Deleted", "Attendance record removed.");
+                BusyText = targets.Count > 1 ? "Deleting records..." : "Deleting record...";
+                foreach (var target in targets)
+                {
+                    await _attendanceService.DeleteAttendanceRecordAsync(target.Record.Id);
+                }
+                NotifySuccess("Deleted", targets.Count > 1 ? $"{targets.Count} records deleted." : "Attendance record removed.");
                 await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting attendance record");
+                _logger.LogError(ex, "Error deleting attendance record(s)");
                 NotifyError("Delete Failed", ex.Message);
             }
             finally { IsBusy = false; }
