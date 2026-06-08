@@ -18,6 +18,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
         private readonly IDialogService _dialogService;
+        private readonly IEmployeeService _employeeService;
         private readonly ILogger<UserListViewModel> _logger;
         private List<User> _allUsers = new();
 
@@ -59,6 +60,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             IUserService userService, 
             IAuthService authService,
             IDialogService dialogService,
+            IEmployeeService employeeService,
             LocalSettingsService settingsService,
             ILogger<UserListViewModel> logger,
             IPdfService pdfService) : base(pdfService)
@@ -66,6 +68,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             _userService = userService;
             _authService = authService;
             _dialogService = dialogService;
+            _employeeService = employeeService;
             _settingsService = settingsService;
             _logger = logger;
             Title = "User Management";
@@ -195,9 +198,36 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 
             if (!targets.Any()) return;
 
-            string message = targets.Count > 1 
-                ? $"Are you sure you want to delete {targets.Count} selected users? This action cannot be undone."
-                : $"Are you sure you want to delete user '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
+            // Check if any of the target users are linked to employee records
+            bool anyLinked = false;
+            try
+            {
+                var employees = await _employeeService.GetEmployeesAsync();
+                var linkedUserIds = employees
+                    .Where(e => e.LinkedUserId.HasValue)
+                    .Select(e => e.LinkedUserId!.Value)
+                    .ToHashSet();
+
+                anyLinked = targets.Any(t => linkedUserIds.Contains(t.Id));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load employee records for dependency validation.");
+            }
+
+            string message;
+            if (anyLinked)
+            {
+                message = targets.Count > 1
+                    ? "One or more of the selected users are linked to active employee profiles.\n\nDeleting these user accounts will remove their access to the application and unlink them from their employee records. This action cannot be undone.\n\nAre you sure you want to proceed?"
+                    : $"The user '{targets[0].FirstName} {targets[0].LastName}' is linked to an active employee profile.\n\nDeleting this user account will remove their access to the application and unlink them from their employee record. This action cannot be undone.\n\nAre you sure you want to proceed?";
+            }
+            else
+            {
+                message = targets.Count > 1 
+                    ? $"Are you sure you want to delete {targets.Count} selected users? This action cannot be undone."
+                    : $"Are you sure you want to delete user '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
+            }
 
             var confirmed = await _dialogService.ShowConfirmationAsync("Delete User", message);
             if (!confirmed) return;

@@ -6,6 +6,7 @@ using OCC.WpfClient.Features.CalendarHub.Services;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
+using OCC.WpfClient.Services.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,6 +39,7 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
 
         private readonly ICalendarService _calendarService;
         private readonly IProjectService  _projectService;
+        private readonly LocalSettingsService _settingsService;
 
         /// <summary>
         /// Backing store for the ordered list of week-start day rows before being
@@ -140,13 +142,21 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
         /// <param name="projectService">Used to populate the project filter sidebar.</param>
         public CalendarHubViewModel(
             ICalendarService calendarService,
-            IProjectService  projectService)
+            IProjectService  projectService,
+            LocalSettingsService settingsService)
         {
             _calendarService = calendarService;
             _projectService  = projectService;
+            _settingsService = settingsService;
 
             Title        = "Calendar";
             CurrentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+            // Load saved settings
+            _showTasks = _settingsService.Settings.CalendarShowTasks;
+            _showPublicHolidays = _settingsService.Settings.CalendarShowPublicHolidays;
+            _showBirthdays = _settingsService.Settings.CalendarShowBirthdays;
+            _showLeave = _settingsService.Settings.CalendarShowLeave;
 
             // Subscribe to real-time task updates so the grid stays current
             // without requiring a manual refresh from the user.
@@ -170,13 +180,17 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
             {
                 IsRefreshing = true;
 
-                // Populate project list for the optional sidebar filter (checked by default)
+                // Populate project list for the optional sidebar filter
                 var summaries = await _projectService.GetProjectSummariesAsync();
+                var savedSelectedIds = _settingsService.Settings.CalendarSelectedProjectIds;
                 App.Current.Dispatcher.Invoke(() =>
                 {
                     AvailableProjects.Clear();
                     foreach (var p in summaries.OrderBy(s => s.Name))
-                        AvailableProjects.Add(new ProjectFilterItem(p.Id, p.Name) { IsSelected = true });
+                    {
+                        bool isSelected = savedSelectedIds == null || savedSelectedIds.Contains(p.Id);
+                        AvailableProjects.Add(new ProjectFilterItem(p.Id, p.Name) { IsSelected = isSelected });
+                    }
                 });
 
                 await GenerateCalendarAsync();
@@ -254,6 +268,7 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
         [RelayCommand]
         private async Task ToggleProjectFilter()
         {
+            SaveSettings();
             await GenerateCalendarAsync();
         }
 
@@ -264,6 +279,7 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
             foreach (var p in AvailableProjects)
                 p.IsSelected = false;
 
+            SaveSettings();
             await GenerateCalendarAsync();
         }
 
@@ -272,10 +288,46 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
         #region Commands — Filter Toggles
 
         /// <summary>Refreshes the calendar whenever a filter toggle changes.</summary>
-        partial void OnShowTasksChanged(bool value)          => _ = GenerateCalendarAsync();
-        partial void OnShowPublicHolidaysChanged(bool value) => _ = GenerateCalendarAsync();
-        partial void OnShowBirthdaysChanged(bool value)      => _ = GenerateCalendarAsync();
-        partial void OnShowLeaveChanged(bool value)          => _ = GenerateCalendarAsync();
+        partial void OnShowTasksChanged(bool value)
+        {
+            SaveSettings();
+            _ = GenerateCalendarAsync();
+        }
+        partial void OnShowPublicHolidaysChanged(bool value)
+        {
+            SaveSettings();
+            _ = GenerateCalendarAsync();
+        }
+        partial void OnShowBirthdaysChanged(bool value)
+        {
+            SaveSettings();
+            _ = GenerateCalendarAsync();
+        }
+        partial void OnShowLeaveChanged(bool value)
+        {
+            SaveSettings();
+            _ = GenerateCalendarAsync();
+        }
+
+        #endregion
+
+        #region Settings Persistence Helper
+
+        private void SaveSettings()
+        {
+            if (_settingsService == null) return;
+
+            _settingsService.Settings.CalendarShowTasks = ShowTasks;
+            _settingsService.Settings.CalendarShowPublicHolidays = ShowPublicHolidays;
+            _settingsService.Settings.CalendarShowBirthdays = ShowBirthdays;
+            _settingsService.Settings.CalendarShowLeave = ShowLeave;
+            _settingsService.Settings.CalendarSelectedProjectIds = AvailableProjects
+                .Where(p => p.IsSelected)
+                .Select(p => p.Id)
+                .ToList();
+
+            _settingsService.Save();
+        }
 
         #endregion
 

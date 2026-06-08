@@ -311,6 +311,13 @@ namespace OCC.API.Controllers
                     return BadRequest("The Developer account cannot be deleted.");
                 }
 
+                // Clean up any employee links before deleting the user to avoid orphaned Guid references
+                var linkedEmployees = await _context.Employees.Where(e => e.LinkedUserId == id).ToListAsync();
+                foreach (var employee in linkedEmployees)
+                {
+                    employee.LinkedUserId = null;
+                }
+
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
                 

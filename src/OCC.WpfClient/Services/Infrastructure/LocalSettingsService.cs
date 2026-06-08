@@ -26,6 +26,13 @@ namespace OCC.WpfClient.Services.Infrastructure
         public OCC.WpfClient.Infrastructure.Models.ListLayout? ProjectListLayout { get; set; }
         public OCC.WpfClient.Infrastructure.Models.ListLayout? ProjectTaskListLayout { get; set; }
         public OCC.WpfClient.Infrastructure.Models.ListLayout? SubContractorListLayout { get; set; }
+
+        // Calendar settings
+        public bool CalendarShowTasks { get; set; } = true;
+        public bool CalendarShowPublicHolidays { get; set; } = true;
+        public bool CalendarShowBirthdays { get; set; } = true;
+        public bool CalendarShowLeave { get; set; } = true;
+        public System.Collections.Generic.List<Guid>? CalendarSelectedProjectIds { get; set; }
     }
 
     public class LocalSettingsService

@@ -427,6 +427,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                 .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult<string?>(_authService.CurrentToken);
+                    options.Headers.Add("X-Environment", _connectionSettings.SelectedEnvironment.ToString());
                 })
                 .WithAutomaticReconnect()
                 .Build();
