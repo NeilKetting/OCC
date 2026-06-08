@@ -1,7 +1,5 @@
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using OCC.WpfClient.Services.Infrastructure;
+using System.Net.Http;
 
 namespace OCC.WpfClient.Infrastructure
 {

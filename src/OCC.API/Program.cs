@@ -122,24 +122,18 @@ builder.Services.AddHostedService<OCC.API.Services.SignalRHeartbeatService>();
 // OpenAPI (Built-in .NET 10)
 builder.Services.AddOpenApi();
 
-    // FINAL ATTEMPT: Use FromStream with manual BOM skip for maximum robustness
+    // Initialize Firebase Admin SDK
     try
     {
         var keyPath = @"C:\OCC-Source\Keys\service-account.json";
         if (File.Exists(keyPath))
         {
-            var bytes = File.ReadAllBytes(keyPath);
-            // Skip BOM if present
-            int offset = (bytes.Length > 3 && bytes[0] == 239 && bytes[1] == 187 && bytes[2] == 191) ? 3 : 0;
-            
-            using (var ms = new MemoryStream(bytes, offset, bytes.Length - offset))
+            var json = File.ReadAllText(keyPath);
+            FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
             {
-                FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
-                {
-                    Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromStream(ms)
-                });
-            }
-            Console.WriteLine($"[STARTUP] Firebase initialized successfully via Stream from: {keyPath}");
+                Credential = Google.Apis.Auth.OAuth2.CredentialFactory.FromJson<Google.Apis.Auth.OAuth2.ServiceAccountCredential>(json).ToGoogleCredential()
+            });
+            Console.WriteLine($"[STARTUP] Firebase initialized successfully from: {keyPath}");
         }
         else
         {

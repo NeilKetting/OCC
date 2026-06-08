@@ -269,7 +269,7 @@ namespace OCC.Shared.Utils
                 progress?.Report(("Import complete!", 100));
                 return (rootTasks, flatTasks.Select(x => x.Task).ToList(), allResourceNames.ToList(), projectName);
             }
-            catch (Exception ex)
+            catch
             {
                 // Rethrow to let caller handle notification
                 throw;

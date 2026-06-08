@@ -232,7 +232,7 @@ namespace OCC.API.Controllers
                     return Unauthorized("User ID not found in claims.");
                 }
 
-                if (string.IsNullOrWhiteSpace(request.Token))
+                if (request == null || string.IsNullOrWhiteSpace(request.Token))
                 {
                     return BadRequest("Device token is required.");
                 }

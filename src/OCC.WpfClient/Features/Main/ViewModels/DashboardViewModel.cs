@@ -123,7 +123,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                         _toastService.ShowInfo("Employee Birthday 🎉", $"Happy Birthday to {emp.DisplayName}! 🎂", isSticky: true);
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     // Non-critical background failure
                 }
