@@ -16,6 +16,16 @@ namespace OCC.WpfClient.Features.ChatHub.Views
         {
             InitializeComponent();
             DataContextChanged += ChatView_DataContextChanged;
+            Loaded += (s, e) => ScrollToBottom();
+            IsVisibleChanged += ChatView_IsVisibleChanged;
+        }
+
+        private void ChatView_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is bool isVisible && isVisible)
+            {
+                ScrollToBottom();
+            }
         }
 
         private void ChatView_DataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)

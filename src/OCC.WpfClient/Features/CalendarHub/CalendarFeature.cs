@@ -78,7 +78,7 @@ namespace OCC.WpfClient.Features.CalendarHub
                 label:     "Calendar",
                 route:     NavigationRoutes.Calendar,
                 category:  "Workspace",
-                iconColor: "#2E9DFF",
+                iconColor: "#C084FC",
                 iconCode:  "\uE787");
         }
 

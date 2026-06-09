@@ -168,7 +168,6 @@
                 <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
 
                 <!-- Branch Filter -->
-                <TextBlock Grid.Column="3" Text="BRANCH" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,10,0" Opacity="0.8"/>
                 <ComboBox Grid.Column="4" SelectedIndex="{Binding SelectedBranchIndex}" Style="{StaticResource ModernComboBox}" Height="30" VerticalAlignment="Center">
                     <ComboBoxItem Content="All Branches" />
                     <ComboBoxItem Content="Johannesburg" />

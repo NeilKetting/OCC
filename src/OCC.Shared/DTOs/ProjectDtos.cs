@@ -33,6 +33,7 @@ namespace OCC.Shared.DTOs
         public Guid? SiteManagerId { get; set; }
         public string SiteManagerName { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+        public string Priority { get; set; } = "Medium";
     }
 
     public class ProjectPersonnelDto

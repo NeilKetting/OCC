@@ -102,7 +102,8 @@ namespace OCC.API.Controllers
                         StartDate = p.StartDate,
                         SiteManagerId = p.SiteManagerId,
                         SiteManagerName = p.SiteManager?.DisplayName ?? "Unassigned",
-                        IsActive = p.IsActive
+                        IsActive = p.IsActive,
+                        Priority = p.Priority
                     };
                 }).ToList();
 

@@ -33,6 +33,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isManagerVisible = true;
         [ObservableProperty] private bool _isUpdateVisible = true;
         [ObservableProperty] private bool _isStatusVisible = true;
+        [ObservableProperty] private bool _isPriorityVisible = true;
 
         
         [ObservableProperty] private bool _showDeleted;
@@ -90,6 +91,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsManagerVisible = layout.Columns.FirstOrDefault(c => c.Header == "Manager")?.IsVisible ?? true;
                 IsUpdateVisible = layout.Columns.FirstOrDefault(c => c.Header == "Update")?.IsVisible ?? true;
                 IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
+                IsPriorityVisible = layout.Columns.FirstOrDefault(c => c.Header == "Priority")?.IsVisible ?? true;
             }
         }
 
@@ -102,7 +104,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     new() { Header = "Progress", IsVisible = IsProgressVisible },
                     new() { Header = "Manager", IsVisible = IsManagerVisible },
                     new() { Header = "Update", IsVisible = IsUpdateVisible },
-                    new() { Header = "Status", IsVisible = IsStatusVisible }
+                    new() { Header = "Status", IsVisible = IsStatusVisible },
+                    new() { Header = "Priority", IsVisible = IsPriorityVisible }
                 }
             };
             _settingsService.Settings.ProjectListLayout = layout;
@@ -113,6 +116,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         partial void OnIsManagerVisibleChanged(bool value) => SaveLayout();
         partial void OnIsUpdateVisibleChanged(bool value) => SaveLayout();
         partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPriorityVisibleChanged(bool value) => SaveLayout();
 
         
 

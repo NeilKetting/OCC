@@ -24,8 +24,8 @@ namespace OCC.WpfClient.Features.EmployeeHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var admin = new NavItem("Admin", string.Empty, "Administration", iconColor: "#FFA500", iconCode: "\uE72E");
-            admin.Children.Add(new NavItem("Employee Management", NavigationRoutes.StaffManagement, "Administration", iconColor: "#FFFF00", iconCode: "\uE77B"));
+            var admin = new NavItem("Admin", string.Empty, "Administration", iconColor: "#FFB900", iconCode: "\uE72E");
+            admin.Children.Add(new NavItem("Employee Management", NavigationRoutes.StaffManagement, "Administration", iconColor: "#FFB900", iconCode: "\uE77B"));
             yield return admin;
         }
     }

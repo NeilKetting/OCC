@@ -49,6 +49,21 @@ namespace OCC.API.Data
                 logger.LogWarning("Failed to standardize task IsGroup data integrity: {Message}", ex.Message);
             }
 
+            // Cleanup corrupt/blank tasks inserted by the legacy update-project-status bug
+            try
+            {
+                logger.LogInformation("Cleaning up corrupt tasks (NULL or empty names)...");
+                int deletedCount = context.Database.ExecuteSqlRaw("DELETE FROM ProjectTasks WHERE Name IS NULL OR Name = '';");
+                if (deletedCount > 0)
+                {
+                    logger.LogInformation("Cleaned up {Count} corrupt tasks with NULL or empty names.", deletedCount);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Failed to clean up corrupt tasks: {Message}", ex.Message);
+            }
+
             var adminEmail = "neil@mdk.co.za";
             var adminUser = context.Users.FirstOrDefault(u => u.Email == adminEmail);
 

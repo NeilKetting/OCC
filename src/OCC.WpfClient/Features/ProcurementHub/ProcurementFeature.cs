@@ -44,28 +44,28 @@ namespace OCC.WpfClient.Features.ProcurementHub
                 "Procurement Dashboard",
                 NavigationRoutes.Procurement,
                 "Operations",
-                iconColor: "#004B50",
-                iconCode: "\uE7BF"));
+                iconColor: "#38BDF8",
+                iconCode: "\uE9D9"));
 
             procurement.Children.Add(new NavItem(
                 "Suppliers",
                 NavigationRoutes.Suppliers,
                 "Operations",
-                iconColor: "LightGreen",
+                iconColor: "#FFB900",
                 iconCode: "\uE716"));
 
             procurement.Children.Add(new NavItem(
                 "Inventory Management",
                 NavigationRoutes.Inventory,
                 "Operations",
-                iconColor: "#001064",
+                iconColor: "#4ADE80",
                 iconCode: "\uE950"));
 
             procurement.Children.Add(new NavItem(
                 "Purchase Order",
                 NavigationRoutes.PurchaseOrder,
                 "Operations",
-                iconColor: "#0078D4",
+                iconColor: "#FB923C",
                 iconCode: "\uE8A1"));
 
             yield return procurement;

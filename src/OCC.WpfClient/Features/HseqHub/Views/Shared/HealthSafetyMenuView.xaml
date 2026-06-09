@@ -29,7 +29,7 @@
                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Dashboard', Mode=TwoWay}"
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Dashboard">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource SymbolIcon}" Foreground="#38BDF8" FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Dashboard" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </RadioButton>
@@ -39,7 +39,7 @@
                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Performance Monitoring', Mode=TwoWay}"
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Performance Monitoring">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#4ADE80" FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Performance" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </RadioButton>
@@ -49,7 +49,7 @@
                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Training', Mode=TwoWay}"
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Training">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#FFB900" FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Training Matrix" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </RadioButton>
@@ -59,7 +59,7 @@
                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Incidents', Mode=TwoWay}"
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Incidents">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FFFF" FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Incidents" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </RadioButton>
@@ -69,7 +69,7 @@
                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Audits', Mode=TwoWay}"
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Audits">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#FBBF24" FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Audits &amp; Inspections" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </RadioButton>
@@ -79,7 +79,7 @@
                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Documents', Mode=TwoWay}"
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Documents">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#F87171" FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Documents" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </RadioButton>

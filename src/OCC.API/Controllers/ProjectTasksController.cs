@@ -694,37 +694,38 @@ namespace OCC.API.Controllers
 
                 if (project != null && taskData.Any())
                 {
-                    // Stub Tasks collection so getters (like Status and Progress) compute correctly 
-                    // without needing to eager load all ProjectTask records.
-                    project.Tasks = taskData.Select(td => new ProjectTask
-                    {
-                        PercentComplete = td.PercentComplete,
-                        FinishDate = td.FinishDate
-                    }).ToList();
-
-                    var averageProgress = project.Progress;
-                    var oldStatus = project.Status;
+                    double averageProgress = taskData.Average(t => (double)t.PercentComplete);
+                    var roundedProgress = Math.Round(averageProgress);
+                    var dbStatus = _context.Entry(project).OriginalValues.GetValue<string>("Status") ?? "Planning";
                     var oldEndDate = project.EndDate;
 
-                    if (averageProgress >= 100)
+                    string newStatus = dbStatus;
+                    if (roundedProgress >= 100 && dbStatus != "Archived" && dbStatus != "OnHold" && dbStatus != "Cancelled")
                     {
-                        project.Status = "Completed";
+                        newStatus = "Completed";
                     }
-                    else if (averageProgress > 0 && (project.Status == "Planning" || project.Status == "Not Started"))
+                    else if (roundedProgress > 0 && roundedProgress < 100 && (dbStatus == "Planning" || dbStatus == "Not Started" || dbStatus == "Completed" || dbStatus == "Active"))
                     {
-                        project.Status = "In Progress";
+                        newStatus = "In Progress";
+                    }
+                    else if (roundedProgress == 0 && dbStatus == "Completed")
+                    {
+                        newStatus = "Not Started";
                     }
 
-                    var maxFinishDate = project.Tasks.Max(t => t.FinishDate);
-                    if (maxFinishDate > project.EndDate)
+                    var maxFinishDate = taskData.Max(t => t.FinishDate);
+                    var newEndDate = oldEndDate;
+                    if (maxFinishDate > oldEndDate)
                     {
-                        project.EndDate = maxFinishDate;
+                        newEndDate = maxFinishDate;
                     }
 
-                    if (oldStatus != project.Status || oldEndDate != project.EndDate)
+                    if (dbStatus != newStatus || oldEndDate != newEndDate)
                     {
+                        project.Status = newStatus;
+                        project.EndDate = newEndDate;
                         _logger.LogInformation("Project {Id} updated. Status: {OldStatus}->{NewStatus}, EndDate: {OldEndDate}->{NewEndDate}", 
-                            project.Id, oldStatus, project.Status, oldEndDate, project.EndDate);
+                            project.Id, dbStatus, newStatus, oldEndDate, newEndDate);
                         _context.Entry(project).State = EntityState.Modified;
                     }
                 }

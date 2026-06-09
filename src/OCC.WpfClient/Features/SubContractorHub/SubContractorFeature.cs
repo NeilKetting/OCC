@@ -35,27 +35,27 @@ namespace OCC.WpfClient.Features.SubContractorHub
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var hub = new NavItem("Partners", string.Empty, "Operations", iconColor: "#C0C0C0", iconCode: "\uE8D7");
+            var hub = new NavItem("Partners", string.Empty, "Operations", iconColor: "#FFB900", iconCode: "\uE8D7");
 
             hub.Children.Add(new NavItem(
                 "Performance",
                 NavigationRoutes.PerformanceDashboard,
                 "Operations",
-                iconColor: "#FF8C00",
-                iconCode: "\uE9D2"));
+                iconColor: "#38BDF8",
+                iconCode: "\uE9D9"));
 
             hub.Children.Add(new NavItem(
                 "Sub-Contractors",
                 NavigationRoutes.SubContractors,
                 "Operations",
-                iconColor: "#0078D4",
+                iconColor: "#FFB900",
                 iconCode: "\uE77B"));
 
             hub.Children.Add(new NavItem(
                 "Snag List",
                 NavigationRoutes.SnagList,
                 "Operations",
-                iconColor: "#D83B01",
+                iconColor: "#FB923C",
                 iconCode: "\uEA37"));
 
             yield return hub;

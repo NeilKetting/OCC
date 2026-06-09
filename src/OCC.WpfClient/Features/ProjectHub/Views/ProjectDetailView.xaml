@@ -49,7 +49,7 @@
                                 <ColumnDefinition Width="40"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#38BDF8" FontSize="16" Opacity="0.85" HorizontalAlignment="Center"/>
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource SymbolIcon}" Foreground="#38BDF8" FontSize="16" Opacity="0.85" HorizontalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="Dashboard" VerticalAlignment="Center" Margin="5,0,0,0"/>
                         </Grid>
                     </RadioButton>

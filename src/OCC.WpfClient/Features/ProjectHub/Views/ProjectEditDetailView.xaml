@@ -16,7 +16,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Main Form Panel -->
-        <Grid Grid.Column="0" Margin="0,0,30,0">
+        <Grid Grid.Column="0" Margin="0,0,20,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -28,7 +28,7 @@
                 <TextBlock Text="Update site details, location and management." FontSize="14" Foreground="{StaticResource TextSub}"/>
             </StackPanel>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,15,0">
                 <StackPanel>
                     <TextBlock Text="PROJECT NAME" Style="{StaticResource FormLabelText}"/>
                     <TextBox Text="{Binding Project.Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
@@ -83,7 +83,7 @@
         </Grid>
 
         <!-- Right Panel: Side Settings -->
-        <Border Grid.Column="1" Width="350" Background="#05FFFFFF" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0" Padding="30">
+        <Border Grid.Column="1" Width="350" Background="#05FFFFFF" BorderBrush="{StaticResource GlassBorderMedium}" BorderThickness="1,0,0,0" Padding="10,30,15,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <TextBlock Text="Project Control" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,30"/>

@@ -25,8 +25,8 @@ namespace OCC.WpfClient.Features.Admin
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            var admin = new NavItem("Admin", string.Empty, "Administration", iconColor: "#FFA500", iconCode: "\uE72E");
-            admin.Children.Add(new NavItem("User Management", NavigationRoutes.UserManagement, "Administration", iconColor: "#FFA500", iconCode: "\uE77B"));
+            var admin = new NavItem("Admin", string.Empty, "Administration", iconColor: "#FFB900", iconCode: "\uE72E");
+            admin.Children.Add(new NavItem("User Management", NavigationRoutes.UserManagement, "Administration", iconColor: "#FFB900", iconCode: "\uE77B"));
             
             yield return admin;
         }

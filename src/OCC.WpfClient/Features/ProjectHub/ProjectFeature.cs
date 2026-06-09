@@ -56,14 +56,14 @@ namespace OCC.WpfClient.Features.ProjectHub
                 "Project Dashboard",
                 NavigationRoutes.ProjectDashboard,
                 "Operations",
-                iconColor: "#107C10",
+                iconColor: "#38BDF8",
                 iconCode: "\uE9D9"));
  
             projects.Children.Add(new NavItem(
                 "Projects",
                 NavigationRoutes.Projects,
                 "Operations",
-                iconColor: "#5C2D91",
+                iconColor: "#FBBF24",
                 iconCode: "\uEA37"));
 
             projects.Children.Add(new NavItem(
@@ -77,7 +77,7 @@ namespace OCC.WpfClient.Features.ProjectHub
                 "Report Run",
                 NavigationRoutes.ProjectReportRun,
                 "Operations",
-                iconColor: "#EF6C00",
+                iconColor: "#F87171",
                 iconCode: "\uE9F9"));
 
             yield return projects;
