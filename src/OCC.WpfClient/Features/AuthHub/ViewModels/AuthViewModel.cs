@@ -66,6 +66,17 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
 
         public Array Environments => Enum.GetValues(typeof(ConnectionSettings.AppEnvironment));
 
+        public bool IsEnvironmentSelectorVisible =>
+            LoginModel != null && string.Equals(LoginModel.Email?.Trim(), "neil@mdk.co.za", StringComparison.OrdinalIgnoreCase);
+
+        private void UpdateDefaultEnvironment()
+        {
+            if (!IsEnvironmentSelectorVisible)
+            {
+                SelectedEnvironment = ConnectionSettings.AppEnvironment.Test;
+            }
+        }
+
         public override void Dispose()
         {
             base.Dispose();
@@ -89,6 +100,16 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
 
             // Load persistence settings
             LoginModel.Email = _localSettings.Settings.LastEmail;
+
+            LoginModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(LoginRequest.Email))
+                {
+                    OnPropertyChanged(nameof(IsEnvironmentSelectorVisible));
+                    UpdateDefaultEnvironment();
+                }
+            };
+            UpdateDefaultEnvironment();
             LoginModel.RememberMe = _localSettings.Settings.RememberMe;
 
 #if DEBUG

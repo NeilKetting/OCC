@@ -15,6 +15,7 @@ namespace OCC.WpfClient.Services
     public class SignalRService : ISignalRService, IAsyncDisposable
     {
         private HubConnection? _hubConnection;
+        private HubConnection? _chatHubConnection;
         private readonly ConnectionSettings _connectionSettings;
         private readonly IAuthService _authService;
         private readonly ILogger<SignalRService> _logger;
@@ -25,8 +26,11 @@ namespace OCC.WpfClient.Services
         public event Action<List<UserConnectionInfo>>? UserListUpdated;
         public event Action<string>? NotificationReceived;
         public event Action<DashboardUpdateDto>? DashboardUpdateReceived;
+        public event Action<ChatMessageDto>? ChatMessageReceived;
+        public event Action<Guid>? SessionDeleted;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
+        public bool IsChatConnected => _chatHubConnection?.State == HubConnectionState.Connected;
         public int OnlineCount => OnlineUsers.Count;
         public List<UserConnectionInfo> OnlineUsers { get; private set; } = new();
 
@@ -60,7 +64,8 @@ namespace OCC.WpfClient.Services
                 if (_hubConnection != null && _hubConnection.State != HubConnectionState.Disconnected) return;
                 if (_authService.CurrentToken == null) return;
 
-                var hubUrl = $"{_connectionSettings.ApiBaseUrl.TrimEnd('/')}/hubs/notifications";
+                var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
+                var hubUrl = $"{baseUrl}/hubs/notifications";
                 DebugLog($"Connecting to SignalR Notification Hub at {hubUrl}...");
 
                 _hubConnection = new HubConnectionBuilder()
@@ -77,6 +82,23 @@ namespace OCC.WpfClient.Services
                 await _hubConnection.StartAsync();
                 DebugLog($"SignalR Notification Hub connected. ID: {_hubConnection.ConnectionId}");
 
+                var chatHubUrl = $"{baseUrl}/hubs/chat";
+                DebugLog($"Connecting to SignalR Chat Hub at {chatHubUrl}...");
+
+                _chatHubConnection = new HubConnectionBuilder()
+                    .WithUrl(chatHubUrl, options =>
+                    {
+                        options.AccessTokenProvider = () => Task.FromResult<string?>(_authService.CurrentToken);
+                        options.Headers.Add("X-Environment", _connectionSettings.SelectedEnvironment.ToString());
+                    })
+                    .WithAutomaticReconnect()
+                    .Build();
+
+                RegisterChatListeners();
+
+                await _chatHubConnection.StartAsync();
+                DebugLog($"SignalR Chat Hub connected. ID: {_chatHubConnection.ConnectionId}");
+
                 // Show success toast on main UI
                 App.Current.Dispatcher.Invoke(() => {
                     WeakReferenceMessenger.Default.Send(new OCC.WpfClient.Infrastructure.Messages.ToastNotificationMessage(
@@ -85,7 +107,7 @@ namespace OCC.WpfClient.Services
             }
             catch (Exception ex)
             {
-                DebugLog($"Failed to connect to SignalR Notification Hub: {ex.Message}");
+                DebugLog($"Failed to connect to SignalR Hubs: {ex.Message}");
             }
             finally
             {
@@ -140,6 +162,21 @@ namespace OCC.WpfClient.Services
             });
         }
 
+        private void RegisterChatListeners()
+        {
+            if (_chatHubConnection == null) return;
+
+            _chatHubConnection.On<ChatMessageDto>("ReceiveMessage", (messageDto) =>
+            {
+                ChatMessageReceived?.Invoke(messageDto);
+            });
+
+            _chatHubConnection.On<Guid>("SessionDeleted", (sessionId) =>
+            {
+                SessionDeleted?.Invoke(sessionId);
+            });
+        }
+
         public async Task StopAsync()
         {
             await _connectionLock.WaitAsync();
@@ -150,6 +187,12 @@ namespace OCC.WpfClient.Services
                     await _hubConnection.StopAsync();
                     await _hubConnection.DisposeAsync();
                     _hubConnection = null;
+                }
+                if (_chatHubConnection != null)
+                {
+                    await _chatHubConnection.StopAsync();
+                    await _chatHubConnection.DisposeAsync();
+                    _chatHubConnection = null;
                 }
             }
             finally
@@ -170,6 +213,35 @@ namespace OCC.WpfClient.Services
             {
                 await _hubConnection.InvokeAsync("UpdateStatus", status);
             }
+        }
+
+        public async Task SendChatMessageAsync(Guid sessionId, string content)
+        {
+            if (_chatHubConnection != null && _chatHubConnection.State == HubConnectionState.Connected)
+            {
+                await _chatHubConnection.InvokeAsync("SendMessage", sessionId, content);
+            }
+            else
+            {
+                throw new InvalidOperationException("Chat hub is not connected.");
+            }
+        }
+
+        public async Task MarkChatSessionAsReadAsync(Guid sessionId)
+        {
+            if (_chatHubConnection != null && _chatHubConnection.State == HubConnectionState.Connected)
+            {
+                await _chatHubConnection.InvokeAsync("MarkSessionAsRead", sessionId);
+            }
+        }
+
+        public async Task<bool> ToggleChatFavouriteAsync(Guid sessionId)
+        {
+            if (_chatHubConnection != null && _chatHubConnection.State == HubConnectionState.Connected)
+            {
+                return await _chatHubConnection.InvokeAsync<bool>("ToggleFavourite", sessionId);
+            }
+            return false;
         }
 
         public async ValueTask DisposeAsync()

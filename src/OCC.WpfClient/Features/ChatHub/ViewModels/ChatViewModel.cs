@@ -37,7 +37,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
         private readonly ILocalEncryptionService _encryptionService;
         private readonly ILogger<ChatViewModel> _logger;
         private readonly IDialogService _dialogService;
-        private HubConnection? _hubConnection;
+        private readonly ISignalRService _signalRService;
 
         [ObservableProperty]
         private ObservableCollection<ChatSessionModel> _chatSessions = new();
@@ -143,7 +143,8 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                              IHttpClientFactory httpClientFactory,
                              ILocalEncryptionService encryptionService,
                              ILogger<ChatViewModel> logger,
-                             IDialogService dialogService)
+                             IDialogService dialogService,
+                             ISignalRService signalRService)
         {
             _authService = authService;
             _connectionSettings = connectionSettings;
@@ -151,6 +152,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             _encryptionService = encryptionService;
             _logger = logger;
             _dialogService = dialogService;
+            _signalRService = signalRService;
 
             // Add authorization header for HTTP requests
             if (!string.IsNullOrEmpty(_authService.CurrentToken))
@@ -251,11 +253,11 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
 
         private async Task MarkSessionAsReadAsync(Guid sessionId)
         {
-            if (_hubConnection != null && IsConnected)
+            if (_signalRService.IsChatConnected)
             {
                 try
                 {
-                    await _hubConnection.InvokeAsync("MarkSessionAsRead", sessionId);
+                    await _signalRService.MarkChatSessionAsReadAsync(sessionId);
                 }
                 catch (Exception ex)
                 {
@@ -345,11 +347,11 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
         [RelayCommand]
         private async Task ToggleFavouriteAsync(ChatSessionModel session)
         {
-            if (session == null || _hubConnection == null || !IsConnected) return;
+            if (session == null || !_signalRService.IsChatConnected) return;
 
             try
             {
-                var isFav = await _hubConnection.InvokeAsync<bool>("ToggleFavourite", session.Id);
+                var isFav = await _signalRService.ToggleChatFavouriteAsync(session.Id);
                 session.IsFavourite = isFav;
             }
             catch (Exception ex)
@@ -358,11 +360,36 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             }
         }
 
+        private void OnGlobalChatMessageReceived(ChatMessageDto messageDto)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                HandleIncomingMessage(messageDto);
+            });
+        }
+
+        private void OnGlobalSessionDeleted(Guid sessionId)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                var session = ChatSessions.FirstOrDefault(s => s.Id == sessionId);
+                if (session != null)
+                {
+                    ChatSessions.Remove(session);
+                    if (SelectedSession?.Id == sessionId) SelectedSession = null;
+                    SessionsView.Refresh();
+                }
+            });
+        }
+
         private async Task InitializeAsync()
         {
             await LoadSessionsAsync();
             await LoadContactsAsync(); // Load all contacts for search
-            await ConnectToSignalRAsync();
+            
+            _signalRService.ChatMessageReceived += OnGlobalChatMessageReceived;
+            _signalRService.SessionDeleted += OnGlobalSessionDeleted;
+            IsConnected = _signalRService.IsChatConnected;
         }
 
         private async Task LoadSessionsAsync()
@@ -417,61 +444,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             }
         }
 
-        private async Task ConnectToSignalRAsync()
-        {
-            if (_authService.CurrentToken == null) return;
 
-            var hubUrl = $"{_connectionSettings.ApiBaseUrl.TrimEnd('/')}/hubs/chat";
-
-            _hubConnection = new HubConnectionBuilder()
-                .WithUrl(hubUrl, options =>
-                {
-                    options.AccessTokenProvider = () => Task.FromResult<string?>(_authService.CurrentToken);
-                    options.Headers.Add("X-Environment", _connectionSettings.SelectedEnvironment.ToString());
-                })
-                .WithAutomaticReconnect()
-                .Build();
-
-            _hubConnection.On<ChatMessageDto>("ReceiveMessage", (messageDto) =>
-            {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    HandleIncomingMessage(messageDto);
-                });
-            });
-
-            _hubConnection.On<Guid, Guid>("MessageRead", (messageId, userId) =>
-            {
-                // Handle read receipts
-            });
-
-            _hubConnection.On<Guid>("SessionDeleted", (sessionId) =>
-            {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    var session = ChatSessions.FirstOrDefault(s => s.Id == sessionId);
-                    if (session != null)
-                    {
-                        ChatSessions.Remove(session);
-                        if (SelectedSession?.Id == sessionId) SelectedSession = null;
-                        SessionsView.Refresh();
-                    }
-                });
-            });
-
-            try
-            {
-                _logger.LogInformation("Connecting to SignalR Chat Hub at {HubUrl}...", hubUrl);
-                await _hubConnection.StartAsync();
-                IsConnected = true;
-                _logger.LogInformation("Successfully connected to Chat Hub.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to connect to SignalR Chat Hub.");
-                IsConnected = false;
-            }
-        }
 
         private void HandleIncomingMessage(ChatMessageDto messageDto)
         {
@@ -614,7 +587,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
         private async Task SendMessageAsync()
         {
             _logger.LogInformation("SendMessageAsync started. Session: {SessionId}, Connection: {ConnectionState}", 
-                SelectedSession?.Id, _hubConnection?.State);
+                SelectedSession?.Id, _signalRService.IsChatConnected);
             
             if (SelectedSession == null || string.IsNullOrWhiteSpace(MessageInput))
             {
@@ -622,14 +595,10 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                 return;
             }
 
-            if (_hubConnection == null || !IsConnected || _hubConnection.State != HubConnectionState.Connected)
+            if (!_signalRService.IsChatConnected)
             {
-                _logger.LogWarning("SendMessage blocked: SignalR not connected. State: {State}", _hubConnection?.State);
-                // Attempt to reconnect if disconnected
-                if (_hubConnection != null && _hubConnection.State == HubConnectionState.Disconnected)
-                {
-                    _ = ConnectToSignalRAsync();
-                }
+                _logger.LogWarning("SendMessage blocked: SignalR Chat not connected.");
+                _ = _signalRService.RestartAsync();
                 return;
             }
 
@@ -645,7 +614,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                 }
 
                 _logger.LogDebug("Invoking SendMessage on Hub for session {SessionId}", SelectedSession.Id);
-                await _hubConnection.InvokeAsync("SendMessage", SelectedSession.Id, contentToSend);
+                await _signalRService.SendChatMessageAsync(SelectedSession.Id, contentToSend);
                 _logger.LogInformation("Message sent successfully via Hub.");
                 success = true;
             }
@@ -822,11 +791,9 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
 
         public async ValueTask DisposeAsync()
         {
-            if (_hubConnection != null)
-            {
-                await _hubConnection.StopAsync();
-                await _hubConnection.DisposeAsync();
-            }
+            _signalRService.ChatMessageReceived -= OnGlobalChatMessageReceived;
+            _signalRService.SessionDeleted -= OnGlobalSessionDeleted;
+            await Task.CompletedTask;
         }
     }
 }

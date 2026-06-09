@@ -55,7 +55,7 @@
 
                     <TextBox Grid.Column="0" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                               Style="{StaticResource ModernInput}" 
-                              ap:WatermarkProperties.Watermark="&#xE721;  Search workers by name, role or status..."
+                              ap:WatermarkProperties.Watermark="Search workers by name, role or status..."
                               Height="38"/>
 
                     <ComboBox Grid.Column="2" ItemsSource="{Binding Teams}"

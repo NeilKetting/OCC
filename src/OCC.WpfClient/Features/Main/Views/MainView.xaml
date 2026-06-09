@@ -449,8 +449,68 @@
                                                             <DropShadowEffect BlurRadius="10" Color="{StaticResource AccentBlueColor}" ShadowDepth="0" Opacity="1"/>
                                                         </Ellipse.Effect>
                                                     </Ellipse>
-                                                    <TextBlock Text="{Binding IconCode}" Style="{StaticResource SidebarIconStyle}" FontSize="18"
-                                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding IconCode}" FontSize="18"
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                               RenderTransformOrigin="0.5,0.5">
+                                                        <TextBlock.RenderTransform>
+                                                            <TransformGroup>
+                                                                <ScaleTransform ScaleX="1.0" ScaleY="1.0"/>
+                                                                <TranslateTransform X="0.0" Y="0.0"/>
+                                                            </TransformGroup>
+                                                        </TextBlock.RenderTransform>
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock" BasedOn="{StaticResource SidebarIconStyle}">
+                                                                <Style.Triggers>
+                                                                    <MultiDataTrigger>
+                                                                        <MultiDataTrigger.Conditions>
+                                                                            <Condition Binding="{Binding Route}" Value="Chat"/>
+                                                                            <Condition Binding="{Binding UnreadCount, Converter={StaticResource VisibilityConverter}}" Value="Visible"/>
+                                                                        </MultiDataTrigger.Conditions>
+                                                                        <MultiDataTrigger.EnterActions>
+                                                                            <BeginStoryboard Name="ShakePulseStory">
+                                                                                <Storyboard RepeatBehavior="Forever">
+                                                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.X)">
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.0" Value="0"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.1" Value="-3"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="3"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="-2"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="2"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:3.0" Value="0"/>
+                                                                                    </DoubleAnimationUsingKeyFrames>
+                                                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)">
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.0" Value="1.0"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="1.15"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1.0"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:3.0" Value="1.0"/>
+                                                                                    </DoubleAnimationUsingKeyFrames>
+                                                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)">
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.0" Value="1.0"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="1.15"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1.0"/>
+                                                                                        <EasingDoubleKeyFrame KeyTime="0:0:3.0" Value="1.0"/>
+                                                                                    </DoubleAnimationUsingKeyFrames>
+                                                                                </Storyboard>
+                                                                            </BeginStoryboard>
+                                                                        </MultiDataTrigger.EnterActions>
+                                                                        <MultiDataTrigger.ExitActions>
+                                                                            <StopStoryboard BeginStoryboardName="ShakePulseStory"/>
+                                                                        </MultiDataTrigger.ExitActions>
+                                                                    </MultiDataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+
+                                                    <!-- Unread Count Badge -->
+                                                    <Border Background="#FF3B30" MinWidth="16" Height="16" CornerRadius="8" 
+                                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-4,0"
+                                                            BorderBrush="{DynamicResource BackgroundDark}" BorderThickness="1.5"
+                                                            IsHitTestVisible="False"
+                                                            Visibility="{Binding UnreadCount, Converter={StaticResource VisibilityConverter}}">
+                                                        <TextBlock Text="{Binding UnreadCount}" Foreground="White" FontSize="9" FontWeight="Bold"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,3,0"/>
+                                                    </Border>
                                                 </Grid>
 
                                                 <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" FontSize="15" Margin="0,0,0,0"

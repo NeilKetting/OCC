@@ -11,6 +11,11 @@ using OCC.WpfClient.Models;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Linq;
+using OCC.Shared.DTOs;
+using OCC.WpfClient.Features.ChatHub.ViewModels;
 
 namespace OCC.WpfClient.Features.Main.ViewModels
 {
@@ -166,6 +171,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     foreach (var hub in OpenHubs)
                     {
                         hub.IsActiveHub = (hub == value);
+                    }
+
+                    if (value is ChatViewModel)
+                    {
+                        var chatNavItem = FindNavItemByRoute(NavigationRoutes.Chat);
+                        if (chatNavItem != null)
+                        {
+                            chatNavItem.UnreadCount = 0;
+                            UpdateFilteredNavigationItems();
+                        }
                     }
                 }
             }
@@ -366,7 +381,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             
             // Connect to real-time SignalR notifications and user lists
             _signalRService.UserListUpdated += OnUserListUpdated;
+            _signalRService.ChatMessageReceived += OnChatMessageReceived;
             _ = _signalRService.StartAsync();
+            _ = LoadInitialUnreadCountAsync();
 
             // Setup User Activity Monitoring & Session auto-expiry timers
             UserActivityStatus = _userActivityService.StatusText;
@@ -862,9 +879,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 if (parentMatches || matchedChildren.Any())
                 {
                     // Create a result item that includes the matches
-                    var resultItem = new NavItem(item.Label, item.Route, item.Category, iconCode: item.IconCode)
+                    var resultItem = new NavItem(item.Label, item.Route, item.Category, iconColor: item.IconColor, iconCode: item.IconCode)
                     {
-                        IsExpanded = true
+                        IsExpanded = true,
+                        UnreadCount = item.UnreadCount
                     };
                     
                     foreach (var child in matchedChildren)
@@ -953,6 +971,107 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         /// Display model representing a single connected online user in the header user list overlay.
         /// </summary>
         public record UserDisplayModel(string Name, string TimeOnline, System.Windows.Media.Brush StatusColor);
+
+        public NavItem? FindNavItemByRoute(string route)
+        {
+            if (NavigationItems == null) return null;
+            foreach (var item in NavigationItems)
+            {
+                if (item.Route == route) return item;
+                var child = item.Children.FirstOrDefault(c => c.Route == route);
+                if (child != null) return child;
+            }
+            return null;
+        }
+
+        private async Task LoadInitialUnreadCountAsync()
+        {
+            if (_authService.CurrentToken == null) return;
+            try
+            {
+                var factory = _serviceProvider.GetRequiredService<System.Net.Http.IHttpClientFactory>();
+                using var client = factory.CreateClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authService.CurrentToken);
+                
+                var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
+                var sessions = await client.GetFromJsonAsync<ChatSessionDto[]>($"{baseUrl}/api/messages/sessions");
+                if (sessions != null)
+                {
+                    int totalUnread = sessions.Sum(s => s.UnreadCount);
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        var chatNavItem = FindNavItemByRoute(NavigationRoutes.Chat);
+                        if (chatNavItem != null)
+                        {
+                            chatNavItem.UnreadCount = totalUnread;
+                            UpdateFilteredNavigationItems();
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load initial unread chat count.");
+            }
+        }
+
+        private void OnChatMessageReceived(ChatMessageDto message)
+        {
+            if (_authService.CurrentUser != null && message.SenderId == _authService.CurrentUser.Id)
+            {
+                return;
+            }
+
+            bool isViewingChat = ActiveHub is ChatViewModel chatVm && chatVm.SelectedSession?.Id == message.ChatSessionId;
+
+            if (!isViewingChat)
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    var chatNavItem = FindNavItemByRoute(NavigationRoutes.Chat);
+                    if (chatNavItem != null)
+                    {
+                        chatNavItem.UnreadCount++;
+                        UpdateFilteredNavigationItems();
+                    }
+
+                    string displayContent = message.Content;
+                    if (message.HasAttachment)
+                    {
+                        displayContent = "📎 Sent an attachment";
+                    }
+                    else
+                    {
+                        var openChatVm = OpenHubs.OfType<ChatViewModel>().FirstOrDefault();
+                        var sessionModel = openChatVm?.ChatSessions.FirstOrDefault(s => s.Id == message.ChatSessionId);
+                        if (sessionModel != null && !string.IsNullOrEmpty(sessionModel.DecryptedAesKey))
+                        {
+                            try
+                            {
+                                var encryptionService = _serviceProvider.GetRequiredService<ILocalEncryptionService>();
+                                displayContent = encryptionService.DecryptMessage(message.Content, sessionModel.DecryptedAesKey);
+                            }
+                            catch
+                            {
+                                displayContent = "New message received";
+                            }
+                        }
+                        else
+                        {
+                            displayContent = "New message received";
+                        }
+                    }
+
+                    var toast = new ToastMessage(
+                        $"New Chat from {message.SenderName}",
+                        displayContent,
+                        ToastType.Info
+                    );
+
+                    WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(toast));
+                });
+            }
+        }
 
         #endregion
 
@@ -1172,6 +1291,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             if (_signalRService != null)
             {
                 _signalRService.UserListUpdated -= OnUserListUpdated;
+                _signalRService.ChatMessageReceived -= OnChatMessageReceived;
             }
 
             if (_userActivityService != null)

@@ -22,6 +22,9 @@ namespace OCC.WpfClient.Infrastructure
         [ObservableProperty]
         private bool _isExpanded;
 
+        [ObservableProperty]
+        private int _unreadCount;
+
         public NavItem(string label, string route, string category, bool isActive = false, string? iconColor = null, string? iconCode = null)
         {
             Label = label;

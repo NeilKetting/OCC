@@ -231,7 +231,7 @@
                             </Grid>
 
                             <!-- Environment Selection -->
-                            <StackPanel Margin="0,15,0,0">
+                            <StackPanel Margin="0,15,0,0" Visibility="{Binding IsEnvironmentSelectorVisible, Converter={StaticResource VisibilityConverter}}">
                                 <TextBlock Text="Server Environment" Foreground="{StaticResource TextSub}" Margin="0,0,0,5" FontSize="{StaticResource FontSizeSmall}"/>
                                 <ComboBox Style="{StaticResource ModernComboBox}"
                                           ItemsSource="{Binding Environments}"
