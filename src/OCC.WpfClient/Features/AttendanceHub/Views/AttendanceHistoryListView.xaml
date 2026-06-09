@@ -113,6 +113,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=yyyy/MM/dd}" Width="Auto"/>
                 <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding EmployeeName}" Width="180"/>
+                <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="160"/>
                 <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="100"/>
                 <DataGridTextColumn Header="CLOCK IN" Binding="{Binding CheckInTime, StringFormat=HH:mm}" Width="Auto"/>
                 <DataGridTextColumn Header="CLOCK OUT" Binding="{Binding CheckOutTime, StringFormat=HH:mm}" Width="Auto"/>

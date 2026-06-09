@@ -348,9 +348,34 @@ namespace OCC.API.Controllers
                     var incidents = await _context.Set<Incident>().Where(i => i.ProjectId == id).ToListAsync();
                     var snagJobs = await _context.Set<SnagJob>().Where(s => s.ProjectId == id).ToListAsync();
 
+                    // Manual deletion of HSEQ Audit Attachments to prevent restrict blocker errors
+                    var auditIds = hseqAudits.Select(a => a.Id).ToList();
+                    var hseqAttachments = auditIds.Any()
+                        ? await _context.Set<HseqAuditAttachment>().Where(at => auditIds.Contains(at.AuditId)).ToListAsync()
+                        : new List<HseqAuditAttachment>();
+
+                    // Manual dissociation of attendance records (preserving historical presence and payroll logs)
+                    var attendanceRecords = await _context.AttendanceRecords.Where(a => a.ProjectId == id).ToListAsync();
+                    foreach (var att in attendanceRecords)
+                    {
+                        att.ProjectId = null;
+                    }
+
+                    // Manual dissociation of time records (preserving labor history and payroll logs)
+                    var taskIds = project.Tasks.Select(t => t.Id).ToList();
+                    var timeRecords = await _context.TimeRecords
+                        .Where(tr => tr.ProjectId == id || (tr.TaskId.HasValue && taskIds.Contains(tr.TaskId.Value)))
+                        .ToListAsync();
+                    foreach (var tr in timeRecords)
+                    {
+                        tr.ProjectId = null;
+                        tr.TaskId = null;
+                    }
+
                     _context.SupressSoftDelete = true;
                     
                     if (hseqDocs.Any()) _context.RemoveRange(hseqDocs);
+                    if (hseqAttachments.Any()) _context.RemoveRange(hseqAttachments);
                     if (hseqAudits.Any()) _context.RemoveRange(hseqAudits);
                     if (incidents.Any()) _context.RemoveRange(incidents);
                     if (snagJobs.Any()) _context.RemoveRange(snagJobs);
@@ -363,9 +388,72 @@ namespace OCC.API.Controllers
                 else
                 {
                     // Soft Delete
-                    var project = await _context.Projects.FindAsync(id);
+                    var project = await _context.Projects
+                        .Include(p => p.Tasks)
+                        .Include(p => p.TeamMembers)
+                        .Include(p => p.VariationOrders)
+                        .FirstOrDefaultAsync(p => p.Id == id);
+
                     if (project == null) return NotFound();
-                    _context.Projects.Remove(project);
+
+                    // Soft delete the project
+                    project.IsActive = false;
+
+                    // Cascade soft delete to tasks
+                    foreach (var task in project.Tasks)
+                    {
+                        task.IsActive = false;
+                    }
+
+                    // Cascade soft delete to team members
+                    foreach (var tm in project.TeamMembers)
+                    {
+                        tm.IsActive = false;
+                    }
+
+                    // Cascade soft delete to variation orders
+                    foreach (var vo in project.VariationOrders)
+                    {
+                        vo.IsActive = false;
+                    }
+
+                    // Soft delete related task details (comments, assignments, attachments)
+                    var taskIds = project.Tasks.Select(t => t.Id).ToList();
+                    if (taskIds.Any())
+                    {
+                        var comments = await _context.TaskComments.Where(c => taskIds.Contains(c.TaskId)).ToListAsync();
+                        foreach (var c in comments) c.IsActive = false;
+
+                        var assignments = await _context.TaskAssignments.Where(a => taskIds.Contains(a.TaskId)).ToListAsync();
+                        foreach (var a in assignments) a.IsActive = false;
+
+                        var attachments = await _context.TaskAttachments.Where(at => taskIds.Contains(at.TaskId)).ToListAsync();
+                        foreach (var at in attachments) at.IsActive = false;
+                    }
+
+                    // Soft delete other project-linked items (Incidents, Audits, SnagJobs, HseqDocuments, SiteDeployments, ProjectReportDrafts/Histories)
+                    var hseqDocs = await _context.Set<HseqDocument>().Where(d => d.ProjectId == id).ToListAsync();
+                    foreach (var doc in hseqDocs) doc.IsActive = false;
+
+                    var hseqAudits = await _context.Set<HseqAudit>().Where(a => a.ProjectId == id).ToListAsync();
+                    foreach (var audit in hseqAudits) audit.IsActive = false;
+
+                    var incidents = await _context.Set<Incident>().Where(i => i.ProjectId == id).ToListAsync();
+                    foreach (var incident in incidents) incident.IsActive = false;
+
+                    var snagJobs = await _context.Set<SnagJob>().Where(s => s.ProjectId == id).ToListAsync();
+                    foreach (var snag in snagJobs) snag.IsActive = false;
+
+                    var siteDeployments = await _context.Set<SiteDeployment>().Where(sd => sd.ProjectId == id).ToListAsync();
+                    foreach (var sd in siteDeployments) sd.IsActive = false;
+
+                    var drafts = await _context.ProjectReportDrafts.Where(d => d.ProjectId == id).ToListAsync();
+                    foreach (var d in drafts) d.IsActive = false;
+
+                    var historyRecords = await _context.ProjectReportHistories.Where(h => h.ProjectId == id).ToListAsync();
+                    foreach (var h in historyRecords) h.IsActive = false;
+
+                    // Note: TimeRecords, AttendanceRecords, and WageRuns are EXPLICITLY EXCLUDED and NOT modified.
                     await _context.SaveChangesAsync();
                 }
 

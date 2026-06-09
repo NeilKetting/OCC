@@ -554,17 +554,17 @@ namespace OCC.API.Data
                 .HasForeignKey(o => o.ProjectId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<TimeRecord>()
-                .HasOne<Project>()
-                .WithMany()
-                .HasForeignKey(tr => tr.ProjectId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<TimeRecord>()
-                .HasOne<ProjectTask>()
-                .WithMany()
-                .HasForeignKey(tr => tr.TaskId)
-                .OnDelete(DeleteBehavior.Restrict);
+             modelBuilder.Entity<TimeRecord>()
+                 .HasOne<Project>()
+                 .WithMany()
+                 .HasForeignKey(tr => tr.ProjectId)
+                 .OnDelete(DeleteBehavior.ClientSetNull);
+ 
+             modelBuilder.Entity<TimeRecord>()
+                 .HasOne<ProjectTask>()
+                 .WithMany()
+                 .HasForeignKey(tr => tr.TaskId)
+                 .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<SubContractor>(entity =>
             {

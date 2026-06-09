@@ -92,7 +92,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Foreground="{StaticResource TextSub}" FontSize="11">
                         <Run Text="Auto-clocked employees available today: "/>
-                        <Run Text="{Binding AvailableEmployees.Count}" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                        <Run Text="{Binding AvailableEmployees.Count, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
                     </TextBlock>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBlock Text="{Binding SelectedCount}" FontWeight="Bold" Foreground="#FFB900" FontSize="13" Margin="0,0,4,0"/>

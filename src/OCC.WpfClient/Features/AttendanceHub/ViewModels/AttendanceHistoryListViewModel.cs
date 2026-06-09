@@ -16,6 +16,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     {
         private readonly IAttendanceService _attendanceService;
         private readonly IEmployeeService _employeeService;
+        private readonly IProjectService _projectService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<AttendanceHistoryListViewModel> _logger;
         private List<AttendanceRecord> _allRecords = new();
@@ -24,6 +25,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public override List<ReportColumnDefinition> ReportColumns => new()
         {
             new() { Header = "Employee",   PropertyName = "EmployeeName",  Width = 1.8 },
+            new() { Header = "Project",    PropertyName = "ProjectName",   Width = 2 },
             new() { Header = "Date",       PropertyName = "Date",          Width = 1 },
             new() { Header = "Status",     PropertyName = "Status",        Width = 1 },
             new() { Header = "Clock In",   PropertyName = "CheckInTime",   Width = 1 },
@@ -50,16 +52,19 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // Rich employee name lookup for display
         private Dictionary<Guid, string> _employeeNameMap = new();
+        private Dictionary<Guid, string> _projectNameMap = new();
 
         public AttendanceHistoryListViewModel(
             IAttendanceService attendanceService,
             IEmployeeService employeeService,
+            IProjectService projectService,
             IDialogService dialogService,
             IPdfService pdfService,
             ILogger<AttendanceHistoryListViewModel> logger) : base(pdfService)
         {
             _attendanceService = attendanceService;
             _employeeService = employeeService;
+            _projectService = projectService;
             _dialogService = dialogService;
             _logger = logger;
             Title = "Attendance History";
@@ -75,6 +80,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 // Build employee name map for display
                 var employees = await _employeeService.GetEmployeesAsync();
                 _employeeNameMap = employees.ToDictionary(e => e.Id, e => $"{e.FirstName} {e.LastName}");
+
+                // Build project name map for display
+                var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: true);
+                _projectNameMap = projects.ToDictionary(p => p.Id, p => p.Name);
 
                 _allRecords = (await _attendanceService.GetAttendanceRecordsAsync(FromDate, ToDate)).ToList();
                 FilterItems();
@@ -103,7 +112,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var q = SearchQuery.ToLower();
                 filtered = filtered.Where(r =>
                     (r.Branch?.ToLower().Contains(q) ?? false) ||
-                    (r.EmployeeId.HasValue && _employeeNameMap.TryGetValue(r.EmployeeId.Value, out var name) && name.ToLower().Contains(q)));
+                    (r.EmployeeId.HasValue && _employeeNameMap.TryGetValue(r.EmployeeId.Value, out var name) && name.ToLower().Contains(q)) ||
+                    (r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var projName) && projName.ToLower().Contains(q)));
             }
 
             filtered = SelectedBranchIndex switch
@@ -128,7 +138,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 .Select(r => new AttendanceHistoryRow
                 {
                     Record       = r,
-                    EmployeeName = GetEmployeeName(r.EmployeeId)
+                    EmployeeName = GetEmployeeName(r.EmployeeId),
+                    ProjectName  = GetProjectName(r.ProjectId)
                 })
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
@@ -138,6 +149,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         public string GetEmployeeName(Guid? id) =>
             id.HasValue && _employeeNameMap.TryGetValue(id.Value, out var n) ? n : "Unknown";
+
+        public string GetProjectName(Guid? id) =>
+            id.HasValue && _projectNameMap.TryGetValue(id.Value, out var n) ? n : "Office / General";
 
         [RelayCommand]
         private void EditRecord(object? parameter)
@@ -316,6 +330,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // Resolved display name (filled by the VM from _employeeNameMap)
         public string EmployeeName { get; set; } = string.Empty;
+
+        // Resolved project name (filled by the VM from _projectNameMap)
+        public string ProjectName { get; set; } = string.Empty;
 
         // Forwarded record properties — keeps XAML bindings intact
         public DateTime        Date          => Record.Date;

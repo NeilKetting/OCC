@@ -82,7 +82,7 @@
             </Border>
             
             <!-- Date Headers ScrollViewer -->
-            <ScrollViewer Grid.Row="0" Grid.Column="2" Name="HeaderScrollViewer" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+            <ScrollViewer Grid.Row="0" Grid.Column="2" Name="HeaderScrollViewer" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Padding="10,0,15,0" Margin="0,0,10,0">
                 <ItemsControl ItemsSource="{Binding DateHeaders}" Width="{Binding CanvasWidth}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -106,7 +106,7 @@
 
             <!-- Row 1: Content -->
             <!-- Task List (Left) -->
-            <ScrollViewer Grid.Row="1" Grid.Column="0" Name="TaskListScrollViewer" HorizontalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" Grid.Column="0" Name="TaskListScrollViewer" HorizontalScrollBarVisibility="Auto" Padding="10,0,15,0"  Margin="0,0,10,0">
                 <ItemsControl ItemsSource="{Binding GanttTasks}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -121,7 +121,8 @@
                     </ItemsControl.ItemContainerStyle>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:GanttTaskWrapper}">
-                            <Border x:Name="TaskRowBorder" Height="{Binding RowHeight}" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1" Background="Transparent">
+                            <Border x:Name="TaskRowBorder" Height="{Binding RowHeight}" BorderBrush="{StaticResource GlassBorderUltraLight}" 
+                                    BorderThickness="0,0,0,1" Background="Transparent">
                                 <StackPanel Orientation="Horizontal" Margin="{Binding IndentMargin}">
                                     <!-- Expander Button -->
                                     <Button Style="{StaticResource ToolbarIconButton}" 
@@ -169,7 +170,7 @@
             <GridSplitter Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Background="{StaticResource GlassBorderUltraLight}"/>
 
             <!-- Gantt Chart (Right) -->
-            <ScrollViewer Grid.Row="1" Grid.Column="2" Name="GanttChartScrollViewer" HorizontalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" Grid.Column="2" Name="GanttChartScrollViewer" HorizontalScrollBarVisibility="Auto" Padding="10,1,15,1"  Margin="0,0,10,0">
                 <Grid>
                     <!-- Layer 1: Background Canvas for Today Marker -->
                     <Canvas Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}" IsHitTestVisible="False">

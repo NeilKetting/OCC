@@ -56,22 +56,46 @@ namespace OCC.API.Services
                 return; // Feature is disabled
             }
 
+            var today = DateTime.UtcNow.Date; // Handle local timezone properly depending on server, but UtcNow.Date is standard
+
+            // Get active deployments for today to check if any crew is dispatched
+            var deploymentsToday = await dbContext.SiteDeployments
+                .Include(sd => sd.Members)
+                .Where(sd => sd.DeploymentDate.Date == today && sd.Status != DeploymentStatus.Cancelled)
+                .ToListAsync(stoppingToken);
+
+            var employeeProjectMap = new Dictionary<Guid, Guid>();
+            foreach (var dep in deploymentsToday)
+            {
+                foreach (var member in dep.Members)
+                {
+                    employeeProjectMap[member.EmployeeId] = dep.ProjectId;
+                }
+            }
+
             // Check if today is a scheduled day
             var todayDay = DateTime.Now.DayOfWeek;
-            if (companyDetails.AutoClockInDays != null && 
-                companyDetails.AutoClockInDays.Count > 0 && 
-                !companyDetails.AutoClockInDays.Contains(todayDay))
+            bool isScheduledDay = companyDetails.AutoClockInDays != null && 
+                                  companyDetails.AutoClockInDays.Count > 0 && 
+                                  companyDetails.AutoClockInDays.Contains(todayDay);
+
+            if (!isScheduledDay && employeeProjectMap.Count == 0)
             {
-                _logger.LogInformation($"AutoClockInService: Skipping today ({todayDay}) as it is not in the scheduled days.");
+                _logger.LogInformation($"AutoClockInService: Skipping today ({todayDay}) as it is not a scheduled day and no crews are deployed.");
                 return;
             }
 
             // 2. Get active employees
-            var activeEmployees = await dbContext.Employees
-                .Where(e => e.Status == EmployeeStatus.Active)
-                .ToListAsync(stoppingToken);
+            IQueryable<Employee> employeeQuery = dbContext.Employees
+                .Where(e => e.Status == EmployeeStatus.Active);
 
-            var today = DateTime.UtcNow.Date; // Handle local timezone properly depending on server, but UtcNow.Date is standard
+            if (!isScheduledDay)
+            {
+                var deployedEmployeeIds = employeeProjectMap.Keys.ToList();
+                employeeQuery = employeeQuery.Where(e => deployedEmployeeIds.Contains(e.Id));
+            }
+
+            var activeEmployees = await employeeQuery.ToListAsync(stoppingToken);
             var currentTime = DateTime.Now.TimeOfDay; // Server local time for shift comparison
 
             int processedCount = 0;
@@ -90,6 +114,12 @@ namespace OCC.API.Services
 
                 bool madeChanges = false;
 
+                Guid? targetProjectId = null;
+                if (employeeProjectMap.TryGetValue(employee.Id, out var projId))
+                {
+                    targetProjectId = projId;
+                }
+
                 if (existingRecord == null)
                 {
                     // If they don't have a record today, check if we should auto clock-in
@@ -103,6 +133,7 @@ namespace OCC.API.Services
                             Id = Guid.NewGuid(),
                             EmployeeId = employee.Id,
                             Date = today,
+                            ProjectId = targetProjectId,
                             Branch = employee.Branch,
                             CheckInTime = inTime,
                             Status = AttendanceStatus.Present,
@@ -141,6 +172,12 @@ namespace OCC.API.Services
                 }
                 else
                 {
+                    if (targetProjectId.HasValue && existingRecord.ProjectId == null)
+                    {
+                        existingRecord.ProjectId = targetProjectId.Value;
+                        madeChanges = true;
+                    }
+
                     // If they have an open record today, check if we should auto clock-out
                     if (existingRecord.CheckOutTime == null && shiftEndTime != null && currentTime >= shiftEndTime.Value)
                     {

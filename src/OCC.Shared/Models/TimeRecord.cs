@@ -22,10 +22,10 @@ namespace OCC.Shared.Models
         public Guid? EmployeeId { get; set; }
         
         /// <summary> Foreign Key linking to the <see cref="Project"/>. </summary>
-        public Guid ProjectId { get; set; }
+        public Guid? ProjectId { get; set; }
 
         /// <summary> Foreign Key linking to the specific <see cref="ProjectTask"/>. </summary>
-        public Guid TaskId { get; set; }
+        public Guid? TaskId { get; set; }
         
         /// <summary> The date the work was performed. </summary>
         public DateTime Date { get; set; }
