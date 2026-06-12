@@ -90,6 +90,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private decimal _grandTotalWage;
         [ObservableProperty] private bool _isGenerated;
 
+        // Column Visibility
+        [ObservableProperty] private bool _isRateHrVisible = true;
+        [ObservableProperty] private bool _isOtRatesVisible = true;
+        [ObservableProperty] private bool _isDeductionsVisible = true;
+        [ObservableProperty] private bool _isSupFeeVisible = true;
+        [ObservableProperty] private bool _isDaysVisible = true;
+        [ObservableProperty] private bool _isNotesVisible = true;
+
         // ─── Past runs list ───────────────────────────────────────────────────
 
         [ObservableProperty] private ObservableCollection<WageRun> _pastRuns = new();

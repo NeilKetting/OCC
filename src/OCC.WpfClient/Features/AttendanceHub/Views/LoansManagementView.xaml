@@ -50,9 +50,8 @@
                         <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh">
                             <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
                         </Button>
-                        <Button Command="{Binding ShowAddPanelCommand}" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0">
+                        <Button Command="{Binding ShowAddPanelCommand}" Style="{StaticResource CreateButton}" Margin="8,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE710;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
                                 <TextBlock Text="NEW LOAN"/>
                             </StackPanel>
                         </Button>

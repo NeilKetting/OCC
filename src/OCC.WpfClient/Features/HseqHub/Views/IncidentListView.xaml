@@ -46,7 +46,7 @@
                     </StackPanel>
                     <TextBlock Text="Report and track health and safety incidents" Style="{StaticResource LabelText}" Opacity="0.7"/>
                 </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource IconButton}" Command="{Binding AddIncidentCommand}" Margin="0,0,20,0">
+                <Button Grid.Column="1" Style="{StaticResource CreateIconButton}" Command="{Binding AddIncidentCommand}" Margin="0,0,20,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
                         <TextBlock Text="Report Incident" Style="{StaticResource ButtonTextStyle}"/>

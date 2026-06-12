@@ -56,7 +56,12 @@ namespace OCC.API.Services
                 return; // Feature is disabled
             }
 
-            var today = DateTime.UtcNow.Date; // Handle local timezone properly depending on server, but UtcNow.Date is standard
+            // South Africa Standard Time (SAST, UTC+2) is the local timezone for all branches (JHB and CPT)
+            var saTimeZone = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
+            var saTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, saTimeZone);
+            var today = saTime.Date;
+            var todayDay = saTime.DayOfWeek;
+            var currentTime = saTime.TimeOfDay;
 
             // Get active deployments for today to check if any crew is dispatched
             var deploymentsToday = await dbContext.SiteDeployments
@@ -74,7 +79,6 @@ namespace OCC.API.Services
             }
 
             // Check if today is a scheduled day
-            var todayDay = DateTime.Now.DayOfWeek;
             bool isScheduledDay = companyDetails.AutoClockInDays != null && 
                                   companyDetails.AutoClockInDays.Count > 0 && 
                                   companyDetails.AutoClockInDays.Contains(todayDay);
@@ -96,7 +100,6 @@ namespace OCC.API.Services
             }
 
             var activeEmployees = await employeeQuery.ToListAsync(stoppingToken);
-            var currentTime = DateTime.Now.TimeOfDay; // Server local time for shift comparison
 
             int processedCount = 0;
 
@@ -104,6 +107,29 @@ namespace OCC.API.Services
             {
                 var shiftStartTime = employee.ShiftStartTime;
                 var shiftEndTime = employee.ShiftEndTime;
+
+                // Resolve branch-specific times from the Company Profile (if defined there)
+                if (!string.IsNullOrEmpty(employee.Branch) && companyDetails.Branches != null)
+                {
+                    Branch? branchEnum = employee.Branch.ToLower().Trim() switch
+                    {
+                        "johannesburg" => Branch.JHB,
+                        "jhb" => Branch.JHB,
+                        "cape town" => Branch.CPT,
+                        "cpt" => Branch.CPT,
+                        _ => null
+                    };
+
+                    if (branchEnum.HasValue && companyDetails.Branches.TryGetValue(branchEnum.Value, out var branchDetails))
+                    {
+                        shiftStartTime = branchDetails.ShiftStartTime;
+                        shiftEndTime = branchDetails.ShiftEndTime;
+                    }
+                }
+
+                // Default fallback if still null
+                shiftStartTime ??= new TimeSpan(7, 0, 0);
+                shiftEndTime ??= new TimeSpan(16, 45, 0);
                 
                 // Get V1 and V2 records for today
                 var existingRecord = await dbContext.AttendanceRecords

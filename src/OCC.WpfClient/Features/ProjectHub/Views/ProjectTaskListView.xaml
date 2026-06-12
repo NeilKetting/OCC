@@ -138,7 +138,7 @@
                                 <TextBlock Text="Collapse All" VerticalAlignment="Center" Style="{StaticResource LabelText}"/>
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding NewTaskCommand}" Style="{StaticResource IconButton}">
+                        <Button Command="{Binding NewTaskCommand}" Style="{StaticResource CreateIconButton}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
                                 <TextBlock Text="Create Task" Style="{StaticResource ButtonTextStyle}"/>

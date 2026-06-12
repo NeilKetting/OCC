@@ -466,14 +466,14 @@
 
                 <!-- Right side: Actions -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding SaveSelectedItemCommand}" Style="{StaticResource IconButton}" Margin="0,0,12,0" Padding="15,10" IsEnabled="{Binding IsGenerating, Converter={StaticResource InverseBooleanConverter}}">
+                    <Button Command="{Binding SaveSelectedItemCommand}" Style="{StaticResource CreateIconButton}" Margin="0,0,12,0" Padding="15,10" IsEnabled="{Binding IsGenerating, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Margin="0,0,8,0" FontSize="14" VerticalAlignment="Center"/>
                             <TextBlock Text="Save Current Draft" Foreground="White" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding GenerateReportsCommand}" Style="{StaticResource IconButton}" Padding="20,10" IsEnabled="{Binding IsGenerating, Converter={StaticResource InverseBooleanConverter}}">
+                    <Button Command="{Binding GenerateReportsCommand}" Style="{StaticResource CreateIconButton}" Padding="20,10" IsEnabled="{Binding IsGenerating, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="" Style="{StaticResource SymbolIcon}" Margin="0,0,8,0"/>
                             <TextBlock Text="Generate Reports" Style="{StaticResource LabelText}"/>

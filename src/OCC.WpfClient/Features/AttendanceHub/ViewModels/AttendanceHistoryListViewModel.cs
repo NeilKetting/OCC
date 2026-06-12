@@ -35,6 +35,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         };
 
         public override IRelayCommand<object>? OpenCommand => EditRecordCommand;
+        public override IRelayCommand<object>? EditCommand => EditRecordCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteRecordCommand;
 
         [ObservableProperty] private DateTime _fromDate = DateTime.Today.AddDays(-30);
@@ -42,13 +43,6 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private int _selectedBranchIndex = 0;
         [ObservableProperty] private int _selectedStatusIndex = 0;
         [ObservableProperty] private int _totalHours;
-        [ObservableProperty] private AttendanceRecord? _editingRecord;
-        [ObservableProperty] private bool _isEditPanelOpen;
-        [ObservableProperty] private string? _sickNoteFilePath;
-        [ObservableProperty] private bool _hasSickNote;
-
-        /// <summary>Status of the record before the edit panel was opened — used to guard balance deduction.</summary>
-        private AttendanceStatus _previousStatus;
 
         // Rich employee name lookup for display
         private Dictionary<Guid, string> _employeeNameMap = new();
@@ -160,121 +154,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             var record = row?.Record;
             if (record == null) return;
 
-            // Capture status BEFORE opening panel for balance-deduction guard
-            _previousStatus = record.Status;
-            SickNoteFilePath = null;
-            HasSickNote = false;
+            var detailVm = new AttendanceDetailViewModel(
+                record,
+                _attendanceService,
+                _employeeService,
+                _dialogService,
+                _logger,
+                _pdfService);
 
-            EditingRecord = new AttendanceRecord
+            OpenOverlay(detailVm, async (res) =>
             {
-                Id = record.Id,
-                EmployeeId = record.EmployeeId,
-                Date = record.Date,
-                CheckInTime = record.CheckInTime,
-                CheckOutTime = record.CheckOutTime,
-                Status = record.Status,
-                Branch = record.Branch,
-                Notes = record.Notes,
-                HoursWorked = record.HoursWorked,
-                DoctorsNoteImagePath = record.DoctorsNoteImagePath,
-                RowVersion = record.RowVersion
-            };
-            IsEditPanelOpen = true;
-        }
-
-        [RelayCommand]
-        private async Task SaveRecord()
-        {
-            if (EditingRecord == null) return;
-            try
-            {
-                IsBusy = true;
-
-                // 1. Upload sick note if provided
-                if (!string.IsNullOrEmpty(SickNoteFilePath))
+                if (res != null) // Meaning saved successfully
                 {
-                    var serverPath = await _attendanceService.UploadSickNoteAsync(SickNoteFilePath);
-                    if (!string.IsNullOrEmpty(serverPath))
-                        EditingRecord.DoctorsNoteImagePath = serverPath;
+                    await LoadDataAsync();
                 }
-
-                // 2. Save the attendance record
-                await _attendanceService.UpdateAttendanceRecordAsync(EditingRecord);
-
-                // 3. Deduct sick leave balance if status changed TO Sick (and wasn't already Sick)
-                if (EditingRecord.Status == AttendanceStatus.Sick &&
-                    _previousStatus != AttendanceStatus.Sick &&
-                    EditingRecord.EmployeeId.HasValue)
-                {
-                    try
-                    {
-                        var emp = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId.Value);
-                        if (emp != null)
-                        {
-                            // Deduct 1 sick day — clamp at 0
-                            emp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - 1);
-                            var updateEmp = new OCC.Shared.Models.Employee
-                            {
-                                Id = emp.Id,
-                                FirstName = emp.FirstName,
-                                LastName = emp.LastName,
-                                EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
-                                IdNumber = emp.IdNumber,
-                                Email = emp.Email,
-                                Phone = emp.Phone,
-                                Branch = emp.Branch,
-                                Role = emp.Role,
-                                Status = emp.Status,
-                                HourlyRate = emp.HourlyRate,
-                                SickLeaveBalance = emp.SickLeaveBalance,
-                                AnnualLeaveBalance = emp.AnnualLeaveBalance,
-                                ShiftStartTime = emp.ShiftStartTime,
-                                ShiftEndTime = emp.ShiftEndTime,
-                                RowVersion = emp.RowVersion
-                            };
-                            await _employeeService.UpdateEmployeeAsync(updateEmp);
-                            NotifySuccess("Record Updated",
-                                $"Status changed to Sick. 1 sick day deducted from {emp.FirstName} {emp.LastName}'s balance ({emp.SickLeaveBalance:F1} days remaining).");
-                        }
-                    }
-                    catch (Exception balEx)
-                    {
-                        _logger.LogWarning(balEx, "Could not deduct sick leave balance for employee {Id}", EditingRecord.EmployeeId);
-                        NotifySuccess("Record Updated", "Attendance record saved. Note: sick leave balance could not be updated automatically.");
-                    }
-                }
-                else
-                {
-                    NotifySuccess("Saved", "Attendance record updated.");
-                }
-
-                IsEditPanelOpen = false;
-                SickNoteFilePath = null;
-                HasSickNote = false;
-                await LoadDataAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving attendance record");
-                NotifyError("Save Failed", ex.Message);
-            }
-            finally { IsBusy = false; }
-        }
-
-        [RelayCommand]
-        private void UploadSickNote()
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Title = "Select Sick Note / Doctor's Certificate",
-                Filter = "Documents|*.pdf;*.jpg;*.jpeg;*.png;*.bmp|PDF Files|*.pdf|Images|*.jpg;*.jpeg;*.png;*.bmp",
-                Multiselect = false
-            };
-            if (dialog.ShowDialog() == true)
-            {
-                SickNoteFilePath = dialog.FileName;
-                HasSickNote = true;
-            }
+            });
         }
 
         [RelayCommand]
@@ -308,13 +202,6 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 NotifyError("Delete Failed", ex.Message);
             }
             finally { IsBusy = false; }
-        }
-
-        [RelayCommand]
-        private void CancelEdit()
-        {
-            IsEditPanelOpen = false;
-            EditingRecord = null;
         }
     }
 

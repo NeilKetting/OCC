@@ -44,7 +44,7 @@
                     </StackPanel>
                     <TextBlock Text="Create and track training and certificates" Style="{StaticResource LabelText}" Opacity="0.7"/>
                 </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource IconButton}" Command="{Binding AddTrainingCommand}" Margin="0,0,20,0">
+                <Button Grid.Column="1" Style="{StaticResource CreateIconButton}" Command="{Binding AddTrainingCommand}" Margin="0,0,20,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
                         <TextBlock Text="Add Training" Style="{StaticResource ButtonTextStyle}"/>

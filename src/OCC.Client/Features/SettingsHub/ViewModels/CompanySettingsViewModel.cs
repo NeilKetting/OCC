@@ -118,6 +118,7 @@ namespace OCC.Client.Features.SettingsHub.ViewModels
                 var details = await _settingsService.GetCompanyDetailsAsync();
                 if (details != null)
                 {
+                    details.AutoClockInDays ??= new System.Collections.Generic.List<DayOfWeek>();
                     CompanyDetails = details;
                     RefreshDays();
                 }

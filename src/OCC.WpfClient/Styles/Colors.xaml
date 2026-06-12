@@ -92,7 +92,14 @@
         <GradientStop Color="#d4cdcb" Offset="1.0" />
     </LinearGradientBrush>
 
-
+    <LinearGradientBrush x:Key="ModernCreateButtonBorderGradient" StartPoint="0,2" EndPoint="1,2">
+        <GradientStop Color="{StaticResource Orange}" Offset="0.0" />
+        <GradientStop Color="#d4cdcb" Offset="0.2" />
+        <GradientStop Color="#5c5857" Offset="0.4" />
+        <GradientStop Color="#5c5857" Offset="0.6" />
+        <GradientStop Color="#d4cdcb" Offset="0.8" />
+        <GradientStop Color="{StaticResource Orange}" Offset="1.0" />
+    </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="PremiumGlassGlow" x:Shared="False" StartPoint="0,0" EndPoint="1,1">
         <LinearGradientBrush.RelativeTransform>
