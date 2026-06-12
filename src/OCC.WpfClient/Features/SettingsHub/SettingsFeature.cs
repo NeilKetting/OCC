@@ -17,9 +17,11 @@ namespace OCC.WpfClient.Features.SettingsHub
         public void RegisterServices(IServiceCollection services)
         {
             services.AddSingleton<ISettingsService, SettingsService>();
+            services.AddSingleton<IAuditLogService, AuditLogService>();
             services.AddTransient<CompanyProfileViewModel>();
             services.AddTransient<CompanySettingsViewModel>();
             services.AddTransient<PersonalPreferencesViewModel>();
+            services.AddTransient<AuditLogViewModel>();
         }
 
         public void RegisterRoutes(INavigationService navigationService)
@@ -27,6 +29,7 @@ namespace OCC.WpfClient.Features.SettingsHub
             navigationService.RegisterRoute(NavigationRoutes.CompanyProfile, typeof(CompanyProfileViewModel));
             navigationService.RegisterRoute(NavigationRoutes.CompanySettings, typeof(CompanySettingsViewModel));
             navigationService.RegisterRoute(NavigationRoutes.PersonalPreferences, typeof(PersonalPreferencesViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.AuditLog, typeof(AuditLogViewModel));
         }
 
         public IEnumerable<NavItem> GetNavigationItems()
@@ -53,6 +56,13 @@ namespace OCC.WpfClient.Features.SettingsHub
                 "Administration",
                 iconColor: "#797775",
                 iconCode: "\uE115"));
+
+            settings.Children.Add(new NavItem(
+                "Audit Logs",
+                NavigationRoutes.AuditLog,
+                "Administration",
+                iconColor: "#FFA500",
+                iconCode: "\uE102"));
 
             yield return settings;
         }

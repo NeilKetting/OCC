@@ -14,8 +14,8 @@ namespace OCC.WpfClient.Services.Infrastructure
         [ObservableProperty]
         private AppEnvironment _selectedEnvironment;
 
-        private const string LiveUrl = "http://102.221.36.149:8081/";
-        private const string TestUrl = "http://102.221.36.149:8081/"; // Same port, different database via header
+        private const string LiveUrl = "https://api.origize63.co.za/";
+        private const string TestUrl = "https://api.origize63.co.za/"; // Same port, different database via header
         private const string LocalUrl = "http://localhost:5237/";
 
         public ConnectionSettings()

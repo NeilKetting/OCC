@@ -130,6 +130,14 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
         <settViews:PersonalPreferencesView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type settVm:AuditLogViewModel}">
+        <settViews:AuditLogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type settVm:AuditLogDetailViewModel}">
+        <settViews:AuditLogDetailView />
+    </DataTemplate>
+
     <!-- Project Hub -->
     <DataTemplate DataType="{x:Type projVm:ProjectDashboardViewModel}">
         <projViews:ProjectDashboardView />

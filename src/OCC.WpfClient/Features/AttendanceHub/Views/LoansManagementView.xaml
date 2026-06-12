@@ -1,265 +1,255 @@
-<UserControl x:Class="OCC.WpfClient.Features.AttendanceHub.Views.LoansManagementView"
+<local:LoansManagementListViewBase x:Class="OCC.WpfClient.Features.AttendanceHub.Views.LoansManagementView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views"
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1100"
-             d:DataContext="{d:DesignInstance vm:LoansManagementViewModel}">
+             d:DataContext="{d:DesignInstance vm:LoansManagementViewModel}"
+             IsDrawerOpen="{Binding IsAddPanelVisible, Mode=TwoWay}"
+             OverlayContent="{Binding}"
+             DrawerWidth="340">
 
-    <UserControl.Resources>
+    <local:LoansManagementListViewBase.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <DataTemplate DataType="{x:Type vm:LoansManagementViewModel}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Panel Header -->
+                    <Border Grid.Row="0" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <TextBlock Text="ADD NEW LOAN" Style="{StaticResource HeaderText}" FontSize="14" VerticalAlignment="Center"/>
+                            <Button HorizontalAlignment="Right" Style="{StaticResource ToolbarIconButton}"
+                                    Command="{Binding CancelAddCommand}">
+                                <TextBlock Text="&#xE711;" Style="{StaticResource SymbolButtonIcon}"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Form Fields -->
+                    <ScrollViewer Grid.Row="1" Padding="16,12">
+                        <StackPanel>
+                            <!-- Employee -->
+                            <TextBlock Text="EMPLOYEE" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <ComboBox ItemsSource="{Binding Employees}"
+                                      SelectedItem="{Binding SelectedEmployee}"
+                                      Style="{StaticResource ModernComboBox}"
+                                      DisplayMemberPath="DisplayName"
+                                      Margin="0,0,0,14"/>
+
+                            <!-- Principal -->
+                            <TextBlock Text="PRINCIPAL AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding PrincipalAmount, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
+
+                            <!-- Installment -->
+                            <TextBlock Text="INSTALMENT AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding MonthlyInstallment, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
+
+                            <!-- Interest Rate -->
+                            <TextBlock Text="INTEREST RATE (%)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding InterestRate, StringFormat='0.00', UpdateSourceTrigger=LostFocus}"
+                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,4"/>
+                            <TextBlock Text="Leave 0 for interest-free" Style="{StaticResource LabelText}" 
+                                       Opacity="0.5" FontSize="10" Margin="0,0,0,14"/>
+
+                            <!-- Start Date -->
+                            <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <DatePicker SelectedDate="{Binding LoanStartDate}"
+                                        Style="{StaticResource ModernDatePicker}" Margin="0,0,0,14"/>
+
+                            <!-- Notes -->
+                            <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding LoanNotes, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ModernInput}" Height="60"
+                                     TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20"/>
+
+                            <!-- Repayment Summary Card -->
+                            <Border Background="#0AFFFFFF" CornerRadius="6" Padding="12" 
+                                    BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="REPAYMENT SUMMARY" Style="{StaticResource LabelText}"
+                                               Margin="0,0,0,10" FontWeight="SemiBold"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Calculated Duration:" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding RepaymentDurationText}"
+                                                   FontWeight="Bold" Foreground="{StaticResource OrangeBrush}"/>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Total Repayable:" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TotalRepayableAmount, StringFormat='R #,##0.00'}"
+                                                   FontWeight="Bold" Foreground="{StaticResource OrangeBrush}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Panel Footer Actions -->
+                    <Border Grid.Row="2" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Cancel" Style="{StaticResource GhostButton}"
+                                    Command="{Binding CancelAddCommand}" Margin="0,0,8,0"/>
+                            <Button Content="SAVE LOAN" Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding SaveLoanCommand}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </DataTemplate>
         </ResourceDictionary>
-    </UserControl.Resources>
+    </local:LoansManagementListViewBase.Resources>
 
     <Grid Background="{StaticResource BackgroundDark}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <!-- Loans list -->
-            <ColumnDefinition Width="Auto"/>
-            <!-- Add panel (collapsible) -->
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- ══════════════════ LOANS LIST (LEFT) ══════════════════ -->
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- Toolbar -->
-            <Border Grid.Row="0" Padding="16,10" Background="#06FFFFFF"
-                    BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="LOANS HUB" Style="{StaticResource HeaderText}"/>
-                        <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
-                            <Run Text="Manage staff loans and repayment schedules"/>
-                        </TextBlock>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh">
-                            <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
-                        </Button>
-                        <Button Command="{Binding ShowAddPanelCommand}" Style="{StaticResource CreateButton}" Margin="8,0,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="NEW LOAN"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Loans DataGrid -->
-            <DataGrid Grid.Row="1"
-                      ItemsSource="{Binding Loans}"
-                      SelectedItem="{Binding SelectedLoan}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      Style="{StaticResource ModernDataGrid}"
-                      VirtualizingPanel.IsVirtualizing="True"
-                      VirtualizingPanel.VirtualizationMode="Recycling">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" MinWidth="200" Width="*"/>
-                    <DataGridTextColumn Header="Branch" Binding="{Binding Employee.Branch}" Width="100"/>
-                    <DataGridTextColumn Header="Principal" Binding="{Binding PrincipalAmount, StringFormat='R #,##0.00'}" Width="110">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Installment" Binding="{Binding MonthlyInstallment, StringFormat='R #,##0.00'}" Width="110">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Balance" Binding="{Binding OutstandingBalance, StringFormat='R #,##0.00'}" Width="110">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Interest %" Binding="{Binding InterestRate, StringFormat='0.00%'}" Width="80">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="110"/>
-                    <!-- Status badge -->
-                    <DataGridTemplateColumn Header="Status" Width="90">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border CornerRadius="4" Padding="8,3" HorizontalAlignment="Center"
-                                        Margin="4,3">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#1022C55A"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsActive}" Value="False">
-                                                    <Setter Property="Background" Value="#10808080"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock FontWeight="SemiBold" FontSize="11">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="ACTIVE"/>
-                                                <Setter Property="Foreground" Value="#22C55A"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
-                                                        <Setter Property="Text" Value="PAID"/>
-                                                        <Setter Property="Foreground" Value="#808080"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <!-- Actions -->
-                    <DataGridTemplateColumn Header="Actions" Width="90">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Print Loan Schedule"
-                                            Command="{Binding DataContext.PrintLoanScheduleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}">
-                                        <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource OrangeBrush}"/>
-                                    </Button>
-                                    <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Mark as Paid / Terminate"
-                                            Command="{Binding DataContext.TerminateLoanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Margin="4,0,0,0">
-                                        <TextBlock Text="&#xE930;" Style="{StaticResource SymbolButtonIcon}" Foreground="#22C55A"/>
-                                    </Button>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
-
-        <!-- ══════════════════ ADD LOAN PANEL (RIGHT SLIDE-IN) ══════════════════ -->
-        <Border Grid.Column="1"
-                Width="340"
-                Background="{StaticResource CardBackground}"
-                BorderBrush="{StaticResource GlassBorderUltraLight}"
-                BorderThickness="1,0,0,0"
-                Visibility="{Binding IsAddPanelVisible, Converter={StaticResource BoolToVis}}">
+        <!-- ══════════════════ LOANS LIST ══════════════════ -->
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Padding="16,10" Background="#06FFFFFF"
+                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Panel Header -->
-                <Border Grid.Row="0" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <TextBlock Text="ADD NEW LOAN" Style="{StaticResource HeaderText}" FontSize="14"/>
-                        <Button HorizontalAlignment="Right" Style="{StaticResource ToolbarIconButton}"
-                                Command="{Binding CancelAddCommand}">
-                            <TextBlock Text="&#xE711;" Style="{StaticResource SymbolButtonIcon}"/>
-                        </Button>
-                    </Grid>
-                </Border>
-
-                <!-- Form Fields -->
-                <ScrollViewer Grid.Row="1" Padding="16,12">
-                    <StackPanel>
-                        <!-- Employee -->
-                        <TextBlock Text="EMPLOYEE" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                        <ComboBox ItemsSource="{Binding Employees}"
-                                  SelectedItem="{Binding SelectedEmployee}"
-                                  Style="{StaticResource ModernComboBox}"
-                                  DisplayMemberPath="DisplayName"
-                                  Margin="0,0,0,14"/>
-
-                        <!-- Principal -->
-                        <TextBlock Text="PRINCIPAL AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding PrincipalAmount, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
-                                 Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
-
-                        <!-- Installment -->
-                        <TextBlock Text="INSTALMENT AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding MonthlyInstallment, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
-                                 Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
-
-                        <!-- Interest Rate -->
-                        <TextBlock Text="INTEREST RATE (%)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding InterestRate, StringFormat='0.00', UpdateSourceTrigger=LostFocus}"
-                                 Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,4"/>
-                        <TextBlock Text="Leave 0 for interest-free" Style="{StaticResource LabelText}" 
-                                   Opacity="0.5" FontSize="10" Margin="0,0,0,14"/>
-
-                        <!-- Start Date -->
-                        <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                        <DatePicker SelectedDate="{Binding LoanStartDate}"
-                                    Style="{StaticResource ModernDatePicker}" Margin="0,0,0,14"/>
-
-                        <!-- Notes -->
-                        <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding LoanNotes, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ModernInput}" Height="60"
-                                 TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20"/>
-
-                        <!-- Repayment Summary Card -->
-                        <Border Background="#0AFFFFFF" CornerRadius="6" Padding="12" 
-                                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="REPAYMENT SUMMARY" Style="{StaticResource LabelText}"
-                                           Margin="0,0,0,10" FontWeight="SemiBold"/>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Calculated Duration:" Style="{StaticResource LabelText}" Opacity="0.7"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding RepaymentDurationText}"
-                                               FontWeight="Bold" Foreground="{StaticResource OrangeBrush}"/>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Total Repayable:" Style="{StaticResource LabelText}" Opacity="0.7"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding TotalRepayableAmount, StringFormat='R #,##0.00'}"
-                                               FontWeight="Bold" Foreground="{StaticResource OrangeBrush}"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- Panel Footer Actions -->
-                <Border Grid.Row="2" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Cancel" Style="{StaticResource GhostButton}"
-                                Command="{Binding CancelAddCommand}" Margin="0,0,8,0"/>
-                        <Button Content="SAVE LOAN" Style="{StaticResource PrimaryButton}"
-                                Command="{Binding SaveLoanCommand}"/>
-                    </StackPanel>
-                </Border>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="LOANS HUB" Style="{StaticResource HeaderText}"/>
+                    <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
+                        <Run Text="Manage staff loans and repayment schedules"/>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh">
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
+                    </Button>
+                    <Button Command="{Binding ShowAddPanelCommand}" Style="{StaticResource CreateButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="NEW LOAN"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
+        <!-- Loans DataGrid -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Loans}"
+                  SelectedItem="{Binding SelectedLoan}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  Style="{StaticResource ModernDataGrid}"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" MinWidth="200" Width="*"/>
+                <DataGridTextColumn Header="Branch" Binding="{Binding Employee.Branch}" Width="100"/>
+                <DataGridTextColumn Header="Principal" Binding="{Binding PrincipalAmount, StringFormat='R #,##0.00'}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Installment" Binding="{Binding MonthlyInstallment, StringFormat='R #,##0.00'}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Balance" Binding="{Binding OutstandingBalance, StringFormat='R #,##0.00'}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Interest %" Binding="{Binding InterestRate, StringFormat='0.00%'}" Width="80">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="110"/>
+                <!-- Status badge -->
+                <DataGridTemplateColumn Header="Status" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="4" Padding="8,3" HorizontalAlignment="Center"
+                                    Margin="4,3">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#1022C55A"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                <Setter Property="Background" Value="#10808080"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="SemiBold" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="ACTIVE"/>
+                                            <Setter Property="Foreground" Value="#22C55A"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                    <Setter Property="Text" Value="PAID"/>
+                                                    <Setter Property="Foreground" Value="#808080"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <!-- Actions -->
+                <DataGridTemplateColumn Header="Actions" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Print Loan Schedule"
+                                        Command="{Binding DataContext.PrintLoanScheduleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource OrangeBrush}"/>
+                                </Button>
+                                <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Mark as Paid / Terminate"
+                                        Command="{Binding DataContext.TerminateLoanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Margin="4,0,0,0">
+                                    <TextBlock Text="&#xE930;" Style="{StaticResource SymbolButtonIcon}" Foreground="#22C55A"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
         <!-- Busy Overlay -->
-        <Border Grid.ColumnSpan="2" Background="#88000000"
+        <Border Grid.RowSpan="2" Background="#88000000"
                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ProgressBar IsIndeterminate="True" Width="200" Height="4"
@@ -269,4 +259,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</UserControl>
+</local:LoansManagementListViewBase>

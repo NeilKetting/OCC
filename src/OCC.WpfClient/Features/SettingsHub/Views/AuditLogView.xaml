@@ -1,0 +1,237 @@
+<utils:ListViewBase x:Class="OCC.WpfClient.Features.SettingsHub.Views.AuditLogView"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+               xmlns:vm="clr-namespace:OCC.WpfClient.Features.SettingsHub.ViewModels"
+               xmlns:views="clr-namespace:OCC.WpfClient.Features.SettingsHub.Views"
+               xmlns:utils="clr-namespace:OCC.WpfClient.Infrastructure"
+               xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+               xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+               mc:Ignorable="d" 
+               d:DesignHeight="800" d:DesignWidth="1200"
+               d:DataContext="{d:DesignInstance Type=vm:AuditLogViewModel}"
+               IsDrawerOpen="{Binding IsOverlayActive}"
+               OverlayContent="{Binding OverlayViewModel}">
+
+    <utils:ListViewBase.Resources>
+        <DataTemplate DataType="{x:Type vm:AuditLogDetailViewModel}">
+            <views:AuditLogDetailView />
+        </DataTemplate>
+        <utils:BindingProxy x:Key="Proxy" Data="{Binding}" />
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
+    </utils:ListViewBase.Resources>
+
+    <Grid Margin="0" Background="{StaticResource AppBackground}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="&#xE102;" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="#FFA500" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="System Audit Logs" Style="{StaticResource HeaderText}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="Track operations, data additions, updates and deletions." Style="{StaticResource LabelText}"/>
+                </Grid>
+            </Grid>
+
+            <!-- Stats, Filters & Search Toolbar -->
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10,0,10,15">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Row 1: Search & Filter Presets -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search -->
+                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="5,0,5,0"/>
+                        <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
+                                 ap:WatermarkProperties.Watermark="Search logs (user, table, action)..."/>
+
+                        <!-- Divider -->
+                        <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+
+                        <!-- User Filter -->
+                        <ComboBox Grid.Column="3" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" 
+                                  Height="34" Width="180" VerticalContentAlignment="Center" Style="{StaticResource ModernComboBox}"
+                                  DisplayMemberPath="DisplayName" ap:WatermarkProperties.Watermark="All Users"/>
+
+                        <!-- Print Button -->
+                        <Button Grid.Column="4" Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="15,0,0,0" Foreground="{StaticResource TextMain}">
+                            <StackPanel Orientation="Horizontal" Margin="10,0">
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
+                                <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Stats Cards -->
+                        <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#1500C853" BorderBrush="#00C853" BorderThickness="1" CornerRadius="12" Padding="10,5" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="CREATES: " FontSize="10" Foreground="#00C853" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding CreateCount}" FontSize="12" FontWeight="Bold" Foreground="#00C853" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#15FFAB00" BorderBrush="{StaticResource SecondaryGold}" BorderThickness="1" CornerRadius="12" Padding="10,5" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="UPDATES: " FontSize="10" Foreground="{StaticResource SecondaryGold}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding UpdateCount}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource SecondaryGold}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#15E81123" BorderBrush="#E81123" BorderThickness="1" CornerRadius="12" Padding="10,5" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="DELETES: " FontSize="10" Foreground="#E81123" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding DeleteCount}" FontSize="12" FontWeight="Bold" Foreground="#E81123" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#20FFFFFF" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="12" Padding="10,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Row 2: Date Filters (Presets + DatePickers) -->
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Presets -->
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Content="ALL TIME" Style="{StaticResource ModernRadioButton}" IsChecked="True"
+                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.All}" Height="28" Margin="0,0,4,0"/>
+                            <RadioButton Content="TODAY" Style="{StaticResource ModernRadioButton}" 
+                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Daily}" Height="28" Margin="0,0,4,0"/>
+                            <RadioButton Content="THIS WEEK" Style="{StaticResource ModernRadioButton}" 
+                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Weekly}" Height="28" Margin="0,0,4,0"/>
+                            <RadioButton Content="THIS MONTH" Style="{StaticResource ModernRadioButton}" 
+                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Monthly}" Height="28"/>
+                        </StackPanel>
+
+                        <!-- Divider -->
+                        <Border Grid.Column="1" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+
+                        <!-- Custom Date Ranges -->
+                        <TextBlock Grid.Column="2" Text="Custom Range:" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                        <DatePicker Grid.Column="3" SelectedDate="{Binding StartDate, Mode=TwoWay}" Width="130" Height="28" 
+                                    BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White"/>
+                        
+                        <TextBlock Grid.Column="4" Text="to" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="8,0" />
+
+                        <DatePicker Grid.Column="5" SelectedDate="{Binding EndDate, Mode=TwoWay}" Width="130" Height="28"
+                                    BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White" HorizontalAlignment="Left"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Data Grid -->
+            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" CornerRadius="0">
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="TIMESTAMP" Binding="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="Auto" FontWeight="SemiBold" />
+                        <DataGridTextColumn Header="USER" Binding="{Binding UserName}" Width="Auto" Foreground="{StaticResource TextSub}" />
+                        
+                        <!-- Action Badge Pill -->
+                        <DataGridTemplateColumn Header="ACTION" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="4">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#15FFAB00"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource SecondaryGold}"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Action}" Value="Create">
+                                                        <Setter Property="Background" Value="#1500C853"/>
+                                                        <Setter Property="BorderBrush" Value="#00C853"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Action}" Value="Delete">
+                                                        <Setter Property="Background" Value="#15E81123"/>
+                                                        <Setter Property="BorderBrush" Value="#E81123"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding Action}" FontSize="10" FontWeight="Bold" TextAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource SecondaryGold}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Action}" Value="Create">
+                                                            <Setter Property="Foreground" Value="#00C853"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Action}" Value="Delete">
+                                                            <Setter Property="Foreground" Value="#E81123"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="TABLE" Binding="{Binding TableName}" Width="Auto" Foreground="{StaticResource TextSub}" />
+                        <DataGridTextColumn Header="AFFECTED RECORD" Binding="{Binding EntityName}" Width="*" FontWeight="SemiBold" />
+
+                        <!-- Detail Actions -->
+                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="View Details">
+                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
+            </Border>
+
+            <!-- Loading Overlay -->
+            <ContentControl Grid.Row="2" Style="{StaticResource StandardLoadingOverlay}" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}"/>
+        </Grid>
+    </Grid>
+</utils:ListViewBase>

@@ -27,7 +27,7 @@ namespace OCC.Client.Services.Infrastructure
             }
         }
 
-        private string _apiBaseUrl = "http://102.221.36.149:8081/";
+        private string _apiBaseUrl = "https://api.origize63.co.za/";
         public string ApiBaseUrl
         {
             get => _apiBaseUrl;
@@ -60,10 +60,10 @@ namespace OCC.Client.Services.Infrastructure
             _googleApiKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY") ?? "";
 #if DEBUG
             _selectedEnvironment = AppEnvironment.Live; // Defaulting to Live as requested
-            _apiBaseUrl = "http://102.221.36.149:8081/";
+            _apiBaseUrl = "https://api.origize63.co.za/";
 #else
             _selectedEnvironment = AppEnvironment.Live;
-            _apiBaseUrl = "http://102.221.36.149:8081/";
+            _apiBaseUrl = "https://api.origize63.co.za/";
 #endif
         }
 
@@ -103,7 +103,7 @@ namespace OCC.Client.Services.Infrastructure
                     switch (_selectedEnvironment)
                     {
                         case AppEnvironment.Live:
-                            ApiBaseUrl = "http://102.221.36.149:8081/";
+                            ApiBaseUrl = "https://api.origize63.co.za/";
                             break;
                         case AppEnvironment.Local:
                             if (!string.IsNullOrEmpty(_customLocalUrl))

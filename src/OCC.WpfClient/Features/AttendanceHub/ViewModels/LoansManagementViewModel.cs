@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 {
-    public partial class LoansManagementViewModel : ViewModelBase
+    public partial class LoansManagementViewModel : OverlayHostViewModel
     {
         private readonly IEmployeeLoanService _loanService;
         private readonly IEmployeeService _employeeService;
@@ -97,6 +97,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             IsAddPanelVisible = false;
             ResetAddForm();
+        }
+
+        public override void CloseOverlay()
+        {
+            CancelAdd();
+            base.CloseOverlay();
         }
 
         [RelayCommand]

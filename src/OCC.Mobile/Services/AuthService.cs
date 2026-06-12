@@ -55,10 +55,10 @@ namespace OCC.Mobile.Services
 
             if (_settingsService.Settings.SelectedEnvironment == AppEnvironment.Test)
             {
-                return "http://102.221.36.149:8081/";
+                return "https://api.origize63.co.za/";
             }
             
-            return "http://102.221.36.149:8081/";
+            return "https://api.origize63.co.za/";
         }
 
         public async Task<(bool Success, string ErrorMessage)> LoginAsync(string email, string password)

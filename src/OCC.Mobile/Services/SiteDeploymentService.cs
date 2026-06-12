@@ -44,7 +44,7 @@ namespace OCC.Mobile.Services
                 return "http://localhost:5237/";
                 #endif
             }
-            return "http://102.221.36.149:8081/";
+            return "https://api.origize63.co.za/";
         }
 
         private void EnsureAuthorization()

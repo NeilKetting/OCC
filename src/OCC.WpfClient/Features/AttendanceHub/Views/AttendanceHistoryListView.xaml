@@ -116,6 +116,12 @@
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.ScrollUnit="Pixel"
                   Style="{StaticResource ModernDataGrid}">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                    <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                    <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                </Style>
+            </DataGrid.RowStyle>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=yyyy/MM/dd}" Width="Auto"/>
                 <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding EmployeeName}" Width="180"/>

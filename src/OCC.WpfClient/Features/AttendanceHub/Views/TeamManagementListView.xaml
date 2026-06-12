@@ -10,7 +10,7 @@
     mc:Ignorable="d"
     d:DesignHeight="800" d:DesignWidth="980"
     d:DataContext="{d:DesignInstance vm:TeamManagementViewModel}"
-    IsDrawerOpen="{Binding IsDetailPanelOpen}"
+    IsDrawerOpen="{Binding IsDetailPanelOpen, Mode=TwoWay}"
     OverlayContent="{Binding}"
     DrawerWidth="380">
 

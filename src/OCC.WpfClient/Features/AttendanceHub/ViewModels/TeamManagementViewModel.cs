@@ -270,6 +270,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             IsDetailPanelOpen = false;
             SelectedTeam = null;
         }
+
+        public override void CloseOverlay()
+        {
+            CloseDetail();
+            base.CloseOverlay();
+        }
     }
 
     public class TeamMemberRow
