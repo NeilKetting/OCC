@@ -233,40 +233,34 @@
                             </TextBox>
                         </StackPanel>
 
-                        <!-- Environment Selector & Remember Email CheckBox -->
-                        <Grid ColumnDefinitions="2*, 1.8*">
-                            <!-- Environment Selector -->
-                            <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,10,0">
-                                <TextBlock Text="ENVIRONMENT" 
-                                           Foreground="#6B77A4" 
-                                           FontSize="10" 
-                                           FontWeight="Bold" 
-                                           Margin="2,0,0,0" 
-                                           LetterSpacing="1.5" />
-                                <ComboBox ItemsSource="{Binding Environments}"
-                                          SelectedItem="{Binding SelectedEnvironment}"
-                                          HorizontalAlignment="Stretch"
-                                          Height="42"
-                                          CornerRadius="12"
-                                          Background="#111929"
-                                          BorderBrush="#246366F1"
-                                          BorderThickness="1" />
-                            </StackPanel>
+                        <!-- Remember Email CheckBox (Environment Selector is hidden) -->
+                        <CheckBox Content="Remember email"
+                                  IsChecked="{Binding RememberEmail}"
+                                  Foreground="#A5AECF"
+                                  FontSize="11"
+                                  HorizontalAlignment="Left"
+                                  Margin="2,0,0,0"/>
 
-                            <!-- Checkbox -->
-                            <CheckBox Grid.Column="1"
-                                      Content="Remember email"
-                                      IsChecked="{Binding RememberEmail}"
-                                      Foreground="#A5AECF"
-                                      FontSize="11"
-                                      VerticalAlignment="Bottom"
-                                      HorizontalAlignment="Right"
-                                      Margin="0,0,2,3"/>
-                        </Grid>
+                        <!-- Hidden Environment Selector (kept in logic for binding) -->
+                        <StackPanel Spacing="6" IsVisible="False">
+                            <TextBlock Text="ENVIRONMENT" 
+                                       Foreground="#6B77A4" 
+                                       FontSize="10" 
+                                       FontWeight="Bold" 
+                                       Margin="2,0,0,0" 
+                                       LetterSpacing="1.5" />
+                            <ComboBox ItemsSource="{Binding Environments}"
+                                      SelectedItem="{Binding SelectedEnvironment}"
+                                      HorizontalAlignment="Stretch"
+                                      Height="42"
+                                      CornerRadius="12"
+                                      Background="#111929"
+                                      BorderBrush="#246366F1"
+                                      BorderThickness="1" />
+                        </StackPanel>
 
-                        <!-- Custom IP Input (Visible only if Local is selected) -->
-                        <StackPanel Spacing="6" 
-                                    IsVisible="{Binding SelectedEnvironment, ConverterParameter=Local, Converter={StaticResource EnumToBoolConverter}}">
+                        <!-- Hidden Custom IP Input -->
+                        <StackPanel Spacing="6" IsVisible="False">
                             <TextBlock Text="LOCAL API IP ADDRESS" 
                                        Foreground="#6B77A4" 
                                        FontSize="10" 

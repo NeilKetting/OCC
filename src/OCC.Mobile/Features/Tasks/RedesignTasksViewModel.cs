@@ -51,6 +51,9 @@ namespace OCC.Mobile.Features.Tasks
         private bool _showFilters;
 
         [ObservableProperty]
+        private bool _sortByDate;
+
+        [ObservableProperty]
         private int _totalTasksCount;
 
         [ObservableProperty]
@@ -58,6 +61,23 @@ namespace OCC.Mobile.Features.Tasks
 
         [ObservableProperty]
         private double _overallProgressPercentage;
+
+        private Guid? _targetTaskId;
+        public Guid? TargetTaskId
+        {
+            get => _targetTaskId;
+            set
+            {
+                if (_targetTaskId != value)
+                {
+                    _targetTaskId = value;
+                    if (value.HasValue)
+                    {
+                        LoadData().FireAndForget();
+                    }
+                }
+            }
+        }
 
         public ObservableCollection<ProjectGroupViewModel> ProjectGroups { get; } = new();
         #endregion
@@ -108,6 +128,7 @@ namespace OCC.Mobile.Features.Tasks
         partial void OnShowDueTodayOnlyChanged(bool value) => ApplyFiltersAndRebuildHierarchy();
         partial void OnShowDueThisWeekOnlyChanged(bool value) => ApplyFiltersAndRebuildHierarchy();
         partial void OnShowOnHoldOnlyChanged(bool value) => ApplyFiltersAndRebuildHierarchy();
+        partial void OnSortByDateChanged(bool value) => ApplyFiltersAndRebuildHierarchy();
         #endregion
 
         #region Commands
@@ -131,6 +152,7 @@ namespace OCC.Mobile.Features.Tasks
             ShowDueTodayOnly = false;
             ShowDueThisWeekOnly = false;
             ShowOnHoldOnly = false;
+            SortByDate = false;
 
             ApplyFiltersAndRebuildHierarchy();
         }
@@ -184,10 +206,12 @@ namespace OCC.Mobile.Features.Tasks
 
                 // Load all assigned projects first
                 var projects = await ProjectService.GetProjectsAsync(assignedToMe: true);
+                if (token.IsCancellationRequested) return;
                 _allProjects = projects.GroupBy(p => p.Id).Select(g => g.First()).ToDictionary(p => p.Id);
 
                 // Load all assigned tasks
                 var tasks = await TaskService.GetTasksAsync(projectId: null, assignedToMe: true, skip: 0, take: 500);
+                if (token.IsCancellationRequested) return;
                 _allTasks = tasks.ToList();
 
                 ApplyFiltersAndRebuildHierarchy();
@@ -208,6 +232,19 @@ namespace OCC.Mobile.Features.Tasks
         #region Hierarchy Rebuilder
         private void ApplyFiltersAndRebuildHierarchy()
         {
+            bool hasTargetInTasks = TargetTaskId.HasValue && _allTasks.Any(t => t.Id == TargetTaskId.Value);
+
+            if (TargetTaskId.HasValue && hasTargetInTasks)
+            {
+                // Clear filters to guarantee the target task is visible in the loaded list
+                SearchText = string.Empty;
+                ShowOverdueOnly = false;
+                ShowDueTodayOnly = false;
+                ShowDueThisWeekOnly = false;
+                ShowOnHoldOnly = false;
+                SortByDate = false;
+            }
+
             // Filter child tasks based on SearchText and chips
             var filteredTasks = _allTasks.Where(t =>
             {
@@ -237,7 +274,9 @@ namespace OCC.Mobile.Features.Tasks
 
             // Group them by Project
             var newGroups = new List<ProjectGroupViewModel>();
-            var tasksByProject = filteredTasks.GroupBy(t => t.ProjectId);
+            var tasksByProject = SortByDate
+                ? filteredTasks.GroupBy(t => t.ProjectId).OrderBy(g => g.Min(t => t.FinishDate))
+                : filteredTasks.GroupBy(t => t.ProjectId);
 
             foreach (var projectGroup in tasksByProject)
             {
@@ -252,12 +291,15 @@ namespace OCC.Mobile.Features.Tasks
                 {
                     Id = projId.Value,
                     Title = projName,
-                    Status = projStatus
+                    Status = projStatus,
+                    IsExpanded = (TargetTaskId.HasValue && hasTargetInTasks) ? false : true
                 };
 
                 // Identify sections (tasks in _allTasks where IsGroup == true for this project)
                 var sections = _allTasks.Where(t => t.IsGroup && t.ProjectId == projId.Value).ToList();
-                var tasksBySection = projectGroup.GroupBy(t => t.ParentId);
+                var tasksBySection = SortByDate
+                    ? projectGroup.GroupBy(t => t.ParentId).OrderBy(g => g.Min(t => t.FinishDate))
+                    : projectGroup.GroupBy(t => t.ParentId);
 
                 foreach (var sectionGroup in tasksBySection)
                 {
@@ -268,17 +310,29 @@ namespace OCC.Mobile.Features.Tasks
                     {
                         Id = parentId ?? Guid.Empty,
                         Title = sectionTask?.Name ?? "General Tasks",
-                        Status = sectionTask?.Status ?? "In Progress"
+                        Status = sectionTask?.Status ?? "In Progress",
+                        IsExpanded = (TargetTaskId.HasValue && hasTargetInTasks) ? false : true
                     };
 
-                    var sortedTasks = sectionGroup.OrderBy(t => t.OrderIndex).ToList();
+                    var sortedTasks = SortByDate 
+                        ? sectionGroup.OrderBy(t => t.FinishDate).ToList()
+                        : sectionGroup.OrderBy(t => t.OrderIndex).ToList();
                     for (int i = 0; i < sortedTasks.Count; i++)
                     {
+                        var isTarget = TargetTaskId.HasValue && sortedTasks[i].Id == TargetTaskId.Value;
                         var taskRow = new RedesignTaskRowViewModel(sortedTasks[i], this)
                         {
                             IsLast = (i == sortedTasks.Count - 1),
-                            ProjectTitle = projName
+                            ProjectTitle = projName,
+                            IsExpanded = isTarget
                         };
+
+                        if (isTarget)
+                        {
+                            projVm.IsExpanded = true;
+                            sectionVm.IsExpanded = true;
+                        }
+
                         sectionVm.Tasks.Add(taskRow);
                     }
 
@@ -290,6 +344,12 @@ namespace OCC.Mobile.Features.Tasks
                 projVm.CompletedTasks = projectGroup.Count(t => t.IsComplete);
 
                 newGroups.Add(projVm);
+            }
+
+            // Clear target ID after building hierarchy so subsequent updates don't keep expanding it
+            if (TargetTaskId.HasValue && hasTargetInTasks)
+            {
+                TargetTaskId = null;
             }
 
             // Update collection and stats on UI thread

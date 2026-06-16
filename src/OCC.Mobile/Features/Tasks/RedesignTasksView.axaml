@@ -73,6 +73,7 @@
                             <CheckBox IsChecked="{Binding ShowDueTodayOnly}" Content="Today" Classes="chip"/>
                             <CheckBox IsChecked="{Binding ShowDueThisWeekOnly}" Content="This Week" Classes="chip"/>
                             <CheckBox IsChecked="{Binding ShowOnHoldOnly}" Content="On Hold" Classes="chip"/>
+                            <CheckBox IsChecked="{Binding SortByDate}" Content="Sort by Date" Classes="chip"/>
                         </StackPanel>
                     </ScrollViewer>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="10,0,0,0">
@@ -206,7 +207,7 @@
                                                                 </Button>
 
                                                                  <!-- Inline Detail Panel (Slide/Fade In) -->
-                                                                 <Border x:Name="DetailPanel" IsVisible="{Binding IsExpanded}" Margin="16,0,16,12" BorderBrush="#406366F1" BorderThickness="1" CornerRadius="12" Padding="16">
+                                                                 <Border x:Name="DetailPanel" IsVisible="{Binding IsExpanded}" AttachedToVisualTree="DetailPanel_AttachedToVisualTree" Margin="16,0,16,12" BorderBrush="#406366F1" BorderThickness="1" CornerRadius="12" Padding="16">
                                                                      <Border.Background>
                                                                          <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                                                                              <GradientStop Offset="0" Color="#0D6366F1"/>

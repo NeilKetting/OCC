@@ -224,6 +224,24 @@ namespace OCC.Mobile.Features.Dashboard
             _navigationService.NavigateTo<ReceiveCrewViewModel>();
         }
 
+        [RelayCommand]
+        private void NavigateToTask(DashboardTaskViewModel taskVm)
+        {
+            if (taskVm == null || !Guid.TryParse(taskVm.Id, out var taskId)) return;
+
+            try
+            {
+                _navigationService.NavigateTo<Features.Tasks.RedesignTasksViewModel>(vm => 
+                {
+                    vm.TargetTaskId = taskId;
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to navigate to redesign tasks: {ex.Message}");
+            }
+        }
+
         public override void Dispose()
         {
             _signalRService.EntityUpdated -= OnEntityUpdated;
