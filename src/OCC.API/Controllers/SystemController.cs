@@ -2,7 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
+using OCC.Shared.Models;
+using System;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
 {
@@ -72,6 +76,64 @@ namespace OCC.API.Controllers
             status.Add("ConfigDiagnostics", dbKeys);
 
             return Ok(status);
+        }
+
+        [HttpGet("public-stats")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublicStats()
+        {
+            try
+            {
+                var projects = await _context.Projects
+                    .Include(p => p.Tasks)
+                    .Include(p => p.TeamMembers)
+                    .Where(p => p.IsActive)
+                    .ToListAsync();
+
+                var activeProjects = projects.Where(p => 
+                    p.Status != "Completed" && 
+                    p.Status != "Done" && 
+                    p.Status != "Cancelled" && 
+                    p.Status != "Archived" && 
+                    p.Status != "OnHold").ToList();
+                var activeProjectsCount = activeProjects.Count;
+
+                var today = DateTime.Today;
+                var tasksTodayCount = activeProjects
+                    .SelectMany(p => p.Tasks)
+                    .Count(t => t.FinishDate.Date == today || 
+                               (t.ActualCompleteDate.HasValue && t.ActualCompleteDate.Value.ToLocalTime().Date == today) ||
+                               (t.IsComplete && t.UpdatedAtUtc?.ToLocalTime().Date == today));
+
+                var liveSitesCount = projects.Count(p => 
+                    p.Status == "In Progress" || 
+                    p.Status == "Active" || 
+                    p.Status == "Planning" || 
+                    p.Status == "Not Started");
+
+                var teamMembersCount = activeProjects
+                    .SelectMany(p => p.TeamMembers)
+                    .Select(tm => tm.EmployeeId)
+                    .Distinct()
+                    .Count();
+
+                if (teamMembersCount == 0)
+                {
+                    teamMembersCount = await _context.Employees.CountAsync(e => e.IsActive);
+                }
+
+                return Ok(new
+                {
+                    ActiveProjectsCount = activeProjectsCount,
+                    TasksTodayCount = tasksTodayCount,
+                    LiveSitesCount = liveSitesCount,
+                    TeamMembersCount = teamMembersCount
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Error retrieving public stats: " + ex.Message });
+            }
         }
 
         private string MaskString(string? val)

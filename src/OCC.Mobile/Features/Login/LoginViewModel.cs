@@ -8,6 +8,8 @@ using OCC.Shared.Models;
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -42,6 +44,20 @@ namespace OCC.Mobile.Features.Login
         [ObservableProperty]
         private string? _customLocalUrl;
         
+        [ObservableProperty]
+        private int _activeProjectsCount;
+
+        [ObservableProperty]
+        private int _tasksTodayCount;
+
+        [ObservableProperty]
+        private int _liveSitesCount;
+
+        [ObservableProperty]
+        private int _teamMembersCount;
+
+        private readonly System.Threading.SemaphoreSlim _statsSemaphore = new(1, 1);
+        
         public string AppVersion => App.AppVersion;
 
         public Array Environments => Enum.GetValues(typeof(AppEnvironment));
@@ -61,6 +77,11 @@ namespace OCC.Mobile.Features.Login
             Title = "Login";
 
             // Load saved settings
+            ActiveProjectsCount = _settingsService.Settings.CachedActiveProjects;
+            TasksTodayCount = _settingsService.Settings.CachedTasksToday;
+            LiveSitesCount = _settingsService.Settings.CachedLiveSites;
+            TeamMembersCount = _settingsService.Settings.CachedTeamMembers;
+
             Username = _settingsService.Settings.LastEmail;
             RememberEmail = _settingsService.Settings.RememberEmail;
             SelectedEnvironment = _settingsService.Settings.SelectedEnvironment;
@@ -174,6 +195,68 @@ namespace OCC.Mobile.Features.Login
         private void NavigateToRegister()
         {
             _navigationService.NavigateTo<Register.RegisterViewModel>();
+        }
+
+        partial void OnSelectedEnvironmentChanged(AppEnvironment value)
+        {
+            _settingsService.Settings.SelectedEnvironment = value;
+            LoadPublicStatsAsync().FireAndForget();
+        }
+
+        partial void OnCustomLocalUrlChanged(string? value)
+        {
+            _settingsService.Settings.CustomLocalUrl = value;
+            LoadPublicStatsAsync().FireAndForget();
+        }
+
+        private async Task LoadPublicStatsAsync()
+        {
+            if (!await _statsSemaphore.WaitAsync(0)) return;
+            try
+            {
+                var baseUrl = _authService.GetBaseUrl();
+                var url = $"{baseUrl}api/System/public-stats";
+                
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Remove("X-Environment");
+                client.DefaultRequestHeaders.Add("X-Environment", SelectedEnvironment.ToString());
+                
+                var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var stats = await response.Content.ReadFromJsonAsync<PublicStatsDto>();
+                    if (stats != null)
+                    {
+                        ActiveProjectsCount = stats.ActiveProjectsCount;
+                        TasksTodayCount = stats.TasksTodayCount;
+                        LiveSitesCount = stats.LiveSitesCount;
+                        TeamMembersCount = stats.TeamMembersCount;
+
+                        // Cache them
+                        _settingsService.Settings.CachedActiveProjects = stats.ActiveProjectsCount;
+                        _settingsService.Settings.CachedTasksToday = stats.TasksTodayCount;
+                        _settingsService.Settings.CachedLiveSites = stats.LiveSitesCount;
+                        _settingsService.Settings.CachedTeamMembers = stats.TeamMembersCount;
+                        _settingsService.Save();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to load public stats: {ex.Message}");
+            }
+            finally
+            {
+                _statsSemaphore.Release();
+            }
+        }
+
+        private class PublicStatsDto
+        {
+            public int ActiveProjectsCount { get; set; }
+            public int TasksTodayCount { get; set; }
+            public int LiveSitesCount { get; set; }
+            public int TeamMembersCount { get; set; }
         }
     }
 }

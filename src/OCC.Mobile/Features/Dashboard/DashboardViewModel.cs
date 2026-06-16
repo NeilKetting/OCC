@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,9 +12,56 @@ using OCC.Mobile.Services;
 using OCC.Mobile.Features.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 using OCC.Shared.DTOs;
+using Avalonia.Media;
 
 namespace OCC.Mobile.Features.Dashboard
 {
+    public class DashboardTaskViewModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Project { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public int? DaysLate { get; set; }
+        public string? DueLabel { get; set; }
+    }
+
+    public class DashboardWeekGroupViewModel
+    {
+        public string Day { get; set; } = string.Empty;
+        public string Date { get; set; } = string.Empty;
+        public List<DashboardTaskViewModel> Tasks { get; set; } = new();
+    }
+
+    public class DashboardProjectBreakdownViewModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Done { get; set; }
+        public int Total { get; set; }
+        public double Progress => Total > 0 ? (double)Done / Total * 100 : 0;
+        public string StartColor { get; set; } = "#6366F1";
+        public string EndColor { get; set; } = "#22D3EE";
+
+        public IBrush ProgressBrush
+        {
+            get
+            {
+                var start = Color.Parse(StartColor);
+                var end = Color.Parse(EndColor);
+                return new LinearGradientBrush
+                {
+                    StartPoint = new Avalonia.RelativePoint(0, 0, Avalonia.RelativeUnit.Relative),
+                    EndPoint = new Avalonia.RelativePoint(1, 0, Avalonia.RelativeUnit.Relative),
+                    GradientStops = new GradientStops
+                    {
+                        new GradientStop(start, 0),
+                        new GradientStop(end, 1)
+                    }
+                };
+            }
+        }
+    }
+
     public partial class DashboardViewModel : ViewModelBase
     {
         private readonly INavigationService _navigationService;
@@ -85,6 +133,38 @@ namespace OCC.Mobile.Features.Dashboard
         [ObservableProperty]
         private string _etaStatus = "Calculating...";
 
+        [ObservableProperty]
+        private ObservableCollection<DashboardTaskViewModel> _overdueTasks = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DashboardTaskViewModel> _todayTasks = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DashboardWeekGroupViewModel> _weekGroups = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DashboardProjectBreakdownViewModel> _projectBreakdowns = new();
+
+        [ObservableProperty]
+        private string _currentDateString = DateTime.Today.ToString("ddd dd MMM yyyy");
+
+        public string DailyProgressMessage => DailyTotalTasks == DailyCompletedTasks
+            ? "All done — great work today!"
+            : $"{(DailyTotalTasks - DailyCompletedTasks)} task{((DailyTotalTasks - DailyCompletedTasks) > 1 ? "s" : "")} still need attention today.";
+
+        public string ProjectHealthBgColor => ProjectHealthColor == "#EF4444" ? "#20EF4444" : ProjectHealthColor == "#F59E0B" ? "#20F59E0B" : "#2010B981";
+
+        public IBrush DailyProgressBrush => new LinearGradientBrush
+        {
+            StartPoint = new Avalonia.RelativePoint(0, 0, Avalonia.RelativeUnit.Relative),
+            EndPoint = new Avalonia.RelativePoint(1, 1, Avalonia.RelativeUnit.Relative),
+            GradientStops = new GradientStops
+            {
+                new GradientStop(Color.Parse("#6366F1"), 0),
+                new GradientStop(Color.Parse("#22D3EE"), 1)
+            }
+        };
+
         private readonly ILocalSettingsService _settingsService;
 
         [ObservableProperty]
@@ -148,9 +228,7 @@ namespace OCC.Mobile.Features.Dashboard
         {
             _signalRService.EntityUpdated -= OnEntityUpdated;
             base.Dispose();
-        }
-
-        public async Task LoadData()
+        }        public async Task LoadData()
         {
             if (!await _loadSemaphore.WaitAsync(0)) return;
             try
@@ -228,6 +306,80 @@ namespace OCC.Mobile.Features.Dashboard
                     etaStat = "Project Complete";
                 }
 
+                // Query collections for redesign dashboard
+                var overdueList = projectList.SelectMany(p => p.Tasks.Where(t => t.IsOverdue)
+                    .Select(t => new DashboardTaskViewModel
+                    {
+                        Id = t.Id.ToString(),
+                        Title = t.Name,
+                        Project = p.Name,
+                        Status = t.Status,
+                        DaysLate = (DateTime.Today - t.FinishDate.Date).Days,
+                        DueLabel = "Overdue"
+                    }))
+                    .OrderByDescending(t => t.DaysLate)
+                    .ToList();
+
+                var todayRemainingList = projectList.SelectMany(p => p.Tasks
+                    .Where(t => !t.IsComplete && t.FinishDate.Date == DateTime.Today)
+                    .Select(t => new DashboardTaskViewModel
+                    {
+                        Id = t.Id.ToString(),
+                        Title = t.Name,
+                        Project = p.Name,
+                        Status = t.Status,
+                        DueLabel = "Today"
+                    }))
+                    .ToList();
+
+                var next7DaysTasks = projectList.SelectMany(p => p.Tasks
+                    .Where(t => !t.IsComplete && t.FinishDate.Date > DateTime.Today && t.FinishDate.Date <= DateTime.Today.AddDays(7))
+                    .Select(t => new { Task = t, Project = p }))
+                    .GroupBy(x => x.Task.FinishDate.Date)
+                    .OrderBy(g => g.Key)
+                    .ToList();
+
+                var weekGroupsList = new List<DashboardWeekGroupViewModel>();
+                foreach (var g in next7DaysTasks)
+                {
+                    var dateVal = g.Key;
+                    string dayLabel;
+                    if (dateVal == DateTime.Today.AddDays(1))
+                        dayLabel = "Tomorrow";
+                    else
+                        dayLabel = dateVal.ToString("dddd");
+
+                    weekGroupsList.Add(new DashboardWeekGroupViewModel
+                    {
+                        Day = dayLabel,
+                        Date = dateVal.ToString("ddd dd MMM"),
+                        Tasks = g.Select(x => new DashboardTaskViewModel
+                        {
+                            Id = x.Task.Id.ToString(),
+                            Title = x.Task.Name,
+                            Project = x.Project.Name,
+                            Status = x.Task.Status,
+                            DueLabel = dateVal.ToString("ddd dd MMM")
+                        }).ToList()
+                    });
+                }
+
+                var gradientColors = new[]
+                {
+                    new { Start = "#6366F1", End = "#22D3EE" }, // Indigo to Cyan
+                    new { Start = "#8B5CF6", End = "#6366F1" }, // Violet to Indigo
+                    new { Start = "#EC4899", End = "#8B5CF6" }, // Pink to Violet
+                };
+
+                var projectBreakdownList = projectList.Select((p, idx) => new DashboardProjectBreakdownViewModel
+                {
+                    Name = p.Name,
+                    Done = p.CompletedTaskCount,
+                    Total = p.TotalTaskCount,
+                    StartColor = gradientColors[idx % gradientColors.Length].Start,
+                    EndColor = gradientColors[idx % gradientColors.Length].End
+                }).ToList();
+
                 // 2. Fetch Recent Activity
                 var updates = await _taskService.GetRecentUpdatesAsync();
                 var activeProjectIds = projectList.Select(p => p.Id).ToList();
@@ -242,8 +394,8 @@ namespace OCC.Mobile.Features.Dashboard
                     DailyTotalTasks = dailyTotal;
                     DailyCompletedTasks = dailyCompleted;
                     DailyProgress = progressValue;
-                    DailyProgressAngle = progressValue * 3.6;
-                    DailyPendingProgressAngle = (dailyTotal > 0 ? (double)pendingCount / dailyTotal * 100 : 0) * 3.6;
+                    DailyProgressAngle = progressValue * 2.4; // 240 degrees horseshoe sweep
+                    DailyPendingProgressAngle = (dailyTotal > 0 ? (double)pendingCount / dailyTotal * 100 : 0) * 2.4;
                     
                     OverallTotalTasks = overallTotal;
                     OverallCompletedTasks = overallCompleted;
@@ -259,10 +411,54 @@ namespace OCC.Mobile.Features.Dashboard
                     EtaDateString = etaDate;
                     EtaStatus = etaStat;
                     
+                    CurrentDateString = DateTime.Today.ToString("ddd dd MMM yyyy");
+
+                    OverdueTasks.Clear();
+                    foreach (var t in overdueList)
+                    {
+                        OverdueTasks.Add(t);
+                    }
+
+                    TodayTasks.Clear();
+                    foreach (var t in todayRemainingList)
+                    {
+                        TodayTasks.Add(t);
+                    }
+
+                    WeekGroups.Clear();
+                    foreach (var wg in weekGroupsList)
+                    {
+                        WeekGroups.Add(wg);
+                    }
+
+                    ProjectBreakdowns.Clear();
+                    foreach (var pb in projectBreakdownList)
+                    {
+                        ProjectBreakdowns.Add(pb);
+                    }
+
                     RecentActivity.Clear();
                     foreach (var update in activityList)
                     {
                         RecentActivity.Add(update);
+                    }
+
+                    OnPropertyChanged(nameof(DailyProgressMessage));
+                    OnPropertyChanged(nameof(ProjectHealthBgColor));
+                    OnPropertyChanged(nameof(DailyProgressBrush));
+
+                    // Cache statistics for Login screen
+                    try
+                    {
+                        _settingsService.Settings.CachedActiveProjects = projectList.Count(p => p.IsActive);
+                        _settingsService.Settings.CachedTasksToday = dailyTotal;
+                        _settingsService.Settings.CachedLiveSites = projectList.Count(p => p.IsActive);
+                        _settingsService.Settings.CachedTeamMembers = projectList.SelectMany(p => p.TeamMembers).Select(tm => tm.EmployeeId).Distinct().Count();
+                        _settingsService.Save();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to cache dashboard stats: {ex.Message}");
                     }
                 });
                 LoadPendingCrewCount().FireAndForget();

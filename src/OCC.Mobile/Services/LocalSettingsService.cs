@@ -17,6 +17,12 @@ namespace OCC.Mobile.Services
         public bool RememberEmail { get; set; } = true;
         public AppEnvironment SelectedEnvironment { get; set; } = AppEnvironment.Test;
         public string? CustomLocalUrl { get; set; } = string.Empty;
+
+        // Cached statistics for unauthenticated login screen
+        public int CachedActiveProjects { get; set; } = 0;
+        public int CachedTasksToday { get; set; } = 0;
+        public int CachedLiveSites { get; set; } = 0;
+        public int CachedTeamMembers { get; set; } = 0;
     }
 
     public interface ILocalSettingsService

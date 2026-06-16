@@ -4,97 +4,380 @@
              x:DataType="vm:LoginViewModel"
              x:Class="OCC.Mobile.Features.Login.LoginView">
 
-    <Grid Background="{DynamicResource BrandDarkBrush}">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Spacing="0" MaxWidth="450" Margin="20,5,20,100">
-                <!-- Official Logo Section -->
-                <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" Height="200" RenderOptions.BitmapInterpolationMode="HighQuality" />
-                                
-                <TextBlock Text="Welcome back. Let's keep building." 
-                           Foreground="{DynamicResource BrandSubTextBrush}" 
-                           FontSize="18" 
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,20"/>
+    <Grid x:Name="MainGrid" ColumnDefinitions="1.2*, *">
+        
+        <!-- ==================== LEFT COLUMN (BRANDING & STATS) ==================== -->
+        <Grid x:Name="LeftPanel" Grid.Column="0">
+            <!-- Background Image -->
+            <Image Source="avares://OCC.Mobile/Assets/loginbackground.jpg" Stretch="UniformToFill" />
+            
+            <!-- Dark translucent overlay to dim background and blend with theme -->
+            <Border Background="#B8070D1C" />
 
-                <!-- Input Section -->
-                <StackPanel Spacing="15" Margin="0,20,0,0">
-                    <TextBox Text="{Binding Username}" 
-                             PlaceholderText="Username or Email" 
-                             Height="55" />
+            <!-- Brand Logo (Top Left) -->
+            <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" 
+                   Height="150" 
+                   RenderOptions.BitmapInterpolationMode="HighQuality"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Top" 
+                   Margin="40" />
+
+            <!-- Center Text Area -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="40,0,40,20" Spacing="0">
+                <TextBlock Text="FIELD MANAGEMENT PLATFORM" 
+                           Foreground="#6366F1" 
+                           FontSize="12" 
+                           FontWeight="Bold" 
+                           LetterSpacing="2" />
+                
+                <TextBlock Text="Every task." 
+                           FontSize="44" 
+                           FontWeight="Black" 
+                           Foreground="White" 
+                           Margin="0,15,0,0" />
+                
+                <TextBlock Text="Every site." 
+                           FontSize="44" 
+                           FontWeight="Black" 
+                           Foreground="White" />
+                
+                <!-- Linear Gradient Accent Text -->
+                <TextBlock Text="In your hands." 
+                           FontSize="44" 
+                           FontWeight="Black">
+                    <TextBlock.Foreground>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                            <GradientStop Offset="0.0" Color="#6366F1" />
+                            <GradientStop Offset="0.5" Color="#4F46E5" />
+                            <GradientStop Offset="1.0" Color="#0EA5E9" />
+                        </LinearGradientBrush>
+                    </TextBlock.Foreground>
+                </TextBlock>
+
+                <TextBlock Text="Real-time project tracking built for Orange Circle Construction in the field." 
+                           FontSize="14" 
+                           Foreground="#A5AECF" 
+                           TextWrapping="Wrap" 
+                           LineHeight="22"
+                           MaxWidth="380" 
+                           Margin="0,15,0,0" />
+            </StackPanel>
+
+            <!-- Stats Grid (Bottom) -->
+            <Grid VerticalAlignment="Bottom" Margin="30" RowDefinitions="Auto, Auto" ColumnDefinitions="*, *">
+                <!-- Card 1: Active Projects -->
+                <Border Grid.Row="0" Grid.Column="0" Background="#131D35" Opacity="0.85" BorderBrush="#246366F1" BorderThickness="1" CornerRadius="16" Padding="15,12" Margin="6">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Width="36" Height="36" Background="#156366F1" CornerRadius="8" VerticalAlignment="Center">
+                            <!-- Folder icon path -->
+                            <Path Data="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" Fill="#6366F1" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ActiveProjectsCount}" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="Active Projects" Foreground="#6B77A4" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Card 2: Tasks Today -->
+                <Border Grid.Row="0" Grid.Column="1" Background="#131D35" Opacity="0.85" BorderBrush="#246366F1" BorderThickness="1" CornerRadius="16" Padding="15,12" Margin="6">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Width="36" Height="36" Background="#156366F1" CornerRadius="8" VerticalAlignment="Center">
+                            <!-- Checkbox checked list icon path -->
+                            <Path Data="M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" Fill="#6366F1" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TasksTodayCount}" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="Tasks Today" Foreground="#6B77A4" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Card 3: Live Sites -->
+                <Border Grid.Row="1" Grid.Column="0" Background="#131D35" Opacity="0.85" BorderBrush="#246366F1" BorderThickness="1" CornerRadius="16" Padding="15,12" Margin="6">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Width="36" Height="36" Background="#156366F1" CornerRadius="8" VerticalAlignment="Center">
+                            <!-- Map pin icon path -->
+                            <Path Data="M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2M12,11.5A2.5,2.5 0 1,1 14.5,9A2.5,2.5 0 0,1 12,11.5Z" Fill="#6366F1" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding LiveSitesCount}" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="Live Sites" Foreground="#6B77A4" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Card 4: Team Members -->
+                <Border Grid.Row="1" Grid.Column="1" Background="#131D35" Opacity="0.85" BorderBrush="#246366F1" BorderThickness="1" CornerRadius="16" Padding="15,12" Margin="6">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Width="36" Height="36" Background="#156366F1" CornerRadius="8" VerticalAlignment="Center">
+                            <!-- Users icon path -->
+                            <Path Data="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15 17,16.5V19H23V16.5C23,14.17 18.33,13 16,13M8,13C5.67,13 1,14.17 1,16.5V19H15V16.5C15,14.17 10.33,13 8,13M8,11A3,3 0 1,0 8,8A3,3 0 0,0 8,11M16,11A3,3 0 1,0 16,8A3,3 0 0,0 16,11Z" Fill="#6366F1" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TeamMembersCount}" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="Team Members" Foreground="#6B77A4" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== RIGHT COLUMN (LOGIN FORM) ==================== -->
+        <Grid x:Name="RightPanel" Grid.Column="1" Background="#070D1C">
+            
+            <!-- Soft radial glows to match Figma backdrop texture -->
+            <Border Width="300" Height="300" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-80,-80,0" IsHitTestVisible="False">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                        <GradientStop Offset="0.0" Color="#086366F1" />
+                        <GradientStop Offset="1.0" Color="Transparent" />
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border Width="220" Height="220" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-80,0,0,-80" IsHitTestVisible="False">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                        <GradientStop Offset="0.0" Color="#0822D3EE" />
+                        <GradientStop Offset="1.0" Color="Transparent" />
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- Scrollable Content to prevent clipping on small screens -->
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" VerticalAlignment="Center">
+                <StackPanel Width="340" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30,40" Spacing="0">
                     
-                    <TextBox Text="{Binding Password}" 
-                             PlaceholderText="Password" 
-                             PasswordChar="*" 
-                             Height="55" />
+                    <!-- Logo (Only visible on narrow phone screens when LeftPanel is collapsed) -->
+                    <Image Source="avares://OCC.Mobile/Assets/occ_logo.png" 
+                           Height="42" 
+                           RenderOptions.BitmapInterpolationMode="HighQuality"
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,30"
+                           IsVisible="{Binding !#LeftPanel.IsVisible}" />
+
+                    <!-- Form Heading -->
+                    <TextBlock Text="Welcome back" 
+                               FontSize="26" 
+                               FontWeight="Bold" 
+                               Foreground="White" />
                     
-                    <Grid ColumnDefinitions="*, *" Margin="5,0,5,10">
-                        <!-- Environment Switcher -->
-                        <StackPanel Grid.Column="0" Spacing="5">
-                            <TextBlock Text="Environment" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="12"/>
-                            <ComboBox ItemsSource="{Binding Environments}"
-                                      SelectedItem="{Binding SelectedEnvironment}"
-                                      HorizontalAlignment="Stretch"
-                                      Height="40"
-                                      Background="{DynamicResource InputBackgroundBrush}"/>
+                    <TextBlock Text="Let's keep building." 
+                               FontSize="13" 
+                               Foreground="#6B77A4" 
+                               Margin="0,4,0,35" />
+
+                    <!-- Inputs Area -->
+                    <StackPanel Spacing="16">
+                        <!-- Email Field -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="EMAIL" 
+                                       Foreground="#6B77A4" 
+                                       FontSize="10" 
+                                       FontWeight="Bold" 
+                                       Margin="2,0,0,0" 
+                                       LetterSpacing="1.5" />
+                            <TextBox Text="{Binding Username}" 
+                                     PlaceholderText="you@company.com" 
+                                     Height="46" 
+                                     CornerRadius="12"
+                                     Background="#111929"
+                                     BorderBrush="#246366F1"
+                                     BorderThickness="1"
+                                     Foreground="#E4E8FF" />
                         </StackPanel>
 
-                        <!-- Save Email -->
-                        <CheckBox Grid.Column="1" 
-                                  Content="Remember Email" 
-                                  Foreground="{DynamicResource BrandSubTextBrush}"
-                                  IsChecked="{Binding RememberEmail}"
-                                  VerticalAlignment="Bottom"
-                                  HorizontalAlignment="Right"/>
-                    </Grid>
+                        <!-- Password Field -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="PASSWORD" 
+                                       Foreground="#6B77A4" 
+                                       FontSize="10" 
+                                       FontWeight="Bold" 
+                                       Margin="2,0,0,0" 
+                                       LetterSpacing="1.5" />
+                            <TextBox x:Name="PasswordBox"
+                                     Text="{Binding Password}" 
+                                     PlaceholderText="••••••••" 
+                                     PasswordChar="*" 
+                                     Height="46" 
+                                     CornerRadius="12"
+                                     Background="#111929"
+                                     BorderBrush="#246366F1"
+                                     BorderThickness="1"
+                                     Foreground="#E4E8FF">
+                                <TextBox.InnerRightContent>
+                                    <ToggleButton IsChecked="{Binding #PasswordBox.RevealPassword, Mode=TwoWay}"
+                                                  BorderThickness="0" 
+                                                  Padding="12,0" 
+                                                  Focusable="False">
+                                        <ToggleButton.Styles>
+                                            <Style Selector="ToggleButton">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                            </Style>
+                                            <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                            </Style>
+                                        </ToggleButton.Styles>
+                                        <!-- Eye Icon Path -->
+                                        <Path Data="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" 
+                                              Fill="#6B77A4" 
+                                              Width="16" 
+                                              Height="16" 
+                                              Stretch="Uniform" />
+                                    </ToggleButton>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                        </StackPanel>
 
-                    <!-- Custom IP Input (Visible only if Local is selected) -->
-                    <StackPanel Spacing="5" Margin="0,0,0,10" IsVisible="{Binding SelectedEnvironment, ConverterParameter=Local, Converter={StaticResource EnumToBoolConverter}}">
-                        <TextBlock Text="Local API IP (e.g. http://192.168.1.10:5237)" Foreground="{DynamicResource BrandSubTextBrush}" FontSize="12"/>
-                        <TextBox Text="{Binding CustomLocalUrl}" 
-                                 PlaceholderText="http://0.0.0.0:5237"
-                                 Height="45"
-                                 Background="{DynamicResource InputBackgroundBrush}"/>
+                        <!-- Environment Selector & Remember Email CheckBox -->
+                        <Grid ColumnDefinitions="2*, 1.8*">
+                            <!-- Environment Selector -->
+                            <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,10,0">
+                                <TextBlock Text="ENVIRONMENT" 
+                                           Foreground="#6B77A4" 
+                                           FontSize="10" 
+                                           FontWeight="Bold" 
+                                           Margin="2,0,0,0" 
+                                           LetterSpacing="1.5" />
+                                <ComboBox ItemsSource="{Binding Environments}"
+                                          SelectedItem="{Binding SelectedEnvironment}"
+                                          HorizontalAlignment="Stretch"
+                                          Height="42"
+                                          CornerRadius="12"
+                                          Background="#111929"
+                                          BorderBrush="#246366F1"
+                                          BorderThickness="1" />
+                            </StackPanel>
+
+                            <!-- Checkbox -->
+                            <CheckBox Grid.Column="1"
+                                      Content="Remember email"
+                                      IsChecked="{Binding RememberEmail}"
+                                      Foreground="#A5AECF"
+                                      FontSize="11"
+                                      VerticalAlignment="Bottom"
+                                      HorizontalAlignment="Right"
+                                      Margin="0,0,2,3"/>
+                        </Grid>
+
+                        <!-- Custom IP Input (Visible only if Local is selected) -->
+                        <StackPanel Spacing="6" 
+                                    IsVisible="{Binding SelectedEnvironment, ConverterParameter=Local, Converter={StaticResource EnumToBoolConverter}}">
+                            <TextBlock Text="LOCAL API IP ADDRESS" 
+                                       Foreground="#6B77A4" 
+                                       FontSize="10" 
+                                       FontWeight="Bold" 
+                                       Margin="2,0,0,0" 
+                                       LetterSpacing="1.5" />
+                            <TextBox Text="{Binding CustomLocalUrl}" 
+                                     PlaceholderText="http://192.168.1.10:5237"
+                                     Height="44"
+                                     CornerRadius="12"
+                                     Background="#111929"
+                                     BorderBrush="#246366F1"
+                                     BorderThickness="1"
+                                     Foreground="#E4E8FF" />
+                        </StackPanel>
                     </StackPanel>
+
+                    <!-- Error Alert box -->
+                    <Border Background="#20EF4444" 
+                            BorderBrush="#40EF4444" 
+                            BorderThickness="1" 
+                            CornerRadius="10" 
+                            Padding="12,10" 
+                            Margin="0,20,0,0"
+                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="{Binding ErrorMessage}" 
+                                   Foreground="#EF4444" 
+                                   FontSize="12" 
+                                   FontWeight="Medium"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Status dot pulsing / loading -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" HorizontalAlignment="Left">
+                        <Ellipse Width="6" Height="6" Fill="#6366F1" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding PushStatus}" 
+                                   Foreground="#6B77A4" 
+                                   FontSize="11" 
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Action: Log In Button -->
+                    <Button Command="{Binding LoginCommand}" 
+                            Height="48" 
+                            CornerRadius="12"
+                            HorizontalAlignment="Stretch" 
+                            Margin="0,15,0,0">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                <GradientStop Offset="0.0" Color="#6366F1" />
+                                <GradientStop Offset="0.5" Color="#4F46E5" />
+                                <GradientStop Offset="1.0" Color="#0EA5E9" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="LOG IN" 
+                                       FontWeight="Bold" 
+                                       FontSize="14" 
+                                       Foreground="White" 
+                                       VerticalAlignment="Center"/>
+                            <Path Data="M12,4L10.59,5.41L16.17,11H4V13H16.17L10.59,18.59L12,20L20,12L12,4Z" 
+                                  Fill="White" 
+                                  Width="14" 
+                                  Height="14" 
+                                  Stretch="Uniform" 
+                                  VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Register Link -->
+                    <Button Command="{Binding NavigateToRegisterCommand}"
+                            Background="Transparent" 
+                            BorderThickness="0" 
+                            HorizontalAlignment="Center"
+                            Margin="0,12,0,0">
+                        <TextBlock Text="Need an account? Register here" 
+                                   Foreground="#6366F1" 
+                                   FontSize="13" 
+                                   FontWeight="SemiBold" />
+                    </Button>
+                    
+                    <!-- App Version -->
+                    <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}" 
+                               Foreground="#6B77A4"
+                               FontSize="10" 
+                               Opacity="0.4"
+                               HorizontalAlignment="Center"
+                               Margin="0,25,0,0" />
                 </StackPanel>
+            </ScrollViewer>
 
-                <!-- Error Message -->
-                <TextBlock Text="{Binding ErrorMessage}" 
-                           Foreground="#EF4444" 
+            <!-- Circular Help "?" Icon in Bottom Right Corner (Visible only on wider screen sizes) -->
+            <Border Width="28" 
+                    Height="28" 
+                    Background="#131D35" 
+                    BorderBrush="#246366F1" 
+                    BorderThickness="1" 
+                    CornerRadius="14" 
+                    HorizontalAlignment="Right" 
+                    VerticalAlignment="Bottom" 
+                    Margin="20"
+                    IsVisible="{Binding #LeftPanel.IsVisible}">
+                <TextBlock Text="?" 
+                           Foreground="#A5AECF" 
                            FontSize="14" 
-                           HorizontalAlignment="Center"
-                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                <!-- Push Status (Debug) -->
-                <TextBlock Text="{Binding PushStatus}" 
-                           Foreground="{DynamicResource BrandSubTextBrush}"
-                           FontSize="12" 
-                           FontWeight="SemiBold"
-                           HorizontalAlignment="Center"
-                           Margin="0,10"/>
-
-                <!-- Login Button -->
-                <Button Command="{Binding LoginCommand}" 
-                        Classes="primary"
-                        Height="60" 
-                        HorizontalAlignment="Stretch" 
-                        Content="LOG IN"/>
-
-                <Button Command="{Binding NavigateToRegisterCommand}"
-                        Background="Transparent" 
-                        BorderThickness="0" 
-                        HorizontalAlignment="Center"
-                        Margin="0,10">
-                    <TextBlock Text="Need an account? Register here" Foreground="{DynamicResource BrandOrangeBrush}" FontSize="14" FontWeight="SemiBold"/>
-                </Button>
-                
-                <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}" 
-                           Foreground="{DynamicResource BrandSubTextBrush}"
-                           FontSize="12" 
-                           Opacity="0.5"
-                           HorizontalAlignment="Center"
-                           Margin="0,10,0,0"/>
-
-            </StackPanel>
-        </ScrollViewer>
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center" />
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

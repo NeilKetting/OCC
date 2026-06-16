@@ -3,222 +3,490 @@
              xmlns:vm="clr-namespace:OCC.Mobile.Features.Dashboard"
              x:DataType="vm:DashboardViewModel"
              x:Class="OCC.Mobile.Features.Dashboard.DashboardView">
-    <ScrollViewer Background="{DynamicResource BrandDarkBrush}">
-        <StackPanel Spacing="25" Margin="20">
-            <!-- Greeting & Header -->
-            <StackPanel Spacing="5">
+    
+    <Grid>
+        <!-- Soft background glows -->
+        <Border Width="300" Height="300" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-80,-80,0" IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                    <GradientStop Offset="0.0" Color="#0D6366F1" />
+                    <GradientStop Offset="1.0" Color="Transparent" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border Width="220" Height="220" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-80,0,0,-80" IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                    <GradientStop Offset="0.0" Color="#0822D3EE" />
+                    <GradientStop Offset="1.0" Color="Transparent" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <ScrollViewer Background="{StaticResource RedesignBackgroundBrush}">
+            <StackPanel Spacing="20" Margin="20">
+                <!-- ── Header ── -->
                 <Grid ColumnDefinitions="*, Auto">
-                    <TextBlock Text="{Binding Greeting}" 
-                               Foreground="White" 
-                               FontSize="32" 
-                               FontWeight="ExtraBold"/>
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding Greeting}" 
+                                       Foreground="White" 
+                                       FontSize="24" 
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="👋" FontSize="24" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Here's how your day looks so far" 
+                                   Foreground="{StaticResource RedesignSecondaryForegroundBrush}" 
+                                   FontSize="13"/>
+                    </StackPanel>
                     
-                    <!-- Push Status Indicator -->
-                    <Border Grid.Column="1" Background="#1E293B" CornerRadius="10" Padding="8,4" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Ellipse Width="6" Height="6" Fill="{Binding PushStatus, Converter={StaticResource PushStatusToColorConverter}}"/>
-                            <TextBlock Text="{Binding PushStatus}" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
+                    <!-- Date Badge -->
+                    <Border Grid.Column="1" 
+                            Background="{StaticResource RedesignSecondaryBrush}" 
+                            BorderBrush="{StaticResource RedesignBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="20" 
+                            Padding="12,6" 
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <!-- Pulsing/Live dot -->
+                            <Ellipse Width="6" Height="6" Fill="#6366F1" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentDateString}" 
+                                       Foreground="{StaticResource RedesignForegroundBrush}" 
+                                       FontSize="11" 
+                                       FontWeight="SemiBold" 
+                                       VerticalAlignment="Center" 
+                                       FontFamily="Consolas"/>
                         </StackPanel>
                     </Border>
                 </Grid>
-                <TextBlock Text="Here's how your day looks so far" 
-                           Foreground="#94A3B8" 
-                           FontSize="16"/>
-            </StackPanel>
 
-            <!-- Incoming Crew Alert Banner -->
-            <Border IsVisible="{Binding !!PendingCrewCount}" 
-                    Background="#1E203B" BorderBrush="#FFB900" BorderThickness="1" CornerRadius="16" Padding="20">
-                <Grid ColumnDefinitions="*, Auto">
-                    <StackPanel Spacing="8">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="👥" Foreground="#FFB900" FontSize="20" VerticalAlignment="Center"/>
-                            <TextBlock Text="INCOMING DAILY CREW" Foreground="#FFB900" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding PendingCrewCount, StringFormat='{}You have {0} crew allocation(s) waiting to be received.'}" 
-                                   Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                        <TextBlock Text="Review and confirm their attendance for today." Foreground="#94A3B8" FontSize="12"/>
-                    </StackPanel>
-                    
-                    <Button Grid.Column="1" Command="{Binding NavigateToReceiveCrewCommand}" 
-                            Background="#FFB900" Foreground="#1E1E2E" Padding="16,10" CornerRadius="8" VerticalAlignment="Center">
-                        <TextBlock Text="Clock In Crew" FontWeight="Bold" FontSize="13" Foreground="#1E1E2E"/>
-                    </Button>
-                </Grid>
-            </Border>
-
-            <!-- Radial Progress Area (Doughnut Charts) -->
-            <Border Background="#1E293B" CornerRadius="20" Padding="20" BoxShadow="0 4 20 0 #40000000">
-                <StackPanel Spacing="20">
-                    <!-- Ring Legend -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Ellipse Width="8" Height="8" Fill="#10B981" VerticalAlignment="Center"/>
-                            <TextBlock Text="Outer Ring: Completed" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Ellipse Width="8" Height="8" Fill="#3B82F6" VerticalAlignment="Center"/>
-                            <TextBlock Text="Inner Ring: Pending" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <UniformGrid Columns="2">
-                        <!-- Daily Chart -->
-                        <StackPanel Spacing="12" HorizontalAlignment="Center">
-                            <TextBlock Text="TODAY'S STATUS" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" LetterSpacing="1"/>
-                            <Viewbox Height="140" Width="140">
-                                <Grid>
-                                    <!-- Background -->
-                                    <Ellipse Width="100" Height="100" Stroke="#334155" StrokeThickness="12"/>
-                                    <Ellipse Width="72" Height="72" Stroke="#334155" StrokeThickness="12"/>
-                                    
-                                    <!-- Completed Ring (Green) -->
-                                    <Arc Width="100" Height="100" Stroke="#10B981" StrokeThickness="12" 
-                                         StartAngle="-90" SweepAngle="{Binding DailyProgressAngle}" 
-                                         StrokeJoin="Round" StrokeLineCap="Round"/>
-                                    
-                                    <!-- Pending Ring (Blue) -->
-                                    <Arc Width="72" Height="72" Stroke="#3B82F6" StrokeThickness="12" 
-                                         StartAngle="-90" SweepAngle="{Binding DailyPendingProgressAngle}" 
-                                         StrokeJoin="Round" StrokeLineCap="Round"/>
-
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock Text="{Binding DailyProgress, StringFormat='{}{0:0}%'}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="DONE" Foreground="#94A3B8" FontSize="8" HorizontalAlignment="Center" FontWeight="Bold"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Viewbox>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                                <TextBlock Text="{Binding DailyCompletedTasks}" Foreground="#10B981" FontSize="14" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding DailyTotalTasks, StringFormat='/ {0}'}" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <!-- Overall Chart -->
-                        <StackPanel Spacing="12" HorizontalAlignment="Center">
-                            <TextBlock Text="OVERALL STATUS" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" LetterSpacing="1"/>
-                            <Viewbox Height="140" Width="140">
-                                <Grid>
-                                    <Ellipse Width="100" Height="100" Stroke="#334155" StrokeThickness="12"/>
-                                    <Ellipse Width="72" Height="72" Stroke="#334155" StrokeThickness="12"/>
-                                    
-                                    <!-- Completed Ring (Green) -->
-                                    <Arc Width="100" Height="100" Stroke="#10B981" StrokeThickness="12" 
-                                         StartAngle="-90" SweepAngle="{Binding OverallProgressAngle}" 
-                                         StrokeJoin="Round" StrokeLineCap="Round"/>
-                                    
-                                    <!-- Pending Ring (Blue) -->
-                                    <Arc Width="72" Height="72" Stroke="#3B82F6" StrokeThickness="12" 
-                                         StartAngle="-90" SweepAngle="{Binding OverallPendingProgressAngle}" 
-                                         StrokeJoin="Round" StrokeLineCap="Round"/>
-
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock Text="{Binding OverallProgress, StringFormat='{}{0:0}%'}" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="TOTAL" Foreground="#94A3B8" FontSize="8" HorizontalAlignment="Center" FontWeight="Bold"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Viewbox>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                                <TextBlock Text="{Binding OverallCompletedTasks}" Foreground="#10B981" FontSize="14" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding OverallTotalTasks, StringFormat='/ {0}'}" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </UniformGrid>
-                    
-                    <Separator Background="#334155" Height="1" Margin="0,5"/>
-                    
-                    <!-- Legend / Details -->
-                    <UniformGrid Columns="3">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <TextBlock Text="COMPLETED" Foreground="#10B981" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" LetterSpacing="0.5"/>
-                            <TextBlock Text="{Binding DailyCompletedTasks}" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <!-- ── Incoming Crew Alert Banner ── -->
+                <Border IsVisible="{Binding !!PendingCrewCount}" 
+                        Background="#1AFFF100" 
+                        BorderBrush="#FFB900" 
+                        BorderThickness="1" 
+                        CornerRadius="16" 
+                        Padding="16">
+                    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="👥" FontSize="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="INCOMING DAILY CREW" Foreground="#FFB900" FontSize="10" FontWeight="Bold" LetterSpacing="1" VerticalAlignment="Center"/>
                         </StackPanel>
                         
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <TextBlock Text="PENDING" Foreground="#3B82F6" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" LetterSpacing="0.5"/>
-                            <TextBlock Text="{Binding PendingTasksCount}" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        </StackPanel>
+                        <TextBlock Grid.Row="1" Grid.Column="0" 
+                                   Text="{Binding PendingCrewCount, StringFormat='{}You have {0} crew allocation(s) waiting to be received.'}" 
+                                   Foreground="White" 
+                                   FontSize="14" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,8,12,0"
+                                   TextWrapping="Wrap"/>
                         
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <TextBlock Text="OVERDUE" Foreground="#EF4444" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" LetterSpacing="0.5"/>
-                            <TextBlock Text="{Binding OverdueTasksCount}" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </UniformGrid>
-                </StackPanel>
-            </Border>
+                        <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" 
+                                Command="{Binding NavigateToReceiveCrewCommand}" 
+                                Background="#FFB900" 
+                                CornerRadius="8" 
+                                Padding="12,8" 
+                                VerticalAlignment="Center">
+                            <TextBlock Text="Clock In Crew" FontWeight="Bold" FontSize="12" Foreground="#070D1C"/>
+                        </Button>
+                    </Grid>
+                </Border>
 
-            <!-- Quick Access Stats -->
-            <UniformGrid Columns="2">
-                <Border Background="#1E293B" CornerRadius="16" Padding="20" Margin="0,0,8,0">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="ACTIVE SITES" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
-                        <TextBlock Text="{Binding ActiveSitesCount}" Foreground="White" FontSize="24" FontWeight="Bold"/>
-                    </StackPanel>
-                </Border>
-                <Border Background="#1E293B" CornerRadius="16" Padding="20" Margin="8,0,0,0">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="TOTAL TASKS" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
-                        <TextBlock Text="{Binding DailyTotalTasks}" Foreground="White" FontSize="24" FontWeight="Bold"/>
-                    </StackPanel>
-                </Border>
-            </UniformGrid>
+                <!-- ── Hero section (Today's Progress) ── -->
+                <Border Background="{StaticResource RedesignCardBrush}" 
+                        BorderBrush="{StaticResource RedesignBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="20" 
+                        Padding="20">
+                    <Grid ColumnDefinitions="Auto, *">
+                        
+                        <!-- Horseshoe Progress Arc -->
+                        <Grid Grid.Column="0" Width="140" Height="140" VerticalAlignment="Center">
+                            <!-- Track Arc -->
+                            <Arc Width="120" Height="120" 
+                                 Stroke="#111929" 
+                                 StrokeThickness="10" 
+                                 StartAngle="150" 
+                                 SweepAngle="240" 
+                                 StrokeLineCap="Round"/>
+                            
+                            <!-- Progress Arc Fill -->
+                            <Arc Width="120" Height="120" 
+                                 StrokeThickness="10" 
+                                 StartAngle="150" 
+                                 SweepAngle="{Binding DailyProgressAngle}" 
+                                 StrokeLineCap="Round"
+                                 Stroke="{Binding DailyProgressBrush}"/>
+                            
+                            <!-- Center text -->
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                <TextBlock Text="{Binding DailyProgress, StringFormat='{}{0:0}%'}" 
+                                           Foreground="White" 
+                                           FontSize="26" 
+                                           FontWeight="ExtraBold" 
+                                           HorizontalAlignment="Center" 
+                                           FontFamily="Consolas"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="3">
+                                    <TextBlock Text="{Binding DailyCompletedTasks}" Foreground="#E4E8FF" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Text="/" Foreground="#6B77A4" FontSize="11"/>
+                                    <TextBlock Text="{Binding DailyTotalTasks}" Foreground="#6B77A4" FontSize="11" FontWeight="Bold"/>
+                                </StackPanel>
+                                <TextBlock Text="TODAY" 
+                                           Foreground="{StaticResource RedesignMutedForegroundBrush}" 
+                                           FontSize="8" 
+                                           FontWeight="Bold" 
+                                           LetterSpacing="1" 
+                                           HorizontalAlignment="Center" 
+                                           Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Grid>
 
-            <!-- Project Health & Predicted Completion -->
-            <UniformGrid Columns="2">
-                <Border Background="#1E293B" CornerRadius="16" Padding="20" Margin="0,0,8,0">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="PROJECT HEALTH" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <Ellipse Width="10" Height="10" Fill="{Binding ProjectHealthColor}"/>
-                            <TextBlock Text="{Binding ProjectHealth}" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock Text="Based on overdue tasks" Foreground="#64748B" FontSize="10"/>
-                    </StackPanel>
-                </Border>
-                <Border Background="#1E293B" CornerRadius="16" Padding="20" Margin="8,0,0,0">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="PREDICTED COMPLETION" Foreground="#94A3B8" FontSize="10" FontWeight="Bold" LetterSpacing="1"/>
-                        <TextBlock Text="{Binding EtaDateString}" Foreground="#F59E0B" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding EtaStatus}" Foreground="#64748B" FontSize="10" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
-            </UniformGrid>
+                        <!-- Progress details -->
+                        <StackPanel Grid.Column="1" Margin="20,0,0,0" Spacing="10" VerticalAlignment="Center">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="TODAY'S PROGRESS" 
+                                           Foreground="{StaticResource RedesignMutedForegroundBrush}" 
+                                           FontSize="9" 
+                                           FontWeight="Bold" 
+                                           LetterSpacing="1.5"/>
+                                <TextBlock Text="{Binding DailyProgressMessage}" 
+                                           Foreground="White" 
+                                           FontSize="13" 
+                                           FontWeight="Medium" 
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
 
-            <!-- Recent Activity List -->
-            <StackPanel Spacing="15">
-                <Grid ColumnDefinitions="*, Auto">
-                    <TextBlock Text="Recent Activity" 
-                               Foreground="White" 
-                               FontSize="20" 
-                               FontWeight="Bold"/>
-                    <Button Grid.Column="1" Content="View All" Foreground="{DynamicResource BrandOrangeBrush}" Background="Transparent" FontSize="12"/>
-                </Grid>
-                
-                <ItemsControl ItemsSource="{Binding RecentActivity}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Spacing="12"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#1E293B" CornerRadius="12" Padding="16">
-                                <Grid ColumnDefinitions="Auto, *">
-                                    <Border Background="{Binding StatusColor}" Width="4" Height="32" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel Grid.Column="1" Spacing="4">
-                                        <TextBlock Text="{Binding Message}" Foreground="White" FontSize="14" TextWrapping="Wrap" LineHeight="20"/>
-                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm} • {0:MMM dd}'}" Foreground="#64748B" FontSize="11" FontWeight="Medium"/>
+                            <!-- Overall project bar -->
+                            <StackPanel Spacing="4">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Text="Overall project progress" 
+                                               Foreground="{StaticResource RedesignMutedForegroundBrush}" 
+                                               FontSize="11"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                                        <TextBlock Text="{Binding OverallCompletedTasks}" Foreground="{StaticResource RedesignForegroundBrush}" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
+                                        <TextBlock Text="/" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11"/>
+                                        <TextBlock Text="{Binding OverallTotalTasks}" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
                                     </StackPanel>
                                 </Grid>
+                                
+                                <ProgressBar Value="{Binding OverallProgress}" 
+                                             Minimum="0" 
+                                             Maximum="100" 
+                                             Height="6" 
+                                             CornerRadius="3" 
+                                             Background="#111929">
+                                    <ProgressBar.Foreground>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Offset="0" Color="#6366F1"/>
+                                            <GradientStop Offset="1" Color="#22D3EE"/>
+                                        </LinearGradientBrush>
+                                    </ProgressBar.Foreground>
+                                </ProgressBar>
+                            </StackPanel>
+
+                            <!-- Health + Completion -->
+                            <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                                <Border Grid.Column="0" 
+                                        Background="{Binding ProjectHealthBgColor}" 
+                                        BorderBrush="#111929" 
+                                        BorderThickness="1" 
+                                        CornerRadius="12" 
+                                        Padding="10,8">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="HEALTH" 
+                                                   Foreground="{StaticResource RedesignMutedForegroundBrush}" 
+                                                   FontSize="8" 
+                                                   FontWeight="Bold" 
+                                                   LetterSpacing="1"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+                                            <Ellipse Width="6" Height="6" Fill="{Binding ProjectHealthColor}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding ProjectHealth}" 
+                                                       Foreground="{Binding ProjectHealthColor}" 
+                                                       FontSize="12" 
+                                                       FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <Border Grid.Column="1" 
+                                        Background="#2010B981" 
+                                        BorderBrush="#111929" 
+                                        BorderThickness="1" 
+                                        CornerRadius="12" 
+                                        Padding="10,8">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="EST. COMPLETION" 
+                                                   Foreground="{StaticResource RedesignMutedForegroundBrush}" 
+                                                   FontSize="8" 
+                                                   FontWeight="Bold" 
+                                                   LetterSpacing="1"/>
+                                        <TextBlock Text="{Binding EtaDateString}" 
+                                                   Foreground="#10B981" 
+                                                   FontSize="12" 
+                                                   FontWeight="Bold" 
+                                                   Margin="0,2,0,0" 
+                                                   FontFamily="Consolas"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- ── Quick stats ── -->
+                <UniformGrid Columns="4">
+                    <!-- Chip 1: Done Today -->
+                    <Border Background="{StaticResource RedesignSecondaryBrush}" 
+                            BorderBrush="{StaticResource RedesignBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="16" 
+                            Padding="8,10"
+                            Margin="0,0,4,0">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <!-- CheckSquare icon path -->
+                            <Path Data="M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" 
+                                  Fill="#10B981" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding DailyCompletedTasks}" Foreground="#10B981" FontSize="18" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                            <TextBlock Text="DONE TODAY" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="8" FontWeight="Bold" LetterSpacing="0.5" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Chip 2: Remaining -->
+                    <Border Background="{StaticResource RedesignSecondaryBrush}" 
+                            BorderBrush="{StaticResource RedesignBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="16" 
+                            Padding="8,10"
+                            Margin="2,0,2,0">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <!-- Clock icon path -->
+                            <Path Data="M12,20A8,8 0 1,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12.5,7H11V13L16.25,16.15L17,14.96L12.5,12.3V7Z" 
+                                  Fill="#6366F1" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding PendingTasksCount}" Foreground="#6366F1" FontSize="18" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                            <TextBlock Text="REMAINING" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="8" FontWeight="Bold" LetterSpacing="0.5" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Chip 3: Overdue -->
+                    <Border Background="{StaticResource RedesignSecondaryBrush}" 
+                            BorderBrush="{StaticResource RedesignBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="16" 
+                            Padding="8,10"
+                            Margin="2,0,2,0">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <!-- AlertTriangle icon path -->
+                            <Path Data="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z" 
+                                  Fill="#EF4444" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding OverdueTasksCount}" Foreground="#EF4444" FontSize="18" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                            <TextBlock Text="OVERDUE" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="8" FontWeight="Bold" LetterSpacing="0.5" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Chip 4: Active Sites -->
+                    <Border Background="{StaticResource RedesignSecondaryBrush}" 
+                            BorderBrush="{StaticResource RedesignBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="16" 
+                            Padding="8,10"
+                            Margin="4,0,0,0">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <!-- MapPin icon path -->
+                            <Path Data="M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2M12,11.5A2.5,2.5 0 1,1 14.5,9A2.5,2.5 0 0,1 12,11.5Z" 
+                                  Fill="#22D3EE" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding ActiveSitesCount}" Foreground="#22D3EE" FontSize="18" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                            <TextBlock Text="ACTIVE SITES" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="8" FontWeight="Bold" LetterSpacing="0.5" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- ── Overdue Tasks List ── -->
+                <Border IsVisible="{Binding !!OverdueTasksCount}"
+                        Background="{StaticResource RedesignCardBrush}" 
+                        BorderBrush="#40EF4444" 
+                        BorderThickness="1" 
+                        CornerRadius="20" 
+                        Padding="16,14">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <Border Background="#20EF4444" Width="28" Height="28" CornerRadius="8">
+                                <Path Data="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z" Fill="#EF4444" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                            <TextBlock Grid.Column="1" Text="OVERDUE" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Bold" LetterSpacing="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding OverdueTasksCount}" Foreground="#EF4444" FontSize="12" FontWeight="Bold" FontFamily="Consolas" VerticalAlignment="Center"/>
+                        </Grid>
+                        
+                        <Border Height="1" Background="#111929"/>
+                        
+                        <ItemsControl ItemsSource="{Binding OverdueTasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#111929" BorderThickness="0,0,0,1" Padding="0,10">
+                                        <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                                            <Border Grid.Column="0" Width="3" CornerRadius="1.5" Background="#EF4444" VerticalAlignment="Stretch" Margin="0,2,12,2"/>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Project}" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Medium" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding DaysLate, StringFormat='{}{0}d late'}" Foreground="#EF4444" FontSize="12" FontWeight="Bold" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,0,12,0" IsVisible="{Binding DaysLate, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                            <Border Grid.Column="3" Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Bg'}" BorderBrush="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Border'}" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <Ellipse Width="5" Height="5" Fill="{Binding Status, Converter={StaticResource StatusToColorConverter}}" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Still to do today Tasks List ── -->
+                <Border IsVisible="{Binding !!PendingTasksCount}"
+                        Background="{StaticResource RedesignCardBrush}" 
+                        BorderBrush="{StaticResource RedesignBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="20" 
+                        Padding="16,14">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <Border Background="#206366F1" Width="28" Height="28" CornerRadius="8">
+                                <Path Data="M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" Fill="#6366F1" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="STILL TO DO TODAY" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Bold" LetterSpacing="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding PendingTasksCount}" Foreground="#6366F1" FontSize="12" FontWeight="Bold" FontFamily="Consolas" VerticalAlignment="Center"/>
+                        </Grid>
+                        
+                        <Border Height="1" Background="#111929"/>
+                        
+                        <ItemsControl ItemsSource="{Binding TodayTasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#111929" BorderThickness="0,0,0,1" Padding="0,10">
+                                        <Grid ColumnDefinitions="Auto, *, Auto">
+                                            <Border Grid.Column="0" Width="3" CornerRadius="1.5" Background="#6366F1" VerticalAlignment="Stretch" Margin="0,2,12,2"/>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Project}" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Medium" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="2" Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Bg'}" BorderBrush="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Border'}" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <Ellipse Width="5" Height="5" Fill="{Binding Status, Converter={StaticResource StatusToColorConverter}}" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Coming this week nested list ── -->
+                <Border Background="{StaticResource RedesignCardBrush}" 
+                        BorderBrush="{StaticResource RedesignBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="20" 
+                        Padding="16,14">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Border Background="#2022D3EE" Width="28" Height="28" CornerRadius="8">
+                                <Path Data="M19,19H5V8H19M16,1H13V3H7V1H4V3H3C1.89,3 1,3.89 1,5V19A2,2 0 0,0 3,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H16M19,5V6H5V5H19Z" Fill="#22D3EE" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="COMING THIS WEEK" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Bold" LetterSpacing="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                        
+                        <Border Height="1" Background="#111929"/>
+
+                        <!-- Outer week groups collection -->
+                        <ItemsControl ItemsSource="{Binding WeekGroups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="4" Margin="0,4,0,12">
+                                        <!-- Header separator row -->
+                                        <Grid ColumnDefinitions="Auto, Auto, *" Margin="0,4">
+                                            <TextBlock Grid.Column="0" Text="{Binding Day}" Foreground="{StaticResource RedesignForegroundBrush}" FontSize="12" FontWeight="Bold"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Date}" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontFamily="Consolas" Margin="8,0,8,0" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="2" Height="1" Background="#111929" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        
+                                        <!-- Inner tasks in this day group -->
+                                        <ItemsControl ItemsSource="{Binding Tasks}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="#111929" BorderThickness="0,0,0,1" Padding="0,10">
+                                                        <Grid ColumnDefinitions="Auto, *, Auto">
+                                                            <Border Grid.Column="0" Width="3" CornerRadius="1.5" Background="#22D3EE" VerticalAlignment="Stretch" Margin="0,2,12,2"/>
+                                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Text="{Binding Project}" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Medium" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
+                                                            </StackPanel>
+                                                            <Border Grid.Column="2" Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Bg'}" BorderBrush="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Border'}" BorderThickness="1" CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                    <Ellipse Width="5" Height="5" Fill="{Binding Status, Converter={StaticResource StatusToColorConverter}}" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Project Breakdown ── -->
+                <Border Background="{StaticResource RedesignCardBrush}" 
+                        BorderBrush="{StaticResource RedesignBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="20" 
+                        Padding="16,14">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Border Background="#206366F1" Width="28" Height="28" CornerRadius="8">
+                                <Path Data="M3,13H11V15H3V13M3,17H11V19H3V17M13,3H21V5H13V3M13,7H21V9H13V7M13,11H21V13H13V11M3,3H11V11H3V3M13,15H21V17H13V15M13,19H21V21H13V19M3,21V21H11V21H3V21Z" Fill="#6366F1" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="PROJECT BREAKDOWN" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Bold" LetterSpacing="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                        
+                        <Border Height="1" Background="#111929"/>
+
+                        <ItemsControl ItemsSource="{Binding ProjectBreakdowns}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="6" Margin="0,4,0,10">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                                                <TextBlock Text="{Binding Done}" Foreground="{StaticResource RedesignForegroundBrush}" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
+                                                <TextBlock Text="/" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11"/>
+                                                <TextBlock Text="{Binding Total}" Foreground="{StaticResource RedesignMutedForegroundBrush}" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        
+                                        <ProgressBar Value="{Binding Progress}" 
+                                                     Minimum="0" 
+                                                     Maximum="100" 
+                                                     Height="6" 
+                                                     CornerRadius="3" 
+                                                     Background="#111929"
+                                                     Foreground="{Binding ProgressBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-            
-            <Border IsVisible="{Binding !RecentActivity.Count}" Background="#1E293B" CornerRadius="12" Padding="20">
-                <TextBlock Text="No recent activity reported." Foreground="#64748B" HorizontalAlignment="Center" FontSize="14"/>
-            </Border>
-        </StackPanel>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>
