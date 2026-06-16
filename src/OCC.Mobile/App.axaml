@@ -14,6 +14,8 @@
         <conv:EqualityConverter x:Key="EqualityConverter"/>
         <conv:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
         <conv:PushStatusToColorConverter x:Key="PushStatusToColorConverter"/>
+        <conv:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
+        <conv:StatusToColorConverter x:Key="StatusToColorConverter"/>
     </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>
@@ -22,5 +24,6 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://OCC.Mobile/Styles/GlobalStyles.axaml" />
+        <StyleInclude Source="avares://OCC.Mobile/Styles/RedesignStyles.axaml" />
     </Application.Styles>
 </Application>

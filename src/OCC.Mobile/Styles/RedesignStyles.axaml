@@ -1,0 +1,90 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20" Background="#070D1C">
+            <StackPanel Spacing="10">
+                <RadioButton Classes="status-chip" Content="Started" IsChecked="True"/>
+                <Button Classes="task-row-btn" Content="Task Name Row"/>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Redesign Theme Colors (based on Figma CSS design system) -->
+    <Styles.Resources>
+        <ResourceDictionary>
+            <!-- Solid Color Brushes for Redesigned Views -->
+            <SolidColorBrush x:Key="RedesignBackgroundBrush" Color="#070D1C"/>
+            <SolidColorBrush x:Key="RedesignForegroundBrush" Color="#E4E8FF"/>
+            <SolidColorBrush x:Key="RedesignCardBrush" Color="#0D1528"/>
+            <SolidColorBrush x:Key="RedesignCardForegroundBrush" Color="#E4E8FF"/>
+            <SolidColorBrush x:Key="RedesignPrimaryBrush" Color="#6366F1"/>
+            <SolidColorBrush x:Key="RedesignPrimaryForegroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="RedesignSecondaryBrush" Color="#131D35"/>
+            <SolidColorBrush x:Key="RedesignSecondaryForegroundBrush" Color="#A5AECF"/>
+            <SolidColorBrush x:Key="RedesignMutedBrush" Color="#111929"/>
+            <SolidColorBrush x:Key="RedesignMutedForegroundBrush" Color="#6B77A4"/>
+            <SolidColorBrush x:Key="RedesignAccentBrush" Color="#22D3EE"/>
+            <SolidColorBrush x:Key="RedesignAccentForegroundBrush" Color="#070D1C"/>
+            <SolidColorBrush x:Key="RedesignDestructiveBrush" Color="#EF4444"/>
+            <SolidColorBrush x:Key="RedesignDestructiveForegroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="RedesignBorderBrush" Color="#246366F1"/> <!-- 14% Primary Opacity -->
+            <SolidColorBrush x:Key="RedesignInputBrush" Color="#1A6366F1"/>  <!-- 10% Primary Opacity -->
+            <SolidColorBrush x:Key="RedesignInputBackgroundBrush" Color="#111929"/>
+            <SolidColorBrush x:Key="RedesignSwitchBackgroundBrush" Color="#1E2A47"/>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- Custom Styles for Redesigned Status RadioButtons -->
+    <Style Selector="RadioButton.status-chip">
+        <Setter Property="Background" Value="{StaticResource RedesignSecondaryBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource RedesignMutedForegroundBrush}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource RedesignBorderBrush}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.status-chip:pointerover">
+        <Setter Property="Background" Value="#1C2C4E"/>
+        <Setter Property="BorderBrush" Value="#386366F1"/>
+    </Style>
+    <Style Selector="RadioButton.status-chip:checked">
+        <Setter Property="Background" Value="{Binding $self.Content, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Bg'}"/>
+        <Setter Property="BorderBrush" Value="{Binding $self.Content, Converter={StaticResource StatusToColorConverter}, ConverterParameter='Border'}"/>
+        <Setter Property="Foreground" Value="{Binding $self.Content, Converter={StaticResource StatusToColorConverter}}"/>
+    </Style>
+
+    <!-- Custom Styles for Flat Grouped Task Row Buttons -->
+    <Style Selector="Button.task-row-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="16,14"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.task-row-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#08FFFFFF"/>
+    </Style>
+    <Style Selector="Button.task-row-btn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#0FFFFFFF"/>
+    </Style>
+</Styles>

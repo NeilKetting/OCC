@@ -114,6 +114,32 @@ namespace OCC.Mobile.Services
                 return new List<DashboardUpdateDto>();
             }
         }
+
+        public async Task UploadAttachmentAsync(Guid taskId, string filePath, string uploadedBy)
+        {
+            EnsureAuthorization();
+            var baseUrl = GetBaseUrl();
+            var url = $"{baseUrl}api/TaskAttachments/upload";
+
+            using (var content = new MultipartFormDataContent())
+            {
+                // ASP.NET Core Form Model parameters
+                content.Add(new StringContent(taskId.ToString()), "TaskId");
+                content.Add(new StringContent(uploadedBy), "UploadedBy");
+
+                // File content
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                var fileContent = new ByteArrayContent(fileBytes);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+                var fileName = System.IO.Path.GetFileName(filePath);
+                content.Add(fileContent, "file", fileName);
+
+                System.Diagnostics.Debug.WriteLine($"[MOBILE-API] Uploading photo {fileName} ({fileBytes.Length} bytes) for task {taskId} to {url}");
+                var response = await _httpClient.PostAsync(url, content);
+                System.Diagnostics.Debug.WriteLine($"[MOBILE-API] Upload response: {response.StatusCode}");
+                response.EnsureSuccessStatusCode();
+            }
+        }
     }
 
     public class ProjectService : IProjectService

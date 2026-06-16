@@ -113,6 +113,7 @@ namespace OCC.Mobile
             services.AddTransient<Features.Dashboard.ActiveProjectsViewModel>();
             services.AddTransient<OverdueTasksViewModel>();
             services.AddTransient<MyTasksViewModel>();
+            services.AddTransient<Features.Tasks.RedesignTasksViewModel>();
             services.AddTransient<TaskDetailViewModel>();
             services.AddTransient<InventoryViewModel>();
             services.AddTransient<TeamViewModel>();

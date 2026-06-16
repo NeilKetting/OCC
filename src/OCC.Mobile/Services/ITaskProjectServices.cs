@@ -12,6 +12,7 @@ namespace OCC.Mobile.Services
         Task<ProjectTask?> GetTaskAsync(Guid id);
         Task UpdateTaskAsync(ProjectTask task);
         Task<IEnumerable<DashboardUpdateDto>> GetRecentUpdatesAsync();
+        Task UploadAttachmentAsync(Guid taskId, string filePath, string uploadedBy);
     }
 
     public interface IProjectService

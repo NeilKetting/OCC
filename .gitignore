@@ -429,3 +429,7 @@ publish/
 Releases/
 releases/
 staging-releases/
+
+# Redesign folder
+/Redesign/
+

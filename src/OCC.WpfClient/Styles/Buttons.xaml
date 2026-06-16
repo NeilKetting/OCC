@@ -441,32 +441,37 @@
     
     <!-- Create new record button -->
     <Style x:Key="CreateIconButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="5"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="#1AFFFFFF"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ModernCreateButtonBorderGradient}"/>
+        <Setter Property="Padding" Value="16,0"/>
+<Setter Property="Height" Value="40"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="Button">
+                <ControlTemplate TargetType="Button">                    
                     <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="buttonScale" ScaleX="1.0" ScaleY="1.0"/>
                         </Grid.RenderTransform>
 
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" BorderThickness="2" 
-                            BorderBrush="{StaticResource ModernCreateButtonBorderGradient}" Padding="10,5">
-                            <ContentPresenter x:Name="content" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center" 
-                                       Opacity="0.9"/>
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}"
+                                TextElement.Foreground="{TemplateBinding Foreground}">
+                            <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <!-- Hover State -->
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="content" Property="Opacity" Value="1.0"/>
-                            <Setter TargetName="border" Property="Background" Value="#10FFFFFF"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
@@ -495,7 +500,7 @@
 
                         <!-- Pressed State -->
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundPressed}"/>
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>

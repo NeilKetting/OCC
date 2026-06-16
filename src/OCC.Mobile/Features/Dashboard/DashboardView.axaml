@@ -50,6 +50,18 @@
             <!-- Radial Progress Area (Doughnut Charts) -->
             <Border Background="#1E293B" CornerRadius="20" Padding="20" BoxShadow="0 4 20 0 #40000000">
                 <StackPanel Spacing="20">
+                    <!-- Ring Legend -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="8" Height="8" Fill="#10B981" VerticalAlignment="Center"/>
+                            <TextBlock Text="Outer Ring: Completed" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="8" Height="8" Fill="#3B82F6" VerticalAlignment="Center"/>
+                            <TextBlock Text="Inner Ring: Pending" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+
                     <UniformGrid Columns="2">
                         <!-- Daily Chart -->
                         <StackPanel Spacing="12" HorizontalAlignment="Center">

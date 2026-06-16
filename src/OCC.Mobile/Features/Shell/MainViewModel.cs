@@ -218,6 +218,9 @@ namespace OCC.Mobile.Features.Shell
         private void NavigateToTasks() => _navigationService.NavigateTo<Dashboard.MyTasksViewModel>();
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]
+        private void NavigateToRedesignTasks() => _navigationService.NavigateTo<Tasks.RedesignTasksViewModel>();
+ 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
         private void NavigateToHseq() => _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]
