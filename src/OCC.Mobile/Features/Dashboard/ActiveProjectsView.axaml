@@ -4,134 +4,354 @@
              x:DataType="vm:ActiveProjectsViewModel"
              x:Name="root"
              x:Class="OCC.Mobile.Features.Dashboard.ActiveProjectsView">
-    <Grid Background="{DynamicResource BrandDarkBrush}">
+
+    <UserControl.Styles>
+        <!-- Horizontal ListBox style for filter pills -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Background" Value="#1AFFFFFF"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#1E293B"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="#226366F1"/>
+            <Setter Property="BorderBrush" Value="#6366F1"/>
+            <Setter Property="Foreground" Value="#6366F1"/>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#0AFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#080E1A">
         <ScrollViewer>
-            <StackPanel Spacing="20" Margin="20">
-                <TextBlock Text="Active Projects" 
-                           Foreground="White" 
-                           FontSize="24" 
-                           FontWeight="Bold"/>
+            <StackPanel Spacing="16" Margin="20">
                 
+                <!-- Header Section -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,10,0,0">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Active Projects" 
+                                   Foreground="White" 
+                                   FontSize="24" 
+                                   FontWeight="Bold"/>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding TotalProjectsCount}" Foreground="#94A3B8" FontSize="12" FontFamily="monospace"/>
+                            <TextBlock Text="projects ·" Foreground="#94A3B8" FontSize="12" FontFamily="monospace"/>
+                            <TextBlock Text="{Binding OverallTasksCount}" Foreground="#94A3B8" FontSize="12" FontFamily="monospace"/>
+                            <TextBlock Text="tasks" Foreground="#94A3B8" FontSize="12" FontFamily="monospace"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <Border Grid.Column="1" 
+                            Background="#6366F11A" 
+                            BorderBrush="#6366F133" 
+                            BorderThickness="1" 
+                            CornerRadius="16" 
+                            Padding="12,6"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse Width="6" Height="6" Fill="#6366F1" VerticalAlignment="Center"/>
+                            <TextBlock Text="Live" Foreground="#6366F1" FontSize="11" FontWeight="Bold" FontFamily="monospace" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Search and Filters -->
+                <StackPanel Spacing="12">
+                    <!-- Search Input Box -->
+                    <Grid>
+                        <TextBox PlaceholderText="Search projects or location…" 
+                                 Text="{Binding SearchText, Mode=TwoWay}" 
+                                 Padding="38,10,38,10"
+                                 Background="#0F131F"
+                                 BorderBrush="#1E293B"
+                                 Height="42"
+                                 CornerRadius="12"
+                                 Foreground="White"
+                                 CaretBrush="#6366F1"
+                                 VerticalContentAlignment="Center"/>
+                        <Path Fill="#94A3B8" Width="14" Height="14" Margin="14,0,0,0" 
+                              HorizontalAlignment="Left" VerticalAlignment="Center" 
+                              Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L19.71,19L18.3,20.41L13.03,15.14C11.89,16.11 10.41,16.7 8.5,16.7A7.5,7.5 0 0,1 1,9.2A7.5,7.5 0 0,1 8.5,1.7M8.5,3.7A5.5,5.5 0 0,0 3,9.2A5.5,5.5 0 0,0 8.5,14.7A5.5,5.5 0 0,0 14,9.2A5.5,5.5 0 0,0 8.5,3.7Z" 
+                              Stretch="Uniform" IsHitTestVisible="False"/>
+                    </Grid>
+
+                    <!-- Horizontal Filter Pills -->
+                    <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                        <ListBox ItemsSource="{Binding Filters}" 
+                                 SelectedItem="{Binding SelectedFilter}" 
+                                 Background="Transparent" 
+                                 BorderThickness="0"
+                                 Padding="0">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                        </ListBox>
+                    </ScrollViewer>
+                </StackPanel>
+
+                <!-- Statistics Summary Bar -->
+                <Grid ColumnDefinitions="*, *, *, *">
+                    <!-- Projects Count -->
+                    <Border Grid.Column="0" Margin="0,0,3,0" CornerRadius="16" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Border Width="28" Height="28" CornerRadius="8" Background="Transparent" HorizontalAlignment="Center">
+                                <Path Fill="#6366F1" Data="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,4H12L10,4Z" Stretch="Uniform" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="{Binding TotalProjectsCount}" FontSize="18" FontWeight="Bold" Foreground="#6366F1" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="PROJECTS" FontSize="8" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Progress Stats -->
+                    <Border Grid.Column="1" Margin="3,0,3,0" CornerRadius="16" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Border Width="28" Height="28" CornerRadius="8" Background="Transparent" HorizontalAlignment="Center">
+                                <Path Fill="#22D3EE" Data="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z" Stretch="Uniform" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="{Binding TotalProgressString}" FontSize="18" FontWeight="Bold" Foreground="#22D3EE" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="PROGRESS" FontSize="8" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Overdue Stats -->
+                    <Border Grid.Column="2" Margin="3,0,3,0" CornerRadius="16" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Border Width="28" Height="28" CornerRadius="8" Background="Transparent" HorizontalAlignment="Center">
+                                <Path Fill="#EF4444" Data="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,9V13H13V9H11M11,15V17H13V15H11Z" Stretch="Uniform" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="{Binding TotalOverdueCount}" FontSize="18" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="OVERDUE" FontSize="8" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- At Risk Count -->
+                    <Border Grid.Column="3" Margin="3,0,0,0" CornerRadius="16" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Border Width="28" Height="28" CornerRadius="8" Background="Transparent" HorizontalAlignment="Center">
+                                <Path Fill="#F59E0B" Data="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M16.59,7.58L10,14.17L7.41,11.59L6,13L10,17L18,9L16.59,7.58Z" Stretch="Uniform" Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="{Binding TotalAtRiskCount}" FontSize="18" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="AT RISK" FontSize="8" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Projects ItemsControl -->
                 <ItemsControl ItemsSource="{Binding ActiveProjects}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Spacing="15"/>
+                            <StackPanel Spacing="16"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#1E293B" CornerRadius="12" Padding="20">
-                                <StackPanel Spacing="15">
-                                    <Grid ColumnDefinitions="*, Auto">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="Project Site" Foreground="#94A3B8" FontSize="12"/>
-                                            <TextBlock Text="{Binding Name}" Foreground="White" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"/>
-                                        </StackPanel>
+                        <DataTemplate x:DataType="vm:ProjectCardViewModel">
+                            <!-- Premium Card Border -->
+                            <Border CornerRadius="20" BorderBrush="#1E293B" BorderThickness="1" Background="#0F131F" ClipToBounds="True">
+                                <StackPanel>
+                                    
+                                    <!-- Gradient Header & Site Information -->
+                                    <Grid Height="128" Background="{Binding CardHeaderBackground}">
                                         
-                                        <StackPanel Grid.Column="1" Spacing="5" HorizontalAlignment="Right">
-                                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                                                <TextBlock Text="{Binding TaskProgressString}" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Bottom"/>
-                                                <TextBlock Text="{Binding Progress, StringFormat='{}{0:0}%'}" Foreground="#3B82F6" FontSize="14" FontWeight="Bold"/>
+                                        <!-- Decorative SVG Geometry Circles -->
+                                        <Canvas Width="400" Height="128" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False" Opacity="0.1">
+                                            <Ellipse Width="180" Height="180" Fill="{Binding AccentBrush}" Canvas.Right="-60" Canvas.Top="-60"/>
+                                            <Ellipse Width="120" Height="120" Fill="{Binding AccentBrush}" Canvas.Right="-30" Canvas.Bottom="-30"/>
+                                            <Ellipse Width="100" Height="100" Fill="{Binding AccentBrush}" Canvas.Left="-40" Canvas.Bottom="-40"/>
+                                        </Canvas>
+
+                                        <!-- Accent Left Strip -->
+                                        <Border Width="4" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="{Binding AccentBrush}"/>
+
+                                        <!-- Status Badge (Top-Right) -->
+                                        <Border Background="{Binding StatusBg}" 
+                                                BorderBrush="{Binding StatusBorder}" 
+                                                BorderThickness="1" 
+                                                CornerRadius="12" 
+                                                Padding="10,4" 
+                                                Margin="12"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Ellipse Width="6" Height="6" Fill="{Binding StatusColor}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding StatusDisplay}" Foreground="{Binding StatusColor}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="4" Width="100" Background="#334155" Foreground="#3B82F6"/>
+                                        </Border>
+
+                                        <!-- Site Details Text (Bottom-Left) -->
+                                        <StackPanel VerticalAlignment="Bottom" Margin="16" Spacing="2">
+                                            <TextBlock Text="Project Site" FontSize="9" Foreground="#94A3B8" FontWeight="Bold" LetterSpacing="2"/>
+                                            <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+                                                <Path Fill="#94A3B8" 
+                                                      Data="M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5Z" 
+                                                      Stretch="Uniform" Width="11" Height="11" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Location}" FontSize="12" Foreground="#94A3B8" FontFamily="monospace" VerticalAlignment="Center"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Grid>
 
-                                    <Separator Background="#334155" Height="1" Margin="0,-5"/>
+                                    <!-- Progress & Mini Statistics Bar -->
+                                    <Border Padding="16" Background="#0AFFFFFF">
+                                        <Grid ColumnDefinitions="Auto, *">
+                                            <!-- Horseshoe Sweep Arc -->
+                                            <Grid Grid.Column="0" Width="72" Height="72" Margin="0,0,16,0" VerticalAlignment="Center">
+                                                <Arc Stroke="#0DFFFFFF" StrokeThickness="6" StartAngle="150" SweepAngle="240" Width="56" Height="56" Stretch="None"/>
+                                                <Arc Stroke="{Binding AccentBrush}" StrokeThickness="6" StartAngle="150" SweepAngle="{Binding SweepAngle}" Width="56" Height="56" Stretch="None"/>
+                                                <TextBlock Text="{Binding ProgressPct, StringFormat='{}{0}%'}" FontSize="13" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="monospace"/>
+                                            </Grid>
 
-                                    <UniformGrid Columns="6" HorizontalAlignment="Stretch">
-                                        <Button Classes="feature-card" 
-                                                HorizontalAlignment="Stretch"
-                                                Command="{Binding #root.DataContext.NavigateToProjectTasksCommand, FallbackValue={x:Null}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="2" Padding="4,8">
-                                            <StackPanel Spacing="5" HorizontalAlignment="Center">
-                                                <Border Background="#3B82F6" Width="28" Height="28" CornerRadius="14">
-                                                    <Path Fill="White" Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M16.06,11.5L15,10.44L11,14.44L8.94,12.38L7.88,13.44L11,16.56L16.06,11.5Z" Stretch="Uniform" Margin="6"/>
-                                                </Border>
-                                                <TextBlock Text="Tasks" Foreground="White" FontSize="9" HorizontalAlignment="Center"/>
+                                            <!-- Progress Bar & Badges -->
+                                            <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                                                <!-- Tasks complete stats -->
+                                                <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,2">
+                                                    <TextBlock Text="Tasks complete" FontSize="11" Foreground="#94A3B8"/>
+                                                    <TextBlock Text="{Binding TaskProgressString}" FontSize="12" Foreground="White" FontWeight="Bold" FontFamily="monospace"/>
+                                                </Grid>
+
+                                                <!-- Linear progress bar -->
+                                                <ProgressBar Value="{Binding ProgressPct}" Minimum="0" Maximum="100" Height="6" CornerRadius="3" Background="#0DFFFFFF" Foreground="{Binding AccentBrush}"/>
+
+                                                <!-- Mini Badges -->
+                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                                                    <!-- Overdue Badge -->
+                                                    <Border CornerRadius="10" Padding="8,3" Background="#EF44441A" BorderBrush="#EF444433" BorderThickness="1" IsVisible="{Binding Overdue}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <Path Fill="#EF4444" Data="M12,2L1,21H23L12,2M11,9V13H13V9H11M11,15V17H13V15H11Z" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Overdue, StringFormat='{}{0} overdue'}" Foreground="#EF4444" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- Due Today Badge -->
+                                                    <Border CornerRadius="10" Padding="8,3" Background="#F59E0B1A" BorderBrush="#F59E0B33" BorderThickness="1" IsVisible="{Binding DueToday}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <Path Fill="#F59E0B" Data="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding DueToday, StringFormat='{}{0} today'}" Foreground="#F59E0B" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- End Date Badge -->
+                                                    <Border CornerRadius="10" Padding="8,3" Background="#0AFFFFFF" BorderBrush="#1E293B" BorderThickness="1" HorizontalAlignment="Right">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <Path Fill="#94A3B8" Data="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V9H19V20Z" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding EndDate}" Foreground="#94A3B8" FontSize="9" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
                                             </StackPanel>
-                                        </Button>
+                                        </Grid>
+                                    </Border>
 
-                                        <Button Classes="feature-card" 
-                                                HorizontalAlignment="Stretch"
-                                                Command="{Binding #root.DataContext.NavigateToProjectHseqCommand, FallbackValue={x:Null}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="2" Padding="4,8">
-                                            <StackPanel Spacing="5" HorizontalAlignment="Center">
-                                                <Border Background="#10B981" Width="28" Height="28" CornerRadius="14">
-                                                    <Path Fill="White" Data="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.47 10,12.33 12,12.33C14,12.33 18,13.47 18,15.47C17.76,16 17.47,16.5 17.13,17Z" Stretch="Uniform" Margin="6"/>
-                                                </Border>
-                                                <TextBlock Text="HSEQ" Foreground="White" FontSize="9" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
+                                    <!-- Divider -->
+                                    <Border Height="1" Background="#1E293B"/>
 
-                                        <Button Classes="feature-card" 
-                                                HorizontalAlignment="Stretch"
-                                                Command="{Binding #root.DataContext.NavigateToInventoryCommand, FallbackValue={x:Null}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="2" Padding="4,8">
-                                            <StackPanel Spacing="5" HorizontalAlignment="Center">
-                                                <Border Background="#F59E0B" Width="28" Height="28" CornerRadius="14">
-                                                    <Path Fill="White" Data="M12,20L10,22L8.5,20.5L10,19L12,20M12,4L14,2L15.5,3.5L14,5L12,4M20,10L22,12L20.5,13.5L19,12L20,10M4,10L2,12L3.5,13.5L5,12L4,10Z" Stretch="Uniform" Margin="6"/>
-                                                </Border>
-                                                <TextBlock Text="Inventory" Foreground="White" FontSize="9" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
+                                    <!-- Quick Actions Bottom Bar -->
+                                    <Border Padding="4" Background="#05FFFFFF">
+                                        <UniformGrid Columns="6">
+                                            <!-- Tasks -->
+                                            <Button Classes="tab-button" Command="{Binding #root.DataContext.NavigateToProjectTasksCommand}" CommandParameter="{Binding}" Padding="0,6">
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                                    <Border Background="#1A6366F1" Width="36" Height="36" CornerRadius="10">
+                                                        <Path Fill="#6366F1" Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M16.06,11.5L15,10.44L11,14.44L8.94,12.38L7.88,13.44L11,16.56L16.06,11.5Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="Tasks" Foreground="#94A3B8" FontSize="9" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                        <Button Classes="feature-card" 
-                                                HorizontalAlignment="Stretch"
-                                                Command="{Binding #root.DataContext.NavigateToTeamCommand, FallbackValue={x:Null}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="2" Padding="4,8">
-                                            <StackPanel Spacing="5" HorizontalAlignment="Center">
-                                                <Border Background="#8B5CF6" Width="28" Height="28" CornerRadius="14">
-                                                    <Path Fill="White" Data="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15.22 17,16.5V19H22V16.5C22,14.63 18.83,13.54 16,13.03M9,12A4,4 0 0,0 13,8A4,4 0 0,0 9,4A4,4 0 0,0 5,8A4,4 0 0,0 9,12M9,14C6.33,14 1,15.34 1,18V20H17V18C17,15.34 11.67,14 9,14Z" Stretch="Uniform" Margin="6"/>
-                                                </Border>
-                                                <TextBlock Text="Team" Foreground="White" FontSize="9" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
+                                            <!-- HSEQ -->
+                                            <Button Classes="tab-button" Command="{Binding #root.DataContext.NavigateToProjectHseqCommand}" CommandParameter="{Binding}" Padding="0,6">
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                                    <Border Background="#1A10B981" Width="36" Height="36" CornerRadius="10">
+                                                        <Path Fill="#10B981" Data="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.47 10,12.33 12,12.33C14,12.33 18,13.47 18,15.47C17.76,16 17.47,16.5 17.13,17Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="HSEQ" Foreground="#94A3B8" FontSize="9" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                        <Button Classes="feature-card" 
-                                                HorizontalAlignment="Stretch"
-                                                Command="{Binding #root.DataContext.NavigateToDueTodayCommand, FallbackValue={x:Null}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="2" Padding="4,8">
-                                            <StackPanel Spacing="5" HorizontalAlignment="Center">
-                                                <Border Background="#6366F1" Width="28" Height="28" CornerRadius="14">
-                                                    <Grid>
-                                                        <Path Fill="White" Data="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" Stretch="Uniform" Margin="6"/>
-                                                        <Border Background="#EF4444" MinWidth="14" Height="14" CornerRadius="7" 
-                                                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="-2,-2,0,0"
-                                                                IsVisible="{Binding ProjectManager, Converter={StaticResource StringNotEmptyConverter}}">
-                                                            <TextBlock Text="{Binding ProjectManager}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0"/>
+                                            <!-- Inventory -->
+                                            <Button Classes="tab-button" Command="{Binding #root.DataContext.NavigateToInventoryCommand}" CommandParameter="{Binding}" Padding="0,6">
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                                    <Border Background="#1A22D3EE" Width="36" Height="36" CornerRadius="10">
+                                                        <Path Fill="#22D3EE" Data="M12,20L10,22L8.5,20.5L10,19L12,20M12,4L14,2L15.5,3.5L14,5L12,4M20,10L22,12L20.5,13.5L19,12L20,10M4,10L2,12L3.5,13.5L5,12L4,10Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="Inventory" Foreground="#94A3B8" FontSize="9" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Crew -->
+                                            <Button Classes="tab-button" Command="{Binding #root.DataContext.NavigateToReceiveCrewCommand}" CommandParameter="{Binding}" Padding="0,6">
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                                    <Border Background="#1A8B5CF6" Width="36" Height="36" CornerRadius="10">
+                                                        <Path Fill="#8B5CF6" Data="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15.22 17,16.5V19H22V16.5C22,14.63 18.83,13.54 16,13.03M9,12A4,4 0 0,0 13,8A4,4 0 0,0 9,4A4,4 0 0,0 5,8A4,4 0 0,0 9,12M9,14C6.33,14 1,15.34 1,18V20H17V18C17,15.34 11.67,14 9,14Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="Crew" Foreground="#94A3B8" FontSize="9" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Due Today -->
+                                            <Button Classes="tab-button" Command="{Binding #root.DataContext.NavigateToDueTodayCommand}" CommandParameter="{Binding}">
+                                                <Grid HorizontalAlignment="Center" Margin="0,6">
+                                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                                        <Border Background="#1AF59E0B" Width="36" Height="36" CornerRadius="10">
+                                                            <Path Fill="#F59E0B" Data="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         </Border>
-                                                    </Grid>
-                                                </Border>
-                                                <TextBlock Text="Due Today" Foreground="White" FontSize="9" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
+                                                        <TextBlock Text="Today" Foreground="#94A3B8" FontSize="9" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    
+                                                    <!-- Badge for today -->
+                                                    <Border Background="#EF4444" MinWidth="16" Height="16" CornerRadius="8" Padding="3,0" 
+                                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,2,0"
+                                                            IsVisible="{Binding DueToday}">
+                                                        <TextBlock Text="{Binding DueToday}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Button>
 
-                                        <Button Classes="feature-card" 
-                                                HorizontalAlignment="Stretch"
-                                                Command="{Binding #root.DataContext.NavigateToOverdueCommand, FallbackValue={x:Null}}"
-                                                CommandParameter="{Binding}"
-                                                Margin="2" Padding="4,8">
-                                            <StackPanel Spacing="5" HorizontalAlignment="Center">
-                                                <Border Background="#EF4444" Width="28" Height="28" CornerRadius="14">
-                                                    <Grid>
-                                                        <Path Fill="White" Data="M13,13H11V7H13M13,17H11V15H13M12,2L1,21H23L12,2Z" Stretch="Uniform" Margin="6"/>
-                                                        <Border Background="White" MinWidth="14" Height="14" CornerRadius="7" 
-                                                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="-2,-2,0,0"
-                                                                IsVisible="{Binding Description, Converter={StaticResource StringNotEmptyConverter}}">
-                                                            <TextBlock Text="{Binding Description}" Foreground="#EF4444" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0"/>
+                                            <!-- Overdue -->
+                                            <Button Classes="tab-button" Command="{Binding #root.DataContext.NavigateToOverdueCommand}" CommandParameter="{Binding}">
+                                                <Grid HorizontalAlignment="Center" Margin="0,6">
+                                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                                        <Border Background="#1AEF4444" Width="36" Height="36" CornerRadius="10">
+                                                            <Path Fill="#EF4444" Data="M12,2L1,21H23L12,2M11,9V13H13V9H11M11,15V17H13V15H11Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         </Border>
-                                                    </Grid>
-                                                </Border>
-                                                <TextBlock Text="Overdue" Foreground="White" FontSize="9" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
-                                    </UniformGrid>
+                                                        <TextBlock Text="Overdue" Foreground="#94A3B8" FontSize="9" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    
+                                                    <!-- Badge for overdue -->
+                                                    <Border Background="#EF4444" MinWidth="16" Height="16" CornerRadius="8" Padding="3,0" 
+                                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,2,0"
+                                                            IsVisible="{Binding Overdue}">
+                                                        <TextBlock Text="{Binding Overdue}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Button>
+                                        </UniformGrid>
+                                    </Border>
+                                    
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

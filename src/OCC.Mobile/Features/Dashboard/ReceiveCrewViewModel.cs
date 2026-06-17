@@ -11,9 +11,80 @@ using OCC.Mobile.Services;
 using OCC.Mobile.ViewModels;
 using OCC.Shared.DTOs;
 using OCC.Shared.Models;
+using Avalonia.Media;
+using Avalonia;
 
 namespace OCC.Mobile.Features.Dashboard
 {
+    public partial class SiteDeploymentMemberCardViewModel : ObservableObject
+    {
+        public SiteDeploymentMemberDto Member { get; }
+
+        public Guid Id => Member.Id;
+        public Guid EmployeeId => Member.EmployeeId;
+        public string FullName => Member.FullName;
+        public string Role => Member.Role;
+        public string Initials => Member.Initials;
+
+        [ObservableProperty]
+        private string _attendance = "Pending"; // "Pending", "Present", "Absent"
+
+        [ObservableProperty]
+        private string? _arrivedAt;
+
+        [ObservableProperty]
+        private bool _isSelected;
+
+        public IBrush AvatarBrush { get; }
+
+        public SiteDeploymentMemberCardViewModel(SiteDeploymentMemberDto member, int index)
+        {
+            Member = member;
+            
+            if (member.IsAbsent)
+            {
+                _attendance = "Absent";
+                _arrivedAt = null;
+            }
+            else
+            {
+                // Default to Pending for daily receipt sheet validation
+                _attendance = "Pending";
+                _arrivedAt = null;
+            }
+
+            // Define gradients matching premium tailwind badges
+            var gradients = new[]
+            {
+                new { From = "#6366F1", To = "#8B5CF6" }, // Indigo to Violet
+                new { From = "#10B981", To = "#14B8A6" }, // Emerald to Teal
+                new { From = "#F59E0B", To = "#F97316" }, // Amber to Orange
+                new { From = "#06B6D4", To = "#0EA5E9" }, // Cyan to Sky
+                new { From = "#8B5CF6", To = "#A855F7" }, // Violet to Purple
+                new { From = "#F43F5E", To = "#EC4899" }, // Rose to Pink
+                new { From = "#14B8A6", To = "#10B981" }, // Teal to Emerald
+                new { From = "#0EA5E9", To = "#6366F1" }  // Sky to Indigo
+            };
+
+            var selectedGrad = gradients[index % gradients.Length];
+            AvatarBrush = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.Parse(selectedGrad.From), 0),
+                    new GradientStop(Color.Parse(selectedGrad.To), 1)
+                }
+            };
+        }
+
+        partial void OnAttendanceChanged(string value)
+        {
+            Member.IsAbsent = value == "Absent";
+        }
+    }
+
     public partial class ReceiveCrewViewModel : ViewModelBase
     {
         private readonly ISiteDeploymentService _deploymentService;
@@ -29,7 +100,7 @@ namespace OCC.Mobile.Features.Dashboard
         private SiteDeploymentDto? _selectedDeployment;
 
         [ObservableProperty]
-        private ObservableCollection<SiteDeploymentMemberDto> _crewMembers = new();
+        private ObservableCollection<SiteDeploymentMemberCardViewModel> _crewMembers = new();
 
         [ObservableProperty]
         private bool _isLoading;
@@ -52,10 +123,30 @@ namespace OCC.Mobile.Features.Dashboard
         [ObservableProperty]
         private bool _showSuccessState;
 
+        [ObservableProperty]
+        private bool _bulkMode;
+
+        [ObservableProperty]
+        private Guid? _targetProjectId;
+
         public bool HasSelectedDeployment => SelectedDeployment != null;
 
-        public int PresentCount => CrewMembers.Count(m => !m.IsAbsent);
-        public int AbsentCount => CrewMembers.Count(m => m.IsAbsent);
+        public int TotalCount => CrewMembers.Count;
+        public int PresentCount => CrewMembers.Count(m => m.Attendance == "Present");
+        public int AbsentCount => CrewMembers.Count(m => m.Attendance == "Absent");
+        public int PendingCount => CrewMembers.Count(m => m.Attendance == "Pending");
+        public bool AllMarked => PendingCount == 0;
+
+        public int SelectedCount => CrewMembers.Count(m => m.IsSelected);
+
+        public string TimeString => DateTime.Now.ToString("HH:mm");
+        public string DateString => DateTime.Now.ToString("ddd dd MMM yyyy");
+
+        public ObservableCollection<SiteDeploymentMemberCardViewModel> PresentMembers => 
+            new(CrewMembers.Where(m => m.Attendance == "Present"));
+
+        public ObservableCollection<SiteDeploymentMemberCardViewModel> AbsentMembers => 
+            new(CrewMembers.Where(m => m.Attendance == "Absent"));
 
         public ReceiveCrewViewModel(
             ISiteDeploymentService deploymentService,
@@ -67,7 +158,8 @@ namespace OCC.Mobile.Features.Dashboard
             _navigationService = navigationService;
             _authService = authService;
             _settingsService = settingsService;
-            Title = "Receive daily crew";
+            Title = "Crew Attendance";
+
             PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(SelectedDeployment) || e.PropertyName == nameof(SimulateGpsError))
@@ -75,8 +167,6 @@ namespace OCC.Mobile.Features.Dashboard
                     UpdateGpsCheck();
                 }
             };
-
-            LoadDataAsync().FireAndForget();
         }
 
         [RelayCommand]
@@ -86,6 +176,7 @@ namespace OCC.Mobile.Features.Dashboard
             IsLoading = true;
             StatusMessage = "";
             ShowSuccessState = false;
+            BulkMode = false;
 
             try
             {
@@ -105,7 +196,15 @@ namespace OCC.Mobile.Features.Dashboard
 
                 if (PendingDeployments.Count > 0)
                 {
-                    SelectedDeployment = PendingDeployments.First();
+                    if (TargetProjectId.HasValue)
+                    {
+                        var matching = PendingDeployments.FirstOrDefault(d => d.ProjectId == TargetProjectId.Value);
+                        SelectedDeployment = matching ?? PendingDeployments.First();
+                    }
+                    else
+                    {
+                        SelectedDeployment = PendingDeployments.First();
+                    }
                 }
                 else
                 {
@@ -125,34 +224,136 @@ namespace OCC.Mobile.Features.Dashboard
 
         partial void OnSelectedDeploymentChanged(SiteDeploymentDto? value)
         {
+            foreach (var m in CrewMembers)
+            {
+                m.PropertyChanged -= OnMemberPropertyChanged;
+            }
+
             CrewMembers.Clear();
             if (value != null)
             {
-                foreach (var member in value.Members)
+                for (int i = 0; i < value.Members.Count; i++)
                 {
-                    // Copy to trigger change notifications properly
-                    CrewMembers.Add(new SiteDeploymentMemberDto
-                    {
-                        Id = member.Id,
-                        EmployeeId = member.EmployeeId,
-                        FullName = member.FullName,
-                        Role = member.Role,
-                        Initials = member.Initials,
-                        IsAbsent = member.IsAbsent
-                    });
+                    var card = new SiteDeploymentMemberCardViewModel(value.Members[i], i);
+                    card.PropertyChanged += OnMemberPropertyChanged;
+                    CrewMembers.Add(card);
                 }
             }
             
+            OnPropertyChanged(nameof(TotalCount));
             OnPropertyChanged(nameof(PresentCount));
             OnPropertyChanged(nameof(AbsentCount));
+            OnPropertyChanged(nameof(PendingCount));
+            OnPropertyChanged(nameof(AllMarked));
+            OnPropertyChanged(nameof(SelectedCount));
+            OnPropertyChanged(nameof(PresentMembers));
+            OnPropertyChanged(nameof(AbsentMembers));
+            
+            ConfirmReceivedCommand.NotifyCanExecuteChanged();
+        }
+
+        private void OnMemberPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SiteDeploymentMemberCardViewModel.Attendance) || 
+                e.PropertyName == nameof(SiteDeploymentMemberCardViewModel.IsSelected))
+            {
+                OnPropertyChanged(nameof(PresentCount));
+                OnPropertyChanged(nameof(AbsentCount));
+                OnPropertyChanged(nameof(PendingCount));
+                OnPropertyChanged(nameof(AllMarked));
+                OnPropertyChanged(nameof(SelectedCount));
+                OnPropertyChanged(nameof(PresentMembers));
+                OnPropertyChanged(nameof(AbsentMembers));
+                
+                ConfirmReceivedCommand.NotifyCanExecuteChanged();
+                MarkSelectedAbsentCommand.NotifyCanExecuteChanged();
+            }
         }
 
         [RelayCommand]
-        private void ToggleAbsent(SiteDeploymentMemberDto member)
+        private void SetMemberPresent(SiteDeploymentMemberCardViewModel member)
         {
-            member.IsAbsent = !member.IsAbsent;
-            OnPropertyChanged(nameof(PresentCount));
-            OnPropertyChanged(nameof(AbsentCount));
+            if (member != null)
+            {
+                if (member.Attendance == "Present")
+                {
+                    member.Attendance = "Pending";
+                    member.ArrivedAt = null;
+                }
+                else
+                {
+                    member.Attendance = "Present";
+                    member.ArrivedAt = TimeString;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void SetMemberAbsent(SiteDeploymentMemberCardViewModel member)
+        {
+            if (member != null)
+            {
+                if (member.Attendance == "Absent")
+                {
+                    member.Attendance = "Pending";
+                    member.ArrivedAt = null;
+                }
+                else
+                {
+                    member.Attendance = "Absent";
+                    member.ArrivedAt = null;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void MarkAllPresent()
+        {
+            var now = TimeString;
+            foreach (var m in CrewMembers)
+            {
+                if (m.Attendance == "Pending")
+                {
+                    m.Attendance = "Present";
+                    m.ArrivedAt = now;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void ToggleBulkMode()
+        {
+            BulkMode = !BulkMode;
+            if (!BulkMode)
+            {
+                foreach (var m in CrewMembers)
+                {
+                    m.IsSelected = false;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void ToggleSelectMember(SiteDeploymentMemberCardViewModel member)
+        {
+            if (member != null)
+            {
+                member.IsSelected = !member.IsSelected;
+            }
+        }
+
+        public bool CanMarkSelectedAbsent => BulkMode && SelectedCount > 0;
+
+        [RelayCommand(CanExecute = nameof(CanMarkSelectedAbsent))]
+        private void MarkSelectedAbsent()
+        {
+            foreach (var m in CrewMembers.Where(m => m.IsSelected))
+            {
+                m.Attendance = "Absent";
+                m.ArrivedAt = null;
+                m.IsSelected = false;
+            }
+            BulkMode = false;
         }
 
         private void UpdateGpsCheck()
@@ -187,7 +388,7 @@ namespace OCC.Mobile.Features.Dashboard
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(AllMarked))]
         private async Task ConfirmReceived()
         {
             if (SelectedDeployment == null || IsLoading) return;
@@ -205,19 +406,18 @@ namespace OCC.Mobile.Features.Dashboard
                     return;
                 }
 
-                // Simulate GPS position based on geofence check
                 double? lat = SelectedDeployment.ProjectLatitude;
                 double? lon = SelectedDeployment.ProjectLongitude;
                 if (SimulateGpsError && lat.HasValue && lon.HasValue)
                 {
-                    lat += 0.01; // offset approx 1.1km
+                    lat += 0.01;
                     lon += 0.01;
                 }
 
                 var request = new ReceiveDeploymentRequest
                 {
                     SiteManagerId = smId.Value,
-                    AbsentMemberEmployeeIds = CrewMembers.Where(m => m.IsAbsent).Select(m => m.EmployeeId).ToList(),
+                    AbsentMemberEmployeeIds = CrewMembers.Where(m => m.Attendance == "Absent").Select(m => m.EmployeeId).ToList(),
                     GpsLatitude = lat,
                     GpsLongitude = lon
                 };
@@ -227,9 +427,8 @@ namespace OCC.Mobile.Features.Dashboard
                 {
                     ShowSuccessState = true;
                     StatusMessage = "";
-                    // Refresh dashboard after a slight delay
-                    await Task.Delay(1500);
-                    GoBack();
+                    OnPropertyChanged(nameof(PresentMembers));
+                    OnPropertyChanged(nameof(AbsentMembers));
                 }
                 else
                 {
@@ -249,7 +448,7 @@ namespace OCC.Mobile.Features.Dashboard
         [RelayCommand]
         private void GoBack()
         {
-            _navigationService.NavigateTo<DashboardViewModel>();
+            _navigationService.NavigateTo<ActiveProjectsViewModel>();
         }
 
         private Guid? _siteManagerEmployeeId;

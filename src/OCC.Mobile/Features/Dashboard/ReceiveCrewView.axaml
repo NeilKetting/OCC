@@ -4,228 +4,521 @@
              xmlns:dtos="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
              x:DataType="vm:ReceiveCrewViewModel"
              x:Class="OCC.Mobile.Features.Dashboard.ReceiveCrewView">
+ 
+    <UserControl.Styles>
+        <!-- Present Button Styles -->
+        <Style Selector="Button.present-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#1E293B"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style Selector="Button.present-btn.active">
+            <Setter Property="Background" Value="#1A10B981"/> <!-- 10% Opacity Emerald -->
+            <Setter Property="BorderBrush" Value="#6610B981"/> <!-- 40% Opacity Emerald -->
+            <Setter Property="Foreground" Value="#10B981"/>
+        </Style>
+        <Style Selector="Button.present-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#0AFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#3310B981"/>
+        </Style>
+
+        <!-- Absent Button Styles -->
+        <Style Selector="Button.absent-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#1E293B"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style Selector="Button.absent-btn.active">
+            <Setter Property="Background" Value="#1AEF4444"/> <!-- 10% Opacity Red -->
+            <Setter Property="BorderBrush" Value="#66EF4444"/> <!-- 40% Opacity Red -->
+            <Setter Property="Foreground" Value="#EF4444"/>
+        </Style>
+        <Style Selector="Button.absent-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#0AFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#33EF4444"/>
+        </Style>
+
+        <!-- Confirm Button Style -->
+        <Style Selector="Button.confirm-btn">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#6366F1" Offset="0"/>
+                        <GradientStop Color="#22D3EE" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="Button.confirm-btn:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto, *">
         <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource BrandDarkerBrush}" Padding="20">
+        <Border Grid.Row="0" Background="#080E1A" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="20,16">
             <Grid ColumnDefinitions="Auto, *, Auto">
-                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Classes="Nav">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Path Fill="White" Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="Back" Foreground="White" VerticalAlignment="Center"/>
-                    </StackPanel>
+                <!-- Back Button -->
+                <Button Grid.Column="0" Command="{Binding GoBackCommand}" Classes="Nav" Width="36" Height="36" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <Path Fill="White" Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Stretch="Uniform" Width="16" Height="16"/>
                 </Button>
                 
-                <TextBlock Grid.Column="1" Text="{Binding Title}" 
-                           Foreground="White" 
-                           FontSize="22" 
-                           FontWeight="Bold" 
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
+                <!-- Main Header Title -->
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="2">
+                    <TextBlock Text="Crew Attendance" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                        <Path Fill="#94A3B8" Data="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DateString}" Foreground="#94A3B8" FontSize="11" FontFamily="monospace" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
 
-                <Button Grid.Column="2" Command="{Binding LoadDataCommand}" Classes="Nav">
-                    <Path Fill="White" Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Stretch="Uniform" Width="20" Height="20"/>
+                <!-- Refresh Button -->
+                <Button Grid.Column="2" Command="{Binding LoadDataCommand}" Classes="Nav" Width="36" Height="36" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <Path Fill="White" Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" Stretch="Uniform" Width="16" Height="16"/>
                 </Button>
             </Grid>
         </Border>
 
-        <!-- Main Content Area -->
-        <Grid Grid.Row="1" Background="{DynamicResource BrandDarkBrush}">
-            <!-- Empty State (when no selected deployment) -->
+        <!-- Dynamic Main Content Grid (Active state) -->
+        <Grid Grid.Row="1" Background="#080E1A" IsVisible="{Binding !ShowSuccessState}">
+            <!-- Empty State (No deployments allocated) -->
             <Border IsVisible="{Binding !HasSelectedDeployment}" Padding="40" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <StackPanel Spacing="20" HorizontalAlignment="Center">
-                    <TextBlock Text="👥" FontSize="64" HorizontalAlignment="Center"/>
-                    <TextBlock Text="No Pending Crew Allocations" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    <TextBlock Text="There are no active or pending daily crews allocated to you to receive." Foreground="#94A3B8" FontSize="14" HorizontalAlignment="Center"/>
-                    <Button Command="{Binding LoadDataCommand}" Content="Check Again" Background="{DynamicResource BrandOrangeBrush}" Foreground="White" HorizontalAlignment="Center" Padding="15,10" CornerRadius="8"/>
+                    <Border Width="64" Height="64" CornerRadius="32" Background="#1A94A3B8" HorizontalAlignment="Center">
+                        <Path Fill="#94A3B8" Data="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15.22 17,16.5V19H22V16.5C22,14.63 18.83,13.54 16,13.03M9,12A4,4 0 0,0 13,8A4,4 0 0,0 9,4A4,4 0 0,0 5,8A4,4 0 0,0 9,12M9,14C6.33,14 1,15.34 1,18V20H17V18C17,15.34 11.67,14 9,14Z" Stretch="Uniform" Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="No Pending Crew Allocations" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="There are no active daily crews allocated to you to receive." Foreground="#94A3B8" FontSize="13" TextAlignment="Center" HorizontalAlignment="Center"/>
+                    <Button Command="{Binding LoadDataCommand}" Content="Check Again" Background="{DynamicResource BrandOrangeBrush}" Foreground="White" HorizontalAlignment="Center" Padding="16,10" CornerRadius="10" FontWeight="SemiBold"/>
                 </StackPanel>
             </Border>
 
-            <!-- Content State (when SelectedDeployment is present) -->
-            <Grid IsVisible="{Binding HasSelectedDeployment}" ColumnDefinitions="2*, 20, 1.2*" Margin="20">
-                <!-- Left Column: Crew Members list -->
-                <Grid RowDefinitions="Auto, *" Grid.Column="0">
-                    <StackPanel Grid.Row="0" Margin="0,0,0,12" Orientation="Horizontal" Spacing="10">
-                        <TextBlock Text="CREW ALLOCATION:" Foreground="#94A3B8" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <ComboBox ItemsSource="{Binding PendingDeployments}" 
-                                  SelectedItem="{Binding SelectedDeployment}" 
-                                  Width="280">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="dtos:SiteDeploymentDto">
-                                    <TextBlock Text="{Binding Label}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+            <!-- Active Deployment Grid -->
+            <Grid IsVisible="{Binding HasSelectedDeployment}" RowDefinitions="Auto, Auto, *, Auto">
+                
+                <!-- Project Dropdown site selector -->
+                <Border Grid.Row="0" Margin="20,16,20,0" CornerRadius="12" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" Padding="14,10">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Path Grid.Column="0" Fill="#6366F1" Data="M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5Z" Stretch="Uniform" Width="14" Height="14" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="PROJECT SITE" FontSize="8" Foreground="#94A3B8" FontWeight="Bold" LetterSpacing="2"/>
+                            <!-- ComboBox styled cleanly -->
+                            <ComboBox ItemsSource="{Binding PendingDeployments}" 
+                                      SelectedItem="{Binding SelectedDeployment}" 
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      Padding="0"
+                                      Height="24"
+                                      HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dtos:SiteDeploymentDto">
+                                        <TextBlock Text="{Binding ProjectName}" Foreground="White" FontSize="14" FontWeight="Bold" Margin="0,-2,0,0"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-                    <ScrollViewer Grid.Row="1">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="CREW MEMBERS" Foreground="#94A3B8" FontSize="11" FontWeight="Bold" Margin="0,5,0,5"/>
+                <!-- Statistics Summary Bar (Total, Present, Absent, Pending) -->
+                <Grid Grid.Row="1" ColumnDefinitions="*, *, *, *" Margin="20,12,20,0">
+                    <!-- Total -->
+                    <Border Grid.Column="0" Margin="0,0,3,0" CornerRadius="12" Background="#1A6366F1" BorderBrush="#336366F1" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Path Fill="#6366F1" Data="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15.22 17,16.5V19H22V16.5C22,14.63 18.83,13.54 16,13.03M9,12A4,4 0 0,0 13,8A4,4 0 0,0 9,4A4,4 0 0,0 5,8A4,4 0 0,0 9,12M9,14C6.33,14 1,15.34 1,18V20H17V18C17,15.34 11.67,14 9,14Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding TotalCount}" FontSize="18" FontWeight="Bold" Foreground="#6366F1" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="TOTAL" FontSize="8" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Present -->
+                    <Border Grid.Column="1" Margin="3,0,3,0" CornerRadius="12" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Path Fill="#10B981" Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M16.59,7.58L10,14.17L7.41,11.59L6,13L10,17L18,9L16.59,7.58Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding PresentCount}" FontSize="18" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="PRESENT" FontSize="8" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Absent -->
+                    <Border Grid.Column="2" Margin="3,0,3,0" CornerRadius="12" Background="#1AEF4444" BorderBrush="#33EF4444" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Path Fill="#EF4444" Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,10.59L14.59,8L16,9.41L13.41,12L16,14.59L14.59,16L12,13.41L9.41,16L8,14.59L10.59,12L8,9.41L9.41,8L12,10.59Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding AbsentCount}" FontSize="18" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="ABSENT" FontSize="8" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- Pending -->
+                    <Border Grid.Column="3" Margin="3,0,0,0" CornerRadius="12" Background="#1AF59E0B" BorderBrush="#33F59E0B" BorderThickness="1" Padding="10">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Path Fill="#F59E0B" Data="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" Stretch="Uniform" Width="14" Height="14" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding PendingCount}" FontSize="18" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="PENDING" FontSize="8" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Scrollable Crew Lists (Not Yet Marked, Present, Absent) -->
+                <ScrollViewer Grid.Row="2" Margin="20,16,20,0">
+                    <StackPanel Spacing="16">
+                        
+                        <!-- Toolbar (Mark All Present / Mark Absent bulk options) -->
+                        <Grid ColumnDefinitions="*, *" Margin="0,0,0,4">
+                            <!-- Mark All Present -->
+                            <Button Grid.Column="0" Command="{Binding MarkAllPresentCommand}" Margin="0,0,4,0" Height="36" CornerRadius="10" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Path Fill="#10B981" Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" Stretch="Uniform" Width="12" Height="12" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Mark All Present" Foreground="#10B981" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Mark Absent Bulk Toggler -->
+                            <Grid Grid.Column="1" ColumnDefinitions="*, Auto" Margin="4,0,0,0">
+                                <Button Grid.Column="0" Command="{Binding ToggleBulkModeCommand}" Height="36" CornerRadius="10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                    <Button.Styles>
+                                        <Style Selector="Button[Tag=False]">
+                                            <Setter Property="Background" Value="#1AFFFFFF"/>
+                                            <Setter Property="BorderBrush" Value="#1E293B"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="Content">
+                                                <Template>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Path Fill="#94A3B8" Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,10.59L14.59,8L16,9.41L13.41,12L16,14.59L14.59,16L12,13.41L9.41,16L8,14.59L10.59,12L8,9.41L9.41,8L12,10.59Z" Stretch="Uniform" Width="12" Height="12" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Mark Absent" Foreground="#94A3B8" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Template>
+                                            </Setter>
+                                        </Style>
+                                        <Style Selector="Button[Tag=True]">
+                                            <Setter Property="Background" Value="#1AEF4444"/>
+                                            <Setter Property="BorderBrush" Value="#33EF4444"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="Content">
+                                                <Template>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Path Fill="#EF4444" Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Stretch="Uniform" Width="12" Height="12" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Cancel" Foreground="#EF4444" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Template>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Styles>
+                                    <Button.Tag>
+                                        <Binding Path="BulkMode"/>
+                                    </Button.Tag>
+                                </Button>
+                                
+                                <!-- Bulk Action: Confirm Absent selection -->
+                                <Button Grid.Column="1" Command="{Binding MarkSelectedAbsentCommand}" IsVisible="{Binding CanMarkSelectedAbsent}" Height="36" CornerRadius="10" Background="#EF4444" Margin="6,0,0,0" Padding="12,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Path Fill="White" Data="M12,2L1,21H23L12,2M12,6C12.75,6 13.5,6.75 13.5,7.5V13.5C13.5,14.25 12.75,15 12,15C11.25,15 10.5,14.25 10.5,13.5V7.5C10.5,6.75 11.25,6 12,6M12,16.5A1.25,1.25 0 1,1 13.25,15.25A1.25,1.25 0 0,1 12,16.5Z" Stretch="Uniform" Width="11" Height="11" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SelectedCount, StringFormat='{}Absent ({0})'}" Foreground="White" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+
+                        <!-- PENDING SECTION -->
+                        <StackPanel Spacing="6" IsVisible="{Binding PendingCount}">
+                            <TextBlock Text="NOT YET MARKED" FontSize="9" FontWeight="Bold" Foreground="#94A3B8" Margin="4,0,0,2" LetterSpacing="1"/>
                             <ItemsControl ItemsSource="{Binding CrewMembers}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="dtos:SiteDeploymentMemberDto">
-                                        <Border Tag="{Binding IsAbsent}" Background="#1E293B" CornerRadius="12" Padding="15" Margin="0,0,0,8">
-                                            <Border.Styles>
-                                                <Style Selector="Border[Tag=True]">
-                                                    <Setter Property="Opacity" Value="0.5"/>
-                                                </Style>
-                                            </Border.Styles>
-                                            <Grid ColumnDefinitions="Auto, *, Auto">
-                                                <!-- Avatar initials circle -->
-                                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#3B82F6" VerticalAlignment="Center" Margin="0,0,12,0">
-                                                    <TextBlock Text="{Binding Initials}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <!-- Name & Role -->
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                                    <TextBlock Text="{Binding FullName}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding Role}" Foreground="#94A3B8" FontSize="13"/>
-                                                </StackPanel>
-
-                                                <!-- Present/Absent Toggle Switch / Button -->
-                                                <Button Grid.Column="2" 
-                                                        Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).ToggleAbsentCommand}" 
-                                                        CommandParameter="{Binding}" 
-                                                        Tag="{Binding IsAbsent}" 
-                                                        Padding="16,8" 
-                                                        CornerRadius="8" 
-                                                        VerticalAlignment="Center">
-                                                    <Button.Styles>
-                                                        <Style Selector="Button[Tag=False]">
-                                                            <Setter Property="Background" Value="#10B981"/>
-                                                            <Setter Property="Content" Value="Present"/>
-                                                        </Style>
-                                                        <Style Selector="Button[Tag=True]">
-                                                            <Setter Property="Background" Value="#EF4444"/>
-                                                            <Setter Property="Content" Value="Absent"/>
-                                                        </Style>
-                                                    </Button.Styles>
+                                    <DataTemplate x:DataType="vm:SiteDeploymentMemberCardViewModel">
+                                        <!-- Show only if Pending -->
+                                        <Border IsVisible="{Binding Attendance, Converter={StaticResource EqualityConverter}, ConverterParameter=Pending}" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="16" Padding="14,12" Margin="0,0,0,8">
+                                            <!-- Reuse Row Layout template (via ContentPresenter or defined below) -->
+                                            <Grid ColumnDefinitions="Auto, Auto, *, Auto">
+                                                <!-- Checkbox -->
+                                                <Button Grid.Column="0" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).ToggleSelectMemberCommand}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,12,0" IsVisible="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).BulkMode}">
+                                                    <Panel>
+                                                        <Border Width="20" Height="20" BorderBrush="#94A3B8" BorderThickness="2" CornerRadius="6" Background="Transparent" IsVisible="{Binding !IsSelected}"/>
+                                                        <Border Width="20" Height="20" Background="#EF4444" CornerRadius="6" BorderThickness="0" IsVisible="{Binding IsSelected}">
+                                                            <Path Fill="White" Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="10" Height="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </Panel>
                                                 </Button>
+                                                <!-- Avatar -->
+                                                <Grid Grid.Column="1" Width="44" Height="44" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                    <Border CornerRadius="12" Background="{Binding AvatarBrush}">
+                                                        <TextBlock Text="{Binding Initials}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                                <!-- Info -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding FullName}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Role}" Foreground="#94A3B8" FontSize="12"/>
+                                                </StackPanel>
+                                                <!-- Action Buttons -->
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding !$parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).BulkMode}">
+                                                    <Button Classes="present-btn" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).SetMemberPresentCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Path Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center" Fill="{Binding $parent[Button].Foreground}"/>
+                                                            <TextBlock Text="Present" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="absent-btn" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).SetMemberAbsentCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center" Fill="{Binding $parent[Button].Foreground}"/>
+                                                            <TextBlock Text="Absent" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
-                    </ScrollViewer>
-                </Grid>
 
-                <!-- Right Column: Verification & Confirmation Actions -->
-                <Grid RowDefinitions="*, Auto" Grid.Column="2">
-                    <ScrollViewer Grid.Row="0">
-                        <StackPanel Spacing="16">
-                            <!-- Project Details Info Box -->
-                            <Border Background="#1E293B" CornerRadius="16" Padding="15">
-                                <StackPanel Spacing="12">
-                                    <TextBlock Text="DETAILS" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Project Site:" Foreground="#94A3B8" FontSize="12"/>
-                                        <TextBlock Text="{Binding SelectedDeployment.ProjectName}" Foreground="White" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Date:" Foreground="#94A3B8" FontSize="12"/>
-                                        <TextBlock Text="{Binding SelectedDeployment.DeploymentDate, StringFormat='{}{0:dd MMM yyyy}'}" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Summary Statistics Box -->
-                            <Border Background="#1E293B" CornerRadius="16" Padding="15">
-                                <Grid ColumnDefinitions="*, *">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Text="PRESENT" Foreground="#10B981" FontSize="10" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding PresentCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Text="ABSENT" Foreground="#EF4444" FontSize="10" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding AbsentCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <!-- GPS Geofence Warning Box -->
-                            <Border Background="#1E293B" CornerRadius="16" Padding="15">
-                                <StackPanel Spacing="12">
-                                    <TextBlock Text="GEOFENCE VALIDATION" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
-
-                                    <!-- Status Indicator Badge -->
-                                    <Border Tag="{Binding HasGpsWarning}" CornerRadius="8" Padding="10">
-                                        <Border.Styles>
-                                            <Style Selector="Border[Tag=False]">
-                                                <Setter Property="Background" Value="#10B981"/>
-                                            </Style>
-                                            <Style Selector="Border[Tag=True]">
-                                                <Setter Property="Background" Value="#F59E0B"/>
-                                            </Style>
-                                        </Border.Styles>
-                                        <Grid ColumnDefinitions="Auto, *">
-                                            <!-- Checked/Verified Icon (Visible when no warning) -->
-                                            <Path Grid.Column="0" Fill="White" Width="18" Height="18" 
-                                                  Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" 
-                                                  Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" 
-                                                  IsVisible="{Binding !HasGpsWarning}"/>
-                                            <!-- Alert/Warning Icon (Visible when has warning) -->
-                                            <Path Grid.Column="0" Fill="White" Width="18" Height="18" 
-                                                  Data="M12,2L1,21H23L12,2M12,6C12.75,6 13.5,6.75 13.5,7.5V13.5C13.5,14.25 12.75,15 12,15C11.25,15 10.5,14.25 10.5,13.5V7.5C10.5,6.75 11.25,6 12,6M12,16.5A1.5,1.5 0 0,1 13.5,18A1.5,1.5 0 0,1 12,19.5A1.5,1.5 0 0,1 10.5,18A1.5,1.5 0 0,1 12,16.5Z" 
-                                                  Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" 
-                                                  IsVisible="{Binding HasGpsWarning}"/>
-                                            
-                                            <TextBlock Grid.Column="1" Text="{Binding GpsStatusText}" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
-
-                                    <!-- Warning Message -->
-                                    <TextBlock Text="{Binding GpsWarningMessage}" Foreground="#F59E0B" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding HasGpsWarning}"/>
-
-                                    <!-- Simulate GPS Toggle -->
-                                    <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
-                                        <TextBlock Text="Simulate GPS Offset (Geofence Warning)" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center"/>
-                                        <ToggleSwitch Grid.Column="1" IsChecked="{Binding SimulateGpsError}" OnContent="On" OffContent="Off"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
+                        <!-- PRESENT SECTION -->
+                        <StackPanel Spacing="6" IsVisible="{Binding PresentCount}">
+                            <TextBlock Text="{Binding PresentCount, StringFormat='PRESENT — {0}'}" FontSize="9" FontWeight="Bold" Foreground="#10B981" Margin="4,0,0,2" LetterSpacing="1"/>
+                            <ItemsControl ItemsSource="{Binding CrewMembers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SiteDeploymentMemberCardViewModel">
+                                        <!-- Show only if Present -->
+                                        <Border IsVisible="{Binding Attendance, Converter={StaticResource EqualityConverter}, ConverterParameter=Present}" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="16" Padding="14,12" Margin="0,0,0,8">
+                                            <Grid ColumnDefinitions="Auto, Auto, *, Auto">
+                                                <!-- Checkbox -->
+                                                <Button Grid.Column="0" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).ToggleSelectMemberCommand}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,12,0" IsVisible="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).BulkMode}">
+                                                    <Panel>
+                                                        <Border Width="20" Height="20" BorderBrush="#94A3B8" BorderThickness="2" CornerRadius="6" Background="Transparent" IsVisible="{Binding !IsSelected}"/>
+                                                        <Border Width="20" Height="20" Background="#EF4444" CornerRadius="6" BorderThickness="0" IsVisible="{Binding IsSelected}">
+                                                            <Path Fill="White" Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="10" Height="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </Panel>
+                                                </Button>
+                                                <!-- Avatar -->
+                                                <Grid Grid.Column="1" Width="44" Height="44" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                    <Border CornerRadius="12" Background="{Binding AvatarBrush}">
+                                                        <TextBlock Text="{Binding Initials}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <!-- Present Mini Badge -->
+                                                    <Border Width="14" Height="14" CornerRadius="7" Background="#10B981" BorderBrush="#0F131F" BorderThickness="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,-2,-2">
+                                                        <Path Fill="White" Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="6" Height="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                                <!-- Info -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding FullName}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Role}" Foreground="#94A3B8" FontSize="12"/>
+                                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                                        <Path Fill="#10B981" Data="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" Width="9" Height="9" Stretch="Uniform" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding ArrivedAt, StringFormat='{}Arrived {0}'}" Foreground="#10B981" FontSize="10" FontFamily="monospace" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <!-- Action Buttons -->
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding !$parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).BulkMode}">
+                                                    <Button Classes="present-btn active" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).SetMemberPresentCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Path Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center" Fill="{Binding $parent[Button].Foreground}"/>
+                                                            <TextBlock Text="Present" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="absent-btn" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).SetMemberAbsentCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center" Fill="{Binding $parent[Button].Foreground}"/>
+                                                            <TextBlock Text="Absent" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
-                    </ScrollViewer>
 
-                    <!-- Bottom Confirm & Success State Area -->
-                    <StackPanel Grid.Row="1" Spacing="12" Margin="0,15,0,0">
-                        <!-- Status/Error/Info message -->
-                        <TextBlock Text="{Binding StatusMessage}" Tag="{Binding ShowSuccessState}" FontSize="13" TextWrapping="Wrap" HorizontalAlignment="Center" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                            <TextBlock.Styles>
-                                <Style Selector="TextBlock[Tag=False]">
-                                    <Setter Property="Foreground" Value="#EF4444"/>
-                                </Style>
-                                <Style Selector="TextBlock[Tag=True]">
-                                    <Setter Property="Foreground" Value="#10B981"/>
-                                </Style>
-                            </TextBlock.Styles>
-                        </TextBlock>
+                        <!-- ABSENT SECTION -->
+                        <StackPanel Spacing="6" IsVisible="{Binding AbsentCount}">
+                            <TextBlock Text="{Binding AbsentCount, StringFormat='ABSENT — {0}'}" FontSize="9" FontWeight="Bold" Foreground="#EF4444" Margin="4,0,0,2" LetterSpacing="1"/>
+                            <ItemsControl ItemsSource="{Binding CrewMembers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SiteDeploymentMemberCardViewModel">
+                                        <!-- Show only if Absent -->
+                                        <Border IsVisible="{Binding Attendance, Converter={StaticResource EqualityConverter}, ConverterParameter=Absent}" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="16" Padding="14,12" Margin="0,0,0,8">
+                                            <Grid ColumnDefinitions="Auto, Auto, *, Auto">
+                                                <!-- Checkbox -->
+                                                <Button Grid.Column="0" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).ToggleSelectMemberCommand}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,12,0" IsVisible="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).BulkMode}">
+                                                    <Panel>
+                                                        <Border Width="20" Height="20" BorderBrush="#94A3B8" BorderThickness="2" CornerRadius="6" Background="Transparent" IsVisible="{Binding !IsSelected}"/>
+                                                        <Border Width="20" Height="20" Background="#EF4444" CornerRadius="6" BorderThickness="0" IsVisible="{Binding IsSelected}">
+                                                            <Path Fill="White" Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="10" Height="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </Panel>
+                                                </Button>
+                                                <!-- Avatar -->
+                                                <Grid Grid.Column="1" Width="44" Height="44" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                    <Border CornerRadius="12" Background="{Binding AvatarBrush}">
+                                                        <TextBlock Text="{Binding Initials}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <!-- Absent Mini Badge -->
+                                                    <Border Width="14" Height="14" CornerRadius="7" Background="#EF4444" BorderBrush="#0F131F" BorderThickness="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,-2,-2">
+                                                        <Path Fill="White" Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Stretch="Uniform" Width="6" Height="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                                <!-- Info -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding FullName}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Role}" Foreground="#94A3B8" FontSize="12"/>
+                                                </StackPanel>
+                                                <!-- Action Buttons -->
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding !$parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).BulkMode}">
+                                                    <Button Classes="present-btn" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).SetMemberPresentCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Path Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center" Fill="{Binding $parent[Button].Foreground}"/>
+                                                            <TextBlock Text="Present" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="absent-btn active" Command="{Binding $parent[UserControl].((vm:ReceiveCrewViewModel)DataContext).SetMemberAbsentCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Stretch="Uniform" Width="10" Height="10" VerticalAlignment="Center" Fill="{Binding $parent[Button].Foreground}"/>
+                                                            <TextBlock Text="Absent" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
 
-                        <!-- Success state badge -->
-                        <Border IsVisible="{Binding ShowSuccessState}" Background="#10B981" CornerRadius="12" Padding="15" HorizontalAlignment="Stretch">
-                          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                              <TextBlock Text="✓" Foreground="White" FontSize="20" FontWeight="Bold"/>
-                              <TextBlock Text="Crew Received &amp; Clocked In Successfully!" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                          </StackPanel>
-                      </Border>
+                    </StackPanel>
+                </ScrollViewer>
 
-                        <!-- Main confirmation button -->
-                        <Button Command="{Binding ConfirmReceivedCommand}" 
-                                IsVisible="{Binding !ShowSuccessState}" 
-                                IsEnabled="{Binding !IsLoading}" 
-                                Background="#FFB900" 
-                                Foreground="#1E1E2E" 
-                                Padding="20,15" 
-                                CornerRadius="10" 
-                                HorizontalAlignment="Stretch">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <TextBlock Grid.Column="0" Text="Confirm Receipt &amp; Clock In Crew" FontWeight="Bold" FontSize="14" Foreground="#1E1E2E" HorizontalAlignment="Center"/>
-                                <ProgressBar Grid.Column="1" IsIndeterminate="True" Width="20" Height="20" IsVisible="{Binding IsLoading}" Foreground="#1E1E2E" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                <!-- Bottom confirm bar CTA -->
+                <Border Grid.Row="3" Background="#0F131F" BorderBrush="#1E293B" BorderThickness="0,1,0,0" Padding="20,12">
+                    <StackPanel Spacing="8">
+                        <!-- Pending warning alert message -->
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" IsVisible="{Binding !AllMarked}">
+                            <Path Fill="#F59E0B" Data="M12,2L1,21H23L12,2M12,6C12.75,6 13.5,6.75 13.5,7.5V13.5C13.5,14.25 12.75,15 12,15C11.25,15 10.5,14.25 10.5,13.5V7.5C10.5,6.75 11.25,6 12,6M12,16.5A1.25,1.25 0 1,1 13.25,15.25A1.25,1.25 0 0,1 12,16.5Z" Stretch="Uniform" Width="12" Height="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PendingCount, StringFormat='{}{0} members still need to be marked'}" Foreground="#F59E0B" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <!-- Confirmation error text -->
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#EF4444" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                        <!-- Geofence simulate checkbox (in bottom area) -->
+                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,2">
+                            <TextBlock Text="GPS Verification Alert Test" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center"/>
+                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding SimulateGpsError}" OnContent="" OffContent="" Height="22" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Border Background="#EF444415" BorderBrush="#33EF4444" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,4" IsVisible="{Binding HasGpsWarning}">
+                            <TextBlock Text="{Binding GpsWarningMessage}" Foreground="#EF4444" FontSize="11" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Border>
+
+                        <!-- Main Submit Button -->
+                        <Button Command="{Binding ConfirmReceivedCommand}" Classes="confirm-btn" Height="48" CornerRadius="14" HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="*, Auto" HorizontalAlignment="Center">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                    <Path Fill="White" Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M16.59,7.58L10,14.17L7.41,11.59L6,13L10,17L18,9L16.59,7.58Z" Stretch="Uniform" Width="14" Height="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Confirm Receipt &amp; Clock In Crew" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding PresentCount, StringFormat='({0} present)'}" IsVisible="{Binding AllMarked}" Foreground="White" FontSize="13" Opacity="0.8" FontFamily="monospace" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                </StackPanel>
+                                <ProgressBar Grid.Column="1" IsIndeterminate="True" Width="20" Height="20" IsVisible="{Binding IsLoading}" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0"/>
                             </Grid>
                         </Button>
                     </StackPanel>
-                </Grid>
+                </Border>
             </Grid>
         </Grid>
+
+        <!-- SUCCESS STATE PANEL (Visible when ShowSuccessState is true) -->
+        <ScrollViewer Grid.Row="1" IsVisible="{Binding ShowSuccessState}" Background="#080E1A">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24" Margin="20" MaxWidth="480">
+                <!-- Circular Check Badge -->
+                <Border Width="80" Height="80" CornerRadius="40" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" HorizontalAlignment="Center">
+                    <Path Fill="#10B981" Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M16.59,7.58L10,14.17L7.41,11.59L6,13L10,17L18,9L16.59,7.58Z" Stretch="Uniform" Width="36" Height="36" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Crew Clocked In!" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding SelectedDeployment.ProjectName}" FontSize="14" Foreground="#94A3B8" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding DateString}" FontSize="12" Foreground="#94A3B8" FontFamily="monospace"/>
+                        <TextBlock Text="·" FontSize="12" Foreground="#94A3B8"/>
+                        <TextBlock Text="{Binding TimeString}" FontSize="12" Foreground="#94A3B8" FontFamily="monospace"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Present / Absent stats boxes -->
+                <Grid ColumnDefinitions="*, *" Width="280">
+                    <Border Grid.Column="0" Margin="0,0,8,0" CornerRadius="16" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" Padding="16,12">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding PresentCount}" FontSize="24" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="Present" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Margin="8,0,0,0" CornerRadius="16" Background="#1AEF4444" BorderBrush="#33EF4444" BorderThickness="1" Padding="16,12">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding AbsentCount}" FontSize="24" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center" FontFamily="monospace"/>
+                            <TextBlock Text="Absent" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Present Members Chips -->
+                <StackPanel Spacing="8" IsVisible="{Binding PresentCount}">
+                    <TextBlock Text="PRESENT MEMBERS" FontSize="9" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" LetterSpacing="1"/>
+                    <WrapPanel HorizontalAlignment="Center">
+                        <!-- Use ItemsControl for Present Chips -->
+                        <ItemsControl ItemsSource="{Binding PresentMembers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel ItemWidth="NaN" ItemHeight="NaN" Margin="0" Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SiteDeploymentMemberCardViewModel">
+                                    <Border CornerRadius="12" Padding="8,4" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" Margin="3">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <Path Fill="#10B981" Data="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41z" Stretch="Uniform" Width="8" Height="8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding FullName}" Foreground="#10B981" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Absent Members Chips -->
+                <StackPanel Spacing="8" IsVisible="{Binding AbsentCount}">
+                    <TextBlock Text="ABSENT MEMBERS" FontSize="9" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Center" LetterSpacing="1"/>
+                    <WrapPanel HorizontalAlignment="Center">
+                        <ItemsControl ItemsSource="{Binding AbsentMembers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel ItemWidth="NaN" ItemHeight="NaN" Margin="0" Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SiteDeploymentMemberCardViewModel">
+                                    <Border CornerRadius="12" Padding="8,4" Background="#1AEF4444" BorderBrush="#33EF4444" BorderThickness="1" Margin="3">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <Path Fill="#EF4444" Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Stretch="Uniform" Width="8" Height="8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding FullName}" Foreground="#EF4444" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Done / Return button -->
+                <Button Command="{Binding GoBackCommand}" Content="Return to Dashboard" Classes="confirm-btn" Padding="24,12" Height="44" CornerRadius="10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

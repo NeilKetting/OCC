@@ -215,10 +215,7 @@ namespace OCC.Mobile.Features.Shell
         private void NavigateToProjects() => _navigationService.NavigateTo<Dashboard.ActiveProjectsViewModel>();
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]
-        private void NavigateToTasks() => _navigationService.NavigateTo<Dashboard.MyTasksViewModel>();
- 
-        [CommunityToolkit.Mvvm.Input.RelayCommand]
-        private void NavigateToRedesignTasks() => _navigationService.NavigateTo<Tasks.RedesignTasksViewModel>();
+        private void NavigateToTasks() => _navigationService.NavigateTo<Tasks.RedesignTasksViewModel>();
  
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         private void NavigateToHseq() => _navigationService.NavigateTo<HSEQ.HseqListViewModel>();
@@ -249,7 +246,19 @@ namespace OCC.Mobile.Features.Shell
             // Shell is visible if we're not on Login or Register screens
             var typeName = value?.GetType().Name;
             IsShellVisible = typeName != "LoginViewModel" && typeName != "RegisterViewModel";
+
+            OnPropertyChanged(nameof(IsDashboardActive));
+            OnPropertyChanged(nameof(IsProjectsActive));
+            OnPropertyChanged(nameof(IsTasksActive));
+            OnPropertyChanged(nameof(IsHseqActive));
+            OnPropertyChanged(nameof(IsProfileActive));
         }
+
+        public bool IsDashboardActive => CurrentView is Dashboard.DashboardViewModel;
+        public bool IsProjectsActive => CurrentView is Dashboard.ActiveProjectsViewModel;
+        public bool IsTasksActive => CurrentView is Tasks.RedesignTasksViewModel;
+        public bool IsHseqActive => CurrentView is HSEQ.HseqListViewModel;
+        public bool IsProfileActive => CurrentView is Profile.ProfileViewModel;
 
         #endregion
     }

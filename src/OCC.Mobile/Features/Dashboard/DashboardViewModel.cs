@@ -221,7 +221,10 @@ namespace OCC.Mobile.Features.Dashboard
         [RelayCommand]
         private void NavigateToReceiveCrew()
         {
-            _navigationService.NavigateTo<ReceiveCrewViewModel>();
+            _navigationService.NavigateTo<ReceiveCrewViewModel>(vm => 
+            {
+                vm.LoadDataCommand.Execute(null);
+            });
         }
 
         [RelayCommand]
@@ -487,11 +490,7 @@ namespace OCC.Mobile.Features.Dashboard
             }
         }
 
-        [RelayCommand]
-        private void NavigateToMyTasks()
-        {
-            _navigationService.NavigateTo<MyTasksViewModel>();
-        }
+
 
         [RelayCommand]
         private void NavigateToHseq()

@@ -61,7 +61,7 @@ namespace OCC.Mobile.Features.AdminDashboard
         [RelayCommand]
         private void NavigateToActiveProjects()
         {
-            _navigationService.NavigateTo<ActiveProjectsViewModel>();
+            _navigationService.NavigateTo<Features.Dashboard.ActiveProjectsViewModel>();
         }
 
         [RelayCommand]

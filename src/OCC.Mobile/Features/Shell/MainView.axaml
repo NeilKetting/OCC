@@ -3,6 +3,53 @@
              xmlns:vm="clr-namespace:OCC.Mobile.Features.Shell"
              x:DataType="vm:MainViewModel"
              x:Class="OCC.Mobile.Features.Shell.MainView">
+             
+    <UserControl.Styles>
+        <!-- Inactive state styling -->
+        <Style Selector="Button.tab-button Border.icon-bg">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.tab-button Path">
+            <Setter Property="Fill" Value="#94A3B8"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Fill" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.tab-button TextBlock.tab-text">
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.tab-button Ellipse.nav-dot">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+
+        <!-- Active state styling -->
+        <Style Selector="Button.tab-button.active Border.icon-bg">
+            <Setter Property="Background" Value="#1A6366F1"/> <!-- 10% Opacity Primary Indigo -->
+        </Style>
+        <Style Selector="Button.tab-button.active Path">
+            <Setter Property="Fill" Value="#6366F1"/>
+        </Style>
+        <Style Selector="Button.tab-button.active TextBlock.tab-text">
+            <Setter Property="Foreground" Value="#6366F1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.tab-button.active Ellipse.nav-dot">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+    </UserControl.Styles>
+
     <Grid RowDefinitions="*, Auto">
         <!-- Main Content -->
         <TransitioningContentControl Grid.Row="0" Content="{Binding CurrentView}">
@@ -13,51 +60,64 @@
  
         <!-- Bottom Tab Bar -->
         <Border Grid.Row="1" 
-                Background="{DynamicResource BrandDarkerBrush}" 
+                Background="#0F131F" 
                 BorderBrush="#1E293B" 
                 BorderThickness="0,1,0,0"
-                Padding="10,8"
+                Padding="10,6"
                 IsVisible="{Binding IsShellVisible}">
-            <UniformGrid Columns="6">
-                <Button Command="{Binding NavigateToDashboardCommand}" Classes="tab-button">
-                    <StackPanel Spacing="4">
-                        <Path Fill="White" Data="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="Overview" FontSize="10" HorizontalAlignment="Center"/>
+            <UniformGrid Columns="5">
+                <!-- Overview -->
+                <Button Command="{Binding NavigateToDashboardCommand}" Classes="tab-button" Classes.active="{Binding IsDashboardActive}">
+                    <StackPanel Spacing="2">
+                        <Border CornerRadius="8" Padding="10,4" HorizontalAlignment="Center" Classes="icon-bg">
+                            <Path Data="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" Stretch="Uniform" Width="20" Height="20"/>
+                        </Border>
+                        <TextBlock Text="Overview" FontSize="10" HorizontalAlignment="Center" Classes="tab-text"/>
+                        <Ellipse Width="4" Height="4" Fill="#6366F1" HorizontalAlignment="Center" Margin="0,1,0,0" Classes="nav-dot"/>
                     </StackPanel>
                 </Button>
  
-                <Button Command="{Binding NavigateToProjectsCommand}" Classes="tab-button">
-                    <StackPanel Spacing="4">
-                        <Path Fill="White" Data="M3,13H11V15H3V13M3,17H11V19H3V17M13,3H21V5H13V3M13,7H21V9H13V7M13,11H21V13H13V11M3,3H11V11H3V3M13,15H21V17H13V15M13,19H21V21H13V19M3,21V21H11V21H3V21Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="Projects" FontSize="10" HorizontalAlignment="Center"/>
+                <!-- Projects -->
+                <Button Command="{Binding NavigateToProjectsCommand}" Classes="tab-button" Classes.active="{Binding IsProjectsActive}">
+                    <StackPanel Spacing="2">
+                        <Border CornerRadius="8" Padding="10,4" HorizontalAlignment="Center" Classes="icon-bg">
+                            <Path Data="M3,13H11V15H3V13M3,17H11V19H3V17M13,3H21V5H13V3M13,7H21V9H13V7M13,11H21V13H13V11M3,3H11V11H3V3M13,15H21V17H13V15M13,19H21V21H13V19M3,21V21H11V21H3V21Z" Stretch="Uniform" Width="20" Height="20"/>
+                        </Border>
+                        <TextBlock Text="Projects" FontSize="10" HorizontalAlignment="Center" Classes="tab-text"/>
+                        <Ellipse Width="4" Height="4" Fill="#6366F1" HorizontalAlignment="Center" Margin="0,1,0,0" Classes="nav-dot"/>
                     </StackPanel>
                 </Button>
  
-                <Button Command="{Binding NavigateToTasksCommand}" Classes="tab-button">
-                    <StackPanel Spacing="4">
-                        <Path Fill="White" Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M16.06,11.5L15,10.44L11,14.44L8.94,12.38L7.88,13.44L11,16.56L16.06,11.5Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="Tasks" FontSize="10" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Command="{Binding NavigateToRedesignTasksCommand}" Classes="tab-button">
-                    <StackPanel Spacing="4">
-                        <Path Fill="White" Data="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="New Tasks" FontSize="10" HorizontalAlignment="Center"/>
+                <!-- Tasks -->
+                <Button Command="{Binding NavigateToTasksCommand}" Classes="tab-button" Classes.active="{Binding IsTasksActive}">
+                    <StackPanel Spacing="2">
+                        <Border CornerRadius="8" Padding="10,4" HorizontalAlignment="Center" Classes="icon-bg">
+                            <Path Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M16.06,11.5L15,10.44L11,14.44L8.94,12.38L7.88,13.44L11,16.56L16.06,11.5Z" Stretch="Uniform" Width="20" Height="20"/>
+                        </Border>
+                        <TextBlock Text="Tasks" FontSize="10" HorizontalAlignment="Center" Classes="tab-text"/>
+                        <Ellipse Width="4" Height="4" Fill="#6366F1" HorizontalAlignment="Center" Margin="0,1,0,0" Classes="nav-dot"/>
                     </StackPanel>
                 </Button>
  
-                <Button Command="{Binding NavigateToHseqCommand}" Classes="tab-button">
-                    <StackPanel Spacing="4">
-                        <Path Fill="White" Data="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.47 10,12.33 12,12.33C14,12.33 18,13.47 18,15.47C17.76,16 17.47,16.5 17.13,17Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="HSEQ" FontSize="10" HorizontalAlignment="Center"/>
+                <!-- HSEQ -->
+                <Button Command="{Binding NavigateToHseqCommand}" Classes="tab-button" Classes.active="{Binding IsHseqActive}">
+                    <StackPanel Spacing="2">
+                        <Border CornerRadius="8" Padding="10,4" HorizontalAlignment="Center" Classes="icon-bg">
+                            <Path Data="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.47 10,12.33 12,12.33C14,12.33 18,13.47 18,15.47C17.76,16 17.47,16.5 17.13,17Z" Stretch="Uniform" Width="20" Height="20"/>
+                        </Border>
+                        <TextBlock Text="HSEQ" FontSize="10" HorizontalAlignment="Center" Classes="tab-text"/>
+                        <Ellipse Width="4" Height="4" Fill="#6366F1" HorizontalAlignment="Center" Margin="0,1,0,0" Classes="nav-dot"/>
                     </StackPanel>
                 </Button>
  
-                <Button Command="{Binding NavigateToProfileCommand}" Classes="tab-button">
-                    <StackPanel Spacing="4">
-                        <Path Fill="White" Data="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" Stretch="Uniform" Width="20" Height="20"/>
-                        <TextBlock Text="Profile" FontSize="10" HorizontalAlignment="Center"/>
+                <!-- Profile -->
+                <Button Command="{Binding NavigateToProfileCommand}" Classes="tab-button" Classes.active="{Binding IsProfileActive}">
+                    <StackPanel Spacing="2">
+                        <Border CornerRadius="8" Padding="10,4" HorizontalAlignment="Center" Classes="icon-bg">
+                            <Path Data="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" Stretch="Uniform" Width="20" Height="20"/>
+                        </Border>
+                        <TextBlock Text="Profile" FontSize="10" HorizontalAlignment="Center" Classes="tab-text"/>
+                        <Ellipse Width="4" Height="4" Fill="#6366F1" HorizontalAlignment="Center" Margin="0,1,0,0" Classes="nav-dot"/>
                     </StackPanel>
                 </Button>
             </UniformGrid>

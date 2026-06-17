@@ -79,6 +79,11 @@ namespace OCC.Mobile.Features.Tasks
             }
         }
 
+        [ObservableProperty]
+        private Guid? _projectId;
+
+        partial void OnProjectIdChanged(Guid? value) => LoadData().FireAndForget();
+
         public ObservableCollection<ProjectGroupViewModel> ProjectGroups { get; } = new();
         #endregion
 
@@ -102,7 +107,10 @@ namespace OCC.Mobile.Features.Tasks
 
             _signalRService.EntityUpdated += OnEntityUpdated;
 
-            LoadData().FireAndForget();
+            if (ProjectId == null)
+            {
+                LoadData().FireAndForget();
+            }
         }
 
         private void OnEntityUpdated(string entityType, string action, Guid id)
@@ -204,13 +212,24 @@ namespace OCC.Mobile.Features.Tasks
 
                 IsBusy = true;
 
+                // Update Title if ProjectId is set
+                if (ProjectId.HasValue)
+                {
+                    var project = await ProjectService.GetProjectAsync(ProjectId.Value);
+                    Title = project != null ? $"{project.Name} Tasks" : "Project Tasks";
+                }
+                else
+                {
+                    Title = "My Tasks";
+                }
+
                 // Load all assigned projects first
                 var projects = await ProjectService.GetProjectsAsync(assignedToMe: true);
                 if (token.IsCancellationRequested) return;
                 _allProjects = projects.GroupBy(p => p.Id).Select(g => g.First()).ToDictionary(p => p.Id);
 
                 // Load all assigned tasks
-                var tasks = await TaskService.GetTasksAsync(projectId: null, assignedToMe: true, skip: 0, take: 500);
+                var tasks = await TaskService.GetTasksAsync(projectId: ProjectId, assignedToMe: true, skip: 0, take: 500);
                 if (token.IsCancellationRequested) return;
                 _allTasks = tasks.ToList();
 
