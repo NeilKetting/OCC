@@ -42,24 +42,8 @@ builder.Services.AddHttpContextAccessor();
 // Database
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
-    var httpContext = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext;
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    
-    // Check for environment header OR query parameter
-    var environmentHeader = httpContext?.Request.Headers["X-Environment"].ToString();
-    var environmentQuery = httpContext?.Request.Query["env"].ToString();
-    var selectedEnv = !string.IsNullOrEmpty(environmentHeader) ? environmentHeader : environmentQuery;
-    
-    string connectionString;
-    if (selectedEnv == "Test")
-    {
-        connectionString = configuration.GetConnectionString("TestConnection") 
-                           ?? configuration.GetConnectionString("DefaultConnection")!;
-    }
-    else
-    {
-        connectionString = configuration.GetConnectionString("DefaultConnection")!;
-    }
+    var connectionString = configuration.GetConnectionString("DefaultConnection")!;
 
     options.UseSqlServer(connectionString, sqlOptions =>
     {
@@ -156,19 +140,16 @@ using (var scope = app.Services.CreateScope())
     var configuration = services.GetRequiredService<IConfiguration>();
     var hasher = services.GetRequiredService<OCC.API.Services.PasswordHasher>();
 
-    var connectionNames = new[] { "DefaultConnection", "TestConnection" };
-
-    foreach (var connectionName in connectionNames)
+    var connectionName = "DefaultConnection";
+    try
     {
-        try
+        var connectionString = configuration.GetConnectionString(connectionName);
+        if (string.IsNullOrEmpty(connectionString)) 
         {
-            var connectionString = configuration.GetConnectionString(connectionName);
-            if (string.IsNullOrEmpty(connectionString)) 
-            {
-                logger.LogWarning($"Skipping {connectionName}: No connection string found.");
-                continue;
-            }
-
+            logger.LogWarning($"Skipping {connectionName}: No connection string found.");
+        }
+        else
+        {
             logger.LogInformation($"[DB-INIT] Checking {connectionName}...");
             
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
@@ -180,10 +161,10 @@ using (var scope = app.Services.CreateScope())
             
             logger.LogInformation($"[DB-INIT] {connectionName} is ready.");
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, $"[DB-INIT] Failed to initialize {connectionName}. Error: {ex.Message}");
-        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, $"[DB-INIT] Failed to initialize {connectionName}. Error: {ex.Message}");
     }
 }
 
