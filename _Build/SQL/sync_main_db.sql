@@ -4,7 +4,7 @@
 USE master;
 GO
 
-DECLARE @LiveDbName NVARCHAR(100) = N'OCC_Rev5_DB';
+DECLARE @LiveDbName NVARCHAR(100) = N'OCC_V2_DB';
 DECLARE @MainDbName NVARCHAR(100) = N'OCC_Main';
 DECLARE @BackupPath NVARCHAR(500) = N'C:\OCCBackups\OCC_Live_Temp.bak';
 DECLARE @MainDataPath NVARCHAR(500) = N'C:\Program Files\Microsoft SQL Server\MSSQL17.OCC_SQL\MSSQL\DATA\OCC_Main.mdf';

@@ -80,7 +80,7 @@ namespace OCC.Client.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=OCC_Rev5_DB;Trusted_Connection=True;TrustServerCertificate=True;");
+                optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=OCC_V2_DB;Trusted_Connection=True;TrustServerCertificate=True;");
             }
         }
 

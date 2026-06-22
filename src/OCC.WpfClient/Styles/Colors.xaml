@@ -79,6 +79,11 @@
     <!-- Ported from Avalonia LightMode.axaml -->
     <SolidColorBrush x:Key="PrimaryTeal" Color="#00b5ad" />
 
+    <LinearGradientBrush x:Key="CreateButtonGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0.0" Color="#6366F1" />
+        <GradientStop Offset="0.5" Color="#4F46E5" />
+        <GradientStop Offset="1.0" Color="#0EA5E9" />
+    </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="ModernPrimaryButtonBackgroundGradient" StartPoint="0.5,0.5" EndPoint="1.5,1.5">
         <GradientStop Color="#093C5D" Offset="0.0" />

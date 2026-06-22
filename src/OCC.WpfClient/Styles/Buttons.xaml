@@ -441,12 +441,12 @@
     
     <!-- Create new record button -->
     <Style x:Key="CreateIconButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
-        <Setter Property="Background" Value="#1AFFFFFF"/>
+        <Setter Property="Background" Value="{StaticResource CreateButtonGradient}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ModernCreateButtonBorderGradient}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
         <Setter Property="Padding" Value="16,0"/>
 <Setter Property="Height" Value="40"/>
         <Setter Property="Template">
@@ -471,7 +471,7 @@
                         <!-- Hover State -->
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="content" Property="Opacity" Value="1.0"/>
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource CreateButtonGradient}"/>
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
@@ -500,7 +500,7 @@
 
                         <!-- Pressed State -->
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{StaticResource GlassBackgroundPressed}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource CreateButtonGradient}"/>
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
