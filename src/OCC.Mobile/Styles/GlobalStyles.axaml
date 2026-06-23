@@ -25,6 +25,8 @@
                     <SolidColorBrush x:Key="InputBorderBrush" Color="#33475A6B"/>
                     <SolidColorBrush x:Key="ButtonHoverBrush" Color="#15FFFFFF"/>
                     <SolidColorBrush x:Key="ButtonPressedBrush" Color="#25FFFFFF"/>
+                    <SolidColorBrush x:Key="ButtonBrush" Color="#25FFFFFF"/>
+                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#4274D9"/>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="BrandOrangeBrush" Color="#FF8F00"/>
@@ -212,5 +214,45 @@
     </Style>
     <Style Selector="Button.tab-button TextBlock">
         <Setter Property="Foreground" Value="#94A3B8"/>
+    </Style>
+
+    <!-- Global Base Button Style (to override Avalonia's FluentTheme default green backgrounds) -->
+    <Style Selector="Button">
+        <Setter Property="Background" Value="{DynamicResource BrandSlateBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Padding" Value="15,8"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                <BrushTransition Property="Background" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+        <Setter Property="RenderTransform" Value="scale(1.02)"/>
+    </Style>
+    <Style Selector="Button:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#2A2F3B"/>
+        <Setter Property="Foreground" Value="#6A7F9B"/>
+    </Style>
+
+    <!-- Global Base ProgressBar Style -->
+    <Style Selector="ProgressBar">
+        <Setter Property="Background" Value="#111929"/>
+        <Setter Property="Foreground">
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0.0" Color="#6366F1" />
+                <GradientStop Offset="0.5" Color="#4F46E5" />
+                <GradientStop Offset="1.0" Color="#0EA5E9" />
+            </LinearGradientBrush>
+        </Setter>
     </Style>
 </Styles>

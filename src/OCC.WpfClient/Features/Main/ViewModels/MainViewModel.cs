@@ -1151,24 +1151,53 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         }
 
         /// <summary>
-        /// Handles OpenOrderMessages by loading the specific order ID in a PurchaseOrderDetailViewModel tab.
+        /// Handles OpenOrderMessages by loading the specific order ID in a PurchaseOrderDetailViewModel or PickingOrderViewModel tab.
         /// </summary>
-        public void Receive(OpenOrderMessage message)
+        public async void Receive(OpenOrderMessage message)
         {
             var orderId = message.Value;
             
             // Check if order tab is already open
-            var existing = OpenHubs.OfType<PurchaseOrderDetailViewModel>().FirstOrDefault(o => o.CurrentOrder?.Id == orderId);
-            if (existing != null)
+            var existingPo = OpenHubs.OfType<PurchaseOrderDetailViewModel>().FirstOrDefault(o => o.CurrentOrder?.Id == orderId);
+            if (existingPo != null)
             {
-                ActiveHub = existing;
+                ActiveHub = existingPo;
                 return;
             }
 
-            var hub = _serviceProvider.GetRequiredService<PurchaseOrderDetailViewModel>();
-            _ = hub.LoadOrderAsync(orderId);
-            OpenHubs.Add(hub);
-            ActiveHub = hub;
+            var existingPicking = OpenHubs.OfType<PickingOrderViewModel>().FirstOrDefault(o => o.CurrentOrder?.Id == orderId);
+            if (existingPicking != null)
+            {
+                ActiveHub = existingPicking;
+                return;
+            }
+
+            try
+            {
+                var orderService = _serviceProvider.GetRequiredService<IOrderService>();
+                var order = await orderService.GetOrderAsync(orderId);
+                if (order != null)
+                {
+                    if (order.OrderType == OCC.Shared.Models.OrderType.PickingOrder)
+                    {
+                        var hub = _serviceProvider.GetRequiredService<PickingOrderViewModel>();
+                        _ = hub.LoadOrderAsync(orderId);
+                        OpenHubs.Add(hub);
+                        ActiveHub = hub;
+                    }
+                    else
+                    {
+                        var hub = _serviceProvider.GetRequiredService<PurchaseOrderDetailViewModel>();
+                        _ = hub.LoadOrderAsync(orderId);
+                        OpenHubs.Add(hub);
+                        ActiveHub = hub;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error opening order details for {OrderId}", orderId);
+            }
         }
 
         /// <summary>

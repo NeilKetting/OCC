@@ -181,6 +181,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
         [RelayCommand]
+        private void NavigateToPicking()
+        {
+            WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Picking));
+        }
+
+        [RelayCommand]
         private void ReceiveStock()
         {
             var findOrderVm = new FindOrderViewModel(_orderService, _supplierService);

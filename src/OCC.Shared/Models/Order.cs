@@ -61,6 +61,10 @@ namespace OCC.Shared.Models
             ? $"Site: {ProjectName}" 
             : "Office Stock";
 
+        public string EntityDisplayName => OrderType == OrderType.PickingOrder 
+            ? (ProjectName ?? "Office Stock") 
+            : SupplierName;
+
         public int TotalItems => Lines?.Count ?? 0;
 
         // Calculated Totals

@@ -101,6 +101,10 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
         <procViews:PurchaseOrderDetailView/>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type procVm:PickingOrderViewModel}">
+        <procViews:PickingOrderView/>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type procVm:SupplierListViewModel}">
         <procViews:SupplierListView/>
     </DataTemplate>

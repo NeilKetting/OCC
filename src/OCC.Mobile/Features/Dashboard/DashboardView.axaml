@@ -176,14 +176,7 @@
                                              Maximum="100" 
                                              Height="6" 
                                              CornerRadius="3" 
-                                             Background="#111929">
-                                    <ProgressBar.Foreground>
-                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                                            <GradientStop Offset="0" Color="#6366F1"/>
-                                            <GradientStop Offset="1" Color="#22D3EE"/>
-                                        </LinearGradientBrush>
-                                    </ProgressBar.Foreground>
-                                </ProgressBar>
+                                             Background="#111929"/>
                             </StackPanel>
 
                             <!-- Health + Completion -->
@@ -511,8 +504,7 @@
                                                      Maximum="100" 
                                                      Height="6" 
                                                      CornerRadius="3" 
-                                                     Background="#111929"
-                                                     Foreground="{Binding ProgressBrush}"/>
+                                                     Background="#111929"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

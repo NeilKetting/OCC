@@ -150,10 +150,16 @@
                         <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
                             <StackPanel>
                                 <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                <CheckBox Content="Index (#)" IsChecked="{Binding IsIndexVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                <CheckBox Content="BAS" IsChecked="{Binding IsBasVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                <CheckBox Content="Name" IsChecked="{Binding IsNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 <CheckBox Content="Rate/Hr" IsChecked="{Binding IsRateHrVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                <CheckBox Content="Total Rem" IsChecked="{Binding IsTotalRemVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 <CheckBox Content="Days" IsChecked="{Binding IsDaysVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                             </StackPanel>
@@ -179,11 +185,14 @@
 
                     <DataGrid.Columns>
                         <!-- # -->
-                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="Auto" IsReadOnly="True"
+                                            Visibility="{Binding Data.IsIndexVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- BAS -->
-                        <DataGridTextColumn Header="BAS" Binding="{Binding EmployeeNumber}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="BAS" Binding="{Binding EmployeeNumber}" Width="Auto" IsReadOnly="True"
+                                            Visibility="{Binding Data.IsBasVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- NAME -->
-                        <DataGridTextColumn Header="NAME" Binding="{Binding EmployeeName}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="NAME" Binding="{Binding EmployeeName}" Width="Auto" IsReadOnly="True"
+                                            Visibility="{Binding Data.IsNameVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- RATE P/HR -->
                         <DataGridTextColumn Header="RATE/HR" Binding="{Binding RatePHrDisplay, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsRateHrVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
@@ -192,7 +201,8 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- HRS (Normal + Projected + Variance) — editable -->
-                        <DataGridTemplateColumn Header="HRS" Width="Auto">
+                        <DataGridTemplateColumn Header="HRS" Width="Auto"
+                                                Visibility="{Binding Data.IsHrsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding StdHoursDisplay, StringFormat='F2'}" HorizontalAlignment="Center"/>
@@ -324,7 +334,8 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
                         <!-- TOTAL NETT — read-only, highlighted -->
-                        <DataGridTextColumn Header="TOTAL NETT" Binding="{Binding NetPay, StringFormat='R #,##0.00'}" Width="Auto" IsReadOnly="True">
+                        <DataGridTextColumn Header="TOTAL NETT" Binding="{Binding NetPay, StringFormat='R #,##0.00'}" Width="Auto" IsReadOnly="True"
+                                            Visibility="{Binding Data.IsTotalNettVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -334,7 +345,8 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- TOTAL REM -->
-                        <DataGridTextColumn Header="TOTAL REM" Binding="{Binding TotalRem, StringFormat='R #,##0.00'}" Width="Auto" IsReadOnly="True">
+                        <DataGridTextColumn Header="TOTAL REM" Binding="{Binding TotalRem, StringFormat='R #,##0.00'}" Width="Auto" IsReadOnly="True"
+                                            Visibility="{Binding Data.IsTotalRemVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="HorizontalAlignment" Value="Right"/>

@@ -55,9 +55,25 @@
                             <TextBox Text="{Binding PrincipalAmount, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
                                      Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
 
-                            <!-- Installment -->
-                            <TextBlock Text="INSTALMENT AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                            <TextBox Text="{Binding MonthlyInstallment, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                            <!-- Payment Frequency -->
+                            <TextBlock Text="PAYMENT FREQUENCY" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <ComboBox SelectedValue="{Binding SelectedPaymentFrequency, Mode=TwoWay}"
+                                      SelectedValuePath="Content"
+                                      Style="{StaticResource ModernComboBox}"
+                                      Margin="0,0,0,14">
+                                <ComboBoxItem Content="Fortnightly"/>
+                                <ComboBoxItem Content="Monthly"/>
+                            </ComboBox>
+
+                            <!-- Number of Installments -->
+                            <TextBlock Text="NUMBER OF INSTALMENTS" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding NumberOfInstallments, UpdateSourceTrigger=LostFocus}"
+                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
+
+                            <!-- Calculated Installment -->
+                            <TextBlock Text="CALCULATED INSTALMENT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding MonthlyInstallment, StringFormat='F2', Mode=OneWay}"
+                                     IsReadOnly="True" Focusable="False"
                                      Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
 
                             <!-- Interest Rate -->
@@ -226,7 +242,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <!-- Actions -->
-                <DataGridTemplateColumn Header="Actions" Width="90">
+                <DataGridTemplateColumn Header="Actions" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -234,6 +250,12 @@
                                         Command="{Binding DataContext.PrintLoanScheduleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}">
                                     <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource OrangeBrush}"/>
+                                </Button>
+                                <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Print Loan Statement"
+                                        Command="{Binding DataContext.PrintLoanStatementCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Margin="4,0,0,0">
+                                    <TextBlock Text="&#xE8F2;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
                                 </Button>
                                 <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Mark as Paid / Terminate"
                                         Command="{Binding DataContext.TerminateLoanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

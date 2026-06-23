@@ -130,5 +130,20 @@ namespace OCC.WpfClient.Services
                 throw new Exception(error);
             }
         }
+
+        public async Task<OCC.Shared.DTOs.LoanStatementDto?> GetStatementAsync(Guid loanId)
+        {
+            EnsureAuthorization();
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<OCC.Shared.DTOs.LoanStatementDto>(
+                    GetFullUrl($"api/EmployeeLoans/{loanId}/statement"), _options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching statement for loan {LoanId}", loanId);
+                return null;
+            }
+        }
     }
 }

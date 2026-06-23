@@ -21,6 +21,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     {
         private readonly IWageService _wageService;
         private readonly IPdfService _pdfService;
+        private readonly IDialogService _dialogService;
         private readonly ILogger<WageRunViewModel> _logger;
 
         private WageRun? _currentDraft;
@@ -91,10 +92,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isGenerated;
 
         // Column Visibility
+        [ObservableProperty] private bool _isIndexVisible = true;
+        [ObservableProperty] private bool _isBasVisible = true;
+        [ObservableProperty] private bool _isNameVisible = true;
         [ObservableProperty] private bool _isRateHrVisible = true;
+        [ObservableProperty] private bool _isHrsVisible = true;
         [ObservableProperty] private bool _isOtRatesVisible = true;
         [ObservableProperty] private bool _isDeductionsVisible = true;
         [ObservableProperty] private bool _isSupFeeVisible = true;
+        [ObservableProperty] private bool _isTotalNettVisible = true;
+        [ObservableProperty] private bool _isTotalRemVisible = true;
         [ObservableProperty] private bool _isDaysVisible = true;
         [ObservableProperty] private bool _isNotesVisible = true;
 
@@ -108,10 +115,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public WageRunViewModel(
             IWageService wageService,
             IPdfService pdfService,
+            IDialogService dialogService,
             ILogger<WageRunViewModel> logger)
         {
             _wageService = wageService;
             _pdfService = pdfService;
+            _dialogService = dialogService;
             _logger = logger;
             Title = "Wage Run";
 
@@ -198,7 +207,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         line.IncentiveSupervisor = edits.SupFee;
                     }
 
-                    var vm = new WageRunLineViewModel(line) { IndexNum = index++ };
+                    var vm = new WageRunLineViewModel(line, _dialogService) { IndexNum = index++ };
                     vm.PropertyChanged += (s, e) =>
                     {
                         if (e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||

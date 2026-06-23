@@ -17,11 +17,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
         private readonly ISupplierService _supplierService;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsSupplierFilterEnabled))]
         private string _transactionType = "Purchase Order";
+
+        public bool IsSupplierFilterEnabled => TransactionType == "Purchase Order" || TransactionType == "Any";
 
         public ObservableCollection<string> TransactionTypes { get; } = new() 
         { 
-            "Any", "Purchase Order", "Sales Order", "Credit Note" 
+            "Any", "Purchase Order", "Picking Order", "Sales Order", "Credit Note" 
         };
 
         [ObservableProperty]
@@ -51,10 +54,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
         public event Action? CloseRequested;
         public event Action<Order>? OrderSelected;
 
-        public FindOrderViewModel(IOrderService orderService, ISupplierService supplierService)
+        public FindOrderViewModel(IOrderService orderService, ISupplierService supplierService, string defaultTransactionType = "Purchase Order")
         {
             _orderService = orderService;
             _supplierService = supplierService;
+            TransactionType = defaultTransactionType;
             
             _fromDate = DateTime.Today.AddMonths(-1);
             _toDate = DateTime.Today;
@@ -83,7 +87,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
                 // Filter locally for now
                 var filtered = orders.Where(o => 
                     (string.IsNullOrEmpty(TransactionType) || TransactionType == "Any" || 
-                     (TransactionType == "Purchase Order" && o.OrderType == OrderType.PurchaseOrder)) &&
+                     (TransactionType == "Purchase Order" && o.OrderType == OrderType.PurchaseOrder) ||
+                     (TransactionType == "Picking Order" && o.OrderType == OrderType.PickingOrder)) &&
                     (SelectedSupplier == null || o.SupplierId == SelectedSupplier.Id) &&
                     (!FromDate.HasValue || o.OrderDate >= FromDate) &&
                     (!ToDate.HasValue || o.OrderDate <= ToDate) &&

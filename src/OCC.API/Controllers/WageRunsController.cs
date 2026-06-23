@@ -312,6 +312,44 @@ namespace OCC.API.Controllers
 
             run.Status = WageRunStatus.Finalized;
             _context.WageRuns.Add(run);
+
+            // Update employee loan outstanding balances
+            foreach (var line in run.Lines)
+            {
+                if (line.DeductionLoan > 0)
+                {
+                    // Find active loans for this employee
+                    var activeLoans = await _context.EmployeeLoans
+                        .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0)
+                        .OrderBy(l => l.StartDate)
+                        .ToListAsync();
+
+                    decimal remainingDeduction = line.DeductionLoan;
+                    foreach (var loan in activeLoans)
+                    {
+                        if (remainingDeduction <= 0) break;
+
+                        if (loan.OutstandingBalance >= remainingDeduction)
+                        {
+                            loan.OutstandingBalance -= remainingDeduction;
+                            remainingDeduction = 0;
+                        }
+                        else
+                        {
+                            remainingDeduction -= loan.OutstandingBalance;
+                            loan.OutstandingBalance = 0;
+                        }
+
+                        if (loan.OutstandingBalance == 0)
+                        {
+                            loan.IsActive = false;
+                            loan.EndDate = run.EndDate;
+                        }
+                        _context.Entry(loan).State = EntityState.Modified;
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
             
             return CreatedAtAction("GetWageRun", new { id = run.Id }, run);

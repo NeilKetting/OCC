@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using OCC.Shared.Models;
+using OCC.WpfClient.Services.Interfaces;
 using System;
 
 namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
@@ -11,6 +12,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     public partial class WageRunLineViewModel : ObservableObject
     {
         public WageRunLine Model { get; }
+        private readonly IDialogService? _dialogService;
 
         private int? _indexNum;
         public int? IndexNum
@@ -19,9 +21,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             set => SetProperty(ref _indexNum, value);
         }
 
-        public WageRunLineViewModel(WageRunLine model)
+        public WageRunLineViewModel(WageRunLine model, IDialogService? dialogService = null)
         {
             Model = model ?? throw new ArgumentNullException(nameof(model));
+            _dialogService = dialogService;
         }
 
         // ─── Display (Read-only columns) ──────────────────────────────────────
@@ -78,9 +81,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 if (Math.Abs(Model.NormalHours - value) > 0.001)
                 {
+                    double oldValue = Model.NormalHours;
                     Model.NormalHours = value;
                     RecalculateAndNotify();
                     OnPropertyChanged();
+                    PromptReason("Normal Hours", oldValue, value);
                 }
             }
         }
@@ -93,10 +98,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 if (Math.Abs(Model.Overtime15Hours - value) > 0.001)
                 {
+                    double oldValue = Model.Overtime15Hours;
                     Model.Overtime15Hours = value;
                     RecalculateAndNotify();
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(StdOt));
+                    PromptReason("OT 1.5 Hours", oldValue, value);
                 }
             }
         }
@@ -109,10 +116,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 if (Math.Abs(Model.Overtime20Hours - value) > 0.001)
                 {
+                    double oldValue = Model.Overtime20Hours;
                     Model.Overtime20Hours = value;
                     RecalculateAndNotify();
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(SunOt));
+                    PromptReason("OT 2.0 Hours", oldValue, value);
                 }
             }
         }
@@ -184,6 +193,56 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             OnPropertyChanged(nameof(TotalRem));
             OnPropertyChanged(nameof(TotalWage));
             OnPropertyChanged(nameof(StdHoursDisplay));
+        }
+
+        private void PromptReason(string hoursType, double oldValue, double newValue)
+        {
+            if (_dialogService == null) return;
+
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new System.Action(async () =>
+            {
+                var title = "Adjustment Reason Required";
+                var message = $"You have manually adjusted {hoursType} for {EmployeeName} from {oldValue:F1} to {newValue:F1}.\n\nPlease specify the reason for this change:";
+                var reason = await _dialogService.ShowInputDialogAsync(title, message);
+
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    // Revert the value directly on the model to avoid re-triggering the setter
+                    if (hoursType == "Normal Hours")
+                    {
+                        Model.NormalHours = oldValue;
+                        OnPropertyChanged(nameof(NormalHours));
+                        OnPropertyChanged(nameof(StdHoursDisplay));
+                    }
+                    else if (hoursType == "OT 1.5 Hours")
+                    {
+                        Model.Overtime15Hours = oldValue;
+                        OnPropertyChanged(nameof(Overtime15Hours));
+                        OnPropertyChanged(nameof(StdOt));
+                    }
+                    else if (hoursType == "OT 2.0 Hours")
+                    {
+                        Model.Overtime20Hours = oldValue;
+                        OnPropertyChanged(nameof(Overtime20Hours));
+                        OnPropertyChanged(nameof(SunOt));
+                    }
+                    RecalculateAndNotify();
+                    await _dialogService.ShowAlertAsync("Adjustment Cancelled", "A valid reason is required to adjust hours. The hours have been reverted.");
+                }
+                else
+                {
+                    var note = $"[Manual Adj: {hoursType} from {oldValue:F1} to {newValue:F1}. Reason: {reason.Trim()}]";
+                    if (string.IsNullOrWhiteSpace(Model.VarianceNotes))
+                    {
+                        Model.VarianceNotes = note;
+                    }
+                    else
+                    {
+                        Model.VarianceNotes = (Model.VarianceNotes + "; " + note).Trim();
+                    }
+                    OnPropertyChanged(nameof(VarianceNotes));
+                }
+            }));
         }
     }
 }

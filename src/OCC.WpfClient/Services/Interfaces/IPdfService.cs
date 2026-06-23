@@ -38,6 +38,7 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates an A4 employee loan agreement with repayment schedule and signature blocks.
         /// </summary>
         Task<string> GenerateLoanSchedulePdfAsync(EmployeeLoan loan, Employee employee);
+        Task<string> GenerateLoanStatementPdfAsync(OCC.Shared.DTOs.LoanStatementDto statement);
     }
 
     public class ReportColumnDefinition

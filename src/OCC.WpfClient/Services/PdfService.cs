@@ -1805,8 +1805,43 @@ namespace OCC.WpfClient.Services
             });
         }
 
+        public static (string Frequency, int Installments, string ActualNotes) ParseLoanNotes(string notes)
+        {
+            if (string.IsNullOrEmpty(notes))
+                return ("Monthly", 0, string.Empty);
+
+            if (notes.StartsWith("[Term:") && notes.Contains("Installments:"))
+            {
+                try
+                {
+                    int termEnd = notes.IndexOf(']');
+                    if (termEnd > 0)
+                    {
+                        string header = notes.Substring(1, termEnd - 1); // "Term: Fortnightly, Installments: 10"
+                        string actualNotes = notes.Substring(termEnd + 1).Trim();
+                        
+                        string[] parts = header.Split(',');
+                        string freq = "Monthly";
+                        int inst = 0;
+                        foreach (var part in parts)
+                        {
+                            if (part.Contains("Term:"))
+                                freq = part.Replace("Term:", "").Trim();
+                            else if (part.Contains("Installments:"))
+                                int.TryParse(part.Replace("Installments:", "").Trim(), out inst);
+                        }
+                        return (freq, inst, actualNotes);
+                    }
+                }
+                catch { }
+            }
+            return ("Monthly", 0, notes);
+        }
+
         private void ComposeLoanDetails(IContainer container, EmployeeLoan loan)
         {
+            var (frequency, installments, actualNotes) = ParseLoanNotes(loan.Notes);
+
             container.Background(Colors.Grey.Lighten5).Border(1).BorderColor(Colors.Grey.Lighten3).Padding(15).Column(col =>
             {
                 col.Item().PaddingBottom(10).Text("Loan Details").FontSize(12).SemiBold();
@@ -1823,9 +1858,28 @@ namespace OCC.WpfClient.Services
                 });
                 col.Item().PaddingTop(5).Row(row =>
                 {
+                    row.RelativeItem().Text("Repayment Frequency:").SemiBold();
+                    row.RelativeItem().AlignRight().Text(frequency);
+                });
+                if (installments > 0)
+                {
+                    col.Item().PaddingTop(5).Row(row =>
+                    {
+                        row.RelativeItem().Text("Repayment Terms:").SemiBold();
+                        row.RelativeItem().AlignRight().Text($"{installments} Installments");
+                    });
+                }
+                col.Item().PaddingTop(5).Row(row =>
+                {
                     row.RelativeItem().Text("Installment Amount:").SemiBold();
                     row.RelativeItem().AlignRight().Text($"{loan.MonthlyInstallment:C}");
                 });
+
+                if (!string.IsNullOrEmpty(actualNotes))
+                {
+                    col.Item().PaddingTop(8).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                    col.Item().PaddingTop(5).Text($"Notes: {actualNotes}").FontSize(9).Italic().FontColor(Colors.Grey.Darken2);
+                }
 
                 col.Item().PaddingVertical(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
@@ -1868,6 +1922,147 @@ namespace OCC.WpfClient.Services
 
             double n = -Math.Log(1 - (r * p) / i) / Math.Log(1 + r);
             return (decimal)(n * i);
+        }
+
+        public async Task<string> GenerateLoanStatementPdfAsync(OCC.Shared.DTOs.LoanStatementDto statement)
+        {
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+                        page.Size(PageSizes.A4);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeStatementHeader(c, statement));
+                        page.Content().PaddingVertical(20).Element(c => ComposeStatementContent(c, statement));
+                        page.Footer().Element(c => ComposeStatementFooter(c));
+                    });
+                });
+
+                string tempPath = Path.GetTempPath();
+                string filename = $"LoanStatement_{statement.EmployeeName.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                string fullPath = Path.Combine(tempPath, filename);
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        private void ComposeStatementHeader(IContainer container, OCC.Shared.DTOs.LoanStatementDto statement)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem(3).Column(col =>
+                {
+                    col.Item().Text("Orange Circle Construction").FontSize(22).ExtraBold().FontColor(ColorPrimary);
+                    col.Item().Text("Employee Loan Statement").FontSize(12).FontColor(Colors.Grey.Medium);
+                });
+                row.RelativeItem(2).AlignRight().Column(col =>
+                {
+                    col.Item().Text($"Date: {DateTime.Today:dd MMM yyyy}").FontSize(14).SemiBold().FontColor(ColorSecondary);
+                    col.Item().Text($"Ref: {statement.EmployeeNumber}").FontSize(9).FontColor(Colors.Grey.Medium);
+                });
+            });
+        }
+
+        private void ComposeStatementContent(IContainer container, OCC.Shared.DTOs.LoanStatementDto statement)
+        {
+            container.Column(col =>
+            {
+                // Employee details block
+                col.Item().Background(Colors.Grey.Lighten5).Padding(15).Row(row =>
+                {
+                    row.RelativeItem().Column(c =>
+                    {
+                        c.Item().Text(statement.EmployeeName).FontSize(16).Bold().FontColor(ColorSecondary);
+                        c.Item().Text($"Loan Start Date: {statement.StartDate:dd MMM yyyy}").FontSize(10).FontColor(Colors.Grey.Darken1);
+                    });
+                    row.RelativeItem().AlignRight().Column(c =>
+                    {
+                        c.Item().Text("Statement Account Summary").FontSize(12).SemiBold().FontColor(Colors.Grey.Darken2);
+                    });
+                });
+
+                // Loan Account Overview
+                col.Item().PaddingTop(15).Background(Colors.Grey.Lighten5).Border(1).BorderColor(Colors.Grey.Lighten3).Padding(15).Column(c =>
+                {
+                    c.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text("Principal Loan Amount:").SemiBold();
+                        r.RelativeItem().AlignRight().Text($"{statement.PrincipalAmount:C}");
+                    });
+                    c.Item().PaddingTop(5).Row(r =>
+                    {
+                        r.RelativeItem().Text("Interest Rate:").SemiBold();
+                        r.RelativeItem().AlignRight().Text($"{statement.InterestRate}%");
+                    });
+                    c.Item().PaddingTop(5).Row(r =>
+                    {
+                        r.RelativeItem().Text("Installment Amount:").SemiBold();
+                        r.RelativeItem().AlignRight().Text($"{statement.MonthlyInstallment:C}");
+                    });
+                    c.Item().PaddingTop(5).Row(r =>
+                    {
+                        r.RelativeItem().Text("Current Outstanding Balance:").Bold().FontColor(ColorPrimary);
+                        r.RelativeItem().AlignRight().Text($"{statement.OutstandingBalance:C}").Bold().FontColor(ColorPrimary);
+                    });
+                });
+
+                // Transaction Table
+                col.Item().PaddingTop(25).Text("Repayment Transaction History").FontSize(12).Bold();
+
+                col.Item().PaddingTop(10).Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(2); // Date
+                        columns.RelativeColumn(4); // Description
+                        columns.RelativeColumn(2); // Amount Paid
+                        columns.RelativeColumn(2); // Remaining Balance
+                    });
+
+                    // Header row
+                    table.Header(header =>
+                    {
+                        header.Cell().Background(ColorPrimary).Padding(8).Text("Payment Date").FontColor(Colors.White).Bold();
+                        header.Cell().Background(ColorPrimary).Padding(8).Text("Description").FontColor(Colors.White).Bold();
+                        header.Cell().Background(ColorPrimary).Padding(8).AlignRight().Text("Amount Paid").FontColor(Colors.White).Bold();
+                        header.Cell().Background(ColorPrimary).Padding(8).AlignRight().Text("Balance").FontColor(Colors.White).Bold();
+                    });
+
+                    // Initial balance row
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).Text($"{statement.StartDate:dd MMM yyyy}");
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).Text("Initial Principal Loan Advanced");
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).AlignRight().Text("-");
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).AlignRight().Text($"{statement.PrincipalAmount:C}");
+
+                    // Payment rows
+                    foreach (var p in statement.Payments)
+                    {
+                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).Text($"{p.Date:dd MMM yyyy}");
+                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).Text(p.Notes);
+                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).AlignRight().Text($"{p.Amount:C}");
+                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(8).AlignRight().Text($"{p.BalanceAfterPayment:C}");
+                    }
+                });
+            });
+        }
+
+        private void ComposeStatementFooter(IContainer container)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem().Text(x =>
+                {
+                    x.Span("Page ");
+                    x.CurrentPageNumber();
+                    x.Span(" of ");
+                    x.TotalPages();
+                });
+                row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - Orange Circle Construction");
+            });
         }
     }
 }

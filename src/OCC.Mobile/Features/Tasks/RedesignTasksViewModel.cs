@@ -195,6 +195,7 @@ namespace OCC.Mobile.Features.Tasks
             }
         }
 
+        private readonly object _tasksLock = new();
         private List<ProjectTask> _allTasks = new();
         private Dictionary<Guid, Project> _allProjects = new();
 
@@ -226,23 +227,57 @@ namespace OCC.Mobile.Features.Tasks
                 // Load all assigned projects first
                 var projects = await ProjectService.GetProjectsAsync(assignedToMe: true);
                 if (token.IsCancellationRequested) return;
-                _allProjects = projects.GroupBy(p => p.Id).Select(g => g.First()).ToDictionary(p => p.Id);
+                lock (_tasksLock)
+                {
+                    _allProjects = projects.GroupBy(p => p.Id).Select(g => g.First()).ToDictionary(p => p.Id);
+                }
 
-                // Load all assigned tasks
-                var tasks = await TaskService.GetTasksAsync(projectId: ProjectId, assignedToMe: true, skip: 0, take: 500);
+                // Load first 15 assigned tasks
+                var firstTasks = await TaskService.GetTasksAsync(projectId: ProjectId, assignedToMe: true, skip: 0, take: 15);
                 if (token.IsCancellationRequested) return;
-                _allTasks = tasks.ToList();
+                lock (_tasksLock)
+                {
+                    _allTasks = firstTasks.ToList();
+                }
 
                 ApplyFiltersAndRebuildHierarchy();
+                IsBusy = false;
+
+                // Load remaining tasks in the background
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var remainingTasks = await TaskService.GetTasksAsync(projectId: ProjectId, assignedToMe: true, skip: 15, take: 1500);
+                        if (token.IsCancellationRequested) return;
+
+                        lock (_tasksLock)
+                        {
+                            var existingIds = new HashSet<Guid>(_allTasks.Select(t => t.Id));
+                            foreach (var t in remainingTasks)
+                            {
+                                if (!existingIds.Contains(t.Id))
+                                {
+                                    _allTasks.Add(t);
+                                }
+                            }
+                        }
+                        ApplyFiltersAndRebuildHierarchy();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error loading remaining tasks: {ex.Message}");
+                    }
+                }, token);
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading redesign tasks: {ex.Message}");
+                IsBusy = false;
             }
             finally
             {
-                IsBusy = false;
                 _loadSemaphore.Release();
             }
         }
@@ -251,7 +286,16 @@ namespace OCC.Mobile.Features.Tasks
         #region Hierarchy Rebuilder
         private void ApplyFiltersAndRebuildHierarchy()
         {
-            bool hasTargetInTasks = TargetTaskId.HasValue && _allTasks.Any(t => t.Id == TargetTaskId.Value);
+            List<ProjectTask> tasksCopy;
+            Dictionary<Guid, Project> projectsCopy;
+
+            lock (_tasksLock)
+            {
+                tasksCopy = _allTasks.ToList();
+                projectsCopy = _allProjects.ToDictionary(entry => entry.Key, entry => entry.Value);
+            }
+
+            bool hasTargetInTasks = TargetTaskId.HasValue && tasksCopy.Any(t => t.Id == TargetTaskId.Value);
 
             if (TargetTaskId.HasValue && hasTargetInTasks)
             {
@@ -265,7 +309,7 @@ namespace OCC.Mobile.Features.Tasks
             }
 
             // Filter child tasks based on SearchText and chips
-            var filteredTasks = _allTasks.Where(t =>
+            var filteredTasks = tasksCopy.Where(t =>
             {
                 if (t.IsGroup) return false;
 
@@ -302,7 +346,7 @@ namespace OCC.Mobile.Features.Tasks
                 var projId = projectGroup.Key;
                 if (!projId.HasValue) continue;
 
-                _allProjects.TryGetValue(projId.Value, out var project);
+                projectsCopy.TryGetValue(projId.Value, out var project);
                 var projName = project?.Name ?? "Unknown Project";
                 var projStatus = project?.Status ?? "Started";
 
@@ -314,8 +358,8 @@ namespace OCC.Mobile.Features.Tasks
                     IsExpanded = (TargetTaskId.HasValue && hasTargetInTasks) ? false : true
                 };
 
-                // Identify sections (tasks in _allTasks where IsGroup == true for this project)
-                var sections = _allTasks.Where(t => t.IsGroup && t.ProjectId == projId.Value).ToList();
+                // Identify sections (tasks in tasksCopy where IsGroup == true for this project)
+                var sections = tasksCopy.Where(t => t.IsGroup && t.ProjectId == projId.Value).ToList();
                 var tasksBySection = SortByDate
                     ? projectGroup.GroupBy(t => t.ParentId).OrderBy(g => g.Min(t => t.FinishDate))
                     : projectGroup.GroupBy(t => t.ParentId);

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using OCC.API.Data;
 using OCC.Shared.Models;
 using OCC.API.Hubs;
+using OCC.Shared.DTOs;
 
 namespace OCC.API.Controllers
 {
@@ -173,6 +174,56 @@ namespace OCC.API.Controllers
         private bool EmployeeLoanExists(Guid id)
         {
             return _context.EmployeeLoans.Any(e => e.Id == id);
+        }
+
+        [HttpGet("{id}/statement")]
+        public async Task<ActionResult<LoanStatementDto>> GetLoanStatement(Guid id)
+        {
+            var loan = await _context.EmployeeLoans
+                .Include(l => l.Employee)
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (loan == null) return NotFound();
+
+            // Find all finalized wage run lines for this employee since the loan's start date
+            var wageRunLines = await _context.WageRunLines
+                .Include(w => w.WageRun)
+                .Where(w => w.EmployeeId == loan.EmployeeId && 
+                            w.DeductionLoan > 0 && 
+                            w.WageRun.Status == WageRunStatus.Finalized &&
+                            w.WageRun.EndDate >= loan.StartDate)
+                .OrderBy(w => w.WageRun.RunDate)
+                .ToListAsync();
+
+            var statement = new LoanStatementDto
+            {
+                LoanId = loan.Id,
+                EmployeeName = $"{loan.Employee?.FirstName} {loan.Employee?.LastName}",
+                EmployeeNumber = loan.Employee?.EmployeeNumber ?? string.Empty,
+                PrincipalAmount = loan.PrincipalAmount,
+                InterestRate = loan.InterestRate,
+                MonthlyInstallment = loan.MonthlyInstallment,
+                OutstandingBalance = loan.OutstandingBalance,
+                StartDate = loan.StartDate,
+                Payments = new List<LoanStatementPaymentDto>()
+            };
+
+            decimal currentBalance = loan.PrincipalAmount;
+            foreach (var line in wageRunLines)
+            {
+                currentBalance -= line.DeductionLoan;
+                if (currentBalance < 0) currentBalance = 0;
+
+                statement.Payments.Add(new LoanStatementPaymentDto
+                {
+                    Date = line.WageRun.RunDate,
+                    Amount = line.DeductionLoan,
+                    Notes = $"Deducted in Wage Run ({line.WageRun.StartDate:dd MMM} - {line.WageRun.EndDate:dd MMM yyyy})",
+                    BalanceAfterPayment = currentBalance
+                });
+            }
+
+            return Ok(statement);
         }
     }
 }

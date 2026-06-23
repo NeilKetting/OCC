@@ -59,7 +59,7 @@
             <!-- Loading Overlay -->
             <Border Background="#CC000000" IsVisible="{Binding IsLoading}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-                    <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{DynamicResource BrandOrangeBrush}"/>
+                    <ProgressBar IsIndeterminate="True" Width="200" Height="4"/>
                     <TextBlock Text="Fetching Safety Files..." Foreground="White" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>

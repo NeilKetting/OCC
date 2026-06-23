@@ -13,5 +13,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<EmployeeLoan> AddAsync(EmployeeLoan loan);
         Task UpdateAsync(EmployeeLoan loan);
         Task DeleteAsync(Guid id);
+        Task<OCC.Shared.DTOs.LoanStatementDto?> GetStatementAsync(Guid loanId);
     }
 }

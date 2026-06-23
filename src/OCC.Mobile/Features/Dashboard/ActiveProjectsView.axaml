@@ -65,15 +65,15 @@
                     </StackPanel>
                     
                     <Border Grid.Column="1" 
-                            Background="#6366F11A" 
-                            BorderBrush="#6366F133" 
+                            Background="#233D4D" 
+                            BorderBrush="#4274D9" 
                             BorderThickness="1" 
                             CornerRadius="16" 
                             Padding="12,6"
                             VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Ellipse Width="6" Height="6" Fill="#6366F1" VerticalAlignment="Center"/>
-                            <TextBlock Text="Live" Foreground="#6366F1" FontSize="11" FontWeight="Bold" FontFamily="monospace" VerticalAlignment="Center"/>
+                            <Ellipse Width="6" Height="6" Fill="#5DF8D8" VerticalAlignment="Center"/>
+                            <TextBlock Text="Live" Foreground="#5DF8D8" FontSize="11" FontWeight="Bold" FontFamily="monospace" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -234,7 +234,7 @@
                                                 </Grid>
 
                                                 <!-- Linear progress bar -->
-                                                <ProgressBar Value="{Binding ProgressPct}" Minimum="0" Maximum="100" Height="6" CornerRadius="3" Background="#0DFFFFFF" Foreground="{Binding AccentBrush}"/>
+                                                <ProgressBar Value="{Binding ProgressPct}" Minimum="0" Maximum="100" Height="6" CornerRadius="3" Background="#0DFFFFFF"/>
 
                                                 <!-- Mini Badges -->
                                                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">

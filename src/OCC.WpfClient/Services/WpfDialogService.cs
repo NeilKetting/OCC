@@ -45,5 +45,15 @@ namespace OCC.WpfClient.Services
             }
             return null;
         }
+
+        public Task<string?> ShowInputDialogAsync(string title, string message, string defaultValue = "")
+        {
+            var dialog = new OCC.WpfClient.Infrastructure.Views.Dialogs.InputDialogView(title, message, defaultValue);
+            if (dialog.ShowDialog() == true)
+            {
+                return Task.FromResult<string?>(dialog.InputValue);
+            }
+            return Task.FromResult<string?>(null);
+        }
     }
 }

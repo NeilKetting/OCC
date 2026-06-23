@@ -19,6 +19,7 @@ namespace OCC.WpfClient.Features.ProcurementHub
             services.AddTransient<ProcurementViewModel>();
             services.AddTransient<InventoryListViewModel>();
             services.AddTransient<PurchaseOrderDetailViewModel>();
+            services.AddTransient<PickingOrderViewModel>();
             services.AddTransient<SupplierListViewModel>();
             services.AddTransient<ViewModels.Dialogs.ReceiveStockViewModel>();
             services.AddTransient<ViewModels.Dialogs.FindOrderViewModel>();
@@ -33,6 +34,7 @@ namespace OCC.WpfClient.Features.ProcurementHub
             navigationService.RegisterRoute(NavigationRoutes.Procurement, typeof(ProcurementViewModel));
             navigationService.RegisterRoute(NavigationRoutes.Inventory, typeof(InventoryListViewModel));
             navigationService.RegisterRoute(NavigationRoutes.PurchaseOrder, typeof(PurchaseOrderDetailViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.Picking, typeof(PickingOrderViewModel));
             navigationService.RegisterRoute(NavigationRoutes.Suppliers, typeof(SupplierListViewModel));
         }
 
@@ -67,6 +69,13 @@ namespace OCC.WpfClient.Features.ProcurementHub
                 "Operations",
                 iconColor: "#FB923C",
                 iconCode: "\uE8A1"));
+
+            procurement.Children.Add(new NavItem(
+                "Picking Orders",
+                NavigationRoutes.Picking,
+                "Operations",
+                iconColor: "#A855F7",
+                iconCode: "\uE73E"));
 
             yield return procurement;
         }

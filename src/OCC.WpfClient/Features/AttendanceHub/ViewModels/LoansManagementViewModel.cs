@@ -32,26 +32,17 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private decimal _interestRate = 0m;
         [ObservableProperty] private DateTime _loanStartDate = DateTime.Today;
         [ObservableProperty] private string _loanNotes = string.Empty;
+        [ObservableProperty] private string _selectedPaymentFrequency = "Fortnightly";
+        [ObservableProperty] private int _numberOfInstallments = 10;
 
         // Computed repayment preview
-        public decimal TotalRepayableAmount => CalculateTotalRepayable();
-        public string RepaymentDurationText
-        {
-            get
-            {
-                if (PrincipalAmount <= 0 || MonthlyInstallment <= 0) return "-";
-                var total = TotalRepayableAmount;
-                if (total == 0) return "Indefinite (installment too low)";
-                var payments = (double)(total / MonthlyInstallment);
-                return SelectedEmployee?.RateType == OCC.Shared.Models.RateType.Hourly
-                    ? $"{payments:N1} Fortnights"
-                    : $"{payments:N1} Months";
-            }
-        }
-
-        partial void OnPrincipalAmountChanged(decimal value)     { OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
-        partial void OnMonthlyInstallmentChanged(decimal value)  { OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
-        partial void OnInterestRateChanged(decimal value)        { OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
+        public decimal TotalRepayableAmount => MonthlyInstallment * NumberOfInstallments;
+        public string RepaymentDurationText => $"{NumberOfInstallments} {SelectedPaymentFrequency}";
+ 
+        partial void OnPrincipalAmountChanged(decimal value)     { RecalculateInstallment(); OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
+        partial void OnInterestRateChanged(decimal value)        { RecalculateInstallment(); OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
+        partial void OnSelectedPaymentFrequencyChanged(string value) { RecalculateInstallment(); OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
+        partial void OnNumberOfInstallmentsChanged(int value)    { RecalculateInstallment(); OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
         partial void OnSelectedEmployeeChanged(EmployeeSummaryDto? value)  { OnPropertyChanged(nameof(RepaymentDurationText)); }
 
         public LoansManagementViewModel(
@@ -123,7 +114,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     InterestRate       = InterestRate,
                     StartDate          = LoanStartDate,
                     IsActive           = true,
-                    Notes              = LoanNotes
+                    Notes              = $"[Term: {SelectedPaymentFrequency}, Installments: {NumberOfInstallments}] {LoanNotes}".Trim()
                 };
                 await _loanService.AddAsync(loan);
                 IsAddPanelVisible = false;
@@ -169,13 +160,40 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             try
             {
                 IsBusy = true;
-                BusyText = "Generating PDF...";
+                BusyText = "Generating Agreement PDF...";
                 var path = await _pdfService.GenerateLoanSchedulePdfAsync(loan, loan.Employee);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error printing loan schedule");
+                _logger.LogError(ex, "Error printing loan agreement");
+                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task PrintLoanStatementAsync(EmployeeLoan? loan)
+        {
+            if (loan == null) return;
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Statement PDF...";
+                var statement = await _loanService.GetStatementAsync(loan.Id);
+                if (statement == null)
+                {
+                    System.Windows.MessageBox.Show("Failed to retrieve statement data.", "Error",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+                var path = await _pdfService.GenerateLoanStatementPdfAsync(statement);
+                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing loan statement");
                 System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
@@ -191,25 +209,30 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             InterestRate       = 0;
             LoanStartDate      = DateTime.Today;
             LoanNotes          = string.Empty;
+            SelectedPaymentFrequency = "Fortnightly";
+            NumberOfInstallments = 10;
             if (Employees.Any()) SelectedEmployee = Employees.First();
         }
 
-        /// <summary>
-        /// Amortized total repayable amount using monthly compounding.
-        /// Formula: n = -log(1 - (r × P) / I) / log(1 + r);  Total = n × I
-        /// </summary>
-        private decimal CalculateTotalRepayable()
+        private void RecalculateInstallment()
         {
-            if (MonthlyInstallment <= 0 || PrincipalAmount <= 0) return 0;
-            if (InterestRate <= 0) return PrincipalAmount;
+            if (PrincipalAmount <= 0 || NumberOfInstallments <= 0) return;
 
-            double r = (double)InterestRate / 100.0 / 12.0;
+            if (InterestRate <= 0)
+            {
+                MonthlyInstallment = Math.Round(PrincipalAmount / NumberOfInstallments, 2);
+                return;
+            }
+
+            double r = SelectedPaymentFrequency == "Fortnightly"
+                ? (double)InterestRate / 100.0 / 26.0
+                : (double)InterestRate / 100.0 / 12.0;
+
             double p = (double)PrincipalAmount;
-            double i = (double)MonthlyInstallment;
-            if (i <= p * r) return 0;
+            double n = NumberOfInstallments;
 
-            double n = -Math.Log(1 - (r * p) / i) / Math.Log(1 + r);
-            return (decimal)(n * i);
+            double installment = (p * r) / (1 - Math.Pow(1 + r, -n));
+            MonthlyInstallment = Math.Round((decimal)installment, 2);
         }
     }
 }
