@@ -6,7 +6,9 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +23,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly ILogger<LoansManagementViewModel> _logger;
 
         [ObservableProperty] private ObservableCollection<EmployeeLoan> _loans = new();
+        partial void OnLoansChanged(ObservableCollection<EmployeeLoan> value) => OnPropertyChanged(nameof(LoansView));
         [ObservableProperty] private EmployeeLoan? _selectedLoan;
         [ObservableProperty] private bool _isAddPanelVisible;
 
@@ -234,5 +237,188 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             double installment = (p * r) / (1 - Math.Pow(1 + r, -n));
             MonthlyInstallment = Math.Round((decimal)installment, 2);
         }
+
+        // ─── Search and Filtering ──────────────────────────────────────────
+
+        [ObservableProperty] private string _searchQuery = string.Empty;
+        [ObservableProperty] private string _branchFilter = "All";
+        [ObservableProperty] private string _statusFilter = "All";
+        [ObservableProperty] private bool _isAdvancedFiltersVisible;
+        
+        [ObservableProperty] private decimal? _minPrincipal;
+        [ObservableProperty] private decimal? _maxPrincipal;
+        [ObservableProperty] private decimal? _minInstallment;
+        [ObservableProperty] private decimal? _maxInstallment;
+        [ObservableProperty] private decimal? _minBalance;
+        [ObservableProperty] private decimal? _maxBalance;
+        [ObservableProperty] private decimal? _minInterestRate;
+        [ObservableProperty] private decimal? _maxInterestRate;
+        [ObservableProperty] private DateTime? _startDateFrom;
+        [ObservableProperty] private DateTime? _startDateTo;
+
+        public ICollectionView LoansView
+        {
+            get
+            {
+                var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Loans);
+                view.Filter = FilterLoans;
+                return view;
+            }
+        }
+
+        partial void OnSearchQueryChanged(string value) => LoansView.Refresh();
+        partial void OnBranchFilterChanged(string value) => LoansView.Refresh();
+        partial void OnStatusFilterChanged(string value) => LoansView.Refresh();
+        partial void OnMinPrincipalChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMaxPrincipalChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMinInstallmentChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMaxInstallmentChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMinBalanceChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMaxBalanceChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMinInterestRateChanged(decimal? value) => LoansView.Refresh();
+        partial void OnMaxInterestRateChanged(decimal? value) => LoansView.Refresh();
+        partial void OnStartDateFromChanged(DateTime? value) => LoansView.Refresh();
+        partial void OnStartDateToChanged(DateTime? value) => LoansView.Refresh();
+
+        private bool FilterLoans(object obj)
+        {
+            if (obj is not EmployeeLoan loan) return false;
+
+            // Search query (Employee Name)
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var name = loan.Employee?.DisplayName ?? string.Empty;
+                if (!name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            // Branch filter
+            if (BranchFilter != "All" && !string.IsNullOrWhiteSpace(BranchFilter))
+            {
+                var branch = loan.Employee?.Branch.ToString() ?? string.Empty;
+                if (!branch.Equals(BranchFilter, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            // Status filter
+            if (StatusFilter != "All" && !string.IsNullOrWhiteSpace(StatusFilter))
+            {
+                bool expectedActive = StatusFilter.Equals("Active", StringComparison.OrdinalIgnoreCase);
+                if (loan.IsActive != expectedActive)
+                    return false;
+            }
+
+            // Principal
+            if (MinPrincipal.HasValue && loan.PrincipalAmount < MinPrincipal.Value) return false;
+            if (MaxPrincipal.HasValue && loan.PrincipalAmount > MaxPrincipal.Value) return false;
+
+            // Balance
+            if (MinBalance.HasValue && loan.OutstandingBalance < MinBalance.Value) return false;
+            if (MaxBalance.HasValue && loan.OutstandingBalance > MaxBalance.Value) return false;
+
+            // Installment
+            if (MinInstallment.HasValue && loan.MonthlyInstallment < MinInstallment.Value) return false;
+            if (MaxInstallment.HasValue && loan.MonthlyInstallment > MaxInstallment.Value) return false;
+
+            // Interest Rate
+            if (MinInterestRate.HasValue)
+            {
+                decimal rateVal = loan.InterestRate;
+                if (rateVal < 1m && MinInterestRate.Value > 1m) rateVal = rateVal * 100m;
+                if (rateVal < MinInterestRate.Value) return false;
+            }
+            if (MaxInterestRate.HasValue)
+            {
+                decimal rateVal = loan.InterestRate;
+                if (rateVal < 1m && MaxInterestRate.Value > 1m) rateVal = rateVal * 100m;
+                if (rateVal > MaxInterestRate.Value) return false;
+            }
+
+            // Start Date
+            if (StartDateFrom.HasValue && loan.StartDate < StartDateFrom.Value) return false;
+            if (StartDateTo.HasValue && loan.StartDate > StartDateTo.Value) return false;
+
+            return true;
+        }
+
+        [RelayCommand]
+        public void ToggleAdvancedFilters() => IsAdvancedFiltersVisible = !IsAdvancedFiltersVisible;
+
+        [RelayCommand]
+        public void ClearFilters()
+        {
+            SearchQuery = string.Empty;
+            BranchFilter = "All";
+            StatusFilter = "All";
+            MinPrincipal = null;
+            MaxPrincipal = null;
+            MinInstallment = null;
+            MaxInstallment = null;
+            MinBalance = null;
+            MaxBalance = null;
+            MinInterestRate = null;
+            MaxInterestRate = null;
+            StartDateFrom = null;
+            StartDateTo = null;
+            LoansView.Refresh();
+        }
+
+        [RelayCommand]
+        public async Task PrintFilteredLoansAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Report PDF...";
+                
+                var filteredItems = LoansView.Cast<EmployeeLoan>().ToList();
+                
+                var cols = new List<ReportColumnDefinition>
+                {
+                    new() { Header = "Employee", PropertyName = "Employee", Width = 2.0 },
+                    new() { Header = "Branch", PropertyName = "Branch", Width = 1.0 },
+                    new() { Header = "Principal (R)", PropertyName = "Principal", Width = 1.0 },
+                    new() { Header = "Installment (R)", PropertyName = "Installment", Width = 1.0 },
+                    new() { Header = "Balance (R)", PropertyName = "Balance", Width = 1.0 },
+                    new() { Header = "Interest (%)", PropertyName = "InterestPercent", Width = 0.8 },
+                    new() { Header = "Start Date", PropertyName = "StartDate", Width = 1.2 },
+                    new() { Header = "Status", PropertyName = "Status", Width = 0.8 }
+                };
+
+                var printItems = filteredItems.Select(l => new LoanPrintModel
+                {
+                    Employee = l.Employee?.DisplayName ?? "Unknown",
+                    Branch = l.Employee?.Branch.ToString() ?? "Unknown",
+                    Principal = l.PrincipalAmount,
+                    Installment = l.MonthlyInstallment,
+                    Balance = l.OutstandingBalance,
+                    InterestPercent = (double)(l.InterestRate < 1m && l.InterestRate > 0m ? l.InterestRate * 100m : l.InterestRate),
+                    StartDate = l.StartDate,
+                    Status = l.IsActive ? "ACTIVE" : "PAID"
+                }).ToList();
+
+                var path = await _pdfService.GenerateListReportPdfAsync("Staff Loans Report", printItems, cols);
+                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing filtered loans");
+                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+    }
+
+    public class LoanPrintModel
+    {
+        public string Employee { get; set; } = string.Empty;
+        public string Branch { get; set; } = string.Empty;
+        public decimal Principal { get; set; }
+        public decimal Installment { get; set; }
+        public decimal Balance { get; set; }
+        public double InterestPercent { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = string.Empty;
     }
 }
