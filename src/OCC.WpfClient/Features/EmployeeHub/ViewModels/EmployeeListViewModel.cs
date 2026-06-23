@@ -225,10 +225,10 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
-            string title = targets.Count > 1 ? "Delete Multiple Employees" : "Delete Employee";
+            string title = targets.Count > 1 ? "Deactivate Multiple Employees" : "Deactivate Employee";
             string message = targets.Count > 1 
-                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
-                : $"Are you sure you want to delete '{targets[0].FirstName} {targets[0].LastName}'? This action cannot be undone.";
+                ? $"You are about to make {targets.Count} employees inactive. Are you sure you want to proceed?"
+                : $"Are you sure you want to make '{targets[0].FirstName} {targets[0].LastName}' inactive?";
 
             var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;
@@ -236,7 +236,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             try
             {
                 IsBusy = true;
-                BusyText = targets.Count > 1 ? "Deleting employees..." : "Deleting employee...";
+                BusyText = targets.Count > 1 ? "Deactivating employees..." : "Deactivating employee...";
                 foreach (var t in targets)
                 {
                     await _employeeService.DeleteEmployeeAsync(t.Id);

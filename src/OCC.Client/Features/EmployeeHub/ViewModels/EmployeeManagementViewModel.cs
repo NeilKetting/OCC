@@ -285,7 +285,7 @@ namespace OCC.Client.Features.EmployeeHub.ViewModels
 
             try
             {
-                BusyText = $"Deleting {employee.FirstName}...";
+                BusyText = $"Deactivating {employee.FirstName}...";
                 IsBusy = true;
                 await _employeeService.DeleteEmployeeAsync(employee.Id);
                 await LoadData();
@@ -294,12 +294,12 @@ namespace OCC.Client.Features.EmployeeHub.ViewModels
             {
                 if (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
                 {
-                    ErrorMessage = "Cannot delete employee. They may be assigned to tasks, managing projects, or in a team. Please check dependencies.";
+                    ErrorMessage = "Cannot deactivate employee. They may be assigned to tasks, managing projects, or in a team. Please check dependencies.";
                     CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new UpdateStatusMessage(ErrorMessage));
                 }
                 else
                 {
-                    ErrorMessage = $"Error deleting employee: {ex.Message}";
+                    ErrorMessage = $"Error deactivating employee: {ex.Message}";
                 }
                 System.Diagnostics.Debug.WriteLine($"[EmployeeManagementViewModel] Delete Error: {ex.Message}");
             }

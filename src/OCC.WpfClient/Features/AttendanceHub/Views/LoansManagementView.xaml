@@ -40,59 +40,79 @@
                     </Border>
 
                     <!-- Form Fields -->
-                    <ScrollViewer Grid.Row="1" Padding="16,12">
+                    <ScrollViewer Grid.Row="1" Padding="16,10">
                         <StackPanel>
                             <!-- Employee -->
-                            <TextBlock Text="EMPLOYEE" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBlock Text="EMPLOYEE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding Employees}"
                                       SelectedItem="{Binding SelectedEmployee}"
                                       Style="{StaticResource ModernComboBox}"
                                       DisplayMemberPath="DisplayName"
-                                      Margin="0,0,0,14"/>
+                                      Margin="0,0,0,10"/>
 
                             <!-- Principal -->
-                            <TextBlock Text="PRINCIPAL AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBlock Text="PRINCIPAL AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding PrincipalAmount, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
-                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
+                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,10"/>
 
-                            <!-- Payment Frequency -->
-                            <TextBlock Text="PAYMENT FREQUENCY" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                            <ComboBox SelectedValue="{Binding SelectedPaymentFrequency, Mode=TwoWay}"
-                                      SelectedValuePath="Content"
-                                      Style="{StaticResource ModernComboBox}"
-                                      Margin="0,0,0,14">
-                                <ComboBoxItem Content="Fortnightly"/>
-                                <ComboBoxItem Content="Monthly"/>
-                            </ComboBox>
-
-                            <!-- Number of Installments -->
-                            <TextBlock Text="NUMBER OF INSTALMENTS" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                            <TextBox Text="{Binding NumberOfInstallments, UpdateSourceTrigger=LostFocus}"
-                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
+                            <!-- Frequency & Installments side-by-side -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel>
+                                    <TextBlock Text="FREQUENCY" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                    <ComboBox SelectedValue="{Binding SelectedPaymentFrequency, Mode=TwoWay}"
+                                              SelectedValuePath="Content"
+                                              Style="{StaticResource ModernComboBox}"
+                                              Height="32">
+                                        <ComboBoxItem Content="Fortnightly"/>
+                                        <ComboBoxItem Content="Monthly"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="INSTALMENTS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding NumberOfInstallments, UpdateSourceTrigger=LostFocus}"
+                                             Style="{StaticResource ModernInput}" TextAlignment="Right" Height="32"/>
+                                </StackPanel>
+                            </Grid>
 
                             <!-- Calculated Installment -->
-                            <TextBlock Text="CALCULATED INSTALMENT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBlock Text="CALCULATED INSTALMENT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding MonthlyInstallment, StringFormat='F2', Mode=OneWay}"
                                      IsReadOnly="True" Focusable="False"
-                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,14"/>
+                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,10"/>
 
-                            <!-- Interest Rate -->
-                            <TextBlock Text="INTEREST RATE (%)" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                            <TextBox Text="{Binding InterestRate, StringFormat='0.00', UpdateSourceTrigger=LostFocus}"
-                                     Style="{StaticResource ModernInput}" TextAlignment="Right" Margin="0,0,0,4"/>
-                            <TextBlock Text="Leave 0 for interest-free" Style="{StaticResource LabelText}" 
-                                       Opacity="0.5" FontSize="10" Margin="0,0,0,14"/>
-
-                            <!-- Start Date -->
-                            <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
-                            <DatePicker SelectedDate="{Binding LoanStartDate}"
-                                        Style="{StaticResource ModernDatePicker}" Margin="0,0,0,14"/>
+                            <!-- Interest Rate & Start Date side-by-side -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel>
+                                    <TextBlock Text="INTEREST RATE (%)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding InterestRate, StringFormat='0.00', UpdateSourceTrigger=LostFocus}"
+                                             Style="{StaticResource ModernInput}" TextAlignment="Right" Height="32"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding LoanStartDate}"
+                                                Style="{StaticResource ModernDatePicker}" Height="32"/>
+                                </StackPanel>
+                            </Grid>
 
                             <!-- Notes -->
-                            <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                            <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding LoanNotes, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernInput}" Height="60"
-                                     TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20"/>
+                                     Style="{StaticResource ModernInput}" Height="45"
+                                     TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,15"/>
 
                             <!-- Repayment Summary Card -->
                             <Border Background="#0AFFFFFF" CornerRadius="6" Padding="12" 
@@ -173,76 +193,71 @@
         </Border>
 
         <!-- ══════════════════ SEARCH & FILTERS TOOLBAR ══════════════════ -->
-        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,10,16,5">
+        <!-- ══════════════════ SEARCH & FILTERS TOOLBAR ══════════════════ -->
+        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="12,8" Margin="16,10,16,5">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Row 1: Search & Core Filters -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" /> <!-- Search Icon -->
-                        <ColumnDefinition Width="220" /> <!-- Search TextBox -->
-                        <ColumnDefinition Width="Auto" /> <!-- Divider -->
-                        <ColumnDefinition Width="Auto" /> <!-- Branch Label -->
-                        <ColumnDefinition Width="130" /> <!-- Branch ComboBox -->
-                        <ColumnDefinition Width="Auto" /> <!-- Status Label -->
-                        <ColumnDefinition Width="130" /> <!-- Status ComboBox -->
-                        <ColumnDefinition Width="*" />    <!-- Spacer -->
-                        <ColumnDefinition Width="Auto" /> <!-- Buttons -->
-                    </Grid.ColumnDefinitions>
-
+                <!-- Row 1: Search & Core Filters Wrap Layout -->
+                <WrapPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Search -->
-                    <TextBlock Text="&#xE11A;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="5,0,5,0"/>
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" Height="30" Padding="8,0" BorderThickness="0" Background="Transparent"
-                             ap:WatermarkProperties.Watermark="Search by Employee..."/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
+                        <TextBlock Text="&#xE11A;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernInput}" Width="170" Height="30" VerticalContentAlignment="Center"
+                                 ap:WatermarkProperties.Watermark="Search Employee..."/>
+                    </StackPanel>
 
                     <!-- Divider -->
-                    <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                    <Border Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="0,0,16,0" VerticalAlignment="Center"/>
 
                     <!-- Branch -->
-                    <TextBlock Grid.Column="3" Text="Branch: " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.8"/>
-                    <ComboBox Grid.Column="4" SelectedValue="{Binding BranchFilter, Mode=TwoWay}" SelectedValuePath="Content"
-                              Height="30" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="All"/>
-                        <ComboBoxItem Content="JHB"/>
-                        <ComboBoxItem Content="CPT"/>
-                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
+                        <TextBlock Text="Branch: " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0" Opacity="0.8"/>
+                        <ComboBox SelectedValue="{Binding BranchFilter, Mode=TwoWay}" SelectedValuePath="Content"
+                                  Width="100" Height="30" Style="{StaticResource ModernComboBox}">
+                            <ComboBoxItem Content="All"/>
+                            <ComboBoxItem Content="JHB"/>
+                            <ComboBoxItem Content="CPT"/>
+                        </ComboBox>
+                    </StackPanel>
 
                     <!-- Status -->
-                    <TextBlock Grid.Column="5" Text="Status: " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="15,0,8,0" Opacity="0.8"/>
-                    <ComboBox Grid.Column="6" SelectedValue="{Binding StatusFilter, Mode=TwoWay}" SelectedValuePath="Content"
-                              Height="30" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="All"/>
-                        <ComboBoxItem Content="Active"/>
-                        <ComboBoxItem Content="Paid"/>
-                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,24,4">
+                        <TextBlock Text="Status: " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0" Opacity="0.8"/>
+                        <ComboBox SelectedValue="{Binding StatusFilter, Mode=TwoWay}" SelectedValuePath="Content"
+                                  Width="100" Height="30" Style="{StaticResource ModernComboBox}">
+                            <ComboBoxItem Content="All"/>
+                            <ComboBoxItem Content="Active"/>
+                            <ComboBoxItem Content="Paid"/>
+                        </ComboBox>
+                    </StackPanel>
 
                     <!-- Action Buttons -->
-                    <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
                         <Button Command="{Binding ToggleAdvancedFiltersCommand}" Style="{StaticResource GhostButton}" Height="30" Padding="10,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE71C;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,6,0" FontSize="12"/>
-                                <TextBlock Text="ADVANCED FILTERS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
+                                <TextBlock Text="&#xE71C;" Style="{StaticResource SymbolButtonIcon}" Foreground="White" Margin="0,0,6,0" FontSize="12"/>
+                                <TextBlock Text="ADVANCED FILTERS" Foreground="White" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding ClearFiltersCommand}" Style="{StaticResource GhostButton}" Height="30" Padding="10,0" Margin="8,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE894;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,6,0" FontSize="12" Foreground="#E81123"/>
-                                <TextBlock Text="CLEAR" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
+                                <TextBlock Text="&#xE894;" Style="{StaticResource SymbolButtonIcon}" Foreground="#EF5350" Margin="0,0,6,0" FontSize="12"/>
+                                <TextBlock Text="CLEAR" Foreground="#EF5350" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding PrintFilteredLoansCommand}" Style="{StaticResource ToolbarButton}" Height="30" Margin="8,0,0,0" Foreground="{StaticResource TextMain}">
+                        <Button Command="{Binding PrintFilteredLoansCommand}" Style="{StaticResource ToolbarButton}" Height="30" Margin="8,0,0,0">
                             <StackPanel Orientation="Horizontal" Margin="8,0">
                                 <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="White" FontSize="12" Margin="0,0,6,0"/>
-                                <TextBlock Text="PRINT LIST" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
+                                <TextBlock Text="PRINT LIST" Foreground="White" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
-                </Grid>
+                </WrapPanel>
 
                 <!-- Row 2: Advanced Range Filters -->
                 <Grid Grid.Row="1" Margin="0,10,0,0" Visibility="{Binding IsAdvancedFiltersVisible, Converter={StaticResource BoolToVis}}">
@@ -321,7 +336,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Interest %" Binding="{Binding InterestRate, StringFormat='0.00%'}" Width="80">
+                <DataGridTextColumn Header="Interest %" Binding="{Binding InterestRate, StringFormat='{}{0:0.00}%'}" Width="80">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                     </DataGridTextColumn.ElementStyle>

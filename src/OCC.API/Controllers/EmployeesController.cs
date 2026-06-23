@@ -158,27 +158,28 @@ namespace OCC.API.Controllers
                     return NotFound();
                 }
 
-                // Safe Deletion Checks
+                // Safe Deactivation Checks
                 
                 // 1. Task Assignments
                 if (await _context.TaskAssignments.AnyAsync(ta => ta.AssigneeId == id))
                 {
-                    return Conflict("Cannot delete employee: They are assigned to active tasks.");
+                    return Conflict("Cannot deactivate employee: They are assigned to active tasks.");
                 }
 
                 // 2. Project Site Manager
                 if (await _context.Projects.AnyAsync(p => p.SiteManagerId == id))
                 {
-                    return Conflict("Cannot delete employee: They are listed as Site Manager on a project.");
+                    return Conflict("Cannot deactivate employee: They are listed as Site Manager on a project.");
                 }
 
                 // 3. Team Membership
                 if (await _context.TeamMembers.AnyAsync(tm => tm.EmployeeId == id))
                 {
-                    return Conflict("Cannot delete employee: They are currently a member of a team.");
+                    return Conflict("Cannot deactivate employee: They are currently a member of a team.");
                 }
 
-                _context.Employees.Remove(employee);
+                employee.Status = EmployeeStatus.Inactive;
+                _context.Entry(employee).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Employee", "Delete", id);
@@ -187,7 +188,7 @@ namespace OCC.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting employee {Id}", id);
+                _logger.LogError(ex, "Error deactivating employee {Id}", id);
                 return StatusCode(500, "Internal server error");
             }
         }
