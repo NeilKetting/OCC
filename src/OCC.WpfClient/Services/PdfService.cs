@@ -1908,20 +1908,12 @@ namespace OCC.WpfClient.Services
         }
 
         /// <summary>
-        /// Amortized total repayable: n = -log(1 - r*P/I) / log(1+r);  Total = n*I
+        /// Flat simple interest total repayable: Total = P + (P * rate / 100)
         /// </summary>
-        private decimal CalculateLoanTotalRepayable(decimal principal, decimal installment, decimal annualRate)
+        private decimal CalculateLoanTotalRepayable(decimal principal, decimal installment, decimal rate)
         {
-            if (installment <= 0 || principal <= 0) return 0;
-            if (annualRate <= 0) return principal;
-
-            double r = (double)annualRate / 100.0 / 12.0;
-            double p = (double)principal;
-            double i = (double)installment;
-            if (i <= p * r) return 0;
-
-            double n = -Math.Log(1 - (r * p) / i) / Math.Log(1 + r);
-            return (decimal)(n * i);
+            if (principal <= 0) return 0;
+            return principal + (principal * rate / 100);
         }
 
         public async Task<string> GenerateLoanStatementPdfAsync(OCC.Shared.DTOs.LoanStatementDto statement)

@@ -82,6 +82,9 @@ namespace OCC.Client.Features.EmployeeHub.ViewModels
         private int _selectedBranchFilterIndex = 0;
 
         [ObservableProperty]
+        private int _selectedStatusFilterIndex = 0; // 0 = Active Only, 1 = Inactive Only, 2 = All
+
+        [ObservableProperty]
         private TeamManagementViewModel _teamsVM;
 
         [ObservableProperty]
@@ -456,6 +459,11 @@ namespace OCC.Client.Features.EmployeeHub.ViewModels
             FilterEmployees();
         }
 
+        partial void OnSelectedStatusFilterIndexChanged(int value)
+        {
+            FilterEmployees();
+        }
+
         partial void OnSelectedEmployeeChanged(EmployeeSummaryDto? value)
         {
             // Selection logic only, double-click handles edit now
@@ -496,6 +504,14 @@ namespace OCC.Client.Features.EmployeeHub.ViewModels
             {
                 1 => filtered.Where(s => s.Branch == "Johannesburg"),
                 2 => filtered.Where(s => s.Branch == "Cape Town"),
+                _ => filtered
+            };
+
+            // 4. Status Filter
+            filtered = SelectedStatusFilterIndex switch
+            {
+                0 => filtered.Where(e => e.Status == EmployeeStatus.Active),
+                1 => filtered.Where(e => e.Status == EmployeeStatus.Inactive || e.Status == EmployeeStatus.Terminated),
                 _ => filtered
             };
 

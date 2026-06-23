@@ -279,14 +279,43 @@ namespace OCC.API.Controllers
                                  (decimal)line.Overtime15Hours * line.HourlyRate * 1.5m +
                                  (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
                     
-                // E. Loans
+                // E. Loans (deducted according to frequency specified in loan agreement)
                 var empLoans = activeLoans.Where(l => l.EmployeeId == emp.Id).ToList();
                 decimal totalLoanDeduction = 0;
                 foreach (var loan in empLoans)
                 {
-                   var deduction = loan.MonthlyInstallment;
-                   if (deduction > loan.OutstandingBalance) deduction = loan.OutstandingBalance;
-                   totalLoanDeduction += deduction;
+                    // Parse frequency from Notes
+                    string frequency = "";
+                    if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
+                    {
+                        int termEnd = loan.Notes.IndexOf(']');
+                        string header = loan.Notes.Substring(1, termEnd - 1);
+                        string[] parts = header.Split(',');
+                        foreach (var part in parts)
+                        {
+                            if (part.Contains("Term:"))
+                            {
+                                frequency = part.Replace("Term:", "").Trim();
+                            }
+                        }
+                    }
+
+                    // Fallback to legacy matching if not specified
+                    if (string.IsNullOrEmpty(frequency))
+                    {
+                        frequency = emp.RateType == RateType.Hourly ? "Fortnightly" : "Monthly";
+                    }
+
+                    // Only deduct if the frequency matches the wage run type
+                    bool matchesRun = (rateType == RateType.Hourly && frequency == "Fortnightly") ||
+                                      (rateType == RateType.MonthlySalary && frequency == "Monthly");
+
+                    if (matchesRun)
+                    {
+                        var deduction = loan.MonthlyInstallment;
+                        if (deduction > loan.OutstandingBalance) deduction = loan.OutstandingBalance;
+                        totalLoanDeduction += deduction;
+                    }
                 }
                 line.DeductionLoan = totalLoanDeduction;
 
@@ -318,14 +347,55 @@ namespace OCC.API.Controllers
             {
                 if (line.DeductionLoan > 0)
                 {
+                    // Determine rateType of the finalized wage run
+                    var rateType = RateType.Hourly; // Default
+                    if (!string.IsNullOrEmpty(run.PayType) && Enum.TryParse<RateType>(run.PayType, out var parsedType))
+                    {
+                        rateType = parsedType;
+                    }
+
                     // Find active loans for this employee
                     var activeLoans = await _context.EmployeeLoans
                         .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0)
                         .OrderBy(l => l.StartDate)
                         .ToListAsync();
 
-                    decimal remainingDeduction = line.DeductionLoan;
+                    // Filter loans by frequency matching this wage run
+                    var matchingLoans = new List<EmployeeLoan>();
                     foreach (var loan in activeLoans)
+                    {
+                        string frequency = "";
+                        if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
+                        {
+                            int termEnd = loan.Notes.IndexOf(']');
+                            string header = loan.Notes.Substring(1, termEnd - 1);
+                            string[] parts = header.Split(',');
+                            foreach (var part in parts)
+                            {
+                                if (part.Contains("Term:"))
+                                {
+                                    frequency = part.Replace("Term:", "").Trim();
+                                }
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(frequency))
+                        {
+                            var employee = await _context.Employees.FindAsync(loan.EmployeeId);
+                            frequency = employee?.RateType == RateType.Hourly ? "Fortnightly" : "Monthly";
+                        }
+
+                        bool matchesRun = (rateType == RateType.Hourly && frequency == "Fortnightly") ||
+                                          (rateType == RateType.MonthlySalary && frequency == "Monthly");
+
+                        if (matchesRun)
+                        {
+                            matchingLoans.Add(loan);
+                        }
+                    }
+
+                    decimal remainingDeduction = line.DeductionLoan;
+                    foreach (var loan in matchingLoans)
                     {
                         if (remainingDeduction <= 0) break;
 

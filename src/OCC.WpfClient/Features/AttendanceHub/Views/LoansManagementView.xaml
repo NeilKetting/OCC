@@ -146,10 +146,10 @@
                     <!-- Panel Footer Actions -->
                     <Border Grid.Row="2" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Cancel" Style="{StaticResource GhostButton}"
+                            <Button Content="Cancel" Style="{StaticResource CancelButton}"
                                     Command="{Binding CancelAddCommand}" Margin="0,0,8,0"/>
-                            <Button Content="SAVE LOAN" Style="{StaticResource PrimaryButton}"
-                                    Command="{Binding SaveLoanCommand}"/>
+                            <Button Content="SAVE &amp; PRINT" Style="{StaticResource CreateIconButton}"
+                                    Command="{Binding SaveAndPrintLoanCommand}" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -192,7 +192,6 @@
             </Grid>
         </Border>
 
-        <!-- ══════════════════ SEARCH & FILTERS TOOLBAR ══════════════════ -->
         <!-- ══════════════════ SEARCH & FILTERS TOOLBAR ══════════════════ -->
         <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="12,8" Margin="16,10,16,5">
             <Grid>

@@ -87,10 +87,17 @@
                         </ComboBox>
 
                         <ComboBox SelectedIndex="{Binding SelectedBranchFilterIndex}" 
-                                  Height="30" Style="{StaticResource ModernComboBox}">
+                                  Height="30" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0">
                             <ComboBoxItem Content="All Branches" />
                             <ComboBoxItem Content="Johannesburg" />
                             <ComboBoxItem Content="Cape Town" />
+                        </ComboBox>
+
+                        <ComboBox SelectedIndex="{Binding SelectedStatusFilterIndex}" 
+                                  Height="30" Style="{StaticResource ModernComboBox}">
+                            <ComboBoxItem Content="Active Only" />
+                            <ComboBoxItem Content="Inactive Only" />
+                            <ComboBoxItem Content="All Statuses" />
                         </ComboBox>
                     </StackPanel>
 

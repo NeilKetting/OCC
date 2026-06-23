@@ -39,7 +39,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private int _numberOfInstallments = 10;
 
         // Computed repayment preview
-        public decimal TotalRepayableAmount => MonthlyInstallment * NumberOfInstallments;
+        public decimal TotalRepayableAmount => PrincipalAmount + (PrincipalAmount * InterestRate / 100);
         public string RepaymentDurationText => $"{NumberOfInstallments} {SelectedPaymentFrequency}";
  
         partial void OnPrincipalAmountChanged(decimal value)     { RecalculateInstallment(); OnPropertyChanged(nameof(TotalRepayableAmount)); OnPropertyChanged(nameof(RepaymentDurationText)); }
@@ -73,7 +73,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 var employees = await _employeeService.GetEmployeesAsync();
                 Employees = new ObservableCollection<EmployeeSummaryDto>(
-                    employees.OrderBy(e => e.LastName));
+                    employees.Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.LastName));
                 if (Employees.Any()) SelectedEmployee = Employees.First();
             }
             catch (Exception ex)
@@ -112,7 +112,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 {
                     EmployeeId         = SelectedEmployee.Id,
                     PrincipalAmount    = PrincipalAmount,
-                    OutstandingBalance = PrincipalAmount,
+                    OutstandingBalance = TotalRepayableAmount,
                     MonthlyInstallment = MonthlyInstallment,
                     InterestRate       = InterestRate,
                     StartDate          = LoanStartDate,
@@ -128,6 +128,59 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 _logger.LogError(ex, "Error saving loan");
                 System.Windows.MessageBox.Show($"Failed to save loan:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task SaveAndPrintLoanAsync()
+        {
+            if (SelectedEmployee == null || PrincipalAmount <= 0 || MonthlyInstallment <= 0) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Saving loan...";
+                var loan = new EmployeeLoan
+                {
+                    EmployeeId         = SelectedEmployee.Id,
+                    PrincipalAmount    = PrincipalAmount,
+                    OutstandingBalance = TotalRepayableAmount,
+                    MonthlyInstallment = MonthlyInstallment,
+                    InterestRate       = InterestRate,
+                    StartDate          = LoanStartDate,
+                    IsActive           = true,
+                    Notes              = $"[Term: {SelectedPaymentFrequency}, Installments: {NumberOfInstallments}] {LoanNotes}".Trim()
+                };
+                
+                var savedLoan = await _loanService.AddAsync(loan);
+                
+                var emp = SelectedEmployee;
+                
+                IsAddPanelVisible = false;
+                ResetAddForm();
+                await LoadDataAsync();
+
+                if (savedLoan != null)
+                {
+                    savedLoan.Employee = new Employee
+                    {
+                        FirstName = emp.FirstName,
+                        LastName = emp.LastName,
+                        EmployeeNumber = emp.EmployeeNumber
+                    };
+
+                    IsBusy = true;
+                    BusyText = "Generating Agreement PDF...";
+                    var path = await _pdfService.GenerateLoanSchedulePdfAsync(savedLoan, savedLoan.Employee);
+                    Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving and printing loan");
+                System.Windows.MessageBox.Show($"Failed to save and print loan:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
@@ -221,21 +274,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (PrincipalAmount <= 0 || NumberOfInstallments <= 0) return;
 
-            if (InterestRate <= 0)
-            {
-                MonthlyInstallment = Math.Round(PrincipalAmount / NumberOfInstallments, 2);
-                return;
-            }
-
-            double r = SelectedPaymentFrequency == "Fortnightly"
-                ? (double)InterestRate / 100.0 / 26.0
-                : (double)InterestRate / 100.0 / 12.0;
-
-            double p = (double)PrincipalAmount;
-            double n = NumberOfInstallments;
-
-            double installment = (p * r) / (1 - Math.Pow(1 + r, -n));
-            MonthlyInstallment = Math.Round((decimal)installment, 2);
+            decimal totalRepayable = PrincipalAmount + (PrincipalAmount * InterestRate / 100);
+            MonthlyInstallment = Math.Round(totalRepayable / NumberOfInstallments, 2);
         }
 
         // ─── Search and Filtering ──────────────────────────────────────────

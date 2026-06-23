@@ -88,7 +88,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 var emps = await _employeeService.GetEmployeesAsync();
                 Employees = new ObservableCollection<OCC.Shared.DTOs.EmployeeSummaryDto>(
-                    emps.OrderBy(e => e.FirstName));
+                    emps.Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.FirstName));
 
                 _allRequests = (await _leaveService.GetLeaveRequestsAsync()).ToList();
                 FilterItems();

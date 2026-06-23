@@ -131,7 +131,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     .Select(e => new TeamMemberRow { EmployeeId = e.Id, Name = $"{e.FirstName} {e.LastName}", Role = e.Role.ToString() }));
 
             AvailableEmployees = new ObservableCollection<EmployeeSummaryDto>(
-                _allEmployees.Where(e => !memberIds.Contains(e.Id)).OrderBy(e => e.FirstName));
+                _allEmployees.Where(e => !memberIds.Contains(e.Id) && e.Status == EmployeeStatus.Active).OrderBy(e => e.FirstName));
 
             // Sync the updated team object back into our list collections to update the Datagrid in real-time
             var indexAll = _allTeams.FindIndex(t => t.Id == team.Id);

@@ -275,9 +275,9 @@
 
                 <!-- Action Buttons -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource SecondaryButton}" Content="CANCEL"
+                    <Button Style="{StaticResource CancelButton}" Content="CANCEL"
                             Command="{Binding CloseApplyPanelCommand}" Margin="0,0,12,0" Padding="14,8"/>
-                    <Button Style="{StaticResource PrimaryButton}" Content="SUBMIT REQUEST"
+                    <Button Style="{StaticResource CreateIconButton}" Content="SUBMIT REQUEST"
                             Command="{Binding SubmitLeaveCommand}" Padding="14,8"/>
                 </StackPanel>
             </StackPanel>

@@ -38,6 +38,9 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [ObservableProperty]
         private int _selectedBranchFilterIndex = 0; // 0 = All, 1 = JHB, 2 = CPT
 
+        [ObservableProperty]
+        private int _selectedStatusFilterIndex = 0; // 0 = Active Only, 1 = Inactive Only, 2 = All Statuses
+
         [ObservableProperty] private int _permanentCount;
         [ObservableProperty] private int _contractCount;
 
@@ -292,6 +295,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
 
         partial void OnSelectedFilterIndexChanged(int value) => FilterItems();
         partial void OnSelectedBranchFilterIndexChanged(int value) => FilterItems();
+        partial void OnSelectedStatusFilterIndexChanged(int value) => FilterItems();
 
         protected override void FilterItems()
         {
@@ -320,6 +324,14 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             {
                 1 => filtered.Where(e => e.Branch == "Johannesburg"),
                 2 => filtered.Where(e => e.Branch == "Cape Town"),
+                _ => filtered
+            };
+
+            // Status Filter
+            filtered = SelectedStatusFilterIndex switch
+            {
+                0 => filtered.Where(e => e.Status == EmployeeStatus.Active),
+                1 => filtered.Where(e => e.Status == EmployeeStatus.Inactive || e.Status == EmployeeStatus.Terminated),
                 _ => filtered
             };
 

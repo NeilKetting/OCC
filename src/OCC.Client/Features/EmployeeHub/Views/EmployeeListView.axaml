@@ -92,6 +92,17 @@
 								<ComboBoxItem>Cape Town</ComboBoxItem>
 							</ComboBox>
 						</StackPanel>
+
+						<!-- Status -->
+						<StackPanel Spacing="2" VerticalAlignment="Bottom">
+							<TextBlock Text="Status" Classes="LabelSmall" FontSize="10" 
+									   Foreground="#64748B"/>
+							<ComboBox SelectedIndex="{Binding SelectedStatusFilterIndex}" Width="130" Background="White" BorderBrush="{DynamicResource BorderGray}">
+								<ComboBoxItem>Active Only</ComboBoxItem>
+								<ComboBoxItem>Inactive Only</ComboBoxItem>
+								<ComboBoxItem>All Statuses</ComboBoxItem>
+							</ComboBox>
+						</StackPanel>
 					</StackPanel>
 
 					<!-- Summary Stats -->

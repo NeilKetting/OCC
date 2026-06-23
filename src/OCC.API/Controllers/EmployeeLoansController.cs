@@ -209,7 +209,7 @@ namespace OCC.API.Controllers
                 Payments = new List<LoanStatementPaymentDto>()
             };
 
-            decimal currentBalance = loan.PrincipalAmount;
+            decimal currentBalance = loan.PrincipalAmount + (loan.PrincipalAmount * loan.InterestRate / 100);
             foreach (var line in wageRunLines)
             {
                 currentBalance -= line.DeductionLoan;
