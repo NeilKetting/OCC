@@ -18,6 +18,9 @@ namespace OCC.Shared.Models
         /// <summary> Foreign Key to the parent <see cref="WageRun"/>. </summary>
         public Guid WageRunId { get; set; }
         
+        /// <summary> Navigation property to the parent <see cref="WageRun"/>. </summary>
+        public WageRun? WageRun { get; set; }
+        
         /// <summary> Foreign Key to the <see cref="Employee"/> being paid. </summary>
         public Guid EmployeeId { get; set; }
         

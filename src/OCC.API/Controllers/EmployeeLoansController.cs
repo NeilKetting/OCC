@@ -190,9 +190,10 @@ namespace OCC.API.Controllers
                 .Include(w => w.WageRun)
                 .Where(w => w.EmployeeId == loan.EmployeeId && 
                             w.DeductionLoan > 0 && 
+                            w.WageRun != null &&
                             w.WageRun.Status == WageRunStatus.Finalized &&
                             w.WageRun.EndDate >= loan.StartDate)
-                .OrderBy(w => w.WageRun.RunDate)
+                .OrderBy(w => w.WageRun!.RunDate)
                 .ToListAsync();
 
             var statement = new LoanStatementDto
@@ -216,7 +217,7 @@ namespace OCC.API.Controllers
 
                 statement.Payments.Add(new LoanStatementPaymentDto
                 {
-                    Date = line.WageRun.RunDate,
+                    Date = line.WageRun!.RunDate,
                     Amount = line.DeductionLoan,
                     Notes = $"Deducted in Wage Run ({line.WageRun.StartDate:dd MMM} - {line.WageRun.EndDate:dd MMM yyyy})",
                     BalanceAfterPayment = currentBalance
