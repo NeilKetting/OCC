@@ -308,7 +308,19 @@ namespace OCC.API.Controllers
 
                 if (user.Email == "neil@mdk.co.za" || user.Email == "neil@origize63.co.za")
                 {
-                    return BadRequest("The Developer account cannot be deleted.");
+                    var otherDeveloperExists = await _context.Users
+                        .AnyAsync(u => u.Email == user.Email && u.Id != id && u.IsActive);
+
+                    if (!otherDeveloperExists)
+                    {
+                        return BadRequest("The Developer account cannot be deleted.");
+                    }
+                }
+
+                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+                {
+                    return BadRequest("You cannot delete your own active account.");
                 }
 
                 // Clean up any employee links before deleting the user to avoid orphaned Guid references

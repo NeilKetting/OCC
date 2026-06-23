@@ -130,12 +130,16 @@ namespace OCC.Client.Features.SettingsHub.ViewModels
                 {
                     try
                     {
-                        var email = user.Email?.ToLowerInvariant();
-                        if (email == "neil@mdk.co.za" || email == "neil@origize63.co.za")
-                        {
-                            await _dialogService.ShowAlertAsync("Restricted Action", "The Developer account cannot be deleted.");
-                            return;
-                        }
+                         var email = user.Email?.ToLowerInvariant();
+                         if (email == "neil@mdk.co.za" || email == "neil@origize63.co.za")
+                         {
+                             bool otherExists = _allUsers.Any(u => u.Email?.Equals(email, StringComparison.OrdinalIgnoreCase) == true && u.Id != user.Id);
+                             if (!otherExists)
+                             {
+                                 await _dialogService.ShowAlertAsync("Restricted Action", "The Developer account cannot be deleted.");
+                                 return;
+                             }
+                         }
 
                         BusyText = "Deleting user...";
                         IsBusy = true;

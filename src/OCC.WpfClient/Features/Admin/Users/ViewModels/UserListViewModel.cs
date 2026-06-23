@@ -224,15 +224,27 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             {
                 IsBusy = true;
                 BusyText = targets.Count > 1 ? "Deleting users..." : "Deleting user...";
+                var failedTargets = new List<User>();
                 foreach (var t in targets)
                 {
-                    await _userService.DeleteUserAsync(t.Id);
+                    var success = await _userService.DeleteUserAsync(t.Id);
+                    if (!success)
+                    {
+                        failedTargets.Add(t);
+                    }
                 }
                 await LoadDataAsync();
+
+                if (failedTargets.Any())
+                {
+                    var failedNames = string.Join(", ", failedTargets.Select(u => $"'{u.FirstName} {u.LastName}'"));
+                    await _dialogService.ShowAlertAsync("Delete Failed", $"Failed to delete the following user(s): {failedNames}.\n\nPlease check system restrictions (e.g. you cannot delete the developer account unless a duplicate exists, and you cannot delete your own active account).");
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Bulk delete failed");
+                await _dialogService.ShowAlertAsync("Error", $"An unexpected error occurred during delete: {ex.Message}");
             }
             finally
             {
