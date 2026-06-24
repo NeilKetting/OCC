@@ -11,6 +11,8 @@ namespace OCC.WpfClient.Services.Interfaces
         Task LogoutAsync();
         Task<bool> UpdateProfileAsync(User user);
         Task<bool> ChangePasswordAsync(string oldPassword, string newPassword);
+        Task<(bool Success, string ErrorMessage)> SendForgotPasswordCodeAsync(string email);
+        Task<(bool Success, string ErrorMessage)> ResetPasswordWithCodeAsync(string email, string code, string newPassword);
         User? CurrentUser { get; }
         string? CurrentToken { get; }
         bool IsAuthenticated { get; }

@@ -9,5 +9,7 @@ namespace OCC.API.Services
         Task<(bool Success, User? User, string Error)> RegisterAsync(User user);
         Task<bool> VerifyEmailAsync(string token);
         Task LogoutAsync(string userId);
+        Task<bool> InitiatePasswordResetAsync(ForgotPasswordRequest request);
+        Task<bool> CompletePasswordResetAsync(ResetPasswordRequest request);
     }
 }

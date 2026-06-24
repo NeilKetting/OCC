@@ -169,6 +169,67 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        public async Task<(bool Success, string ErrorMessage)> SendForgotPasswordCodeAsync(string email)
+        {
+            var url = GetFullUrl("api/auth/forgot-password");
+            _logger.LogInformation("Sending forgot password request for {Email} to {Url}", email, url);
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(url, new ForgotPasswordRequest { Email = email });
+                if (response.IsSuccessStatusCode)
+                {
+                    return (true, string.Empty);
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                var errorMessage = error.Trim('"');
+                if (string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    errorMessage = $"Request failed with status: {response.StatusCode}";
+                }
+                return (false, errorMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception during forgot password request for {Email}", email);
+                return (false, $"Connection error: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> ResetPasswordWithCodeAsync(string email, string code, string newPassword)
+        {
+            var url = GetFullUrl("api/auth/reset-password");
+            _logger.LogInformation("Sending reset password request for {Email} to {Url}", email, url);
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(url, new ResetPasswordRequest 
+                { 
+                    Email = email, 
+                    Code = code, 
+                    NewPassword = newPassword 
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    return (true, string.Empty);
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                var errorMessage = error.Trim('"');
+                if (string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    errorMessage = $"Request failed with status: {response.StatusCode}";
+                }
+                return (false, errorMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception during reset password request for {Email}", email);
+                return (false, $"Connection error: {ex.Message}");
+            }
+        }
+
         private async Task FetchGoogleMapsKey()
         {
             try

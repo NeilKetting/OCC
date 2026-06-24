@@ -263,42 +263,42 @@
                     <WrapPanel Orientation="Horizontal">
                         <!-- Principal Range -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,5">
-                            <TextBlock Text="Principal Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Width="95" Opacity="0.8"/>
-                            <TextBox Text="{Binding MinPrincipal, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Min R"/>
-                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="5,0"/>
-                            <TextBox Text="{Binding MaxPrincipal, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Max R"/>
+                            <TextBlock Text="Principal Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Opacity="0.8"/>
+                            <TextBox Text="{Binding MinPrincipal, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Min R" Margin="8,0"/>
+                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding MaxPrincipal, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Max R"/>
                         </StackPanel>
 
                         <!-- Installment Range -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,5">
-                            <TextBlock Text="Installment Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Width="105" Opacity="0.8"/>
-                            <TextBox Text="{Binding MinInstallment, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Min R"/>
-                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="5,0"/>
-                            <TextBox Text="{Binding MaxInstallment, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Max R"/>
+                            <TextBlock Text="Installment Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Opacity="0.8"/>
+                            <TextBox Text="{Binding MinInstallment, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Min R"  Margin="8,0"/>
+                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding MaxInstallment, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Max R"  Margin="8,0"/>
                         </StackPanel>
 
                         <!-- Balance Range -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,5">
-                            <TextBlock Text="Balance Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Width="95" Opacity="0.8"/>
-                            <TextBox Text="{Binding MinBalance, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Min R"/>
-                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="5,0"/>
-                            <TextBox Text="{Binding MaxBalance, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Max R"/>
+                            <TextBlock Text="Balance Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Opacity="0.8"/>
+                            <TextBox Text="{Binding MinBalance, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Min R"  Margin="8,0"/>
+                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding MaxBalance, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Max R"  Margin="8,0"/>
                         </StackPanel>
 
                         <!-- Interest Rate Range -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,5">
-                            <TextBlock Text="Admin Fee % Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Width="100" Opacity="0.8"/>
-                            <TextBox Text="{Binding MinInterestRate, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Min %"/>
-                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="5,0"/>
-                            <TextBox Text="{Binding MaxInterestRate, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Width="80" Height="28" ap:WatermarkProperties.Watermark="Max %"/>
+                            <TextBlock Text="Admin Fee % Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Opacity="0.8"/>
+                            <TextBox Text="{Binding MinInterestRate, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Min %"  Margin="8,0"/>
+                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding MaxInterestRate, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ModernInput}" Height="28" ap:WatermarkProperties.Watermark="Max %"  Margin="8,0"/>
                         </StackPanel>
 
                         <!-- Start Date Range -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,5">
-                            <TextBlock Text="Start Date Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Width="105" Opacity="0.8"/>
-                            <DatePicker SelectedDate="{Binding StartDateFrom}" Style="{StaticResource ModernDatePicker}" Width="120" Height="28" Margin="0"/>
-                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="5,0"/>
-                            <DatePicker SelectedDate="{Binding StartDateTo}" Style="{StaticResource ModernDatePicker}" Width="120" Height="28" Margin="0"/>
+                            <TextBlock Text="Start Date Range:" Style="{StaticResource LabelText}" VerticalAlignment="Center" Opacity="0.8"/>
+                            <DatePicker SelectedDate="{Binding StartDateFrom}" Style="{StaticResource ModernDatePicker}" Height="28"  Margin="8,0"/>
+                            <TextBlock Text=" to " Style="{StaticResource LabelText}" VerticalAlignment="Center"/>
+                            <DatePicker SelectedDate="{Binding StartDateTo}" Style="{StaticResource ModernDatePicker}" Height="28"  Margin="8,0"/>
                         </StackPanel>
                     </WrapPanel>
                 </Grid>
@@ -315,19 +315,19 @@
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" MinWidth="200" Width="*"/>
-                <DataGridTextColumn Header="Branch" Binding="{Binding Employee.Branch}" Width="100"/>
-                <DataGridTextColumn Header="Principal" Binding="{Binding PrincipalAmount, StringFormat='R #,##0.00'}" Width="110">
+                <DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" Width="Auto"/>
+                <DataGridTextColumn Header="Branch" Binding="{Binding Employee.Branch}" Width="Auto"/>
+                <DataGridTextColumn Header="Principal" Binding="{Binding PrincipalAmount, StringFormat='R #,##0.00'}" Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Installment" Binding="{Binding MonthlyInstallment, StringFormat='R #,##0.00'}" Width="110">
+                <DataGridTextColumn Header="Installment" Binding="{Binding MonthlyInstallment, StringFormat='R #,##0.00'}" Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Balance" Binding="{Binding OutstandingBalance, StringFormat='R #,##0.00'}" Width="110">
+                <DataGridTextColumn Header="Balance" Binding="{Binding OutstandingBalance, StringFormat='R #,##0.00'}" Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -335,14 +335,14 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Admin Fee %" Binding="{Binding InterestRate, StringFormat='{}{0:0.00}%'}" Width="80">
+                <DataGridTextColumn Header="Admin Fee %" Binding="{Binding InterestRate, StringFormat='{}{0:0.00}%'}" Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="110"/>
+                <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="Auto"/>
                 <!-- Status badge -->
-                <DataGridTemplateColumn Header="Status" Width="90">
+                <DataGridTemplateColumn Header="Status" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="4" Padding="8,3" HorizontalAlignment="Center"
@@ -376,7 +376,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <!-- Actions -->
-                <DataGridTemplateColumn Header="Actions" Width="120">
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

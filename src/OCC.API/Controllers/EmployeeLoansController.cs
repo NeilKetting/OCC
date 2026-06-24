@@ -179,52 +179,62 @@ namespace OCC.API.Controllers
         [HttpGet("{id}/statement")]
         public async Task<ActionResult<LoanStatementDto>> GetLoanStatement(Guid id)
         {
-            var loan = await _context.EmployeeLoans
-                .Include(l => l.Employee)
-                .FirstOrDefaultAsync(l => l.Id == id);
-
-            if (loan == null) return NotFound();
-
-            // Find all finalized wage run lines for this employee since the loan's start date
-            var wageRunLines = await _context.WageRunLines
-                .Include(w => w.WageRun)
-                .Where(w => w.EmployeeId == loan.EmployeeId && 
-                            w.DeductionLoan > 0 && 
-                            w.WageRun != null &&
-                            w.WageRun.Status == WageRunStatus.Finalized &&
-                            w.WageRun.EndDate >= loan.StartDate)
-                .OrderBy(w => w.WageRun!.RunDate)
-                .ToListAsync();
-
-            var statement = new LoanStatementDto
+            try
             {
-                LoanId = loan.Id,
-                EmployeeName = $"{loan.Employee?.FirstName} {loan.Employee?.LastName}",
-                EmployeeNumber = loan.Employee?.EmployeeNumber ?? string.Empty,
-                PrincipalAmount = loan.PrincipalAmount,
-                InterestRate = loan.InterestRate,
-                MonthlyInstallment = loan.MonthlyInstallment,
-                OutstandingBalance = loan.OutstandingBalance,
-                StartDate = loan.StartDate,
-                Payments = new List<LoanStatementPaymentDto>()
-            };
+                var loan = await _context.EmployeeLoans
+                    .Include(l => l.Employee)
+                    .FirstOrDefaultAsync(l => l.Id == id);
 
-            decimal currentBalance = loan.PrincipalAmount + (loan.PrincipalAmount * loan.InterestRate / 100);
-            foreach (var line in wageRunLines)
-            {
-                currentBalance -= line.DeductionLoan;
-                if (currentBalance < 0) currentBalance = 0;
+                if (loan == null) return NotFound();
 
-                statement.Payments.Add(new LoanStatementPaymentDto
+                // Find all finalized/paid wage run lines for this employee since the loan's start date
+                var wageRunLines = await _context.WageRunLines
+                    .Include(w => w.WageRun)
+                    .Where(w => w.EmployeeId == loan.EmployeeId && 
+                                w.DeductionLoan > 0 && 
+                                w.WageRun != null &&
+                                (w.WageRun.Status == WageRunStatus.Finalized || w.WageRun.Status == WageRunStatus.Paid) &&
+                                w.WageRun.EndDate >= loan.StartDate)
+                    .OrderBy(w => w.WageRun!.RunDate)
+                    .ToListAsync();
+
+                var statement = new LoanStatementDto
                 {
-                    Date = line.WageRun!.RunDate,
-                    Amount = line.DeductionLoan,
-                    Notes = $"Deducted in Wage Run ({line.WageRun.StartDate:dd MMM} - {line.WageRun.EndDate:dd MMM yyyy})",
-                    BalanceAfterPayment = currentBalance
-                });
-            }
+                    LoanId = loan.Id,
+                    EmployeeName = $"{loan.Employee?.FirstName} {loan.Employee?.LastName}",
+                    EmployeeNumber = loan.Employee?.EmployeeNumber ?? string.Empty,
+                    PrincipalAmount = loan.PrincipalAmount,
+                    InterestRate = loan.InterestRate,
+                    MonthlyInstallment = loan.MonthlyInstallment,
+                    OutstandingBalance = loan.OutstandingBalance,
+                    StartDate = loan.StartDate,
+                    Payments = new List<LoanStatementPaymentDto>()
+                };
 
-            return Ok(statement);
+                decimal currentBalance = loan.PrincipalAmount + (loan.PrincipalAmount * loan.InterestRate / 100);
+                foreach (var line in wageRunLines)
+                {
+                    if (line.WageRun == null) continue;
+
+                    currentBalance -= line.DeductionLoan;
+                    if (currentBalance < 0) currentBalance = 0;
+
+                    statement.Payments.Add(new LoanStatementPaymentDto
+                    {
+                        Date = line.WageRun.RunDate,
+                        Amount = line.DeductionLoan,
+                        Notes = $"Deducted in Wage Run ({line.WageRun.StartDate:dd MMM} - {line.WageRun.EndDate:dd MMM yyyy})",
+                        BalanceAfterPayment = currentBalance
+                    });
+                }
+
+                return Ok(statement);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating loan statement for loan {LoanId}", id);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

@@ -19,6 +19,7 @@ namespace OCC.API.Services
         private readonly PasswordHasher _passwordHasher;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IEmailService _emailService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
@@ -27,6 +28,7 @@ namespace OCC.API.Services
             PasswordHasher passwordHasher,
             IHubContext<NotificationHub> hubContext,
             IEmailService emailService,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<AuthService> logger)
         {
             _context = context;
@@ -34,6 +36,7 @@ namespace OCC.API.Services
             _passwordHasher = passwordHasher;
             _hubContext = hubContext;
             _emailService = emailService;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
@@ -146,7 +149,9 @@ namespace OCC.API.Services
             {
                 var verificationToken = GenerateJwtToken(user, 1);
                 var encodedToken = HttpUtility.UrlEncode(verificationToken);
-                var verifyLink = $"https://localhost:7166/api/Auth/verify?token={encodedToken}"; // TODO: get URL from config
+                var request = _httpContextAccessor.HttpContext?.Request;
+                var baseUri = request != null ? $"{request.Scheme}://{request.Host}" : "https://api.origize63.co.za";
+                var verifyLink = $"{baseUri}/api/Auth/verify?token={encodedToken}";
 
                 var emailBody = $@"
                     <p>Hi {user.FirstName},</p>
@@ -259,6 +264,95 @@ namespace OCC.API.Services
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<bool> InitiatePasswordResetAsync(ForgotPasswordRequest request)
+        {
+            _logger.LogInformation("Password reset request initiated for email: {Email}", request?.Email);
+            if (request == null || string.IsNullOrWhiteSpace(request.Email))
+            {
+                return false;
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("Password reset requested for non-existent email: {Email}", request.Email);
+                return false;
+            }
+
+            // Generate random 6-digit verification code
+            var random = new Random();
+            var resetCode = random.Next(100000, 999999).ToString();
+
+            user.PasswordResetCode = resetCode;
+            user.PasswordResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
+
+            _context.Entry(user).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Generated reset code for {Email}. Sending email...", request.Email);
+
+            try
+            {
+                var subject = "Reset Your Password - Orange Circle Construction";
+                var body = $@"
+                    <p>Hi {user.FirstName},</p>
+                    <p>You requested to reset your password. Use the following code to complete the process:</p>
+                    <h2 style='color:#f39c12; font-size:24px; letter-spacing: 2px;'>{resetCode}</h2>
+                    <p>This code is valid for 15 minutes. If you did not request this, you can safely ignore this email.</p>
+                ";
+
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send password reset email to {Email}", request.Email);
+                return false;
+            }
+        }
+
+        public async Task<bool> CompletePasswordResetAsync(ResetPasswordRequest request)
+        {
+            _logger.LogInformation("Password reset completion attempt for email: {Email}", request?.Email);
+            if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return false;
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+            {
+                return false;
+            }
+
+            if (user.PasswordResetCode != request.Code || user.PasswordResetCodeExpiry < DateTime.UtcNow)
+            {
+                _logger.LogWarning("Password reset failed for {Email}: Invalid or expired code.", request.Email);
+                return false;
+            }
+
+            // Update user password
+            user.Password = _passwordHasher.HashPassword(request.NewPassword);
+            user.PasswordResetCode = null;
+            user.PasswordResetCodeExpiry = null;
+
+            _context.Entry(user).State = EntityState.Modified;
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = user.Id.ToString(),
+                TableName = "Users",
+                RecordId = user.Id.ToString(),
+                Action = "Password Reset Complete",
+                Timestamp = DateTime.UtcNow,
+                NewValues = "{ \"Action\": \"Password reset successfully via reset code\" }"
+            });
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Password successfully reset for user: {Email}", request.Email);
+            return true;
         }
     }
 }

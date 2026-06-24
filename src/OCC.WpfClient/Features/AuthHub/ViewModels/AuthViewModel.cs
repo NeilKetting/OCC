@@ -289,10 +289,17 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
             {
                 IsBusy = true;
                 ErrorMessage = null;
-                // Mocking reset request logic
-                await Task.Delay(1500);
-                IsResetCodeSent = true;
-                _logger.LogInformation("Password reset code sent to {Email}", ForgotPasswordEmail);
+                
+                var (success, error) = await _authService.SendForgotPasswordCodeAsync(ForgotPasswordEmail);
+                if (success)
+                {
+                    IsResetCodeSent = true;
+                    _logger.LogInformation("Password reset code sent successfully to {Email}", ForgotPasswordEmail);
+                }
+                else
+                {
+                    ErrorMessage = error;
+                }
             }
             catch (Exception ex)
             {
@@ -317,15 +324,21 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
             {
                 IsBusy = true;
                 ErrorMessage = null;
-                // Mocking reset verification and save
-                await Task.Delay(2000);
-                _logger.LogInformation("Password successfully reset for {Email}", ForgotPasswordEmail);
                 
-                ErrorMessage = "Password reset successful! You can now login.";
-                IsResetCodeSent = false;
-                ForgotPasswordEmail = null;
-                ResetCode = null;
-                NewPassword = null;
+                var (success, error) = await _authService.ResetPasswordWithCodeAsync(ForgotPasswordEmail!, ResetCode, NewPassword);
+                if (success)
+                {
+                    _logger.LogInformation("Password successfully reset for {Email}", ForgotPasswordEmail);
+                    ErrorMessage = "Password reset successful! You can now login.";
+                    IsResetCodeSent = false;
+                    ForgotPasswordEmail = null;
+                    ResetCode = null;
+                    NewPassword = null;
+                }
+                else
+                {
+                    ErrorMessage = error;
+                }
             }
             catch (Exception ex)
             {

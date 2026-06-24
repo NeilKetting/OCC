@@ -92,5 +92,29 @@ namespace OCC.API.Controllers
                     </body>
                 </html>", "text/html");
         }
+
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var success = await _authService.InitiatePasswordResetAsync(request);
+            if (!success)
+            {
+                return BadRequest("Email address not found or invalid request.");
+            }
+            return Ok(new { Message = "Reset code has been sent to your email." });
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var success = await _authService.CompletePasswordResetAsync(request);
+            if (!success)
+            {
+                return BadRequest("Invalid/expired reset code or password mismatch.");
+            }
+            return Ok(new { Message = "Password has been successfully updated." });
+        }
     }
 }

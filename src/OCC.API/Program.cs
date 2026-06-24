@@ -92,8 +92,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // SignalR
 builder.Services.AddSignalR();
 
-// Email Service (Mock/Local for Dev)
-builder.Services.AddSingleton<OCC.API.Services.IEmailService, OCC.API.Services.MockEmailService>();
+// Email Service
+var smtpSection = builder.Configuration.GetSection("SmtpSettings");
+if (smtpSection.Exists() && !string.IsNullOrEmpty(smtpSection["Host"]))
+{
+    builder.Services.Configure<OCC.API.Services.SmtpSettings>(smtpSection);
+    builder.Services.AddScoped<OCC.API.Services.IEmailService, OCC.API.Services.SmtpEmailService>();
+    Console.WriteLine("[STARTUP] Registered SmtpEmailService.");
+}
+else
+{
+    builder.Services.AddSingleton<OCC.API.Services.IEmailService, OCC.API.Services.MockEmailService>();
+    Console.WriteLine("[STARTUP] Registered MockEmailService (Fallback).");
+}
 // Security
 builder.Services.AddScoped<OCC.API.Services.PasswordHasher>();
 builder.Services.AddScoped<OCC.API.Services.IAuthService, OCC.API.Services.AuthService>();

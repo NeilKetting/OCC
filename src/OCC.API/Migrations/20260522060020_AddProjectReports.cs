@@ -173,6 +173,18 @@ namespace OCC.API.Migrations
                 column: "CreatedAtUtc",
                 value: new DateTime(2026, 5, 22, 6, 0, 20, 183, DateTimeKind.Utc).AddTicks(5483));
 
+            migrationBuilder.AddColumn<Guid>(
+                name: "ProjectId",
+                table: "Incidents",
+                type: "uniqueidentifier",
+                nullable: true);
+
+            migrationBuilder.AddColumn<Guid>(
+                name: "ProjectId",
+                table: "HseqAudits",
+                type: "uniqueidentifier",
+                nullable: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_Incidents_ProjectId",
                 table: "Incidents",
@@ -245,6 +257,14 @@ namespace OCC.API.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_HseqAudits_ProjectId",
+                table: "HseqAudits");
+
+            migrationBuilder.DropColumn(
+                name: "ProjectId",
+                table: "Incidents");
+
+            migrationBuilder.DropColumn(
+                name: "ProjectId",
                 table: "HseqAudits");
             migrationBuilder.UpdateData(
                 table: "PublicHolidays",
