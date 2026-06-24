@@ -122,8 +122,8 @@ namespace OCC.API.Services
 
                     if (branchEnum.HasValue && companyDetails.Branches.TryGetValue(branchEnum.Value, out var branchDetails))
                     {
-                        shiftStartTime = branchDetails.ShiftStartTime;
-                        shiftEndTime = branchDetails.ShiftEndTime;
+                        shiftStartTime ??= branchDetails.ShiftStartTime;
+                        shiftEndTime ??= branchDetails.ShiftEndTime;
                     }
                 }
 

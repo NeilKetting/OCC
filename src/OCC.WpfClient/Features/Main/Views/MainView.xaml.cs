@@ -19,6 +19,12 @@ namespace OCC.WpfClient.Features.Main.Views
             if (e.NewValue is System.ComponentModel.INotifyPropertyChanged newVm)
             {
                 newVm.PropertyChanged += Vm_PropertyChanged;
+                
+                if (SidebarBorder != null && e.NewValue is ViewModels.MainViewModel vm)
+                {
+                    // Apply initial width based on KeepSidebarExpanded setting
+                    SidebarBorder.Width = vm.IsSidebarMinimized ? 72 : 280;
+                }
             }
         }
 
@@ -47,7 +53,10 @@ namespace OCC.WpfClient.Features.Main.Views
         {
             if (DataContext is ViewModels.MainViewModel vm)
             {
-                vm.IsSidebarMinimized = false;
+                if (!vm.KeepSidebarExpanded)
+                {
+                    vm.IsSidebarMinimized = false;
+                }
             }
         }
 
@@ -64,7 +73,10 @@ namespace OCC.WpfClient.Features.Main.Views
         {
             if (DataContext is ViewModels.MainViewModel vm)
             {
-                vm.IsSidebarMinimized = true;
+                if (!vm.KeepSidebarExpanded)
+                {
+                    vm.IsSidebarMinimized = true;
+                }
             }
         }
 

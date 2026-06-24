@@ -61,6 +61,20 @@
                                       IsChecked="{Binding UsePlainMenuIcons}" 
                                       Style="{StaticResource ModernToggleSwitch}"/>
                         </Grid>
+
+                        <Grid Margin="0,15,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Keep Sidebar Expanded" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                                <TextBlock Text="Prevent the main navigation sidebar from automatically collapsing when not in use." Foreground="{StaticResource TextSub}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" VerticalAlignment="Center"
+                                      IsChecked="{Binding KeepSidebarExpanded}" 
+                                      Style="{StaticResource ModernToggleSwitch}"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 

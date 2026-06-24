@@ -14,6 +14,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         public bool MaximizeOverTaskbar { get; set; } = false;
         public double ThemeBrightness { get; set; } = 0.5;
         public bool UsePlainMenuIcons { get; set; } = false;
+        public bool KeepSidebarExpanded { get; set; } = false;
         public bool AutoCheckUpdates { get; set; } = true;
         public OCC.WpfClient.Infrastructure.Models.ListLayout? EmployeeListLayout { get; set; }
 

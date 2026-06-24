@@ -39,6 +39,22 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [ObservableProperty]
         private string _sickLeaveCycleEndDisplay = "N/A";
 
+        [ObservableProperty]
+        private string _activeBranchShiftDisplay = string.Empty;
+
+        private bool _isShiftOverrideEnabled;
+        public bool IsShiftOverrideEnabled
+        {
+            get => _isShiftOverrideEnabled;
+            set
+            {
+                if (SetProperty(ref _isShiftOverrideEnabled, value))
+                {
+                    UpdateShiftTimes();
+                }
+            }
+        }
+
         public bool IsPassportVisible => Employee.IdType == IdType.RSAId;
         public bool IsContractVisible => Employee.EmploymentType == EmploymentType.Contract;
 
@@ -54,6 +70,24 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _isNew = employee.Id == Guid.Empty;
             
             Title = _isNew ? "Add Employee" : $"Edit {employee.DisplayName}";
+
+            var jhbStart = new TimeSpan(7, 0, 0);
+            var jhbEnd = new TimeSpan(16, 45, 0);
+            var cptStart = new TimeSpan(7, 0, 0);
+            var cptEnd = new TimeSpan(16, 30, 0);
+
+            bool matchesDefault = false;
+            if (string.Equals(Employee.Branch, "Johannesburg", StringComparison.OrdinalIgnoreCase))
+            {
+                matchesDefault = Employee.ShiftStartTime == jhbStart && Employee.ShiftEndTime == jhbEnd;
+            }
+            else if (string.Equals(Employee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase))
+            {
+                matchesDefault = Employee.ShiftStartTime == cptStart && Employee.ShiftEndTime == cptEnd;
+            }
+
+            _isShiftOverrideEnabled = (Employee.ShiftStartTime.HasValue || Employee.ShiftEndTime.HasValue) && !matchesDefault;
+            UpdateShiftTimes();
 
             _ = InitializeAsync();
         }
@@ -139,15 +173,33 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             var cptStart = new TimeSpan(7, 0, 0);
             var cptEnd = new TimeSpan(16, 30, 0);
 
+            string defaultDisplay = "07:00 - 16:45"; // fallback
+
             if (string.Equals(Employee.Branch, "Johannesburg", StringComparison.OrdinalIgnoreCase))
             {
-                Employee.ShiftStartTime = jhbStart;
-                Employee.ShiftEndTime = jhbEnd;
+                defaultDisplay = "07:00 - 16:45";
+                if (IsShiftOverrideEnabled)
+                {
+                    Employee.ShiftStartTime ??= jhbStart;
+                    Employee.ShiftEndTime ??= jhbEnd;
+                }
             }
             else if (string.Equals(Employee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase))
             {
-                Employee.ShiftStartTime = cptStart;
-                Employee.ShiftEndTime = cptEnd;
+                defaultDisplay = "07:00 - 16:30";
+                if (IsShiftOverrideEnabled)
+                {
+                    Employee.ShiftStartTime ??= cptStart;
+                    Employee.ShiftEndTime ??= cptEnd;
+                }
+            }
+
+            ActiveBranchShiftDisplay = $"Using Branch Default ({defaultDisplay})";
+
+            if (!IsShiftOverrideEnabled)
+            {
+                Employee.ShiftStartTime = null;
+                Employee.ShiftEndTime = null;
             }
         }
 

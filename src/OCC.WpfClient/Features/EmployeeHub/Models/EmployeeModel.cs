@@ -68,10 +68,10 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         private DateTime _doB = new DateTime(1990, 1, 1);
 
         [ObservableProperty]
-        private TimeSpan? _shiftStartTime = new TimeSpan(7, 0, 0);
+        private TimeSpan? _shiftStartTime;
 
         [ObservableProperty]
-        private TimeSpan? _shiftEndTime = new TimeSpan(16, 45, 0);
+        private TimeSpan? _shiftEndTime;
 
         // Banking Details
         [ObservableProperty] private BankName _bankName = BankName.None;

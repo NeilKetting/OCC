@@ -13,6 +13,9 @@
 
     <UserControl.Resources>
         <conv:VisibilityConverter x:Key="VisibilityConverter" />
+        <Style x:Key="TextBlockLeftAlign" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -162,6 +165,6 @@
         </Grid>
 
         <!-- Close button at bottom -->
-        <Button Grid.Row="3" Command="{Binding CloseCommand}" Content="Close Detail" Style="{StaticResource StandardButton}" Height="38"/>
+        <Button Grid.Row="3" Command="{Binding CloseCommand}" Content="Close Detail" Style="{StaticResource CancelButton}" Height="38"/>
     </Grid>
 </UserControl>

@@ -13,7 +13,46 @@
              d:DataContext="{d:DesignInstance Type=vm:EmployeeDetailViewModel}">
     
     <UserControl.Resources>
-        <!-- Converters are defined globally in App.xaml via Converters.xaml -->
+        <Style x:Key="SectionHeaderToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0,5,5,5"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{StaticResource GlassBorderUltraLight}" 
+                                BorderThickness="0,0,0,1" 
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="Arrow" 
+                                           Text="&#xE70E;" 
+                                           FontFamily="Segoe MDL2 Assets" 
+                                           FontSize="12" 
+                                           Foreground="{TemplateBinding Foreground}" 
+                                           HorizontalAlignment="Right" 
+                                           VerticalAlignment="Center" 
+                                           Opacity="0.7"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+                                <Setter TargetName="Arrow" Property="Opacity" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="Arrow" Property="Text" Value="&#xE70D;"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BackgroundDark}">
@@ -42,262 +81,291 @@
                 <StackPanel Margin="0,0,20,0">
                     <!-- Section: Personal Info -->
                     <StackPanel Margin="0,0,0,25">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="&#xE946;" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AccentBlue}"/>
-                            <TextBlock Text="Personal Info" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AccentBlue}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Employee Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.EmployeeNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. EMP001"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Linked System User" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding AvailableUsers}" 
-                                      SelectedValue="{Binding Employee.LinkedUserId}" 
-                                      SelectedValuePath="Id"
-                                      DisplayMemberPath="DisplayName"
-                                      Style="{StaticResource ModernComboBox}"
-                                      ap:WatermarkProperties.Watermark="Search for user..."/>
-                            <TextBlock Text="Link this record to a login account to enable mobile dashboard access." 
-                                       FontSize="10" Foreground="{StaticResource TextSub}" Margin="5,4,0,0" Opacity="0.6" TextWrapping="Wrap"/>
-                        </StackPanel>
-                        
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="First Name" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.FirstName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="John"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Last Name" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.LastName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Doe"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.Email}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="name@example.com"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.Phone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="082 ..."/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Physical Address" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.PhysicalAddress}" Style="{StaticResource ModernInput}" MinHeight="60" Height="Auto" TextWrapping="Wrap" AcceptsReturn="True" ap:WatermarkProperties.Watermark="Street, Suburb, City..." VerticalContentAlignment="Top"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Identification Type" Style="{StaticResource FormLabelText}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,5">
-                                <RadioButton IsChecked="{Binding Employee.IdType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='RSAId'}" Content="RSA ID" Style="{StaticResource ModernRadioButton}" Margin="0,0,20,0" Foreground="White"/>
-                                <RadioButton IsChecked="{Binding Employee.IdType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Passport'}" Content="Passport" Style="{StaticResource ModernRadioButton}" Foreground="White"/>
+                        <ToggleButton x:Name="PersonalInfoToggle" IsChecked="True" Style="{StaticResource SectionHeaderToggleStyle}" Foreground="{StaticResource AccentBlue}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE946;" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AccentBlue}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Personal Info" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AccentBlue}"/>
                             </StackPanel>
-                        </StackPanel>
+                        </ToggleButton>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="ID / Passport Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.IdNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="13 Digit ID or Passport"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Permit Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.PermitNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Work Permit No. (if applicable)"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Date of Birth" Style="{StaticResource FormLabelText}"/>
-                            <DatePicker SelectedDate="{Binding Employee.DoB}" Style="{StaticResource ModernDatePicker}"/>
-                        </StackPanel>                                        
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Tax Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.TaxNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Tax Ref No."/>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- Section: Employment -->
-                    <StackPanel Margin="0,0,0,25">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AlertOrange}"/>
-                            <TextBlock Text="Employment" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AlertOrange}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Employee Status" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding Statuses}" SelectedValue="{Binding Employee.Status}" Style="{StaticResource ModernComboBox}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Job Role" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding Roles}" SelectedValue="{Binding Employee.Role}" Style="{StaticResource ModernComboBox}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Employment Date" Style="{StaticResource FormLabelText}"/>
-                            <DatePicker SelectedDate="{Binding Employee.EmploymentDate}" Style="{StaticResource ModernDatePicker}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Employment Type" Style="{StaticResource FormLabelText}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,5">
-                                <RadioButton IsChecked="{Binding Employee.EmploymentType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Permanent'}" Content="Permanent" Style="{StaticResource ModernRadioButton}" Margin="0,0,20,0" Foreground="White"/>
-                                <RadioButton IsChecked="{Binding Employee.EmploymentType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Contract'}" Content="Contract" Style="{StaticResource ModernRadioButton}" Foreground="White"/>
+                        <Grid x:Name="PersonalInfoGrid" Visibility="{Binding IsChecked, ElementName=PersonalInfoToggle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Employee Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.EmployeeNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. EMP001"/>
                             </StackPanel>
-                        </StackPanel>
 
-                        <StackPanel Margin="0,0,0,12" Visibility="{Binding IsContractVisible, Converter={StaticResource VisibilityConverter}}">
-                            <TextBlock Text="Contract Duration" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.ContractDuration}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 6 Months"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Branch Location" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding Employee.Branch}" Style="{StaticResource ModernComboBox}"/>
-                        </StackPanel>
-
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Shift Start" Style="{StaticResource FormLabelText}"/>
-                                <TextBox Style="{StaticResource ModernTimePicker}" Text="{Binding Employee.ShiftStartTime, StringFormat={}{0:hh\:mm}}"/>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Linked System User" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding AvailableUsers}" 
+                                          SelectedValue="{Binding Employee.LinkedUserId}" 
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="DisplayName"
+                                          Style="{StaticResource ModernComboBox}"
+                                          ap:WatermarkProperties.Watermark="Search for user..."/>
+                                <TextBlock Text="Link this record to a login account to enable mobile dashboard access." 
+                                           FontSize="10" Foreground="{StaticResource TextSub}" Margin="5,4,0,0" Opacity="0.6" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Shift End" Style="{StaticResource FormLabelText}"/>
-                                <TextBox Style="{StaticResource ModernTimePicker}" Text="{Binding Employee.ShiftEndTime, StringFormat={}{0:hh\:mm}}"/>
+                            
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="First Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.FirstName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="John"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Last Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.LastName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Doe"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.Email}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="name@example.com"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.Phone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="082 ..."/>
+                            </StackPanel>
+
+                            <StackPanel Tag="FullWidth" Margin="0,0,0,12">
+                                <TextBlock Text="Physical Address" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.PhysicalAddress}" Style="{StaticResource ModernInput}" MinHeight="60" Height="Auto" TextWrapping="Wrap" AcceptsReturn="True" ap:WatermarkProperties.Watermark="Street, Suburb, City..." VerticalContentAlignment="Top"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Identification Type" Style="{StaticResource FormLabelText}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,5">
+                                    <RadioButton IsChecked="{Binding Employee.IdType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='RSAId'}" Content="RSA ID" Style="{StaticResource ModernRadioButton}" Margin="0,0,20,0" Foreground="White"/>
+                                    <RadioButton IsChecked="{Binding Employee.IdType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Passport'}" Content="Passport" Style="{StaticResource ModernRadioButton}" Foreground="White"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="ID / Passport Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.IdNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="13 Digit ID or Passport"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Permit Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.PermitNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Work Permit No. (if applicable)"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Date of Birth" Style="{StaticResource FormLabelText}"/>
+                                <DatePicker SelectedDate="{Binding Employee.DoB}" Style="{StaticResource ModernDatePicker}"/>
+                            </StackPanel>                                        
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Tax Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.TaxNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Tax Ref No."/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
 
-                    <!-- Section: Emergency -->
+                    <!-- Section: Employment -->
                     <StackPanel Margin="0,0,0,25">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource ErrorRed}"/>
-                            <TextBlock Text="Emergency Contacts" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource ErrorRed}"/>
-                        </StackPanel>
+                        <ToggleButton x:Name="EmploymentToggle" IsChecked="True" Style="{StaticResource SectionHeaderToggleStyle}" Foreground="{StaticResource AlertOrange}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AlertOrange}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Employment" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AlertOrange}"/>
+                            </StackPanel>
+                        </ToggleButton>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Next of Kin Name" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.NextOfKinName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Full Name"/>
-                        </StackPanel>
+                        <Grid x:Name="EmploymentGrid" Visibility="{Binding IsChecked, ElementName=EmploymentToggle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Employee Status" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding Statuses}" SelectedValue="{Binding Employee.Status}" Style="{StaticResource ModernComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Relation" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.NextOfKinRelation}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. Spouse"/>
-                        </StackPanel>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Job Role" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding Roles}" SelectedValue="{Binding Employee.Role}" Style="{StaticResource ModernComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Phone" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.NextOfKinPhone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="082 ..."/>
-                        </StackPanel>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Employment Date" Style="{StaticResource FormLabelText}"/>
+                                <DatePicker SelectedDate="{Binding Employee.EmploymentDate}" Style="{StaticResource ModernDatePicker}"/>
+                            </StackPanel>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Secondary Contact Name" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.EmergencyContactName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Name"/>
-                        </StackPanel>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Employment Type" Style="{StaticResource FormLabelText}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,5">
+                                    <RadioButton IsChecked="{Binding Employee.EmploymentType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Permanent'}" Content="Permanent" Style="{StaticResource ModernRadioButton}" Margin="0,0,20,0" Foreground="White"/>
+                                    <RadioButton IsChecked="{Binding Employee.EmploymentType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Contract'}" Content="Contract" Style="{StaticResource ModernRadioButton}" Foreground="White"/>
+                                </StackPanel>
+                            </StackPanel>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Secondary Contact Phone" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.EmergencyContactPhone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Phone"/>
-                        </StackPanel>
+                            <StackPanel Margin="0,0,0,12" Visibility="{Binding IsContractVisible, Converter={StaticResource VisibilityConverter}}">
+                                <TextBlock Text="Contract Duration" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.ContractDuration}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. 6 Months"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Branch Location" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding Employee.Branch}" Style="{StaticResource ModernComboBox}"/>
+                            </StackPanel>
+
+                            <CheckBox Content="Override Branch Shift Times" 
+                                      IsChecked="{Binding IsShiftOverrideEnabled}" 
+                                      Style="{StaticResource ModernToggleSwitch}" 
+                                      Foreground="{StaticResource TextSub}"
+                                      FontSize="12"
+                                      Margin="0,0,0,12"/>
+
+                            <TextBlock Text="{Binding ActiveBranchShiftDisplay}" 
+                                       Style="{StaticResource FormLabelText}" 
+                                       Foreground="#88FFFFFF" 
+                                       Margin="0,0,0,12"
+                                       Visibility="{Binding IsShiftOverrideEnabled, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
+
+                            <Grid Margin="0,0,0,12" Visibility="{Binding IsShiftOverrideEnabled, Converter={StaticResource VisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Shift Start" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Style="{StaticResource ModernTimePicker}" Text="{Binding Employee.ShiftStartTime, StringFormat={}{0:hh\:mm}}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Shift End" Style="{StaticResource FormLabelText}"/>
+                                    <TextBox Style="{StaticResource ModernTimePicker}" Text="{Binding Employee.ShiftEndTime, StringFormat={}{0:hh\:mm}}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Section: Emergency Contacts -->
+                    <StackPanel Margin="0,0,0,25">
+                        <ToggleButton x:Name="EmergencyToggle" IsChecked="True" Style="{StaticResource SectionHeaderToggleStyle}" Foreground="{StaticResource ErrorRed}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource ErrorRed}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Emergency Contacts" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource ErrorRed}"/>
+                            </StackPanel>
+                        </ToggleButton>
+
+                        <Grid x:Name="EmergencyGrid" Visibility="{Binding IsChecked, ElementName=EmergencyToggle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Next of Kin Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.NextOfKinName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Full Name"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Relation" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.NextOfKinRelation}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. Spouse"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Phone" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.NextOfKinPhone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="082 ..."/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Secondary Contact Name" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.EmergencyContactName}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Name"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Secondary Contact Phone" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.EmergencyContactPhone}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Phone"/>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
 
                     <!-- Section: Banking & Leave -->
                     <StackPanel Margin="0,0,0,25">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource SuccessGreen}"/>
-                            <TextBlock Text="Banking &amp; Leave" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource SuccessGreen}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Bank Name" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding Banks}" SelectedItem="{Binding Employee.BankName}" Style="{StaticResource ModernComboBox}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Account Type" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding Employee.AccountType}" Style="{StaticResource ModernComboBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Account Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.AccountNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Account Number"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Branch Code" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.BranchCode}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="6 Digits"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,10,0,12">
-                            <TextBlock Text="Remuneration Type" Style="{StaticResource FormLabelText}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,5">
-                                <RadioButton IsChecked="{Binding Employee.RateType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Hourly'}" Content="Hourly" Style="{StaticResource ModernRadioButton}" Margin="0,0,20,0" Foreground="White"/>
-                                <RadioButton IsChecked="{Binding Employee.RateType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='MonthlySalary'}" Content="Salary" Style="{StaticResource ModernRadioButton}" Foreground="White"/>
+                        <ToggleButton x:Name="BankingLeaveToggle" IsChecked="True" Style="{StaticResource SectionHeaderToggleStyle}" Foreground="{StaticResource SuccessGreen}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource SuccessGreen}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Banking &amp; Leave" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource SuccessGreen}"/>
                             </StackPanel>
-                        </StackPanel>
+                        </ToggleButton>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Rate / Monthly Salary (R)" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Employee.HourlyRate}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="0.00"/>
-                        </StackPanel>
+                        <Grid x:Name="BankingLeaveGrid" Visibility="{Binding IsChecked, ElementName=BankingLeaveToggle, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Bank Name" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding Banks}" SelectedItem="{Binding Employee.BankName}" Style="{StaticResource ModernComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
 
-                        <Border BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
-                            <StackPanel>
-                                <TextBlock Text="LEAVE BALANCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,12"/>
-                                <TextBlock Text="{Binding LeaveAccrualRule}" FontSize="11" Foreground="{StaticResource TextSub}" TextWrapping="Wrap" Margin="0,0,0,10" Opacity="0.7"/>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Account Type" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding Employee.AccountType}" Style="{StaticResource ModernComboBox}"/>
+                            </StackPanel>
 
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Account Number" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.AccountNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Account Number"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Branch Code" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.BranchCode}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="6 Digits"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,10,0,12">
+                                <TextBlock Text="Remuneration Type" Style="{StaticResource FormLabelText}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,5">
+                                    <RadioButton IsChecked="{Binding Employee.RateType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='Hourly'}" Content="Hourly" Style="{StaticResource ModernRadioButton}" Margin="0,0,20,0" Foreground="White"/>
+                                    <RadioButton IsChecked="{Binding Employee.RateType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter='MonthlySalary'}" Content="Salary" Style="{StaticResource ModernRadioButton}" Foreground="White"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Rate / Monthly Salary (R)" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Employee.HourlyRate}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="0.00"/>
+                            </StackPanel>
+
+                            <Border Tag="FullWidth" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Padding="0,15,0,0" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="LEAVE BALANCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,12"/>
+                                    <TextBlock Text="{Binding LeaveAccrualRule}" FontSize="11" Foreground="{StaticResource TextSub}" TextWrapping="Wrap" Margin="0,0,0,10" Opacity="0.7"/>
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="10"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Initial Annual" Style="{StaticResource FormLabelText}"/>
-                                        <TextBox Text="{Binding Employee.AnnualLeaveBalance}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="0.0"/>
-                                        <TextBlock Text="{Binding CurrentAnnualLeaveBalance, StringFormat='Current: {0:N2}'}" FontSize="11" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,5,0,0"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Initial Sick" Style="{StaticResource FormLabelText}"/>
-                                        <TextBox Text="{Binding Employee.SickLeaveBalance}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="30"/>
-                                    </StackPanel>
-                                </Grid>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Initial Annual" Style="{StaticResource FormLabelText}"/>
+                                            <TextBox Text="{Binding Employee.AnnualLeaveBalance}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="0.0"/>
+                                            <TextBlock Text="{Binding CurrentAnnualLeaveBalance, StringFormat='Current: {0:N2}'}" FontSize="11" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Initial Sick" Style="{StaticResource FormLabelText}"/>
+                                            <TextBox Text="{Binding Employee.SickLeaveBalance}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="30"/>
+                                        </StackPanel>
+                                    </Grid>
 
-                                <StackPanel Margin="0,0,0,12">
-                                    <TextBlock Text="Leave Cycle Start Date" Style="{StaticResource FormLabelText}"/>
-                                    <DatePicker SelectedDate="{Binding Employee.LeaveCycleStartDate}" Style="{StaticResource ModernDatePicker}"/>
-                                    <TextBlock Text="{Binding SickLeaveCycleEndDisplay, StringFormat='Sick Cycle Ends: {0}'}" FontSize="11" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,5,0,0"/>
+                                    <StackPanel Margin="0,0,0,12">
+                                        <TextBlock Text="Leave Cycle Start Date" Style="{StaticResource FormLabelText}"/>
+                                        <DatePicker SelectedDate="{Binding Employee.LeaveCycleStartDate}" Style="{StaticResource ModernDatePicker}"/>
+                                        <TextBlock Text="{Binding SickLeaveCycleEndDisplay, StringFormat='Sick Cycle Ends: {0}'}" FontSize="11" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,5,0,0"/>
+                                    </StackPanel>
+
+                                    <CheckBox IsChecked="{Binding Employee.LivesInCompanyHousing}" Content="Lives in Company Shared Housing" 
+                                              Style="{StaticResource ModernCheckBox}" Foreground="White" Margin="0,10,0,0"/>
                                 </StackPanel>
-
-                                <CheckBox IsChecked="{Binding Employee.LivesInCompanyHousing}" Content="Lives in Company Shared Housing" 
-                                          Style="{StaticResource ModernCheckBox}" Foreground="White" Margin="0,10,0,0"/>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>

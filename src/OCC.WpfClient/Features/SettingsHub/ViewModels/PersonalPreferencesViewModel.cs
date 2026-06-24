@@ -21,6 +21,7 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             _sessionTimeoutMinutes = _localSettings.Settings.SessionTimeoutMinutes;
             _themeBrightness = _localSettings.Settings.ThemeBrightness;
             _usePlainMenuIcons = _localSettings.Settings.UsePlainMenuIcons;
+            _keepSidebarExpanded = _localSettings.Settings.KeepSidebarExpanded;
         }
 
         [ObservableProperty]
@@ -43,6 +44,17 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             _localSettings.Save();
             
             WeakReferenceMessenger.Default.Send(new PreferenceChangedMessage(nameof(LocalSettings.UsePlainMenuIcons)));
+        }
+
+        [ObservableProperty]
+        private bool _keepSidebarExpanded;
+
+        partial void OnKeepSidebarExpandedChanged(bool value)
+        {
+            _localSettings.Settings.KeepSidebarExpanded = value;
+            _localSettings.Save();
+
+            WeakReferenceMessenger.Default.Send(new PreferenceChangedMessage(nameof(LocalSettings.KeepSidebarExpanded)));
         }
 
         [ObservableProperty]

@@ -143,12 +143,12 @@ namespace OCC.Shared.Models
         /// <summary>
         /// Start time of the employee's shift.
         /// </summary>
-        public TimeSpan? ShiftStartTime { get; set; } = new TimeSpan(7, 0, 0);
-
+        public TimeSpan? ShiftStartTime { get; set; }
+        
         /// <summary>
         /// End time of the employee's shift.
         /// </summary>
-        public TimeSpan? ShiftEndTime { get; set; } = new TimeSpan(16, 45, 0);
+        public TimeSpan? ShiftEndTime { get; set; }
 
         // Banking Details
         /// <summary>

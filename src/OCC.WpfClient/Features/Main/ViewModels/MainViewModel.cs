@@ -137,6 +137,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private string _appVersion = string.Empty;
 
         public bool UsePlainMenuIcons => _localSettings.Settings.UsePlainMenuIcons;
+        public bool KeepSidebarExpanded => _localSettings.Settings.KeepSidebarExpanded;
 
         // --- Toast Alerts ---
         public ObservableCollection<ToastMessage> Toasts { get; } = new();
@@ -349,8 +350,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             Title = "Main Shell";
             AppVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
             
-            // Start navigation sidebar minimized by default
-            IsSidebarMinimized = true;
+            // Start navigation sidebar minimized by default unless keep expanded preference is enabled
+            IsSidebarMinimized = !_localSettings.Settings.KeepSidebarExpanded;
 
             // Load and filter navigation routes based on user permission roles
             InitializeNavigation();
@@ -1255,6 +1256,18 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             if (message.PreferenceName == nameof(LocalSettings.UsePlainMenuIcons))
             {
                 OnPropertyChanged(nameof(UsePlainMenuIcons));
+            }
+            else if (message.PreferenceName == nameof(LocalSettings.KeepSidebarExpanded))
+            {
+                OnPropertyChanged(nameof(KeepSidebarExpanded));
+                if (KeepSidebarExpanded)
+                {
+                    IsSidebarMinimized = false;
+                }
+                else
+                {
+                    IsSidebarMinimized = true;
+                }
             }
         }
 
