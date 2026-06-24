@@ -63,7 +63,7 @@
                                 
                                 <StackPanel>
 
-                                    <TextBlock Text="Global Loan Interest Rate (%)" Style="{StaticResource FormLabelText}"/>
+                                    <TextBlock Text="Global Loan Admin Fee (%)" Style="{StaticResource FormLabelText}"/>
                                     <TextBox Text="{Binding CompanyDetails.GlobalLoanInterestRate, StringFormat='N2'}" 
                                              Style="{StaticResource ModernInput}" 
                                              Width="200" HorizontalAlignment="Left"

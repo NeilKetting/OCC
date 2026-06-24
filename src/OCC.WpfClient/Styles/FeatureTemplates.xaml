@@ -302,6 +302,10 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
         <attndViews:LoansManagementView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type attndVm:AttendanceImportPreviewViewModel}">
+        <attndViews:AttendanceImportPreviewView />
+    </DataTemplate>
+
     <!-- Splash -->
     <DataTemplate DataType="{x:Type splashVm:SplashViewModel}">
         <splashViews:SplashView />

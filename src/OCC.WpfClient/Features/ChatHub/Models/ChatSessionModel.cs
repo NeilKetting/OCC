@@ -41,6 +41,9 @@ namespace OCC.WpfClient.Features.ChatHub.Models
         private string _badgeColor = string.Empty;
 
         [ObservableProperty]
+        private Guid _participantId;
+
+        [ObservableProperty]
         private string? _profilePictureUrl;
 
         public Guid CreatedById => Dto.CreatedById;
@@ -96,6 +99,7 @@ namespace OCC.WpfClient.Features.ChatHub.Models
                 {
                     Initials = GetInitials(otherUser.FirstName, otherUser.LastName);
                     BadgeColor = GetColorFromGuid(otherUser.UserId);
+                    ParticipantId = otherUser.UserId;
                     // ProfilePictureUrl = otherUser.ProfilePictureUrl; // Not in Dto yet, but ready
                 }
             }
@@ -103,6 +107,7 @@ namespace OCC.WpfClient.Features.ChatHub.Models
             {
                 Initials = GetInitials(Name, "");
                 BadgeColor = GetColorFromGuid(Id);
+                ParticipantId = Id;
             }
         }
 

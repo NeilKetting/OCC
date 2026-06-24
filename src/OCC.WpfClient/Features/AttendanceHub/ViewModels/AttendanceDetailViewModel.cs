@@ -5,6 +5,8 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
@@ -13,17 +15,80 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     {
         private readonly IAttendanceService _attendanceService;
         private readonly IEmployeeService _employeeService;
+        private readonly IProjectService _projectService;
         private readonly AttendanceRecord _originalRecord;
         private readonly AttendanceStatus _previousStatus;
 
         [ObservableProperty] private AttendanceRecord _editingRecord;
         [ObservableProperty] private string? _sickNoteFilePath;
         [ObservableProperty] private bool _hasSickNote;
+        [ObservableProperty] private bool _isNew;
+        [ObservableProperty] private List<OCC.Shared.DTOs.EmployeeSummaryDto> _employees = new();
+        [ObservableProperty] private OCC.Shared.DTOs.EmployeeSummaryDto? _selectedEmployee;
+
+        [ObservableProperty] private List<OCC.Shared.DTOs.ProjectSummaryDto> _projects = new();
+        [ObservableProperty] private OCC.Shared.DTOs.ProjectSummaryDto? _selectedProject;
+        [ObservableProperty] private string? _customSiteName;
+        [ObservableProperty] private bool _isCustomSiteVisible;
+
+        public AttendanceStatus Status
+        {
+            get => EditingRecord.Status;
+            set
+            {
+                if (EditingRecord.Status != value)
+                {
+                    EditingRecord.Status = value;
+                    OnPropertyChanged(nameof(Status));
+                    OnPropertyChanged(nameof(IsProjectSelectorVisible));
+                }
+            }
+        }
+
+        public bool IsProjectSelectorVisible => 
+            Status == AttendanceStatus.Present || 
+            Status == AttendanceStatus.Late || 
+            Status == AttendanceStatus.LeaveEarly;
+
+        public TimeSpan? CheckInTimeSpan
+        {
+            get => EditingRecord.CheckInTime?.TimeOfDay;
+            set
+            {
+                if (value.HasValue)
+                {
+                    EditingRecord.CheckInTime = EditingRecord.Date.Date.Add(value.Value);
+                }
+                else
+                {
+                    EditingRecord.CheckInTime = null;
+                }
+                OnPropertyChanged(nameof(CheckInTimeSpan));
+            }
+        }
+
+        public TimeSpan? CheckOutTimeSpan
+        {
+            get => EditingRecord.CheckOutTime?.TimeOfDay;
+            set
+            {
+                if (value.HasValue)
+                {
+                    EditingRecord.CheckOutTime = EditingRecord.Date.Date.Add(value.Value);
+                }
+                else
+                {
+                    EditingRecord.CheckOutTime = null;
+                }
+                OnPropertyChanged(nameof(CheckOutTimeSpan));
+            }
+        }
 
         public AttendanceDetailViewModel(
             AttendanceRecord record,
             IAttendanceService attendanceService,
             IEmployeeService employeeService,
+            IProjectService projectService,
             IDialogService dialogService,
             ILogger logger,
             IPdfService pdfService) : base(dialogService, logger, pdfService)
@@ -31,9 +96,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _originalRecord = record;
             _attendanceService = attendanceService;
             _employeeService = employeeService;
+            _projectService = projectService;
             _previousStatus = record.Status;
+            _isNew = record.Id == Guid.Empty;
 
-            Title = "EDIT ATTENDANCE RECORD";
+            Title = _isNew ? "CREATE ATTENDANCE RECORD" : "EDIT ATTENDANCE RECORD";
 
             _editingRecord = new AttendanceRecord
             {
@@ -49,6 +116,99 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 DoctorsNoteImagePath = record.DoctorsNoteImagePath,
                 RowVersion = record.RowVersion
             };
+
+            _ = InitializeAsync();
+        }
+
+        private async Task InitializeAsync()
+        {
+            try
+            {
+                var list = await _employeeService.GetEmployeesAsync();
+                Employees = list.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToList();
+
+                var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: false);
+                var pList = new List<OCC.Shared.DTOs.ProjectSummaryDto>
+                {
+                    new OCC.Shared.DTOs.ProjectSummaryDto { Id = Guid.Empty, Name = "Other (Specify)..." }
+                };
+                pList.AddRange(projects.OrderBy(p => p.Name));
+                Projects = pList;
+
+                if (IsNew)
+                {
+                    SelectedEmployee = Employees.FirstOrDefault();
+                    Status = AttendanceStatus.Present;
+                    SelectedProject = Projects.FirstOrDefault(p => p.Id != Guid.Empty); // Default to first actual project if exists
+                }
+                else
+                {
+                    SelectedEmployee = Employees.FirstOrDefault(e => e.Id == EditingRecord.EmployeeId);
+                    Status = EditingRecord.Status;
+                    
+                    if (EditingRecord.ProjectId.HasValue)
+                    {
+                        SelectedProject = Projects.FirstOrDefault(p => p.Id == EditingRecord.ProjectId.Value);
+                    }
+                    else if (IsProjectSelectorVisible && !string.IsNullOrEmpty(EditingRecord.Notes))
+                    {
+                        var matchedProj = Projects.FirstOrDefault(p => p.Id != Guid.Empty && string.Equals(p.Name, EditingRecord.Notes, StringComparison.OrdinalIgnoreCase));
+                        if (matchedProj != null)
+                        {
+                            SelectedProject = matchedProj;
+                        }
+                        else
+                        {
+                            SelectedProject = Projects.FirstOrDefault(p => p.Id == Guid.Empty);
+                            CustomSiteName = EditingRecord.Notes;
+                        }
+                    }
+                    else
+                    {
+                        SelectedProject = null;
+                    }
+
+                    OnPropertyChanged(nameof(CheckInTimeSpan));
+                    OnPropertyChanged(nameof(CheckOutTimeSpan));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading initialization data for attendance detail");
+            }
+        }
+
+        partial void OnSelectedEmployeeChanged(OCC.Shared.DTOs.EmployeeSummaryDto? value)
+        {
+            if (value != null)
+            {
+                EditingRecord.EmployeeId = value.Id;
+                EditingRecord.Branch = value.Branch;
+
+                if (IsNew)
+                {
+                    // Default shift times based on employee record or branch defaults
+                    var shiftStart = value.ShiftStartTime ?? new TimeSpan(7, 0, 0);
+                    var shiftEnd = value.ShiftEndTime ?? 
+                        (string.Equals(value.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) 
+                            ? new TimeSpan(16, 30, 0) 
+                            : new TimeSpan(16, 45, 0));
+
+                    EditingRecord.CheckInTime = EditingRecord.Date.Date.Add(shiftStart);
+                    EditingRecord.CheckOutTime = EditingRecord.Date.Date.Add(shiftEnd);
+                    OnPropertyChanged(nameof(CheckInTimeSpan));
+                    OnPropertyChanged(nameof(CheckOutTimeSpan));
+                }
+            }
+        }
+
+        partial void OnSelectedProjectChanged(OCC.Shared.DTOs.ProjectSummaryDto? value)
+        {
+            IsCustomSiteVisible = value?.Id == Guid.Empty;
+            if (!IsCustomSiteVisible)
+            {
+                CustomSiteName = null;
+            }
         }
 
         [RelayCommand]
@@ -77,13 +237,39 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     EditingRecord.DoctorsNoteImagePath = serverPath;
             }
 
+            // Align check-in and check-out dates to the selected record Date
+            if (EditingRecord.CheckInTime.HasValue)
+            {
+                EditingRecord.CheckInTime = EditingRecord.Date.Date.Add(EditingRecord.CheckInTime.Value.TimeOfDay);
+            }
+            if (EditingRecord.CheckOutTime.HasValue)
+            {
+                EditingRecord.CheckOutTime = EditingRecord.Date.Date.Add(EditingRecord.CheckOutTime.Value.TimeOfDay);
+            }
+
+            // Map project and custom site to the record properties as string
+            if (IsProjectSelectorVisible && SelectedProject != null)
+            {
+                EditingRecord.ProjectId = null;
+                EditingRecord.Notes = SelectedProject.Id == Guid.Empty ? CustomSiteName : SelectedProject.Name;
+            }
+
             // 2. Save the attendance record
-            await _attendanceService.UpdateAttendanceRecordAsync(EditingRecord);
+            if (IsNew)
+            {
+                await _attendanceService.CreateAttendanceRecordAsync(EditingRecord);
+            }
+            else
+            {
+                await _attendanceService.UpdateAttendanceRecordAsync(EditingRecord);
+            }
 
             // 3. Deduct sick leave balance if status changed TO Sick (and wasn't already Sick)
-            if (EditingRecord.Status == AttendanceStatus.Sick &&
-                _previousStatus != AttendanceStatus.Sick &&
-                EditingRecord.EmployeeId.HasValue)
+            bool shouldDeductSickLeave = EditingRecord.Status == AttendanceStatus.Sick &&
+                (IsNew || _previousStatus != AttendanceStatus.Sick) &&
+                EditingRecord.EmployeeId.HasValue;
+
+            if (shouldDeductSickLeave)
             {
                 try
                 {
@@ -111,19 +297,20 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                             RowVersion = emp.RowVersion
                         };
                         await _employeeService.UpdateEmployeeAsync(updateEmp);
-                        NotifySuccess("Record Updated",
-                            $"Status changed to Sick. 1 sick day deducted from {emp.FirstName} {emp.LastName}'s balance ({emp.SickLeaveBalance:F1} days remaining).");
+                        NotifySuccess(IsNew ? "Record Created" : "Record Updated",
+                            $"Status set to Sick. 1 sick day deducted from {emp.FirstName} {emp.LastName}'s balance ({emp.SickLeaveBalance:F1} days remaining).");
                     }
                 }
                 catch (Exception balEx)
                 {
                     _logger.LogWarning(balEx, "Could not deduct sick leave balance for employee {Id}", EditingRecord.EmployeeId);
-                    NotifySuccess("Record Updated", "Attendance record saved. Note: sick leave balance could not be updated automatically.");
+                    NotifySuccess(IsNew ? "Record Created" : "Record Updated",
+                        $"Attendance record {(IsNew ? "created" : "saved")}. Note: sick leave balance could not be updated automatically.");
                 }
             }
             else
             {
-                NotifySuccess("Saved", "Attendance record updated.");
+                NotifySuccess("Saved", IsNew ? "Attendance record created." : "Attendance record updated.");
             }
         }
 

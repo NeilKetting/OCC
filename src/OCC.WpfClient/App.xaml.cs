@@ -51,7 +51,7 @@ namespace OCC.WpfClient
             FrameworkElement.LanguageProperty.OverrideMetadata(
                 typeof(FrameworkElement),
                 new FrameworkPropertyMetadata(
-                    System.Windows.Markup.XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
+                    System.Windows.Markup.XmlLanguage.GetLanguage("en-US")));
 
             // Global Exception Handling
             this.DispatcherUnhandledException += OnDispatcherUnhandledException;

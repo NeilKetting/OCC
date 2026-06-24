@@ -239,7 +239,7 @@
                                             </Grid.ColumnDefinitions>
                                             
                                             <Grid Grid.Column="0" Width="40" Height="40" HorizontalAlignment="Left">
-                                                <Ellipse Fill="{Binding BadgeColor}" />
+                                                <Ellipse Fill="{Binding ParticipantId, Converter={StaticResource UserColorConverter}}" />
                                                 <TextBlock Text="{Binding Initials}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
                                                 
                                                 <!-- Profile Picture Support -->
@@ -458,7 +458,7 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 
-                                                <Ellipse Grid.Column="0" Width="40" Height="40" Fill="#00a884" HorizontalAlignment="Left" />
+                                                <Ellipse Grid.Column="0" Width="40" Height="40" Fill="{Binding UserId, Converter={StaticResource UserColorConverter}}" HorizontalAlignment="Left" />
                                                 <TextBlock Grid.Column="0" Text="{Binding FirstName[0]}" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
                                                 
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
@@ -886,7 +886,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Grid.Column="0" Width="40" Height="40">
-                        <Ellipse Fill="{Binding SelectedSession.BadgeColor}" />
+                        <Ellipse Fill="{Binding SelectedSession.ParticipantId, Converter={StaticResource UserColorConverter}}" />
                         <TextBlock Text="{Binding SelectedSession.Initials}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         
                         <Ellipse Visibility="{Binding SelectedSession.ProfilePictureUrl, Converter={StaticResource VisibilityConverter}}">

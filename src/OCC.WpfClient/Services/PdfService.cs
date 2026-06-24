@@ -1784,7 +1784,7 @@ namespace OCC.WpfClient.Services
                 col.Item().PaddingTop(30).Text("Terms and Conditions").FontSize(12).Bold().Underline();
                 col.Item().PaddingTop(10).Text("1. The employee acknowledges the debt and agrees to repay the loan in the installments specified above.");
                 col.Item().Text("2. Installments will be deducted directly from the employee's salary/wages.");
-                col.Item().Text("3. Interest is calculated as specified. Early repayment is permitted without penalty.");
+                col.Item().Text("3. An administration fee is calculated as specified. Early repayment is permitted without penalty.");
                 col.Item().Text("4. If employment is terminated, the outstanding balance becomes immediately due and payable.");
 
                 // Signatures
@@ -1853,7 +1853,7 @@ namespace OCC.WpfClient.Services
                 });
                 col.Item().PaddingTop(5).Row(row =>
                 {
-                    row.RelativeItem().Text("Interest Rate:").SemiBold();
+                    row.RelativeItem().Text("Admin Fee:").SemiBold();
                     row.RelativeItem().AlignRight().Text($"{loan.InterestRate}%");
                 });
                 col.Item().PaddingTop(5).Row(row =>
@@ -1987,7 +1987,7 @@ namespace OCC.WpfClient.Services
                     });
                     c.Item().PaddingTop(5).Row(r =>
                     {
-                        r.RelativeItem().Text("Interest Rate:").SemiBold();
+                        r.RelativeItem().Text("Admin Fee:").SemiBold();
                         r.RelativeItem().AlignRight().Text($"{statement.InterestRate}%");
                     });
                     c.Item().PaddingTop(5).Row(r =>

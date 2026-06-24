@@ -5,6 +5,8 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System.Collections.ObjectModel;
+using System.IO;
+using ExcelDataReader;
 
 namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 {
@@ -43,6 +45,17 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private int _selectedBranchIndex = 0;
         [ObservableProperty] private int _selectedStatusIndex = 0;
         [ObservableProperty] private int _totalHours;
+        [ObservableProperty] private double _drawerWidth = 380.0;
+        
+        [ObservableProperty] private bool _isDateColumnVisible = true;
+        [ObservableProperty] private bool _isEmployeeColumnVisible = true;
+        [ObservableProperty] private bool _isProjectColumnVisible = true;
+        [ObservableProperty] private bool _isStatusColumnVisible = true;
+        [ObservableProperty] private bool _isClockInColumnVisible = true;
+        [ObservableProperty] private bool _isClockOutColumnVisible = true;
+        [ObservableProperty] private bool _isHoursColumnVisible = true;
+        [ObservableProperty] private bool _isBranchColumnVisible = true;
+        [ObservableProperty] private bool _isNotesColumnVisible = true;
 
         // Rich employee name lookup for display
         private Dictionary<Guid, string> _employeeNameMap = new();
@@ -107,7 +120,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 filtered = filtered.Where(r =>
                     (r.Branch?.ToLower().Contains(q) ?? false) ||
                     (r.EmployeeId.HasValue && _employeeNameMap.TryGetValue(r.EmployeeId.Value, out var name) && name.ToLower().Contains(q)) ||
-                    (r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var projName) && projName.ToLower().Contains(q)));
+                    (r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var projName) && projName.ToLower().Contains(q)) ||
+                    (r.Notes != null && r.Notes.ToLower().Contains(q) && (r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly)));
             }
 
             filtered = SelectedBranchIndex switch
@@ -133,7 +147,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 {
                     Record       = r,
                     EmployeeName = GetEmployeeName(r.EmployeeId),
-                    ProjectName  = GetProjectName(r.ProjectId)
+                    ProjectName  = GetProjectName(r)
                 })
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
@@ -144,8 +158,191 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public string GetEmployeeName(Guid? id) =>
             id.HasValue && _employeeNameMap.TryGetValue(id.Value, out var n) ? n : "Unknown";
 
-        public string GetProjectName(Guid? id) =>
-            id.HasValue && _projectNameMap.TryGetValue(id.Value, out var n) ? n : "Office / General";
+        public string GetProjectName(AttendanceRecord r)
+        {
+            if (r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var n))
+                return n;
+
+            if (r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly)
+            {
+                if (!string.IsNullOrEmpty(r.Notes))
+                    return r.Notes;
+            }
+
+            return "Office / General";
+        }
+
+        [RelayCommand]
+        private void AddRecord()
+        {
+            var record = new AttendanceRecord
+            {
+                Id = Guid.Empty,
+                Date = DateTime.Today,
+                Status = AttendanceStatus.Present
+            };
+
+            var detailVm = new AttendanceDetailViewModel(
+                record,
+                _attendanceService,
+                _employeeService,
+                _projectService,
+                _dialogService,
+                _logger,
+                _pdfService);
+
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res != null) // Meaning saved successfully
+                {
+                    await LoadDataAsync();
+                }
+            });
+        }
+
+        [RelayCommand]
+        private async Task ImportExcel()
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Select Weekly Biometric Sheet (Excel)",
+                Filter = "Excel Files|*.xlsx;*.xls;*.xlsb",
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            var filePath = dialog.FileName;
+            var parsedRows = new List<TempImportRow>();
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Reading Excel sheet...";
+
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+                await Task.Run(() =>
+                {
+                    using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        using (var reader = ExcelReaderFactory.CreateReader(stream))
+                        {
+                            var result = reader.AsDataSet();
+                            if (result == null) return;
+
+                            foreach (System.Data.DataTable table in result.Tables)
+                            {
+                                // Skip metadata/empty sheets
+                                if (table.Rows.Count < 8 || table.Columns.Count < 7) continue;
+
+                                // Let's check row 3 (0-indexed) for dates
+                                var dates = new Dictionary<int, DateTime>();
+                                for (int col = 2; col < table.Columns.Count; col += 5)
+                                {
+                                    if (col >= table.Columns.Count) break;
+                                    var cellVal = table.Rows[3][col];
+                                    if (cellVal is DateTime dt)
+                                    {
+                                        dates[col] = dt;
+                                    }
+                                    else if (cellVal != null && cellVal != DBNull.Value && DateTime.TryParse(cellVal.ToString(), out var parsedDt))
+                                    {
+                                        dates[col] = parsedDt;
+                                    }
+                                }
+
+                                if (dates.Count == 0) continue;
+
+                                // Parse employees starting from row 8, stepping by 2
+                                for (int r = 8; r < table.Rows.Count; r += 2)
+                                {
+                                    var row = table.Rows[r];
+                                    var empName = row[0]?.ToString()?.Trim();
+                                    if (string.IsNullOrEmpty(empName)) continue;
+                                    if (empName.StartsWith("OCC :", StringComparison.OrdinalIgnoreCase) || 
+                                        empName.StartsWith("TOTAL", StringComparison.OrdinalIgnoreCase)) continue;
+
+                                    // Parse 7 days (Saturday to Friday)
+                                    for (int col = 2; col < table.Columns.Count; col += 5)
+                                    {
+                                        if (!dates.TryGetValue(col, out var date)) continue;
+
+                                        var site = row[col]?.ToString()?.Trim() ?? "";
+                                        var checkInVal = row[col + 1];
+                                        var checkOutVal = row[col + 2];
+
+                                        if (string.IsNullOrEmpty(site) && checkInVal == DBNull.Value && checkOutVal == DBNull.Value)
+                                        {
+                                            // No clocking for this day
+                                            continue;
+                                        }
+
+                                        TimeSpan? checkIn = null;
+                                        TimeSpan? checkOut = null;
+
+                                        if (checkInVal is DateTime cInDt) checkIn = cInDt.TimeOfDay;
+                                        else if (checkInVal != null && checkInVal != DBNull.Value && TimeSpan.TryParse(checkInVal.ToString(), out var cInTs)) checkIn = cInTs;
+
+                                        if (checkOutVal is DateTime cOutDt) checkOut = cOutDt.TimeOfDay;
+                                        else if (checkOutVal != null && checkOutVal != DBNull.Value && TimeSpan.TryParse(checkOutVal.ToString(), out var cOutTs)) checkOut = cOutTs;
+
+                                        parsedRows.Add(new TempImportRow
+                                        {
+                                            RawEmployeeName = empName,
+                                            RawSiteName = site,
+                                            Date = date,
+                                            CheckInTime = checkIn,
+                                            CheckOutTime = checkOut
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (parsedRows.Count == 0)
+                {
+                    NotifyError("No Records Found", "Could not find any valid daily attendance entries in the selected Excel sheet.");
+                    return;
+                }
+
+                var employees = await _employeeService.GetEmployeesAsync();
+                var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: false);
+
+                var previewVm = new AttendanceImportPreviewViewModel(
+                    parsedRows,
+                    employees.ToList(),
+                    projects.ToList(),
+                    _attendanceService
+                );
+
+                // Dynamically expand the drawer for the preview grid!
+                DrawerWidth = 1300.0;
+
+                OpenOverlay(previewVm, async (res) =>
+                {
+                    // Restore original drawer width when overlay closes
+                    DrawerWidth = 380.0;
+
+                    if (res is int count && count > 0)
+                    {
+                        NotifySuccess("Import Completed", $"Successfully imported {count} attendance records.");
+                        await LoadDataAsync();
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing Excel biometric sheet");
+                NotifyError("Import Failed", $"Failed to parse Excel file: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         [RelayCommand]
         private void EditRecord(object? parameter)
@@ -158,6 +355,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 record,
                 _attendanceService,
                 _employeeService,
+                _projectService,
                 _dialogService,
                 _logger,
                 _pdfService);

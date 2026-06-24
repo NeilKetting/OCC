@@ -420,7 +420,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     new() { Header = "Principal (R)", PropertyName = "Principal", Width = 1.0 },
                     new() { Header = "Installment (R)", PropertyName = "Installment", Width = 1.0 },
                     new() { Header = "Balance (R)", PropertyName = "Balance", Width = 1.0 },
-                    new() { Header = "Interest (%)", PropertyName = "InterestPercent", Width = 0.8 },
+                    new() { Header = "Admin Fee (%)", PropertyName = "InterestPercent", Width = 0.8 },
                     new() { Header = "Start Date", PropertyName = "StartDate", Width = 1.2 },
                     new() { Header = "Status", PropertyName = "Status", Width = 0.8 }
                 };
