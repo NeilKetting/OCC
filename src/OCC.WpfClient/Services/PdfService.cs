@@ -1310,7 +1310,8 @@ namespace OCC.WpfClient.Services
                                 });
                                 box.Item().Padding(12).Row(row =>
                                 {
-                                    row.RelativeItem().Text(t => { t.Span("Paid Leave: ").SemiBold(); t.Span(request.IsUnpaid ? "No (Unpaid)" : "Yes"); });
+                                    bool isUnpaid = request.IsUnpaid || request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave;
+                                    row.RelativeItem().Text(t => { t.Span("Paid Leave: ").SemiBold(); t.Span(isUnpaid ? "No (Unpaid)" : "Yes"); });
                                     row.RelativeItem().Text(t =>
                                     {
                                         t.Span("Status: ").SemiBold();
@@ -2056,6 +2057,189 @@ namespace OCC.WpfClient.Services
                     x.TotalPages();
                 });
                 row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - Orange Circle Construction");
+            });
+        }
+
+        public async Task<string> GenerateWeeklyAttendanceReportPdfAsync(string title, string branchFilter, string searchFilter, List<WeeklyAttendanceReportWeekModel> weeks)
+        {
+            var company = new CompanyDetails();
+
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(15);
+                        page.Size(PageSizes.A4.Landscape());
+                        page.DefaultTextStyle(x => x.FontSize(6).FontFamily(Fonts.Arial).FontColor(Colors.Black));
+
+                        page.Header().Element(c => ComposeWeeklyAttendanceHeader(c, title, branchFilter, searchFilter, company));
+                        page.Content().PaddingVertical(10).Element(c => ComposeWeeklyAttendanceContent(c, weeks));
+                        page.Footer().Element(c => ComposeWeeklyAttendanceFooter(c, company));
+                    });
+                });
+
+                string docsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OCC", "AttendanceReports");
+                if (!Directory.Exists(docsPath)) Directory.CreateDirectory(docsPath);
+
+                string filename = $"Weekly_Attendance_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                string fullPath = Path.Combine(docsPath, filename);
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        private void ComposeWeeklyAttendanceHeader(IContainer container, string title, string branchFilter, string searchFilter, CompanyDetails company)
+        {
+            container.Column(col =>
+            {
+                col.Item().Row(row =>
+                {
+                    // Left
+                    row.RelativeItem().Column(c =>
+                    {
+                        c.Item().Text(company.CompanyName).FontSize(12).ExtraBold().FontColor(ColorPrimary);
+                        c.Item().Text(title.ToUpper()).FontSize(9).Bold().FontColor(ColorSecondary);
+                    });
+
+                    // Right (Filters and Date)
+                    row.RelativeItem().AlignRight().Column(c =>
+                    {
+                        var filters = new List<string>();
+                        if (!string.IsNullOrEmpty(branchFilter) && branchFilter != "All Branches" && branchFilter != "All")
+                            filters.Add($"Branch: {branchFilter}");
+                        if (!string.IsNullOrEmpty(searchFilter))
+                            filters.Add($"Search: {searchFilter}");
+
+                        string filterStr = filters.Count > 0 ? string.Join(" | ", filters) : "All Records";
+                        c.Item().Text(filterStr).FontSize(7.5f).SemiBold().FontColor(Colors.Grey.Darken2);
+                        c.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(7).FontColor(Colors.Grey.Medium);
+                    });
+                });
+                col.Item().PaddingVertical(4).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten1);
+            });
+        }
+
+        private void ComposeWeeklyAttendanceContent(IContainer container, List<WeeklyAttendanceReportWeekModel> weeks)
+        {
+            container.Column(col =>
+            {
+                for (int w = 0; w < weeks.Count; w++)
+                {
+                    var week = weeks[w];
+                    if (w > 0)
+                    {
+                        col.Item().PageBreak();
+                    }
+
+                    // Week Title Header
+                    col.Item().PaddingBottom(5).Row(row =>
+                    {
+                        string dateRangeStr = (week.FilterFromDate.HasValue && week.FilterToDate.HasValue)
+                            ? $" ({week.FilterFromDate.Value:dd MMM yyyy} to {week.FilterToDate.Value:dd MMM yyyy})"
+                            : "";
+                        row.RelativeItem().Text($"DAILY ATTENDANCE REGISTER{dateRangeStr} - WEEK ENDING {week.WeekEnd:yyyy/MM/dd}").FontSize(9).ExtraBold().FontColor(ColorPrimary);
+                        row.RelativeItem().AlignRight().Text($"Period: {week.WeekStart:dd MMM yyyy} to {week.WeekEnd:dd MMM yyyy}").FontSize(8).SemiBold();
+                    });
+
+                    // Weekly table
+                    col.Item().Element(c => ComposeWeeklyAttendanceTable(c, week.Employees));
+                }
+            });
+        }
+
+        private void ComposeWeeklyAttendanceTable(IContainer container, List<WeeklyAttendancePrintModel> employees)
+        {
+            container.Table(table =>
+            {
+                // Columns Definition (29 columns total: Name + 7 days * 4 sub-columns)
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(2.0f); // NAME
+                    for (int d = 0; d < 7; d++)
+                    {
+                        columns.RelativeColumn(1.3f); // Site
+                        columns.ConstantColumn(20);   // In
+                        columns.ConstantColumn(20);   // Out
+                        columns.ConstantColumn(16);   // O/T
+                    }
+                });
+
+                // Header Row 1: Name and Day headers
+                table.Header(header =>
+                {
+                    static IContainer MainHeaderStyle(IContainer c) =>
+                        c.Border(0.5f).BorderColor(Colors.Grey.Lighten1).Background(ColorPrimary).Padding(2)
+                         .AlignCenter().AlignMiddle()
+                         .DefaultTextStyle(x => x.Bold().FontSize(6.5f).FontColor(Colors.White));
+
+                    static IContainer SubHeaderStyle(IContainer c) =>
+                         c.Border(0.5f).BorderColor(Colors.Grey.Lighten1).Background(Colors.Grey.Lighten4).Padding(1)
+                          .AlignCenter().AlignMiddle()
+                          .DefaultTextStyle(x => x.Bold().FontSize(5.5f).FontColor(ColorSecondary));
+
+                    header.Cell().RowSpan(2).Element(MainHeaderStyle).Text("NAME");
+                    
+                    var daysOfWeek = new[] { "SAT", "SUN", "MON", "TUE", "WED", "THUR", "FRI" };
+                    foreach (var day in daysOfWeek)
+                    {
+                        header.Cell().ColumnSpan(4).Element(MainHeaderStyle).Text(day);
+                    }
+
+                    // Header Row 2: Sub-headers Site, In, Out, O/T
+                    for (int d = 0; d < 7; d++)
+                    {
+                        header.Cell().Element(SubHeaderStyle).Text("Site");
+                        header.Cell().Element(SubHeaderStyle).Text("In");
+                        header.Cell().Element(SubHeaderStyle).Text("Out");
+                        header.Cell().Element(SubHeaderStyle).Text("O/T");
+                    }
+                });
+
+                // Rows
+                foreach (var emp in employees)
+                {
+                    static IContainer NameStyle(IContainer c) =>
+                        c.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(2).AlignLeft().AlignMiddle();
+
+                    static IContainer CellStyle(IContainer c) =>
+                        c.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(1.5f).AlignCenter().AlignMiddle();
+
+                    static IContainer SiteStyle(IContainer c) =>
+                        c.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(1.5f).AlignLeft().AlignMiddle();
+
+                    table.Cell().Element(NameStyle).Text(emp.EmployeeName).Bold();
+
+                    for (int d = 0; d < 7; d++)
+                    {
+                        var dayData = emp.Days[d] ?? new DailyAttendancePrintModel();
+                        
+                        // SiteName
+                        table.Cell().Element(SiteStyle).Text(dayData.Site);
+                        // In
+                        table.Cell().Element(CellStyle).Text(dayData.TimeIn);
+                        // Out
+                        table.Cell().Element(CellStyle).Text(dayData.TimeOut);
+                        // O/T
+                        table.Cell().Element(CellStyle).Text(dayData.Overtime);
+                    }
+                }
+            });
+        }
+
+        private void ComposeWeeklyAttendanceFooter(IContainer container, CompanyDetails company)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem().Text(x =>
+                {
+                    x.Span("Page ");
+                    x.CurrentPageNumber();
+                    x.Span(" of ");
+                    x.TotalPages();
+                });
+                row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - {company.CompanyName}");
             });
         }
     }

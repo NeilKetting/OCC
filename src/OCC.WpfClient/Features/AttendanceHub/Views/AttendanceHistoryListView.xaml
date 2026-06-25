@@ -163,17 +163,18 @@
                     <!-- From Date -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,4,20,4" VerticalAlignment="Center">
                         <TextBlock Text="From" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <DatePicker SelectedDate="{Binding FromDate}" Style="{StaticResource ModernDatePicker}" Width="120"/>
+                        <DatePicker SelectedDate="{Binding FromDate}" Style="{StaticResource ModernDatePicker}" />
                     </StackPanel>
 
                     <!-- To Date -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,4,20,4" VerticalAlignment="Center">
                         <TextBlock Text="To" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <DatePicker SelectedDate="{Binding ToDate}" Style="{StaticResource ModernDatePicker}" Width="120"/>
+                        <DatePicker SelectedDate="{Binding ToDate}" Style="{StaticResource ModernDatePicker}"/>
                     </StackPanel>
 
                     <!-- Status Filter -->
-                    <ComboBox Grid.Column="3" SelectedIndex="{Binding SelectedStatusIndex}" Style="{StaticResource ModernComboBox}" Width="130" Margin="0,4,15,4" VerticalAlignment="Center">
+                    <ComboBox Grid.Column="3" SelectedIndex="{Binding SelectedStatusIndex}" 
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,15,4" VerticalAlignment="Center">
                         <ComboBoxItem Content="All Statuses"/>
                         <ComboBoxItem Content="Present"/>
                         <ComboBoxItem Content="Late"/>
@@ -183,7 +184,8 @@
                     </ComboBox>
 
                     <!-- Branch Filter -->
-                    <ComboBox Grid.Column="4" SelectedIndex="{Binding SelectedBranchIndex}" Style="{StaticResource ModernComboBox}" Width="130" Margin="0,4,15,4" VerticalAlignment="Center">
+                    <ComboBox Grid.Column="4" SelectedIndex="{Binding SelectedBranchIndex}" 
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,15,4" VerticalAlignment="Center">
                         <ComboBoxItem Content="All Branches"/>
                         <ComboBoxItem Content="Johannesburg"/>
                         <ComboBoxItem Content="Cape Town"/>

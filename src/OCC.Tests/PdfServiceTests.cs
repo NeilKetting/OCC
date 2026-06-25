@@ -139,5 +139,74 @@ namespace OCC.Tests
             // Assert
             Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
         }
+
+        [Fact]
+        public async Task GenerateWeeklyAttendanceReportPdfAsync_ShouldCreatePdfFile()
+        {
+            // Arrange
+            var pdfService = new PdfService();
+            
+            var weeks = new List<WeeklyAttendanceReportWeekModel>
+            {
+                new WeeklyAttendanceReportWeekModel
+                {
+                    WeekStart = new DateTime(2026, 6, 20),
+                    WeekEnd = new DateTime(2026, 6, 26),
+                    Employees = new List<WeeklyAttendancePrintModel>
+                    {
+                        new WeeklyAttendancePrintModel
+                        {
+                            EmployeeName = "Aaron Moselane",
+                            Days = new DailyAttendancePrintModel[]
+                            {
+                                new DailyAttendancePrintModel { Site = "Mosselbay", TimeIn = "07:00", TimeOut = "14:00", Overtime = "7.0" }, // Sat
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" }, // Sun
+                                new DailyAttendancePrintModel { Site = "Mosselbay", TimeIn = "07:00", TimeOut = "16:45", Overtime = "" }, // Mon
+                                new DailyAttendancePrintModel { Site = "Mosselbay", TimeIn = "07:00", TimeOut = "16:45", Overtime = "" }, // Tue
+                                new DailyAttendancePrintModel { Site = "Mosselbay", TimeIn = "07:00", TimeOut = "16:45", Overtime = "" }, // Wed
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" }, // Thu
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" } // Fri
+                            }
+                        },
+                        new WeeklyAttendancePrintModel
+                        {
+                            EmployeeName = "Coster Malepe",
+                            Days = new DailyAttendancePrintModel[]
+                            {
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" }, // Sat
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" }, // Sun
+                                new DailyAttendancePrintModel { Site = "ABSENT", TimeIn = "XXXX", TimeOut = "XXXX", Overtime = "UNP" }, // Mon
+                                new DailyAttendancePrintModel { Site = "ABSENT", TimeIn = "XXXX", TimeOut = "XXXX", Overtime = "UNP" }, // Tue
+                                new DailyAttendancePrintModel { Site = "ABSENT", TimeIn = "XXXX", TimeOut = "XXXX", Overtime = "UNP" }, // Wed
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" }, // Thu
+                                new DailyAttendancePrintModel { Site = "", TimeIn = "", TimeOut = "", Overtime = "" } // Fri
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Act
+            var path = await pdfService.GenerateWeeklyAttendanceReportPdfAsync(
+                "Weekly Attendance Register",
+                "All Branches",
+                "",
+                weeks);
+
+            // Copy to workspace root for user visual inspection
+            var targetPath = @"c:\Users\Neil\source\repos\NeilKetting\OrangeCircleConstruction-master\SampleWeeklyAttendanceReport.pdf";
+            try
+            {
+                if (File.Exists(targetPath))
+                {
+                    File.Delete(targetPath);
+                }
+                File.Copy(path, targetPath);
+            }
+            catch { }
+
+            // Assert
+            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+        }
     }
 }

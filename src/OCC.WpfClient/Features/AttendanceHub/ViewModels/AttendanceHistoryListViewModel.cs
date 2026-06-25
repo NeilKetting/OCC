@@ -142,13 +142,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             };
 
             var result = filtered
-                .OrderByDescending(r => r.Date)
                 .Select(r => new AttendanceHistoryRow
                 {
                     Record       = r,
                     EmployeeName = GetEmployeeName(r.EmployeeId),
                     ProjectName  = GetProjectName(r)
                 })
+                .OrderBy(r => r.EmployeeName)
+                .ThenByDescending(r => r.Date)
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
             TotalCount = result.Count;
@@ -400,6 +401,192 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 NotifyError("Delete Failed", ex.Message);
             }
             finally { IsBusy = false; }
+        }
+
+        public override async Task PrintAsync()
+        {
+            if (Items == null) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating weekly report...";
+
+                // Determine all Saturday-to-Friday weeks within the FromDate to ToDate range
+                // A week starts on Saturday. Find the Saturday on or before FromDate.
+                DateTime startSat = FromDate.Date;
+                while (startSat.DayOfWeek != DayOfWeek.Saturday)
+                {
+                    startSat = startSat.AddDays(-1);
+                }
+
+                var weeksList = new List<WeeklyAttendanceReportWeekModel>();
+
+                // Load all active employees and filter/sort them
+                var activeEmps = (await _employeeService.GetEmployeesAsync())
+                    .Where(e => e.Status == EmployeeStatus.Active);
+
+                if (SelectedBranchIndex == 1)
+                {
+                    activeEmps = activeEmps.Where(e => e.Branch == "Johannesburg");
+                }
+                else if (SelectedBranchIndex == 2)
+                {
+                    activeEmps = activeEmps.Where(e => e.Branch == "Cape Town");
+                }
+
+                if (!string.IsNullOrWhiteSpace(SearchQuery))
+                {
+                    var q = SearchQuery.ToLower();
+                    activeEmps = activeEmps.Where(e =>
+                        $"{e.FirstName} {e.LastName}".ToLower().Contains(q) ||
+                        (e.EmployeeNumber != null && e.EmployeeNumber.ToLower().Contains(q)) ||
+                        (e.Branch != null && e.Branch.ToLower().Contains(q)));
+                }
+
+                var sortedEmployees = activeEmps
+                    .OrderBy(e => $"{e.FirstName} {e.LastName}".Trim())
+                    .ToList();
+
+                // Build weeks
+                for (DateTime weekStart = startSat; weekStart <= ToDate.Date; weekStart = weekStart.AddDays(7))
+                {
+                    DateTime weekEnd = weekStart.AddDays(6);
+
+                    var weekModel = new WeeklyAttendanceReportWeekModel
+                    {
+                        WeekStart = weekStart,
+                        WeekEnd = weekEnd,
+                        FilterFromDate = FromDate,
+                        FilterToDate = ToDate
+                    };
+
+                    // Get all attendance records in Items that fall in this week
+                    var weekRecords = Items.Where(r => r.Date.Date >= weekStart && r.Date.Date <= weekEnd).ToList();
+
+                    // Find if there are any other employee names in these week records that aren't in our active list
+                    var weekEmployeeNames = weekRecords.Select(r => r.EmployeeName).Distinct().ToList();
+
+                    // Combine active sorted employees and any extra employees with records this week
+                    var allWeekEmployees = new List<string>();
+                    foreach (var emp in sortedEmployees)
+                    {
+                        allWeekEmployees.Add($"{emp.FirstName} {emp.LastName}".Trim());
+                    }
+                    foreach (var extraName in weekEmployeeNames)
+                    {
+                        if (!allWeekEmployees.Any(name => name.Equals(extraName, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            allWeekEmployees.Add(extraName);
+                        }
+                    }
+
+                    // Sort the combined list alphabetically
+                    allWeekEmployees = allWeekEmployees.OrderBy(name => name).ToList();
+
+                    foreach (var empName in allWeekEmployees)
+                    {
+                        var empRecords = weekRecords.Where(r => r.EmployeeName.Equals(empName, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                        var empModel = new WeeklyAttendancePrintModel
+                        {
+                            EmployeeName = empName
+                        };
+
+                        // Populate 7 days Saturday (0) to Friday (6)
+                        for (int i = 0; i < 7; i++)
+                        {
+                            DateTime dayDate = weekStart.AddDays(i);
+                            var dayPrint = new DailyAttendancePrintModel();
+
+                            // ONLY grab attendance records for that timespan (between FromDate and ToDate)
+                            if (dayDate >= FromDate.Date && dayDate <= ToDate.Date)
+                            {
+                                var dayRow = empRecords.FirstOrDefault(r => r.Date.Date == dayDate);
+                                if (dayRow != null)
+                                {
+                                    if (dayRow.Status == AttendanceStatus.Absent)
+                                    {
+                                        dayPrint.Site = "ABSENT";
+                                        dayPrint.TimeIn = "XXXX";
+                                        dayPrint.TimeOut = "XXXX";
+                                        dayPrint.Overtime = "UNP";
+                                    }
+                                    else if (dayRow.Status == AttendanceStatus.Sick)
+                                    {
+                                        dayPrint.Site = "ABSENT -SICK";
+                                        dayPrint.TimeIn = "XXXX";
+                                        dayPrint.TimeOut = "XXXX";
+                                        dayPrint.Overtime = "PAID";
+                                    }
+                                    else if (dayRow.Status == AttendanceStatus.UnpaidSick)
+                                    {
+                                        dayPrint.Site = "ABSENT -SICK";
+                                        dayPrint.TimeIn = "XXXX";
+                                        dayPrint.TimeOut = "XXXX";
+                                        dayPrint.Overtime = "UNP";
+                                    }
+                                    else if (dayRow.Status == AttendanceStatus.LeaveAuthorized)
+                                    {
+                                        dayPrint.Site = "LEAVE";
+                                        dayPrint.TimeIn = "XXXX";
+                                        dayPrint.TimeOut = "XXXX";
+                                        dayPrint.Overtime = "PAID";
+                                    }
+                                    else // Present, Late, LeaveEarly
+                                    {
+                                        dayPrint.Site = dayRow.ProjectName ?? string.Empty;
+                                        dayPrint.TimeIn = dayRow.CheckInTime?.ToString("HH:mm") ?? string.Empty;
+                                        dayPrint.TimeOut = dayRow.CheckOutTime?.ToString("HH:mm") ?? string.Empty;
+
+                                        // Overtime calculation
+                                        if (dayDate.DayOfWeek == DayOfWeek.Saturday || dayDate.DayOfWeek == DayOfWeek.Sunday)
+                                        {
+                                            dayPrint.Overtime = dayRow.HoursWorked > 0 ? dayRow.HoursWorked.ToString("F1") : string.Empty;
+                                        }
+                                        else
+                                        {
+                                            dayPrint.Overtime = dayRow.HoursWorked > 8.75 ? (dayRow.HoursWorked - 8.75).ToString("F1") : string.Empty;
+                                        }
+                                    }
+                                }
+                            }
+                            empModel.Days[i] = dayPrint;
+                        }
+                        weekModel.Employees.Add(empModel);
+                    }
+
+                    if (weekModel.Employees.Any())
+                    {
+                        weeksList.Add(weekModel);
+                    }
+                }
+
+                // Call PDF Service
+                string branchStr = SelectedBranchIndex switch
+                {
+                    1 => "Johannesburg",
+                    2 => "Cape Town",
+                    _ => "All Branches"
+                };
+
+                var path = await _pdfService.GenerateWeeklyAttendanceReportPdfAsync(
+                    "Weekly Attendance Register",
+                    branchStr,
+                    SearchQuery,
+                    weeksList);
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating weekly attendance PDF");
+                NotifyError("Print Error", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 

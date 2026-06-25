@@ -52,7 +52,7 @@ namespace OCC.WpfClient.Infrastructure
         public virtual IRelayCommand<object>? DeleteCommand => null;
 
         [RelayCommand]
-        public async Task PrintAsync()
+        public virtual async Task PrintAsync()
         {
             try
             {

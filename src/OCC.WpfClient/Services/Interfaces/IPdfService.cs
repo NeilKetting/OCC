@@ -39,6 +39,34 @@ namespace OCC.WpfClient.Services.Interfaces
         /// </summary>
         Task<string> GenerateLoanSchedulePdfAsync(EmployeeLoan loan, Employee employee);
         Task<string> GenerateLoanStatementPdfAsync(OCC.Shared.DTOs.LoanStatementDto statement);
+
+        /// <summary>
+        /// Generates a landscape A4 weekly attendance register matching the client's biometric layout.
+        /// </summary>
+        Task<string> GenerateWeeklyAttendanceReportPdfAsync(string title, string branchFilter, string searchFilter, List<WeeklyAttendanceReportWeekModel> weeks);
+    }
+
+    public class WeeklyAttendanceReportWeekModel
+    {
+        public DateTime WeekStart { get; set; }
+        public DateTime WeekEnd { get; set; }
+        public DateTime? FilterFromDate { get; set; }
+        public DateTime? FilterToDate { get; set; }
+        public List<WeeklyAttendancePrintModel> Employees { get; set; } = new();
+    }
+
+    public class WeeklyAttendancePrintModel
+    {
+        public string EmployeeName { get; set; } = string.Empty;
+        public DailyAttendancePrintModel[] Days { get; set; } = new DailyAttendancePrintModel[7];
+    }
+
+    public class DailyAttendancePrintModel
+    {
+        public string Site { get; set; } = string.Empty;
+        public string TimeIn { get; set; } = string.Empty;
+        public string TimeOut { get; set; } = string.Empty;
+        public string Overtime { get; set; } = string.Empty;
     }
 
     public class ReportColumnDefinition

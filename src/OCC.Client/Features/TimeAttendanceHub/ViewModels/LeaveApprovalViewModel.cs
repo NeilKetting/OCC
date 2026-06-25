@@ -210,7 +210,8 @@ namespace OCC.Client.Features.TimeAttendanceHub.ViewModels
                 RowVersion = request.RowVersion,
                 CreatedAtUtc = request.CreatedAtUtc,
                 CreatedBy = request.CreatedBy,
-                IsActive = request.IsActive
+                IsActive = request.IsActive,
+                IsUnpaid = request.IsUnpaid
             };
 
             var editedRequest = await _dialogService.ShowEditLeaveRequestAsync(clone);

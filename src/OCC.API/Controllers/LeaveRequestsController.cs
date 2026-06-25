@@ -51,6 +51,10 @@ namespace OCC.API.Controllers
         [HttpPost]
         public async Task<ActionResult<LeaveRequest>> PostLeaveRequest(LeaveRequest request)
         {
+            if (request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave)
+            {
+                request.IsUnpaid = true;
+            }
             if (request.Id == Guid.Empty) request.Id = Guid.NewGuid();
             _context.LeaveRequests.Add(request);
             await _context.SaveChangesAsync();
@@ -69,6 +73,10 @@ namespace OCC.API.Controllers
         {
             if (id != request.Id) return BadRequest();
 
+            if (request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave)
+            {
+                request.IsUnpaid = true;
+            }
             _context.Entry(request).State = EntityState.Modified;
 
             try
