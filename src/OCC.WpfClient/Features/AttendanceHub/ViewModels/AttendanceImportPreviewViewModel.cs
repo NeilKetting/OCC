@@ -264,8 +264,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                     if (row.Status == AttendanceStatus.Present || row.Status == AttendanceStatus.Late || row.Status == AttendanceStatus.LeaveEarly)
                     {
-                        record.ProjectId = null;
-                        record.Notes = row.SelectedProject?.Id == Guid.Empty ? row.CustomSite : row.SelectedProject?.Name;
+                        if (row.SelectedProject?.Id == Guid.Empty) // Other
+                        {
+                            record.ProjectId = null;
+                            record.CustomSite = row.CustomSite;
+                        }
+                        else
+                        {
+                            record.ProjectId = row.SelectedProject?.Id;
+                            record.CustomSite = null;
+                        }
 
                         if (row.CheckInTime.HasValue)
                         {
@@ -279,6 +287,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     else
                     {
                         record.ProjectId = null;
+                        record.CustomSite = null;
                         record.Notes = row.RawSiteName; // Save original status notes like "ABSENT -CLINIC"
                     }
 
