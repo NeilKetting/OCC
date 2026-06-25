@@ -37,5 +37,43 @@ namespace OCC.WpfClient.Infrastructure
                 return string.Empty;
             }
         }
+
+        public static void ShowScreenshot(string? base64, string title = "Screenshot Preview")
+        {
+            if (string.IsNullOrEmpty(base64)) return;
+            try
+            {
+                byte[] binaryData = Convert.FromBase64String(base64);
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = new MemoryStream(binaryData);
+                bitmap.EndInit();
+
+                var window = new Window
+                {
+                    Title = title,
+                    Width = 1024,
+                    Height = 768,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    Background = new SolidColorBrush(Color.FromRgb(17, 24, 39)),
+                    ShowInTaskbar = true
+                };
+
+                var grid = new System.Windows.Controls.Grid();
+                var image = new System.Windows.Controls.Image
+                {
+                    Source = bitmap,
+                    Stretch = Stretch.Uniform,
+                    Margin = new Thickness(20)
+                };
+                grid.Children.Add(image);
+                window.Content = grid;
+                window.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error showing screenshot: {ex.Message}");
+            }
+        }
     }
 }

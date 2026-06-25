@@ -42,79 +42,109 @@
                     </StackPanel>
                     <TextBlock Text="Track and resolve post-completion quality issues." Style="{StaticResource FormLabelText}"/>
                 </StackPanel>
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <Button Style="{StaticResource CreateIconButton}" Command="{Binding AddSnagCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
-                            <TextBlock Text="Record Snag" Style="{StaticResource ButtonTextStyle}"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
             </Grid>
 
             <!-- Filters Bar -->
             <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="20,5">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" MinWidth="180" />
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" Height="34" Padding="8,0" BorderThickness="0" Background="Transparent"
-                             ap:WatermarkProperties.Watermark="Search snags..."/>
+                    <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                    <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
-                    <!-- Filters -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal">
-                        <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedFilterProject}" DisplayMemberPath="Name"
-                                  Style="{StaticResource ModernComboBox}" MinWidth="120" Height="30"/>
-                        <ComboBox ItemsSource="{Binding SubContractors}" SelectedItem="{Binding SelectedFilterSubContractor}" DisplayMemberPath="Name"
-                                  Style="{StaticResource ModernComboBox}" MinWidth="120" Height="30" Margin="10,0"/>
-                        <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" 
-                                  Style="{StaticResource ModernComboBox}" MinWidth="120" Height="30"/>
-                    </StackPanel>
+                            <!-- Record Snag Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding AddSnagCommand}" ToolTip="Record Snag">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Record Snag" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <Border Grid.Column="4" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
-                    <!-- Columns Selection -->
-                    <Grid Grid.Column="5">
-                        <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Height="30">
-                            <StackPanel Orientation="Horizontal" Margin="10,0">
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
-                                <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                            </StackPanel>
-                        </ToggleButton>
-                        <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="180">
-                                <StackPanel>
-                                    <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
-                                    <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                    <CheckBox Content="Partner" IsChecked="{Binding IsPartnerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                    <CheckBox Content="Project" IsChecked="{Binding IsProjectVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
-                                    <CheckBox Content="Due Date" IsChecked="{Binding IsDueDateVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2"/>
+                            <!-- Print Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Report">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Columns Button -->
+                            <Button x:Name="ColumnsButton" Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding ToggleColumnPickerCommand}" ToolTip="Show/Hide Columns">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE136;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Columns" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Column Picker Popup -->
+                            <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-60" VerticalOffset="5">
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
+                                    <StackPanel>
+                                        <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                                        <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Partner" IsChecked="{Binding IsPartnerVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Project" IsChecked="{Binding IsProjectVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Due Date" IsChecked="{Binding IsDueDateVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Search & Filter Controls -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search -->
+                        <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE721;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" Width="200" ap:WatermarkProperties.Watermark="Search snags..."/>
+                        </StackPanel>
+
+                        <!-- Filters -->
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0,0,0">
+                            <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedFilterProject}" DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}" MinWidth="120" Height="30"/>
+                            <ComboBox ItemsSource="{Binding SubContractors}" SelectedItem="{Binding SelectedFilterSubContractor}" DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}" MinWidth="120" Height="30" Margin="10,0"/>
+                            <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" 
+                                      Style="{StaticResource ModernComboBox}" MinWidth="120" Height="30"/>
+                        </StackPanel>
+
+                        <!-- Stats -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
-                        </Popup>
+                        </StackPanel>
                     </Grid>
-
-                    <StackPanel Grid.Column="7" VerticalAlignment="Center">
-                        <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
                 </Grid>
             </Border>
 

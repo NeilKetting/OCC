@@ -20,12 +20,31 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly IEmployeeLoanService _loanService;
         private readonly IEmployeeService _employeeService;
         private readonly IPdfService _pdfService;
+        private readonly IDialogService _dialogService;
         private readonly ILogger<LoansManagementViewModel> _logger;
 
         [ObservableProperty] private ObservableCollection<EmployeeLoan> _loans = new();
         partial void OnLoansChanged(ObservableCollection<EmployeeLoan> value) => OnPropertyChanged(nameof(LoansView));
         [ObservableProperty] private EmployeeLoan? _selectedLoan;
         [ObservableProperty] private bool _isAddPanelVisible;
+        [ObservableProperty] private bool _isEditing;
+
+        public IRelayCommand<object>? OpenCommand => EditLoanCommand;
+        public IRelayCommand<object>? EditCommand => EditLoanCommand;
+        public IRelayCommand<object>? DeleteCommand => DeleteLoanCommand;
+
+        public string PanelHeaderTitle => IsEditing ? "EDIT LOAN DETAILS" : "ADD NEW LOAN";
+        public bool IsEmployeeSelectionEnabled => !IsEditing;
+        public System.Windows.Visibility SaveAndPrintVisibility => IsEditing ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+        public System.Windows.Visibility SaveChangesVisibility => IsEditing ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+        partial void OnIsEditingChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PanelHeaderTitle));
+            OnPropertyChanged(nameof(IsEmployeeSelectionEnabled));
+            OnPropertyChanged(nameof(SaveAndPrintVisibility));
+            OnPropertyChanged(nameof(SaveChangesVisibility));
+        }
 
         // AddLoan form fields
         [ObservableProperty] private ObservableCollection<EmployeeSummaryDto> _employees = new();
@@ -52,11 +71,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             IEmployeeLoanService loanService,
             IEmployeeService employeeService,
             IPdfService pdfService,
+            IDialogService dialogService,
             ILogger<LoansManagementViewModel> logger)
         {
             _loanService = loanService;
             _employeeService = employeeService;
             _pdfService = pdfService;
+            _dialogService = dialogService;
             _logger = logger;
             Title = "Loans Management";
         }
@@ -84,7 +105,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         [RelayCommand]
-        public void ShowAddPanel() => IsAddPanelVisible = true;
+        public void ShowAddPanel()
+        {
+            IsEditing = false;
+            ResetAddForm();
+            IsAddPanelVisible = true;
+        }
 
         [RelayCommand]
         public void CancelAdd()
@@ -190,10 +216,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public async Task TerminateLoanAsync(EmployeeLoan? loan)
         {
             if (loan == null) return;
-            var result = System.Windows.MessageBox.Show(
-                $"Mark loan for {loan.Employee?.DisplayName} as fully paid / terminated?",
-                "Terminate Loan", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
-            if (result != System.Windows.MessageBoxResult.Yes) return;
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Terminate Loan",
+                $"Mark loan for {loan.Employee?.DisplayName} as fully paid / terminated?");
+            if (!confirmed) return;
 
             try
             {
@@ -204,8 +230,247 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error terminating loan");
-                System.Windows.MessageBox.Show($"Failed to update loan:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to update loan:\n\n{ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        public void EditLoan(object? parameter)
+        {
+            var loan = parameter as EmployeeLoan ?? SelectedLoan;
+            if (loan == null) return;
+            SelectedLoan = loan;
+            IsEditing = true;
+
+            // Populate form fields
+            SelectedEmployee = Employees.FirstOrDefault(e => e.Id == loan.EmployeeId);
+            PrincipalAmount = loan.PrincipalAmount;
+            InterestRate = loan.InterestRate;
+            LoanStartDate = loan.StartDate;
+            
+            // Parse notes
+            string notes = loan.Notes ?? string.Empty;
+            if (notes.StartsWith("[Term:") && notes.Contains("Installments:"))
+            {
+                int termIndex = notes.IndexOf("[Term: ") + 7;
+                int termEndIndex = notes.IndexOf(",", termIndex);
+                if (termEndIndex > termIndex)
+                {
+                    SelectedPaymentFrequency = notes.Substring(termIndex, termEndIndex - termIndex).Trim();
+                }
+                int instIndex = notes.IndexOf("Installments: ") + 14;
+                int instEndIndex = notes.IndexOf("]", instIndex);
+                if (instEndIndex > instIndex)
+                {
+                    if (int.TryParse(notes.Substring(instIndex, instEndIndex - instIndex), out int instCount))
+                    {
+                        NumberOfInstallments = instCount;
+                    }
+                }
+                int closingBracket = notes.IndexOf("]");
+                LoanNotes = closingBracket >= 0 && closingBracket + 1 < notes.Length ? notes.Substring(closingBracket + 1).Trim() : string.Empty;
+            }
+            else
+            {
+                SelectedPaymentFrequency = "Monthly";
+                NumberOfInstallments = 10;
+                LoanNotes = notes;
+            }
+
+            IsAddPanelVisible = true;
+        }
+
+        [RelayCommand]
+        public async Task SaveEditLoanAsync()
+        {
+            if (SelectedLoan == null || SelectedEmployee == null || PrincipalAmount <= 0 || MonthlyInstallment <= 0) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Saving loan changes...";
+                var loan = SelectedLoan;
+                loan.EmployeeId = SelectedEmployee.Id;
+                loan.PrincipalAmount = PrincipalAmount;
+                loan.MonthlyInstallment = MonthlyInstallment;
+                loan.InterestRate = InterestRate;
+                loan.StartDate = LoanStartDate;
+                
+                // Get statement/payments to see how much was already paid
+                decimal paidSoFar = 0;
+                try
+                {
+                    var statement = await _loanService.GetStatementAsync(loan.Id);
+                    if (statement != null)
+                    {
+                        paidSoFar = statement.Payments.Sum(p => p.Amount);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to get loan statement to calculate payments made so far.");
+                }
+
+                loan.OutstandingBalance = TotalRepayableAmount - paidSoFar;
+                if (loan.OutstandingBalance <= 0)
+                {
+                    loan.OutstandingBalance = 0;
+                    loan.IsActive = false;
+                    loan.EndDate = DateTime.Today;
+                }
+
+                // Build notes
+                loan.Notes = $"[Term: {SelectedPaymentFrequency}, Installments: {NumberOfInstallments}] {LoanNotes}".Trim();
+
+                await _loanService.UpdateAsync(loan);
+                IsAddPanelVisible = false;
+                ResetAddForm();
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving loan changes");
+                await _dialogService.ShowAlertAsync("Error", $"Failed to save loan changes:\n\n{ex.Message}");
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task DeleteLoanAsync(object? parameter)
+        {
+            var targets = new List<EmployeeLoan>();
+            if (parameter is System.Collections.IList list)
+            {
+                foreach (var item in list)
+                {
+                    if (item is EmployeeLoan typedItem)
+                    {
+                        targets.Add(typedItem);
+                    }
+                }
+            }
+            else if (parameter is EmployeeLoan item)
+            {
+                targets.Add(item);
+            }
+            else if (SelectedLoan != null)
+            {
+                targets.Add(SelectedLoan);
+            }
+
+            if (!targets.Any()) return;
+
+            string title = targets.Count > 1 ? "Delete Multiple Loans" : "Delete Loan";
+            
+            string message;
+            bool hasActiveLoans = targets.Any(l => l.IsActive && l.OutstandingBalance > 0);
+            
+            if (targets.Count > 1)
+            {
+                if (hasActiveLoans)
+                {
+                    message = $"You are about to delete {targets.Count} loans. Some of these loans are currently ACTIVE. Deleting them will permanently erase the loan records and all payment histories.\n\n" +
+                              "If employees have made payments, you should use the 'Receive Manual Payment' option instead of deleting the loan.\n\n" +
+                              "Are you sure you want to proceed with deleting these loans anyway?";
+                }
+                else
+                {
+                    message = $"You are about to delete {targets.Count} loans. This action cannot be undone. Are you sure you want to proceed?";
+                }
+            }
+            else
+            {
+                var target = targets[0];
+                var empName = target.Employee?.DisplayName ?? "the employee";
+                if (target.IsActive && target.OutstandingBalance > 0)
+                {
+                    message = $"The loan for {empName} is currently ACTIVE with an outstanding balance of R {target.OutstandingBalance:F2}.\n\n" +
+                              "Deleting this loan will permanently erase the loan record and all history. If the employee wants to pay off the loan, you should use the 'Receive Manual Payment' option instead.\n\n" +
+                              "Are you sure you want to permanently delete this loan?";
+                }
+                else
+                {
+                    message = $"Are you sure you want to permanently delete the loan for {empName}? This action cannot be undone.";
+                }
+            }
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+            if (!confirmed) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = targets.Count > 1 ? "Deleting loans..." : "Deleting loan...";
+                foreach (var target in targets)
+                {
+                    await _loanService.DeleteAsync(target.Id);
+                }
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting loan(s)");
+                await _dialogService.ShowAlertAsync("Error", $"Failed to delete loan:\n\n{ex.Message}");
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task ReceiveManualPaymentAsync(EmployeeLoan? loan)
+        {
+            if (loan == null) return;
+            if (!loan.IsActive)
+            {
+                await _dialogService.ShowAlertAsync("Manual Payment", "This loan is already paid off.");
+                return;
+            }
+
+            var input = await _dialogService.ShowInputDialogAsync(
+                "Receive Manual Payment", 
+                $"Enter the manual payment amount for {loan.Employee?.DisplayName} (Outstanding: R {loan.OutstandingBalance:F2}):",
+                "0.00");
+
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            if (decimal.TryParse(input, out decimal paymentAmount) && paymentAmount > 0)
+            {
+                if (paymentAmount > loan.OutstandingBalance)
+                {
+                    await _dialogService.ShowAlertAsync("Invalid Amount", $"The payment amount cannot exceed the outstanding balance of R {loan.OutstandingBalance:F2}.");
+                    return;
+                }
+
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Processing payment...";
+                    
+                    loan.OutstandingBalance -= paymentAmount;
+                    if (loan.OutstandingBalance <= 0)
+                    {
+                        loan.OutstandingBalance = 0;
+                        loan.IsActive = false;
+                        loan.EndDate = DateTime.Today;
+                    }
+
+                    // Log the manual payment in the notes to keep a history
+                    loan.Notes = $"{loan.Notes}\n[Manual Payment: R {paymentAmount:F2} on {DateTime.Today:dd MMM yyyy}]".Trim();
+
+                    await _loanService.UpdateAsync(loan);
+                    
+                    await _dialogService.ShowAlertAsync("Payment Received", $"Successfully received payment of R {paymentAmount:F2} for {loan.Employee?.DisplayName}.");
+                    await LoadDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing manual payment");
+                    await _dialogService.ShowAlertAsync("Error", $"Failed to process payment:\n\n{ex.Message}");
+                }
+                finally { IsBusy = false; }
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Invalid Amount", "Please enter a valid numeric amount greater than zero.");
             }
         }
 

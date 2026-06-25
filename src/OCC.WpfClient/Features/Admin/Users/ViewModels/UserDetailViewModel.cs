@@ -38,6 +38,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _hasProcurementAccess;
         [ObservableProperty] private bool _hasInventoryAccess;
         [ObservableProperty] private bool _hasPurchaseOrderAccess;
+        [ObservableProperty] private bool _hasCalendarAccess;
 
         // Additional Hubs
         [ObservableProperty] private bool _hasCustomerAccess;
@@ -119,6 +120,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 HasCompanyProfileAccess = true;
                 HasSettingsAccess = true;
                 HasAuditLogAccess = true;
+                HasCalendarAccess = true;
             }
             else if (value == UserRole.HSEQ)
             {
@@ -143,6 +145,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             HasProcurementAccess = current.Contains(NavigationRoutes.Procurement, StringComparer.OrdinalIgnoreCase);
             HasInventoryAccess = current.Contains(NavigationRoutes.Inventory, StringComparer.OrdinalIgnoreCase);
             HasPurchaseOrderAccess = current.Contains(NavigationRoutes.PurchaseOrder, StringComparer.OrdinalIgnoreCase);
+            HasCalendarAccess = current.Contains(NavigationRoutes.Calendar, StringComparer.OrdinalIgnoreCase);
 
             HasCustomerAccess = current.Contains(NavigationRoutes.Customers, StringComparer.OrdinalIgnoreCase);
             HasProjectsAccess = current.Contains(NavigationRoutes.Projects, StringComparer.OrdinalIgnoreCase);
@@ -171,6 +174,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             if (HasProcurementAccess) selected.Add(NavigationRoutes.Procurement);
             if (HasInventoryAccess) selected.Add(NavigationRoutes.Inventory);
             if (HasPurchaseOrderAccess) selected.Add(NavigationRoutes.PurchaseOrder);
+            if (HasCalendarAccess) selected.Add(NavigationRoutes.Calendar);
 
             if (HasCustomerAccess) selected.Add(NavigationRoutes.Customers);
             if (HasProjectsAccess) selected.Add(NavigationRoutes.Projects);

@@ -1,7 +1,7 @@
 using System.Windows;
 using OCC.WpfClient.Services.Interfaces;
 
-namespace OCC.WpfClient.Infrastructure.Views.Dialogs
+namespace OCC.WpfClient.Dialogs
 {
     public partial class CustomDialogView : Window
     {

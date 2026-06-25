@@ -181,7 +181,7 @@ namespace OCC.Client.Features.TimeAttendanceHub.ViewModels
                     EndDate = EndDate.Value.Date,
                     LeaveType = SelectedLeaveType,
                     Reason = Reason,
-                    IsUnpaid = HasBalanceWarning // Assuming IsUnpaid is determined by HasBalanceWarning
+                    IsUnpaid = HasBalanceWarning || SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave
                 };
 
                 await _leaveService.SubmitRequestAsync(request);

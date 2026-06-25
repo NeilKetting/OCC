@@ -33,10 +33,6 @@
 
             <!-- Header -->
             <Grid Grid.Row="0" Margin="15">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource PrimaryTeal}" FontSize="24" Margin="0,0,12,0"/>
@@ -44,54 +40,83 @@
                     </StackPanel>
                     <TextBlock Text="Create and track training and certificates" Style="{StaticResource LabelText}" Opacity="0.7"/>
                 </StackPanel>
-                <Button Grid.Column="1" Style="{StaticResource CreateIconButton}" Command="{Binding AddTrainingCommand}" Margin="0,0,20,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
-                        <TextBlock Text="Add Training" Style="{StaticResource ButtonTextStyle}"/>
-                    </StackPanel>
-                </Button>
             </Grid>
 
             <!-- Toolbar -->
             <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="15,0,20,10">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="200" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" ap:WatermarkProperties.Watermark="Search training..."/>
+                    <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                    <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="20,0">
-                        <TextBlock Text="CATEGORY" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,10,0" Opacity="0.8"/>
-                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding CategoryFilter}" Style="{StaticResource ToolbarComboBox}" Width="150"/>
-                    </StackPanel>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="10,0">
-                        <TextBlock Text="EXPIRY WARNING" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,10,0" Opacity="0.8"/>
-                        <TextBox Text="{Binding ExpiryWarningDays}" Style="{StaticResource ToolbarTextBox}" Width="60" Background="#1AFFFFFF" BorderThickness="1" BorderBrush="{StaticResource GlassBorder}"/>
-                        <TextBlock Text="DAYS" VerticalAlignment="Center" FontSize="9" Foreground="{StaticResource TextSub}" Margin="8,0,0,0" Opacity="0.6"/>
-                    </StackPanel>
+                            <!-- Add Training Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding AddTrainingCommand}" ToolTip="Add Training">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Add Training" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <StackPanel Grid.Column="5" Orientation="Horizontal">
-                        <ToggleButton Command="{Binding FilterExpiringCommand}" Style="{StaticResource ToolbarToggleButton}" Margin="0,0,10,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
-                                <TextBlock Text="SHOW EXPIRING" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                            </StackPanel>
-                        </ToggleButton>
-                        <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
-                                <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Print Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Matrix">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Search & Filters Row -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" ap:WatermarkProperties.Watermark="Search training..." VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="20,0" VerticalAlignment="Center">
+                            <TextBlock Text="CATEGORY" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,10,0" Opacity="0.8"/>
+                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding CategoryFilter}" Style="{StaticResource ToolbarComboBox}" Width="150" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="10,0" VerticalAlignment="Center">
+                            <TextBlock Text="EXPIRY WARNING" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PrimaryTeal}" Margin="0,0,10,0" Opacity="0.8"/>
+                            <TextBox Text="{Binding ExpiryWarningDays}" Style="{StaticResource ToolbarTextBox}" Width="60" Background="#1AFFFFFF" BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalAlignment="Center"/>
+                            <TextBlock Text="DAYS" VerticalAlignment="Center" FontSize="9" Foreground="{StaticResource TextSub}" Margin="8,0,0,0" Opacity="0.6"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ToggleButton Command="{Binding FilterExpiringCommand}" Style="{StaticResource ToolbarToggleButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
+                                    <TextBlock Text="SHOW EXPIRING" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
 

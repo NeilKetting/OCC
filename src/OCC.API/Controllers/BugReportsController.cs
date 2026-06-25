@@ -125,7 +125,7 @@ namespace OCC.API.Controllers
             }
             catch { /* Ignore notification errors */ }
 
-            return CreatedAtAction("GetBugReport", new { id = bugReport.Id }, bugReport);
+            return StatusCode(StatusCodes.Status201Created, bugReport);
         }
 
         // DELETE: api/BugReports/5

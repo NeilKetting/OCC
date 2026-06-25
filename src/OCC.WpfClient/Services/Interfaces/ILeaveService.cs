@@ -9,6 +9,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<bool> ApproveLeaveAsync(Guid requestId, string? comment = null);
         Task<bool> RejectLeaveAsync(Guid requestId, string? comment = null);
         Task<bool> DeleteLeaveRequestAsync(Guid requestId);
+        Task<bool> UpdateLeaveRequestAsync(LeaveRequest request);
 
         /// <summary>
         /// Calculates the number of working days (Mon–Fri) between two dates inclusive.

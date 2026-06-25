@@ -58,7 +58,7 @@
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Teams">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
                             <TextBlock Text="&#xE902;" Style="{StaticResource SymbolIcon}"
-                                       Foreground="#FFB900"
+                                       Foreground="#34D399"
                                        FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Team Management" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
@@ -97,7 +97,7 @@
                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Loans">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
                             <TextBlock Text="&#xE1D0;" Style="{StaticResource SymbolIcon}"
-                                       Foreground="#FB923C"
+                                       Foreground="#2DD4BF"
                                        FontSize="16" Margin="0,0,12,0"/>
                             <TextBlock Text="Loans" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>

@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace OCC.WpfClient.Infrastructure.Views.Dialogs
+namespace OCC.WpfClient.Dialogs
 {
     public partial class InputDialogView : Window
     {

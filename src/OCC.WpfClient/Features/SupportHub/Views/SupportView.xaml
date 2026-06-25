@@ -191,7 +191,14 @@
                                     <!-- Screenshot -->
                                     <Border Margin="0,0,0,30" Visibility="{Binding SelectedBug.ScreenshotBase64, Converter={StaticResource VisibilityConverter}}">
                                         <StackPanel>
-                                            <TextBlock Text="SCREENSHOT" FontSize="11" FontWeight="Bold" Foreground="{StaticResource OrangeBrush}" Margin="0,0,0,10" />
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="SCREENSHOT" FontSize="11" FontWeight="Bold" Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Center" />
+                                                <Button Grid.Column="1" Command="{Binding EnlargeScreenshotCommand}" Style="{StaticResource SecondaryButton}" Content="Enlarge" Padding="10,4" Height="Auto" FontSize="11" VerticalAlignment="Center" />
+                                            </Grid>
                                             <Border CornerRadius="8" ClipToBounds="True" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1" HorizontalAlignment="Left" MaxWidth="800">
                                                 <Image Source="{Binding SelectedBug.ScreenshotBase64, Converter={StaticResource Base64ToImageConverter}}" Stretch="Uniform" />
                                             </Border>
@@ -259,7 +266,7 @@
                                                                 <Button Style="{StaticResource RoundIconButtonStyle}" Width="32" Height="32" Padding="0"
                                                                         Command="{Binding DataContext.MarkAsSolutionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                         CommandParameter="{Binding}"
-                                                                        Visibility="{Binding DataContext.IsDev, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                        Visibility="{Binding DataContext.CanManageBugs, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                                         ToolTip="Mark as Solution">
                                                                     <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="14"/>
                                                                 </Button>
@@ -288,7 +295,7 @@
                         <Border Grid.Row="2" Padding="30,15" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0" Background="#08FFFFFF"
                                 Visibility="{Binding CanDeleteSelectedBug, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <StackPanel Orientation="Horizontal" Visibility="{Binding IsDev, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding CanManageBugs, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Button Command="{Binding MoveToInProgressCommand}" Style="{StaticResource SecondaryButton}" Content="In Progress" Margin="0,0,10,0" Foreground="Orange" />
                                     <Button Command="{Binding MoveToPlanningCommand}" Style="{StaticResource SecondaryButton}" Content="Planning" Margin="0,0,10,0" Foreground="SlateGray" />
                                     <Button Command="{Binding MoveToFeatureUpdateCommand}" Style="{StaticResource SecondaryButton}" Content="Feature Update" Margin="0,0,10,0" Foreground="DeepSkyBlue" />

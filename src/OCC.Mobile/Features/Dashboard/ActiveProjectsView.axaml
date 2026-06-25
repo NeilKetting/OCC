@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:OCC.Mobile.Features.Dashboard"
              x:DataType="vm:ActiveProjectsViewModel"
-             x:Name="root"
+             x:Name="root"             
              x:Class="OCC.Mobile.Features.Dashboard.ActiveProjectsView">
 
     <UserControl.Styles>
@@ -229,8 +229,10 @@
                                             <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
                                                 <!-- Tasks complete stats -->
                                                 <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,2">
+                                                    <StackPanel Orientation="Horizontal" Spacing="10">
                                                     <TextBlock Text="Tasks complete" FontSize="11" Foreground="#94A3B8"/>
-                                                    <TextBlock Text="{Binding TaskProgressString}" FontSize="12" Foreground="White" FontWeight="Bold" FontFamily="monospace"/>
+                                                    <TextBlock Text="{Binding TaskProgressString}" FontSize="12" Foreground="White" FontWeight="Bold" FontFamily="monospace"/>                                                       
+                                                    </StackPanel>
                                                 </Grid>
 
                                                 <!-- Linear progress bar -->

@@ -161,6 +161,22 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        public async Task<bool> UpdateLeaveRequestAsync(LeaveRequest request)
+        {
+            EnsureAuthorization();
+            try
+            {
+                var url = GetFullUrl($"api/LeaveRequests/{request.Id}");
+                var response = await _httpClient.PutAsJsonAsync(url, request, _options);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating leave request {Id}", request.Id);
+                return false;
+            }
+        }
+
         public int CalculateBusinessDays(DateTime start, DateTime end)
         {
             if (end < start) return 0;

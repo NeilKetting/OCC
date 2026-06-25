@@ -118,7 +118,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private void ViewScreenshot()
         {
-            // Logic to show the screenshot in a bigger view or save it
+            ScreenshotHelper.ShowScreenshot(ScreenshotBase64, "Screenshot Preview");
         }
     }
 }

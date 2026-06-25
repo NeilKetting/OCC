@@ -57,7 +57,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 BusyText = "Loading today's attendance...";
 
                 var employees = await _employeeService.GetEmployeesAsync();
-                var activeEmployees = employees.ToList();
+                var activeEmployees = employees.Where(e => e.Status == EmployeeStatus.Active).ToList();
 
                 var today = DateTime.Today;
                 var records = (await _attendanceService.GetTodaysAttendanceAsync())

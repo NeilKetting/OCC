@@ -1,4 +1,4 @@
-<Window x:Class="OCC.WpfClient.Infrastructure.Views.Dialogs.InputDialogView"
+<Window x:Class="OCC.WpfClient.Dialogs.InputDialogView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Dialog" MinHeight="260" Width="550" SizeToContent="Height"
@@ -29,7 +29,7 @@
             
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                 <Button x:Name="BtnCancel" Content="Cancel" Style="{StaticResource SecondaryButton}" Padding="15,5" Height="35" Margin="0,0,10,0" Click="BtnCancel_Click" BorderBrush="{StaticResource ErrorRed}"/>
-                <Button x:Name="BtnOK" Content="OK" Style="{StaticResource ActionButtonSecondary}" Padding="15,5" Height="35" Click="BtnOK_Click" BorderBrush="{StaticResource SuccessGreen}"/>
+                <Button x:Name="BtnOK" Content="OK" Style="{StaticResource ActionButtonSecondary}" Padding="25,5" Height="35" Click="BtnOK_Click" BorderBrush="{StaticResource SuccessGreen}"/>
             </StackPanel>
         </Grid>
     </Border>

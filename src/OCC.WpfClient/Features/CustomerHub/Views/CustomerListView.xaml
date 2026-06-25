@@ -48,47 +48,60 @@
                     <TextBlock Grid.Column="1" Grid.Row="0" Text="Customer Management" Style="{StaticResource HeaderText}" />
                     <TextBlock Grid.Column="1" Grid.Row="1" Text="Manage clients and key contacts." Style="{StaticResource LabelText}"/>
                 </Grid>
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Style="{StaticResource CreateIconButton}" Command="{Binding AddCustomerCommand}" >
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
-                            <TextBlock Text="Add Customer" Style="{StaticResource ButtonTextStyle}"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
             </Grid>
 
-            <!-- Stats & Search Line -->
+            <!-- Stats & Search Line (Redesigned as QuickBooks Toolbar Card) -->
             <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" MinWidth="180" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0"/>
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
-                             ap:WatermarkProperties.Watermark="Search customers..."/>
+                    <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                    <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
-                    <!-- Columns Selection -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal">
-                        <Grid>
-                            <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="30">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
-                                    <TextBlock Text="COLUMNS" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                            <!-- Add Customer Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding AddCustomerCommand}" ToolTip="Add New Customer">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Add Customer" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Print Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Report">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Columns Toggle Button -->
+                            <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource QuickBooksToolbarButtonStyle}" ToolTip="Show/Hide Columns">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE136;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Columns" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </ToggleButton>
-                            <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+
+                            <!-- Column Picker Popup -->
+                            <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade" HorizontalOffset="-60" VerticalOffset="5">
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
                                     <StackPanel>
                                         <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
                                         <CheckBox Content="Name" IsChecked="{Binding IsNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,2" Foreground="White"/>
@@ -98,26 +111,33 @@
                                     </StackPanel>
                                 </Border>
                             </Popup>
-                        </Grid>
+                        </StackPanel>
+                    </Border>
 
-                        <!-- Print -->
-                        <Button Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}">
-                            <StackPanel Orientation="Horizontal" Margin="10,0">
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
-                                <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                    <!-- Search & Stats Row -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Stats -->
-                    <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                        <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ToolbarTextBox}" ap:WatermarkProperties.Watermark="Search customers..." VerticalAlignment="Center"/>
+
+                        <!-- Stats -->
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#20FFFFFF" CornerRadius="12" Padding="10,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
 

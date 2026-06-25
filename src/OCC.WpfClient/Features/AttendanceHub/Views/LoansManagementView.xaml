@@ -31,7 +31,7 @@
                     <!-- Panel Header -->
                     <Border Grid.Row="0" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
                         <Grid>
-                            <TextBlock Text="ADD NEW LOAN" Style="{StaticResource HeaderText}" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PanelHeaderTitle}" Style="{StaticResource HeaderText}" FontSize="14" VerticalAlignment="Center"/>
                             <Button HorizontalAlignment="Right" Style="{StaticResource ToolbarIconButton}"
                                     Command="{Binding CancelAddCommand}">
                                 <TextBlock Text="&#xE711;" Style="{StaticResource SymbolButtonIcon}"/>
@@ -44,11 +44,12 @@
                         <StackPanel>
                             <!-- Employee -->
                             <TextBlock Text="EMPLOYEE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                            <ComboBox ItemsSource="{Binding Employees}"
-                                      SelectedItem="{Binding SelectedEmployee}"
-                                      Style="{StaticResource ModernComboBox}"
-                                      DisplayMemberPath="DisplayName"
-                                      Margin="0,0,0,10"/>
+                             <ComboBox ItemsSource="{Binding Employees}"
+                                       SelectedItem="{Binding SelectedEmployee}"
+                                       IsEnabled="{Binding IsEmployeeSelectionEnabled}"
+                                       Style="{StaticResource ModernComboBox}"
+                                       DisplayMemberPath="DisplayName"
+                                       Margin="0,0,0,10"/>
 
                             <!-- Principal -->
                             <TextBlock Text="PRINCIPAL AMOUNT (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
@@ -145,12 +146,16 @@
 
                     <!-- Panel Footer Actions -->
                     <Border Grid.Row="2" Padding="16,12" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Cancel" Style="{StaticResource CancelButton}"
-                                    Command="{Binding CancelAddCommand}" Margin="0,0,8,0"/>
-                            <Button Content="SAVE &amp; PRINT" Style="{StaticResource CreateIconButton}"
-                                    Command="{Binding SaveAndPrintLoanCommand}" Margin="8,0,0,0"/>
-                        </StackPanel>
+                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                             <Button Content="Cancel" Style="{StaticResource CancelButton}"
+                                     Command="{Binding CancelAddCommand}" Margin="0,0,8,0"/>
+                             <Button Content="SAVE &amp; PRINT" Style="{StaticResource CreateIconButton}"
+                                     Command="{Binding SaveAndPrintLoanCommand}" Margin="8,0,0,0"
+                                     Visibility="{Binding SaveAndPrintVisibility}"/>
+                             <Button Content="SAVE CHANGES" Style="{StaticResource CreateIconButton}"
+                                     Command="{Binding SaveEditLoanCommand}" Margin="8,0,0,0"
+                                     Visibility="{Binding SaveChangesVisibility}"/>
+                         </StackPanel>
                     </Border>
                 </Grid>
             </DataTemplate>
@@ -306,15 +311,49 @@
         </Border>
 
         <!-- Loans DataGrid -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding LoansView}"
-                  SelectedItem="{Binding SelectedLoan}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  Style="{StaticResource ModernDataGrid}"
-                  VirtualizingPanel.IsVirtualizing="True"
-                  VirtualizingPanel.VirtualizationMode="Recycling">
-            <DataGrid.Columns>
+         <DataGrid Grid.Row="2"
+                   ItemsSource="{Binding LoansView}"
+                   SelectedItem="{Binding SelectedLoan}"
+                   AutoGenerateColumns="False"
+                   IsReadOnly="True"
+                   Style="{StaticResource ModernDataGrid}"
+                   VirtualizingPanel.IsVirtualizing="True"
+                   VirtualizingPanel.VirtualizationMode="Recycling">
+             <DataGrid.RowStyle>
+                 <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                     <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                     <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                     <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                     <Setter Property="ContextMenu">
+                         <Setter.Value>
+                             <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                 <MenuItem Header="Open" Command="{Binding Tag.OpenCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                     <MenuItem.Icon>
+                                         <TextBlock Text="&#xE8A7;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SuccessGreen}" FontSize="14"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <MenuItem Header="Edit" Command="{Binding Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                     <MenuItem.Icon>
+                                         <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <MenuItem Header="Receive Manual Payment" Command="{Binding Tag.ReceiveManualPaymentCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                     <MenuItem.Icon>
+                                         <TextBlock Text="&#xE19F;" Style="{StaticResource SymbolIcon}" Foreground="#FF9800" FontSize="14"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <Separator/>
+                                 <MenuItem Header="Delete" Command="{Binding Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                     <MenuItem.Icon>
+                                         <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="14"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                             </ContextMenu>
+                         </Setter.Value>
+                     </Setter>
+                 </Style>
+             </DataGrid.RowStyle>
+             <DataGrid.Columns>
                 <DataGridTextColumn Header="Employee" Binding="{Binding Employee.DisplayName}" Width="Auto"/>
                 <DataGridTextColumn Header="Branch" Binding="{Binding Employee.Branch}" Width="Auto"/>
                 <DataGridTextColumn Header="Principal" Binding="{Binding PrincipalAmount, StringFormat='R #,##0.00'}" Width="Auto">

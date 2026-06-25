@@ -268,7 +268,8 @@ namespace OCC.Shared.Models
         SiteManager = 21,
         BrickLayer = 22,
         Driver = 23,
-        JnrForeman = 24
+        JnrForeman = 24,
+        FabricationManager = 25
     }
 
     /// <summary>

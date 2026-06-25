@@ -32,8 +32,22 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             new() { Header = "Status",     PropertyName = "Status",       Width = 1 },
         };
 
-        public override IRelayCommand<object>? OpenCommand => null;
+        public override IRelayCommand<object>? OpenCommand => EditLeaveCommand;
+        public override IRelayCommand<object>? EditCommand => EditLeaveCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteLeaveCommand;
+
+        [ObservableProperty] private bool _isEditing;
+
+        public string PanelHeaderTitle => IsEditing ? "EDIT LEAVE DETAILS" : "APPLY FOR LEAVE";
+        public string SubmitButtonText => IsEditing ? "SAVE CHANGES" : "SUBMIT REQUEST";
+        public bool IsEmployeeSelectionEnabled => !IsEditing;
+
+        partial void OnIsEditingChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PanelHeaderTitle));
+            OnPropertyChanged(nameof(SubmitButtonText));
+            OnPropertyChanged(nameof(IsEmployeeSelectionEnabled));
+        }
 
         // ── Apply Panel ──────────────────────────────────────────────────────
         [ObservableProperty] private bool _isApplyPanelOpen;
@@ -136,6 +150,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [RelayCommand]
         private void OpenApplyPanel()
         {
+            IsEditing = false;
             Reason = string.Empty;
             StartDate = DateTime.Today;
             EndDate = DateTime.Today;
@@ -143,6 +158,23 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             SelectedEmployee = Employees.FirstOrDefault();
             HasBalanceWarning = false;
             BalanceWarning = string.Empty;
+            IsApplyPanelOpen = true;
+        }
+
+        [RelayCommand]
+        private void EditLeave(object? parameter)
+        {
+            var request = parameter as LeaveRequest ?? SelectedItem;
+            if (request == null) return;
+            SelectedItem = request;
+            IsEditing = true;
+
+            SelectedEmployee = Employees.FirstOrDefault(e => e.Id == request.EmployeeId);
+            SelectedLeaveType = request.LeaveType;
+            StartDate = request.StartDate;
+            EndDate = request.EndDate;
+            Reason = request.Reason;
+
             IsApplyPanelOpen = true;
         }
 
@@ -191,21 +223,49 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             try
             {
                 IsBusy = true;
-                var request = new LeaveRequest
+                if (IsEditing)
                 {
-                    EmployeeId = SelectedEmployee.Id,
-                    StartDate = StartDate.Date,
-                    EndDate = EndDate.Date,
-                    NumberOfDays = CalculatedDays,
-                    LeaveType = SelectedLeaveType,
-                    Reason = Reason,
-                    Status = LeaveStatus.Pending
-                };
+                    if (SelectedItem == null) return;
+                    var request = SelectedItem;
+                    request.EmployeeId = SelectedEmployee.Id;
+                    request.StartDate = StartDate.Date;
+                    request.EndDate = EndDate.Date;
+                    request.NumberOfDays = CalculatedDays;
+                    request.LeaveType = SelectedLeaveType;
+                    request.Reason = Reason;
+                    request.IsUnpaid = (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave);
 
-                await _leaveService.SubmitLeaveRequestAsync(request);
-                NotifySuccess("Leave Submitted", $"Leave request for {SelectedEmployee.FirstName} submitted for approval.");
-                IsApplyPanelOpen = false;
-                await LoadDataAsync();
+                    var success = await _leaveService.UpdateLeaveRequestAsync(request);
+                    if (success)
+                    {
+                        NotifySuccess("Leave Updated", "Leave request details updated successfully.");
+                        IsApplyPanelOpen = false;
+                        await LoadDataAsync();
+                    }
+                    else
+                    {
+                        NotifyError("Update Failed", "Could not update leave request details.");
+                    }
+                }
+                else
+                {
+                    var request = new LeaveRequest
+                    {
+                        EmployeeId = SelectedEmployee.Id,
+                        StartDate = StartDate.Date,
+                        EndDate = EndDate.Date,
+                        NumberOfDays = CalculatedDays,
+                        LeaveType = SelectedLeaveType,
+                        Reason = Reason,
+                        Status = LeaveStatus.Pending,
+                        IsUnpaid = (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave)
+                    };
+
+                    await _leaveService.SubmitLeaveRequestAsync(request);
+                    NotifySuccess("Leave Submitted", $"Leave request for {SelectedEmployee.FirstName} submitted for approval.");
+                    IsApplyPanelOpen = false;
+                    await LoadDataAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -279,9 +339,38 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             if (!targets.Any()) return;
 
             string title = targets.Count > 1 ? "Delete Multiple Leave Requests" : "Delete Leave Request";
-            string message = targets.Count > 1
-                ? $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?"
-                : "Are you sure you want to delete this leave request? This action cannot be undone.";
+            
+            string message;
+            bool hasApprovedLeave = targets.Any(l => l.Status == LeaveStatus.Approved);
+            
+            if (targets.Count > 1)
+            {
+                if (hasApprovedLeave)
+                {
+                    message = $"You are about to delete {targets.Count} leave requests. Some of these requests are already APPROVED. Deleting them may cause leave balance inconsistencies.\n\n" +
+                              "Rather Reject the leave requests instead of deleting them.\n\n" +
+                              "Are you sure you want to proceed with deleting anyway?";
+                }
+                else
+                {
+                    message = $"You are about to delete {targets.Count} records. This action cannot be undone. Are you sure you want to proceed?";
+                }
+            }
+            else
+            {
+                var target = targets[0];
+                var empName = target.Employee != null ? $"{target.Employee.FirstName} {target.Employee.LastName}" : "the employee";
+                if (target.Status == LeaveStatus.Approved)
+                {
+                    message = $"The leave request for {empName} is already APPROVED.\n\n" +
+                              "Deleting this request may cause leave balance inconsistencies. Rather Reject the leave request instead.\n\n" +
+                              "Are you sure you want to permanently delete this leave request?";
+                }
+                else
+                {
+                    message = "Are you sure you want to delete this leave request? This action cannot be undone.";
+                }
+            }
 
             var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
             if (!confirmed) return;

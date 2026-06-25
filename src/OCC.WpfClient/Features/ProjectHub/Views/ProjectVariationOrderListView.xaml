@@ -49,57 +49,76 @@
                 </Grid>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding AddVariationOrderCommand}" Style="{StaticResource CreateIconButton}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
-                            <TextBlock Text="Add Variation" Style="{StaticResource ButtonTextStyle}"/>
-                        </StackPanel>
-                    </Button>
                 </StackPanel>
             </Grid>
 
-            <!-- Filters & Stats Line -->
+            <!-- Stats, Filters & Search Toolbar -->
             <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10,0,10,15">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" MinWidth="180" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <!-- Search -->
-                    <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernInput}" Height="32" Padding="8,0" BorderThickness="0" Background="Transparent"
-                             ap:WatermarkProperties.Watermark="Search variation orders..."/>
+                    <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                    <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <Border Grid.Column="2" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
-                    <Button Grid.Column="3" Command="{Binding LoadDataCommand}" Style="{StaticResource ToolbarIconButton}" ToolTip="Refresh Data" Margin="0,0,15,0">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="16" Opacity="0.6"/>
-                    </Button>
+                            <!-- Add Variation Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding AddVariationOrderCommand}" ToolTip="Add Variation">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Add Variation" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                    <!-- Print Button -->
-                    <Button Grid.Column="4" Command="{Binding PrintCommand}" Style="{StaticResource ToolbarButton}" Margin="0,0,15,0">
-                        <StackPanel Orientation="Horizontal" Margin="10,0">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0" Opacity="0.8"/>
-                            <TextBlock Text="PRINT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Print Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Report">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
-                    </Button>
+                    </Border>
 
-                    <!-- Stats -->
-                    <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#20FFFFFF" CornerRadius="12" Padding="12,6">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                    <!-- Search & Filter Controls -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search -->
+                        <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE721;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" Width="200" ap:WatermarkProperties.Watermark="Search variation orders..."/>
+                        </StackPanel>
+
+                        <!-- Stats -->
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <Border Background="#20FFFFFF" CornerRadius="12" Padding="12,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="TOTAL: " FontSize="10" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
 

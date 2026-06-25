@@ -24,6 +24,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -41,17 +42,38 @@
                     </StackPanel>
                     <TextBlock Text="Policies, Templates, and Registers" Style="{StaticResource LabelText}" Opacity="0.7"/>
                 </StackPanel>
-
-                <Button Grid.Column="1" Style="{StaticResource CreateIconButton}" Command="{Binding OpenUploadCommand}" Margin="0,0,20,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" />
-                        <TextBlock Text="Upload Document" Style="{StaticResource ButtonTextStyle}"/>
-                    </StackPanel>
-                </Button>
             </Grid>
 
+            <!-- Toolbar Card -->
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="15,0,20,10">
+                <Grid>
+                    <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                    <Border BorderBrush="{StaticResource GlassBorder}" BorderThickness="0" Padding="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDocumentsCommand}" ToolTip="Refresh Documents">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Upload Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding OpenUploadCommand}" ToolTip="Upload Document">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE898;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Upload" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
             <!-- Document Grid -->
-            <ScrollViewer Grid.Row="1" Padding="24,0,24,24" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="2" Padding="24,0,24,24" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Documents}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

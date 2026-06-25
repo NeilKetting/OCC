@@ -1,5 +1,5 @@
 using OCC.WpfClient.Services.Interfaces;
-using OCC.WpfClient.Infrastructure.Views.Dialogs;
+using OCC.WpfClient.Dialogs;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -48,7 +48,7 @@ namespace OCC.WpfClient.Services
 
         public Task<string?> ShowInputDialogAsync(string title, string message, string defaultValue = "")
         {
-            var dialog = new OCC.WpfClient.Infrastructure.Views.Dialogs.InputDialogView(title, message, defaultValue);
+            var dialog = new InputDialogView(title, message, defaultValue);
             if (dialog.ShowDialog() == true)
             {
                 return Task.FromResult<string?>(dialog.InputValue);

@@ -20,7 +20,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            
+
             <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
             <conv:VisibilityConverter x:Key="VisibilityConverter" />
 
@@ -36,80 +36,144 @@
     <Grid Background="{StaticResource BackgroundDark}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Toolbar -->
+            <!-- Row 0: QuickBooks Toolbar -->
             <RowDefinition Height="Auto"/>
-            <!-- Filter bar -->
+            <!-- Row 1: Title Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 2: Filters -->
             <RowDefinition Height="*"/>
-            <!-- DataGrid -->
+            <!-- Row 3: DataGrid -->
         </Grid.RowDefinitions>
 
-        <!-- ══════════════════ TOOLBAR ══════════════════ -->
-        <Border Grid.Row="0" Padding="16,10" Background="#06FFFFFF"
-                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Page Header Info (Fills Remaining Space) -->
-                <TextBlock Grid.Row="0" Grid.Column="0"  Text="ATTENDANCE HISTORY" Style="{StaticResource HeaderText}" TextTrimming="CharacterEllipsis"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0" TextTrimming="CharacterEllipsis">
-                            <Run Text="{Binding TotalCount}"/>
-                            <Run Text="records | "/>
-                            <Run Text="{Binding TotalHours}"/>
-                            <Run Text=" hours total"/>
+        <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+        <Border Grid.Row="1" Margin="16,12,16,4">
+            <StackPanel>
+                <TextBlock Text="ATTENDANCE HISTORY" Style="{StaticResource HeaderText}" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
+                <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
+                    <Run Text="{Binding TotalCount}"/>
+                    <Run Text=" records | "/>
+                    <Run Text="{Binding TotalHours}"/>
+                    <Run Text=" hours total"/>
                 </TextBlock>
-
-                <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh" Margin="0,0,10,0">
-                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0" Foreground="{StaticResource AccentBlue}"/>
-                    </Button>
-                    <Button Style="{StaticResource PrintButton}" Command="{Binding PrintCommand}" Padding="0" ToolTip="Print Report" Width="120" Margin="0,0,12,0"/>
-                </StackPanel>
-                
-                <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
-                    <Button Style="{StaticResource CreateButton}" Content="Add Entry" Command="{Binding AddRecordCommand}" Margin="0,0,12,0"/>
-                    <Button Style="{StaticResource SecondaryButton}" Command="{Binding ImportExcelCommand}" Margin="0,0,12,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0" />
-                            <TextBlock Text="Import Excel" Style="{StaticResource ButtonTextStyle}"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-
-            </Grid>
+            </StackPanel>
         </Border>
 
         <!-- ══════════════════ FILTER BAR ══════════════════ -->
-        <Border Grid.Row="1" Padding="16,10" Background="#04FFFFFF"
-                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
-            <WrapPanel Orientation="Horizontal">
-                <!-- Search -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
-                    <TextBlock Text="&#xE721;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
-                    <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" Width="200" ap:WatermarkProperties.Watermark="Search attendance..."/>
-                </StackPanel>
-                <!-- From Date -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock Text="From" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <DatePicker SelectedDate="{Binding FromDate}" Style="{StaticResource ModernDatePicker}" Width="130"/>
-                </StackPanel>
-                <!-- To Date -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock Text="To" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <DatePicker SelectedDate="{Binding ToDate}" Style="{StaticResource ModernDatePicker}" Width="130"/>
-                </StackPanel>
-                
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                <!-- Status Filter -->
-                    <ComboBox SelectedIndex="{Binding SelectedStatusIndex}" Style="{StaticResource ModernComboBox}" Width="140" Margin="0,0,12,0">
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="16,10" Margin="16,6">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                    <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Add Entry Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding AddRecordCommand}" ToolTip="Add New Entry">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Add Entry" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Import Excel Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding ImportExcelCommand}" ToolTip="Import from Excel">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE718;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Import Excel" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Print Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Report">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Columns Button -->
+                            <Button x:Name="ColumnsButton" Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding ToggleColumnPickerCommand}" ToolTip="Show/Hide Columns">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE136;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Columns" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Column Picker Popup -->
+                            <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-60" VerticalOffset="5">
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
+                                    <StackPanel>
+                                        <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                                        <CheckBox Content="Date" IsChecked="{Binding IsDateColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Employee" IsChecked="{Binding IsEmployeeColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Project" IsChecked="{Binding IsProjectColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Status" IsChecked="{Binding IsStatusColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Clock In" IsChecked="{Binding IsClockInColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Clock Out" IsChecked="{Binding IsClockOutColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Hours" IsChecked="{Binding IsHoursColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Branch" IsChecked="{Binding IsBranchColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Notes" IsChecked="{Binding IsNotesColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Search -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- From Date -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- To Date -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Status Filter -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Branch Filter -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Spacing -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,4,20,4" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE721;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" Margin="5,0,10,0" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ToolbarTextBox}" Width="160" ap:WatermarkProperties.Watermark="Search attendance..."/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+
+                    <!-- From Date -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,4,20,4" VerticalAlignment="Center">
+                        <TextBlock Text="From" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <DatePicker SelectedDate="{Binding FromDate}" Style="{StaticResource ModernDatePicker}" Width="120"/>
+                    </StackPanel>
+
+                    <!-- To Date -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,4,20,4" VerticalAlignment="Center">
+                        <TextBlock Text="To" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <DatePicker SelectedDate="{Binding ToDate}" Style="{StaticResource ModernDatePicker}" Width="120"/>
+                    </StackPanel>
+
+                    <!-- Status Filter -->
+                    <ComboBox Grid.Column="3" SelectedIndex="{Binding SelectedStatusIndex}" Style="{StaticResource ModernComboBox}" Width="130" Margin="0,4,15,4" VerticalAlignment="Center">
                         <ComboBoxItem Content="All Statuses"/>
                         <ComboBoxItem Content="Present"/>
                         <ComboBoxItem Content="Late"/>
@@ -117,94 +181,72 @@
                         <ComboBoxItem Content="Sick"/>
                         <ComboBoxItem Content="Leave"/>
                     </ComboBox>
+
                     <!-- Branch Filter -->
-                    <ComboBox SelectedIndex="{Binding SelectedBranchIndex}" Style="{StaticResource ModernComboBox}" Width="140" Margin="0,0,12,0">
+                    <ComboBox Grid.Column="4" SelectedIndex="{Binding SelectedBranchIndex}" Style="{StaticResource ModernComboBox}" Width="130" Margin="0,4,15,4" VerticalAlignment="Center">
                         <ComboBoxItem Content="All Branches"/>
                         <ComboBoxItem Content="Johannesburg"/>
                         <ComboBoxItem Content="Cape Town"/>
                     </ComboBox>
-
-                    <!-- Columns Filter Button -->
-                    <Button x:Name="ColumnsButton" Command="{Binding ToggleColumnPickerCommand}" Style="{StaticResource SecondaryButton}" Margin="10,0,0,0" Height="35">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14" Margin="0,0,8,0"/>
-                            <TextBlock Text="COLUMNS" Foreground="White" FontSize="11" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Column Picker Popup -->
-                    <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-120" VerticalOffset="5">
-                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
-                            <StackPanel>
-                                <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-                                <CheckBox Content="Date" IsChecked="{Binding IsDateColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Employee" IsChecked="{Binding IsEmployeeColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Project" IsChecked="{Binding IsProjectColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Status" IsChecked="{Binding IsStatusColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Clock In" IsChecked="{Binding IsClockInColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Clock Out" IsChecked="{Binding IsClockOutColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Hours" IsChecked="{Binding IsHoursColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Branch" IsChecked="{Binding IsBranchColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                <CheckBox Content="Notes" IsChecked="{Binding IsNotesColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                            </StackPanel>
-                        </Border>
-                    </Popup>
-                </StackPanel>                
-            </WrapPanel>
+                </StackPanel>
+            </Grid>
         </Border>
 
+        
+
         <!-- ══════════════════ DATA GRID ══════════════════ -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding Items}"
-                  SelectedItem="{Binding SelectedItem}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  SelectionMode="Extended"
-                  RowBackground="Transparent"
-                  AlternatingRowBackground="#06FFFFFF"
-                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                  VirtualizingPanel.IsVirtualizing="True"
-                  VirtualizingPanel.ScrollUnit="Pixel"
-                  Style="{StaticResource ModernDataGrid}">
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                    <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                    <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
-                </Style>
-            </DataGrid.RowStyle>
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=yyyy/MM/dd}" Width="Auto" Visibility="{Binding Data.IsDateColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding EmployeeName}" Width="180" Visibility="{Binding Data.IsEmployeeColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="160" Visibility="{Binding Data.IsProjectColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="100" Visibility="{Binding Data.IsStatusColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="CLOCK IN" Binding="{Binding CheckInTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockInColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="CLOCK OUT" Binding="{Binding CheckOutTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockOutColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="HOURS" Binding="{Binding HoursWorked, StringFormat={}{0:F1}}" Width="Auto" Visibility="{Binding Data.IsHoursColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <DataGridTextColumn Header="NOTES" Binding="{Binding Notes}" Width="Auto" Visibility="{Binding Data.IsNotesColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                <!-- Actions -->
-                <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Edit Record"
-                                        Command="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="{StaticResource AccentBlue}" Margin="5">
-                                    <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                </Button>
-                                <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Delete Record"
-                                        Command="{Binding DataContext.DeleteRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}" Margin="5">
-                                    <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                </Button>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Border Grid.Row="3" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1">
+            <DataGrid ItemsSource="{Binding Items}"
+                      SelectedItem="{Binding SelectedItem}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      SelectionMode="Extended"
+                      RowBackground="Transparent"
+                      AlternatingRowBackground="#06FFFFFF"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.ScrollUnit="Pixel"
+                      Style="{StaticResource ModernDataGrid}">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                        <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                        <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=yyyy/MM/dd}" Width="Auto" Visibility="{Binding Data.IsDateColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding EmployeeName}" Width="180" Visibility="{Binding Data.IsEmployeeColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="160" Visibility="{Binding Data.IsProjectColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="100" Visibility="{Binding Data.IsStatusColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="CLOCK IN" Binding="{Binding CheckInTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockInColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="CLOCK OUT" Binding="{Binding CheckOutTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockOutColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="HOURS" Binding="{Binding HoursWorked, StringFormat={}{0:F1}}" Width="Auto" Visibility="{Binding Data.IsHoursColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="NOTES" Binding="{Binding Notes}" Width="Auto" Visibility="{Binding Data.IsNotesColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <!-- Actions -->
+                    <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Edit Record"
+                                            Command="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" Foreground="{StaticResource AccentBlue}" Margin="5">
+                                        <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                    </Button>
+                                    <Button Style="{StaticResource ToolbarIconButton}" ToolTip="Delete Record"
+                                            Command="{Binding DataContext.DeleteRecordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}" Margin="5">
+                                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </Grid>
 </local:AttendanceHistoryListViewBase>

@@ -1,4 +1,4 @@
-<Window x:Class="OCC.WpfClient.Infrastructure.Views.Dialogs.CustomDialogView"
+<Window x:Class="OCC.WpfClient.Dialogs.CustomDialogView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Dialog" MinHeight="220" Width="550" SizeToContent="Height"
@@ -32,4 +32,3 @@
         </Grid>
     </Border>
 </Window>
-

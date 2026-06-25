@@ -60,6 +60,8 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
 
         public bool CanDeleteSelectedBug => IsDev || IsAdmin || IsReporter;
 
+        public bool CanManageBugs => IsDev || IsAdmin;
+
         [ObservableProperty]
         private string _searchText = string.Empty;
 
@@ -285,7 +287,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task MoveToInProgressAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanManageBugs) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to In Progress.", "In Progress");
             await LoadBugs();
         }
@@ -293,7 +295,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task MoveToPlanningAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanManageBugs) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to Planning stage.", "Planning");
             await LoadBugs();
         }
@@ -301,7 +303,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task MoveToFeatureUpdateAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanManageBugs) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Reclassified as a Feature Update.", "Feature Update");
             await LoadBugs();
         }
@@ -309,7 +311,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task MarkFixedAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanManageBugs) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Developer marked this issue as Fixed.", "Fixed");
             await LoadBugs();
         }
@@ -317,7 +319,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task RequestInfoAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanManageBugs) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Developer requested more information.", "Waiting for Client");
             await LoadBugs();
         }
@@ -325,9 +327,18 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task CloseBugAsync()
         {
-            if (SelectedBug == null || !IsDev) return;
+            if (SelectedBug == null || !CanManageBugs) return;
             await _bugService.AddCommentAsync(SelectedBug.Id, "Developer closed the bug.", "Closed");
             await LoadBugs();
+        }
+
+        [RelayCommand]
+        private void EnlargeScreenshot()
+        {
+            if (SelectedBug != null && !string.IsNullOrEmpty(SelectedBug.ScreenshotBase64))
+            {
+                ScreenshotHelper.ShowScreenshot(SelectedBug.ScreenshotBase64, $"Screenshot - {SelectedBug.ViewName}");
+            }
         }
 
         [RelayCommand]
