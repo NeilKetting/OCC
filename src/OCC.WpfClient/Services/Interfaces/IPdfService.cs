@@ -11,7 +11,7 @@ namespace OCC.WpfClient.Services.Interfaces
         /// <summary>
         /// Generates a branded list report from a collection of items.
         /// </summary>
-        Task<string> GenerateListReportPdfAsync<T>(string title, IEnumerable<T> items, List<ReportColumnDefinition> columns);
+        Task<string> GenerateListReportPdfAsync<T>(string title, IEnumerable<T> items, List<ReportColumnDefinition> columns, bool isLandscape = false);
         
         /// <summary>
         /// Generates a branded profile/detail report for a single entity.
@@ -44,6 +44,11 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a landscape A4 weekly attendance register matching the client's biometric layout.
         /// </summary>
         Task<string> GenerateWeeklyAttendanceReportPdfAsync(string title, string branchFilter, string searchFilter, List<WeeklyAttendanceReportWeekModel> weeks);
+
+        /// <summary>
+        /// Generates a landscape A4 employee profile report including all fields from detail view.
+        /// </summary>
+        Task<string> GenerateEmployeeProfilePdfAsync(Employee employee);
     }
 
     public class WeeklyAttendanceReportWeekModel

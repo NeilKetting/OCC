@@ -51,6 +51,8 @@ namespace OCC.WpfClient.Infrastructure
         public virtual IRelayCommand<object>? EditCommand => null;
         public virtual IRelayCommand<object>? DeleteCommand => null;
 
+        public virtual bool IsLandscape => false;
+
         [RelayCommand]
         public virtual async Task PrintAsync()
         {
@@ -66,7 +68,7 @@ namespace OCC.WpfClient.Infrastructure
                     return;
                 }
 
-                var path = await _pdfService.GenerateListReportPdfAsync(ReportTitle, Items, ReportColumns);
+                var path = await _pdfService.GenerateListReportPdfAsync(ReportTitle, Items, ReportColumns, IsLandscape);
                 
                 Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }

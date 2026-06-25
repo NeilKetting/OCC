@@ -538,20 +538,59 @@ namespace OCC.WpfClient.Services
 
         private void ComposeReportTable<T>(IContainer container, IEnumerable<T> data)
         {
-            // Simplified table for reports
-            container.Table(table =>
-            {
-                table.ColumnsDefinition(columns =>
-                {
-                    columns.RelativeColumn();
-                    columns.RelativeColumn();
-                    columns.RelativeColumn();
-                });
-                
-                table.Header(h => {
-                    h.Cell().Text("Data");
-                });
-            });
+             container.Table(table =>
+             {
+                 // Define Columns based on ViewModel properties we expect
+                 // Date, In, Out, Status, Hours, Wage
+                 table.ColumnsDefinition(columns =>
+                 {
+                     columns.RelativeColumn(); // Date
+                     columns.ConstantColumn(60); // In
+                     columns.ConstantColumn(60); // Out
+                     columns.ConstantColumn(80); // Status
+                     columns.ConstantColumn(60); // Hours
+                     columns.ConstantColumn(80); // Wage
+                 });
+                 
+                 table.Header(header =>
+                 {
+                     header.Cell().Element(HeaderStyle).Text("Date");
+                     header.Cell().Element(HeaderStyle).Text("In");
+                     header.Cell().Element(HeaderStyle).Text("Out");
+                     header.Cell().Element(HeaderStyle).Text("Status");
+                     header.Cell().Element(HeaderStyle).AlignRight().Text("Hours");
+                     header.Cell().Element(HeaderStyle).AlignRight().Text("Wage");
+                     
+                     static IContainer HeaderStyle(IContainer container)
+                     {
+                         return container.Background(Colors.Grey.Lighten4).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten2).DefaultTextStyle(x => x.SemiBold());
+                     }
+                 });
+                 
+                 var props = typeof(T).GetProperties();
+
+                 foreach(var item in data)
+                 {
+                     // Reflection to get values by order or name?
+                     // Expected anonymous object: Date, In, Out, Status, Hours, Wage
+                     // We trust the order from ViewModel: Date, In, Out, Status, Hours, Wage
+                     
+                     // Helper to safe get
+                     string GetVal(string name) => props.FirstOrDefault(p => p.Name == name)?.GetValue(item)?.ToString() ?? "";
+                     
+                     table.Cell().Element(CellStyle).Text(GetVal("Date"));
+                     table.Cell().Element(CellStyle).Text(GetVal("In"));
+                     table.Cell().Element(CellStyle).Text(GetVal("Out"));
+                     table.Cell().Element(CellStyle).Text(GetVal("Status"));
+                     table.Cell().Element(CellStyle).AlignRight().Text(GetVal("Hours"));
+                     table.Cell().Element(CellStyle).AlignRight().Text(GetVal("Wage"));
+                     
+                     static IContainer CellStyle(IContainer container)
+                     {
+                         return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten4).PaddingVertical(5);
+                     }
+                 }
+             });
         }
 
         private void ComposeReportFooter(IContainer container, CompanyDetails company)
@@ -569,7 +608,7 @@ namespace OCC.WpfClient.Services
                 row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - {company.CompanyName}");
             });
         }
-        public async Task<string> GenerateListReportPdfAsync<T>(string title, IEnumerable<T> items, List<ReportColumnDefinition> columns)
+        public async Task<string> GenerateEmployeeProfilePdfAsync(Employee employee)
         {
             var company = new CompanyDetails();
 
@@ -580,7 +619,113 @@ namespace OCC.WpfClient.Services
                     container.Page(page =>
                     {
                         page.Margin(30);
-                        page.Size(PageSizes.A4);
+                        page.Size(PageSizes.A4.Landscape());
+                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeGenericHeader(c, $"Employee Profile: {employee.DisplayName}", company));
+                        page.Content().PaddingVertical(15).Element(c => ComposeEmployeeProfileContent(c, employee));
+                        page.Footer().Element(c => ComposeGenericFooter(c, company));
+                    });
+                });
+
+                string docsPath = Path.GetTempPath();
+                string filename = $"EmployeeProfile_{employee.LastName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                string fullPath = Path.Combine(docsPath, filename);
+
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
+        private void ComposeEmployeeProfileContent(IContainer container, Employee employee)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem().PaddingRight(10).Element(c => ComposeCard(c, "Personal & Contact Details", col =>
+                {
+                    col.Item().Element(sc => InfoRow(sc, "First Name", employee.FirstName));
+                    col.Item().Element(sc => InfoRow(sc, "Last Name", employee.LastName));
+                    col.Item().Element(sc => InfoRow(sc, "Employee Number", employee.EmployeeNumber));
+                    col.Item().Element(sc => InfoRow(sc, "ID Type", employee.IdType.ToString()));
+                    col.Item().Element(sc => InfoRow(sc, "ID / Permit No.", employee.IdType == IdType.RSAId ? employee.IdNumber : (employee.PermitNumber ?? "-")));
+                    col.Item().Element(sc => InfoRow(sc, "Date of Birth", employee.DoB.ToString("yyyy-MM-dd")));
+                    col.Item().Element(sc => InfoRow(sc, "Tax Number", employee.TaxNumber ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Company Housing", employee.LivesInCompanyHousing ? "Yes" : "No"));
+                    col.Item().Element(sc => InfoRow(sc, "Email", employee.Email ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Phone", employee.Phone ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Physical Address", employee.PhysicalAddress ?? "-"));
+                }));
+
+                row.RelativeItem().PaddingRight(10).Element(c => ComposeCard(c, "Employment & Leave", col =>
+                {
+                    col.Item().Element(sc => InfoRow(sc, "Role", employee.Role.ToString()));
+                    col.Item().Element(sc => InfoRow(sc, "Status", employee.Status.ToString()));
+                    col.Item().Element(sc => InfoRow(sc, "Employment Type", employee.EmploymentType.ToString()));
+                    col.Item().Element(sc => InfoRow(sc, "Contract Duration", employee.ContractDuration ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Branch", employee.Branch ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Employment Date", employee.EmploymentDate.ToString("yyyy-MM-dd")));
+                    col.Item().Element(sc => InfoRow(sc, "Shift Start", employee.ShiftStartTime?.ToString(@"hh\:mm") ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Shift End", employee.ShiftEndTime?.ToString(@"hh\:mm") ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Annual Leave Bal", $"{employee.AnnualLeaveBalance:F2} days"));
+                    col.Item().Element(sc => InfoRow(sc, "Sick Leave Bal", $"{employee.SickLeaveBalance:F2} days"));
+                    col.Item().Element(sc => InfoRow(sc, "Leave Cycle Start", employee.LeaveCycleStartDate?.ToString("yyyy-MM-dd") ?? "-"));
+                }));
+
+                row.RelativeItem().Element(c => ComposeCard(c, "Financial & Emergency Contacts", col =>
+                {
+                    col.Item().Element(sc => InfoRow(sc, "Rate Type", employee.RateType.ToString()));
+                    col.Item().Element(sc => InfoRow(sc, "Hourly Rate", $"R {employee.HourlyRate:N2}"));
+                    col.Item().Element(sc => InfoRow(sc, "Bank Name", employee.BankName ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Account Number", employee.AccountNumber ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Branch Code", employee.BranchCode ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Account Type", employee.AccountType ?? "-"));
+                    
+                    col.Item().PaddingTop(10).Text("Emergency Contacts").Bold().FontColor(ColorPrimary);
+                    col.Item().Element(sc => InfoRow(sc, "Next of Kin Name", employee.NextOfKinName ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Relation", employee.NextOfKinRelation ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Kin Phone", employee.NextOfKinPhone ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Emergency Contact", employee.EmergencyContactName ?? "-"));
+                    col.Item().Element(sc => InfoRow(sc, "Contact Phone", employee.EmergencyContactPhone ?? "-"));
+                }));
+            });
+
+            static void ComposeCard(IContainer container, string title, Action<ColumnDescriptor> content)
+            {
+                container
+                    .Border(1)
+                    .BorderColor(Colors.Grey.Lighten3)
+                    .Background(Colors.White)
+                    .Padding(12)
+                    .Column(col =>
+                    {
+                        col.Item().PaddingBottom(4).Text(title).FontSize(11).Bold().FontColor(ColorPrimary);
+                        col.Item().BorderBottom(1).BorderColor(ColorPrimary).PaddingBottom(4);
+                        content(col);
+                    });
+            }
+
+            static void InfoRow(IContainer container, string label, string value)
+            {
+                container.BorderBottom(1).BorderColor(Colors.Grey.Lighten4).PaddingVertical(3).Row(row =>
+                {
+                    row.ConstantItem(110).Text(label).SemiBold().FontColor(Colors.Grey.Darken2);
+                    row.RelativeItem().Text(value ?? "-");
+                });
+            }
+        }
+
+        public async Task<string> GenerateListReportPdfAsync<T>(string title, IEnumerable<T> items, List<ReportColumnDefinition> columns, bool isLandscape = false)
+        {
+            var company = new CompanyDetails();
+
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+                        page.Size(isLandscape ? PageSizes.A4.Landscape() : PageSizes.A4);
                         page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
 
                         page.Header().Element(c => ComposeGenericHeader(c, title, company));

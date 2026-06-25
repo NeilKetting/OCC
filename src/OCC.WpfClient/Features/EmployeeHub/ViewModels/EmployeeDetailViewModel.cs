@@ -340,5 +340,27 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             Employee.EmploymentType,
             Employee.Status
         };
+
+        public override async Task PrintAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating employee profile report...";
+
+                var employeeEntity = Employee.ToEntity();
+                var path = await _pdfService.GenerateEmployeeProfilePdfAsync(employeeEntity);
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing employee profile");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
     }
 }

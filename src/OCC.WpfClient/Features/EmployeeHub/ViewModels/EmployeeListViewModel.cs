@@ -22,15 +22,32 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private List<EmployeeSummaryDto> _allEmployees = new();
         
         public override string ReportTitle => "Employee Directory";
-        public override List<ReportColumnDefinition> ReportColumns => new()
+        public override bool IsLandscape => true;
+        public override List<ReportColumnDefinition> ReportColumns
         {
-            new() { Header = "Emp #", PropertyName = "EmployeeNumber", Width = 1 },
-            new() { Header = "First Name", PropertyName = "FirstName", Width = 1.5 },
-            new() { Header = "Last Name", PropertyName = "LastName", Width = 1.5 },
-            new() { Header = "Position", PropertyName = "Role", Width = 2 },
-            new() { Header = "Type", PropertyName = "EmploymentType", Width = 1 },
-            new() { Header = "Branch", PropertyName = "Branch", Width = 1.5 }
-        };
+            get
+            {
+                var cols = new List<ReportColumnDefinition>();
+                if (IsNumberVisible) cols.Add(new() { Header = "Emp #", PropertyName = "EmployeeNumber", Width = 1 });
+                cols.Add(new() { Header = "First Name", PropertyName = "FirstName", Width = 1.5 });
+                cols.Add(new() { Header = "Last Name", PropertyName = "LastName", Width = 1.5 });
+                if (IsPositionVisible) cols.Add(new() { Header = "Position", PropertyName = "Role", Width = 2 });
+                if (IsTypeVisible) cols.Add(new() { Header = "Type", PropertyName = "EmploymentType", Width = 1.2 });
+                if (IsBranchVisible) cols.Add(new() { Header = "Branch", PropertyName = "Branch", Width = 1.5 });
+                if (IsPhoneVisible) cols.Add(new() { Header = "Phone", PropertyName = "Phone", Width = 1.5 });
+                if (IsEmailVisible) cols.Add(new() { Header = "Email", PropertyName = "Email", Width = 2.2 });
+                if (IsIdNumberVisible) cols.Add(new() { Header = "ID Number", PropertyName = "IdNumber", Width = 2 });
+                if (IsRateTypeVisible) cols.Add(new() { Header = "Rate Type", PropertyName = "RateType", Width = 1.2 });
+                if (IsHourlyRateVisible) cols.Add(new() { Header = "Rate", PropertyName = "HourlyRate", Width = 1.2 });
+                if (IsTaxNumberVisible) cols.Add(new() { Header = "Tax #", PropertyName = "TaxNumber", Width = 1.5 });
+                if (IsBankNameVisible) cols.Add(new() { Header = "Bank", PropertyName = "BankName", Width = 1.5 });
+                if (IsLeaveBalanceVisible) cols.Add(new() { Header = "Leave", PropertyName = "LeaveBalance", Width = 1 });
+                if (IsEmploymentDateVisible) cols.Add(new() { Header = "Start Date", PropertyName = "EmploymentDate", Width = 1.5 });
+                if (IsShiftStartVisible) cols.Add(new() { Header = "Shift Start", PropertyName = "ShiftStartTime", Width = 1.2 });
+                if (IsShiftEndVisible) cols.Add(new() { Header = "Shift End", PropertyName = "ShiftEndTime", Width = 1.2 });
+                return cols;
+            }
+        }
 
         [ObservableProperty]
         private int _selectedFilterIndex = 0; // 0 = Everyone, 1 = Permanent, 2 = Contract
@@ -282,7 +299,6 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                 _logger.LogError(ex, "Export failed");
             }
         }
-
         [RelayCommand]
         private void OpenEmployeeReport(EmployeeSummaryDto? employee)
         {
