@@ -91,7 +91,7 @@
                             <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
                             <!-- Columns Toggle Button -->
-                            <ToggleButton x:Name="ColumnsBtn" Style="{StaticResource QuickBooksToolbarButtonStyle}" ToolTip="Show/Hide Columns">
+                            <ToggleButton x:Name="ColumnsBtn" Style="{StaticResource QuickBooksToolbarToggleButtonStyle}" ToolTip="Show/Hide Columns">
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                     <TextBlock Text="&#xE136;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="Columns" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>

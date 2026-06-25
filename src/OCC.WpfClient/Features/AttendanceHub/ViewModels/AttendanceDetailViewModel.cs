@@ -273,7 +273,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 try
                 {
-                    var emp = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId.Value);
+                    var emp = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId!.Value);
                     if (emp != null)
                     {
                         emp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - 1);

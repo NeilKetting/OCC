@@ -1166,6 +1166,7 @@ namespace OCC.WpfClient.Services
                     col.Item().PaddingTop(12).Column(photoCol =>
                     {
                         photoCol.Item().Text("INCIDENT & PROGRESS PHOTOS").FontSize(9).ExtraBold().FontColor(ColorSecondary);
+#pragma warning disable CS0618
                         photoCol.Item().PaddingTop(3).Grid(grid =>
                         {
                             grid.Columns(4); // 4 columns
@@ -1190,6 +1191,7 @@ namespace OCC.WpfClient.Services
                                 }
                             }
                         });
+#pragma warning restore CS0618
                     });
                 }
             });

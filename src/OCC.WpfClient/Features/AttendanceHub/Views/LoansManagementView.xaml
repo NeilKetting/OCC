@@ -169,49 +169,72 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ══════════════════ LOANS LIST ══════════════════ -->
-        <!-- Toolbar -->
-        <Border Grid.Row="0" Padding="16,10" Background="#06FFFFFF"
-                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="LOANS HUB" Style="{StaticResource HeaderText}"/>
-                    <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
-                        <Run Text="Manage staff loans and repayment schedules"/>
-                    </TextBlock>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh">
-                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
-                    </Button>
-                    <Button Command="{Binding ShowAddPanelCommand}" Style="{StaticResource CreateButton}" Margin="8,0,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="NEW LOAN"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- ══════════════════ SEARCH & FILTERS TOOLBAR ══════════════════ -->
-        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="12,8" Margin="16,10,16,5">
-            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="&#xE14A;" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="#7FFFD4" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="Loans Hub" Style="{StaticResource HeaderText}" />
+                <TextBlock Grid.Column="1" Grid.Row="1" Text="Manage staff loans and repayment schedules." Style="{StaticResource LabelText}"/>
+            </Grid>
+        </Grid>
+
+        <!-- Stats & Search Line (Redesigned as QuickBooks Toolbar Card) -->
+        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,10,16,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
+                <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Refresh Button -->
+                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                        <!-- New Loan Button -->
+                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding ShowAddPanelCommand}" ToolTip="New Loan">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="New Loan" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                        <!-- Print List Button -->
+                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintFilteredLoansCommand}" ToolTip="Print Loan List">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Print List" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
 
                 <!-- Row 1: Search & Core Filters Wrap Layout -->
-                <WrapPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <WrapPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Search -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
                         <TextBlock Text="&#xE11A;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                                 Style="{StaticResource ModernInput}" Width="170" Height="30" VerticalContentAlignment="Center"
+                                 Style="{StaticResource ToolbarTextBox}" Width="170" Height="30" VerticalContentAlignment="Center"
                                  ap:WatermarkProperties.Watermark="Search Employee..."/>
                     </StackPanel>
 
@@ -254,17 +277,11 @@
                                 <TextBlock Text="CLEAR" Foreground="#EF5350" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding PrintFilteredLoansCommand}" Style="{StaticResource ToolbarButton}" Height="30" Margin="8,0,0,0">
-                            <StackPanel Orientation="Horizontal" Margin="8,0">
-                                <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="White" FontSize="12" Margin="0,0,6,0"/>
-                                <TextBlock Text="PRINT LIST" Foreground="White" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Button>
                     </StackPanel>
                 </WrapPanel>
 
                 <!-- Row 2: Advanced Range Filters -->
-                <Grid Grid.Row="1" Margin="0,10,0,0" Visibility="{Binding IsAdvancedFiltersVisible, Converter={StaticResource BoolToVis}}">
+                <Grid Grid.Row="2" Margin="0,10,0,0" Visibility="{Binding IsAdvancedFiltersVisible, Converter={StaticResource BoolToVis}}">
                     <WrapPanel Orientation="Horizontal">
                         <!-- Principal Range -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,5">
