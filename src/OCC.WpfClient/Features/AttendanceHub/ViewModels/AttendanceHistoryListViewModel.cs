@@ -44,8 +44,17 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private DateTime _toDate = DateTime.Today;
         [ObservableProperty] private int _selectedBranchIndex = 0;
         [ObservableProperty] private int _selectedStatusIndex = 0;
+        
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsCustomTimeSpan))]
+        private int _selectedTimeSpanIndex = 6; // Default: Custom (updated for This Month option)
+
+        [ObservableProperty] private int _selectedRateTypeIndex = 0; // Default: All
         [ObservableProperty] private int _totalHours;
         [ObservableProperty] private double _drawerWidth = 380.0;
+
+        public bool IsCustomTimeSpan => SelectedTimeSpanIndex == 6;
+        private bool _isUpdatingTimeSpan;
         
         [ObservableProperty] private bool _isDateColumnVisible = true;
         [ObservableProperty] private bool _isEmployeeColumnVisible = true;
@@ -59,6 +68,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // Rich employee name lookup for display
         private Dictionary<Guid, string> _employeeNameMap = new();
+        private Dictionary<Guid, RateType> _employeeRateTypeMap = new();
         private Dictionary<Guid, string> _projectNameMap = new();
 
         public AttendanceHistoryListViewModel(
@@ -87,12 +97,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 // Build employee name map for display
                 var employees = await _employeeService.GetEmployeesAsync();
                 _employeeNameMap = employees.ToDictionary(e => e.Id, e => $"{e.FirstName} {e.LastName}");
+                _employeeRateTypeMap = employees.ToDictionary(e => e.Id, e => e.RateType);
 
                 // Build project name map for display
                 var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: true);
                 _projectNameMap = projects.ToDictionary(p => p.Id, p => p.Name);
 
-                _allRecords = (await _attendanceService.GetAttendanceRecordsAsync(FromDate, ToDate)).ToList();
+                DateTime? from = null;
+                DateTime? to = null;
+                if (SelectedTimeSpanIndex != 0) // Not "All"
+                {
+                    from = FromDate;
+                    to = ToDate;
+                }
+
+                _allRecords = (await _attendanceService.GetAttendanceRecordsAsync(from, to)).ToList();
                 FilterItems();
             }
             catch (Exception ex)
@@ -105,10 +124,73 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
         }
 
-        partial void OnFromDateChanged(DateTime value) => _ = LoadDataAsync();
-        partial void OnToDateChanged(DateTime value) => _ = LoadDataAsync();
+        partial void OnFromDateChanged(DateTime value)
+        {
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 6)
+            {
+                _ = LoadDataAsync();
+            }
+        }
+
+        partial void OnToDateChanged(DateTime value)
+        {
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 6)
+            {
+                _ = LoadDataAsync();
+            }
+        }
+
         partial void OnSelectedBranchIndexChanged(int value) => FilterItems();
         partial void OnSelectedStatusIndexChanged(int value) => FilterItems();
+        partial void OnSelectedRateTypeIndexChanged(int value) => FilterItems();
+
+        partial void OnSelectedTimeSpanIndexChanged(int value)
+        {
+            if (value == 6) return; // Custom
+
+            _isUpdatingTimeSpan = true;
+            try
+            {
+                if (value == 1) // Today
+                {
+                    FromDate = DateTime.Today;
+                    ToDate = DateTime.Today;
+                }
+                else if (value == 2) // This Week
+                {
+                    DateTime start = DateTime.Today;
+                    while (start.DayOfWeek != DayOfWeek.Saturday) start = start.AddDays(-1);
+                    FromDate = start;
+                    ToDate = start.AddDays(6);
+                }
+                else if (value == 3) // Last Week
+                {
+                    DateTime start = DateTime.Today;
+                    while (start.DayOfWeek != DayOfWeek.Saturday) start = start.AddDays(-1);
+                    start = start.AddDays(-7);
+                    FromDate = start;
+                    ToDate = start.AddDays(6);
+                }
+                else if (value == 4) // This Month
+                {
+                    DateTime firstDay = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    FromDate = firstDay;
+                    ToDate = firstDay.AddMonths(1).AddDays(-1);
+                }
+                else if (value == 5) // Last Month
+                {
+                    DateTime firstDay = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1);
+                    FromDate = firstDay;
+                    ToDate = firstDay.AddMonths(1).AddDays(-1);
+                }
+            }
+            finally
+            {
+                _isUpdatingTimeSpan = false;
+            }
+
+            _ = LoadDataAsync();
+        }
 
         protected override void FilterItems()
         {
@@ -139,6 +221,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 3 => filtered.Where(r => r.Status == AttendanceStatus.Absent),
                 4 => filtered.Where(r => r.Status == AttendanceStatus.Sick),
                 5 => filtered.Where(r => r.Status == AttendanceStatus.LeaveAuthorized),
+                _ => filtered
+            };
+
+            filtered = SelectedRateTypeIndex switch
+            {
+                1 => filtered.Where(r => r.EmployeeId.HasValue && _employeeRateTypeMap.TryGetValue(r.EmployeeId.Value, out var rt) && rt == RateType.Hourly),
+                2 => filtered.Where(r => r.EmployeeId.HasValue && _employeeRateTypeMap.TryGetValue(r.EmployeeId.Value, out var rt) && rt == RateType.MonthlySalary),
                 _ => filtered
             };
 
@@ -443,6 +532,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 else if (SelectedBranchIndex == 2)
                 {
                     activeEmps = activeEmps.Where(e => e.Branch == "Cape Town");
+                }
+
+                if (SelectedRateTypeIndex == 1)
+                {
+                    activeEmps = activeEmps.Where(e => e.RateType == RateType.Hourly);
+                }
+                else if (SelectedRateTypeIndex == 2)
+                {
+                    activeEmps = activeEmps.Where(e => e.RateType == RateType.MonthlySalary);
                 }
 
                 if (!string.IsNullOrWhiteSpace(SearchQuery))
