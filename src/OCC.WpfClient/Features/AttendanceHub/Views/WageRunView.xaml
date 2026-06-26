@@ -70,103 +70,127 @@
         <!-- ══════════════════ CONFIG BAR ══════════════════ -->
         <Border Grid.Row="1" Padding="16,10" Background="#04FFFFFF"
                 BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
-            <WrapPanel Orientation="Horizontal">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <!-- Start Date -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" 
-                                Style="{StaticResource ModernDatePicker}" Width="140"/>
-                </StackPanel>
+                <!-- Core Filters & Actions -->
+                <WrapPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <!-- Start Date -->
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                        <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" 
+                                    Style="{StaticResource ModernDatePicker}" Width="140"/>
+                    </StackPanel>
 
-                <!-- End Date (auto-filled) -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="END DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
-                                Style="{StaticResource ModernDatePicker}" Width="140"/>
-                </StackPanel>
+                    <!-- End Date (auto-filled) -->
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <TextBlock Text="END DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                        <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
+                                    Style="{StaticResource ModernDatePicker}" Width="140"/>
+                    </StackPanel>
 
-                <!-- Pay Type -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="PAY TYPE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}"
-                              Style="{StaticResource ModernComboBox}" Width="140"/>
-                </StackPanel>
+                    <!-- Salary Type -->
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <TextBlock Text="SALARY TYPE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}"
+                                   Style="{StaticResource ModernComboBox}" Width="140"/>
+                    </StackPanel>
 
-                <!-- Branch -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="BRANCH" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}"
-                              Style="{StaticResource ModernComboBox}" Width="140"/>
-                </StackPanel>
+                    <!-- Branch -->
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <TextBlock Text="BRANCH" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}"
+                                   Style="{StaticResource ModernComboBox}" Width="140"/>
+                    </StackPanel>
 
-                <!-- Gas Charge -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="GAS (TOTAL R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding TotalGasCharge, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
-                             Style="{StaticResource ModernInput}" Width="100" TextAlignment="Right"/>
-                </StackPanel>
+                    <!-- Notes -->
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernInput}" Width="180"/>
+                    </StackPanel>
 
-                <!-- Washing Fee -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="WASHING (R/PERSON)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding CompanyHousingWashingFee, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
-                             Style="{StaticResource ModernInput}" Width="100" TextAlignment="Right"/>
-                </StackPanel>
+                    <!-- Deductions Panel Toggle -->
+                    <ToggleButton x:Name="DeductionsToggle" Style="{StaticResource ToolbarToggleButton}" Width="150" Height="34" Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
+                            <TextBlock Text="DEDUCTIONS &amp; FEES" Foreground="White" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </ToggleButton>
 
-                <!-- Supervisor Fee -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="SUPERVISOR FEE (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding DefaultSupervisorFee, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
-                             Style="{StaticResource ModernInput}" Width="100" TextAlignment="Right"/>
-                </StackPanel>
-
-                <!-- Notes -->
-                <StackPanel Margin="0,0,16,0">
-                    <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernInput}" Width="200"/>
-                </StackPanel>
-
-                <!-- Generate Button -->
-                <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,0">
-                    <Button Command="{Binding GenerateDraftCommand}" Style="{StaticResource CreateIconButton}" Height="34">
+                    <!-- Generate Button -->
+                    <Button Command="{Binding GenerateDraftCommand}" Style="{StaticResource CreateIconButton}" Height="34" Margin="0,0,16,0" VerticalAlignment="Bottom">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8FD;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
                             <TextBlock Text="GENERATE DRAFT"/>
                         </StackPanel>
                     </Button>
-                </StackPanel>
 
-                <!-- Column Options -->
-                <Grid Margin="16,0,0,0" VerticalAlignment="Bottom" Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
-                    <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="34">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
-                            <TextBlock Text="COLUMNS" Foreground="White" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </ToggleButton>
-                    <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
-                            <StackPanel>
-                                <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
-                                <CheckBox Content="Index (#)" IsChecked="{Binding IsIndexVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="BAS" IsChecked="{Binding IsBasVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Name" IsChecked="{Binding IsNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Rate/Hr" IsChecked="{Binding IsRateHrVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Total Rem" IsChecked="{Binding IsTotalRemVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Days" IsChecked="{Binding IsDaysVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                    <!-- Column Options -->
+                    <Grid VerticalAlignment="Bottom" Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
+                        <ToggleButton x:Name="ColumnsToggle" Style="{StaticResource ToolbarToggleButton}" Width="100" Height="34">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" Opacity="0.8" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="COLUMNS" Foreground="White" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
                             </StackPanel>
-                        </Border>
-                    </Popup>
+                        </ToggleButton>
+                        <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
+                                <StackPanel>
+                                    <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                    <CheckBox Content="Index (#)" IsChecked="{Binding IsIndexVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="BAS" IsChecked="{Binding IsBasVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Name" IsChecked="{Binding IsNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Rate/Hr" IsChecked="{Binding IsRateHrVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Total Rem" IsChecked="{Binding IsTotalRemVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Days" IsChecked="{Binding IsDaysVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </WrapPanel>
+
+                <!-- Expanded Deductions & Fees Panel -->
+                <Grid Grid.Row="1" Margin="0,10,0,0" Visibility="{Binding IsChecked, ElementName=DeductionsToggle, Converter={StaticResource BoolToVis}}">
+                    <Border Background="#12FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1" CornerRadius="8" Padding="16,12">
+                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Gas Charge -->
+                            <StackPanel Margin="0,0,24,0">
+                                <TextBlock Text="GAS CHARGE (TOTAL R)" Style="{StaticResource LabelText}" Margin="0,0,0,4" Foreground="{StaticResource AccentBlue}"/>
+                                <TextBox Text="{Binding TotalGasCharge, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                                         Style="{StaticResource ModernInput}" Width="120" TextAlignment="Right"/>
+                            </StackPanel>
+
+                            <!-- Washing Fee -->
+                            <StackPanel Margin="0,0,24,0">
+                                <TextBlock Text="WASHING FEE (R/PERSON)" Style="{StaticResource LabelText}" Margin="0,0,0,4" Foreground="{StaticResource AccentBlue}"/>
+                                <TextBox Text="{Binding CompanyHousingWashingFee, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                                         Style="{StaticResource ModernInput}" Width="120" TextAlignment="Right"/>
+                            </StackPanel>
+
+                            <!-- Supervisor Fee -->
+                            <StackPanel Margin="0,0,24,0">
+                                <TextBlock Text="SUPERVISOR FEE (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4" Foreground="{StaticResource AccentBlue}"/>
+                                <TextBox Text="{Binding DefaultSupervisorFee, StringFormat='F2', UpdateSourceTrigger=LostFocus}"
+                                         Style="{StaticResource ModernInput}" Width="120" TextAlignment="Right"/>
+                            </StackPanel>
+                            
+                            <!-- Help info -->
+                            <TextBlock Text="* Deductions are automatically distributed to company housed employees and supervisor fees to supervisors upon generating draft."
+                                       Style="{StaticResource LabelText}" Opacity="0.5" VerticalAlignment="Center" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                        </WrapPanel>
+                    </Border>
                 </Grid>
-            </WrapPanel>
+            </Grid>
         </Border>
 
         <!-- ══════════════════ MAIN CONTENT AREA ══════════════════ -->
@@ -394,12 +418,34 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Padding="16,8" Background="#04FFFFFF">
-                    <TextBlock Text="PAST RUNS" Style="{StaticResource LabelText}" Opacity="0.7"/>
+                <Border Grid.Row="0" Padding="16,10" Background="#04FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="PAST RUNS" Style="{StaticResource LabelText}" Opacity="0.7" VerticalAlignment="Center" FontWeight="Bold"/>
+                        
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Past Runs Branch Filter -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
+                                <TextBlock Text="BRANCH:" Style="{StaticResource LabelText}" Opacity="0.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedPastBranch}"
+                                           Style="{StaticResource ModernComboBox}" Width="140" Height="28" FontSize="11"/>
+                            </StackPanel>
+
+                            <!-- Past Runs Salary Type Filter -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="SALARY TYPE:" Style="{StaticResource LabelText}" Opacity="0.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox ItemsSource="{Binding PayTypeOptionsWithAll}" SelectedItem="{Binding SelectedPastSalaryType}"
+                                           Style="{StaticResource ModernComboBox}" Width="140" Height="28" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding PastRuns}"
+                          ItemsSource="{Binding FilteredPastRuns}"
                           SelectedItem="{Binding SelectedPastRun}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"

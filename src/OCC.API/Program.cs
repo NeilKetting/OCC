@@ -114,6 +114,11 @@ builder.Services.AddHostedService<OCC.API.Services.DatabaseBackupService>();
 builder.Services.AddHostedService<OCC.API.Services.AutoClockInService>();
 builder.Services.AddHostedService<OCC.API.Services.SignalRHeartbeatService>();
 
+// Wage Calculation Engine
+builder.Services.Configure<OCC.API.Services.WageCalculationOptions>(
+    builder.Configuration.GetSection("WageCalculation"));
+builder.Services.AddScoped<OCC.API.Services.IWageCalculationService, OCC.API.Services.WageCalculationService>();
+
 // OpenAPI (Built-in .NET 10)
 builder.Services.AddOpenApi();
 

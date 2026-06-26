@@ -2289,13 +2289,14 @@ namespace OCC.WpfClient.Services
                     });
 
                     // Weekly table
-                    col.Item().Element(c => ComposeWeeklyAttendanceTable(c, week.Employees));
+                    col.Item().Element(c => ComposeWeeklyAttendanceTable(c, week));
                 }
             });
         }
 
-        private void ComposeWeeklyAttendanceTable(IContainer container, List<WeeklyAttendancePrintModel> employees)
+        private void ComposeWeeklyAttendanceTable(IContainer container, WeeklyAttendanceReportWeekModel week)
         {
+            var employees = week.Employees;
             container.Table(table =>
             {
                 // Columns Definition (29 columns total: Name + 7 days * 4 sub-columns)
@@ -2327,9 +2328,11 @@ namespace OCC.WpfClient.Services
                     header.Cell().RowSpan(2).Element(MainHeaderStyle).Text("NAME");
                     
                     var daysOfWeek = new[] { "SAT", "SUN", "MON", "TUE", "WED", "THUR", "FRI" };
-                    foreach (var day in daysOfWeek)
+                    for (int i = 0; i < 7; i++)
                     {
-                        header.Cell().ColumnSpan(4).Element(MainHeaderStyle).Text(day);
+                        var dayDate = week.WeekStart.AddDays(i);
+                        string dayHeader = $"{daysOfWeek[i]} - {GetDayWithSuffix(dayDate)}";
+                        header.Cell().ColumnSpan(4).Element(MainHeaderStyle).Text(dayHeader);
                     }
 
                     // Header Row 2: Sub-headers Site, In, Out, O/T
@@ -2386,6 +2389,16 @@ namespace OCC.WpfClient.Services
                 });
                 row.RelativeItem().AlignRight().Text($"Generated on {DateTime.Now:F} - {company.CompanyName}");
             });
+        }
+
+        private static string GetDayWithSuffix(DateTime date)
+        {
+            int day = date.Day;
+            string suffix = (day % 10 == 1 && day != 11) ? "st"
+                          : (day % 10 == 2 && day != 12) ? "nd"
+                          : (day % 10 == 3 && day != 13) ? "rd"
+                          : "th";
+            return $"{day}{suffix}";
         }
     }
 }

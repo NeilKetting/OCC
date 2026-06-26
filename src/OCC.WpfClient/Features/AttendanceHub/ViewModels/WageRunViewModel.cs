@@ -107,8 +107,44 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // ─── Past runs list ───────────────────────────────────────────────────
 
-        [ObservableProperty] private ObservableCollection<WageRun> _pastRuns = new();
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
+        private string _selectedPastBranch = "All";
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
+        private string _selectedPastSalaryType = "All";
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
+        private ObservableCollection<WageRun> _pastRuns = new();
+
         [ObservableProperty] private WageRun? _selectedPastRun;
+
+        public ObservableCollection<string> PayTypeOptionsWithAll { get; } = new()
+        {
+            "All",
+            "Hourly",
+            "MonthlySalary"
+        };
+
+        public IEnumerable<WageRun> FilteredPastRuns
+        {
+            get
+            {
+                var filtered = PastRuns.AsEnumerable();
+                if (SelectedPastBranch != "All")
+                {
+                    filtered = filtered.Where(r => r.Branch == SelectedPastBranch);
+                }
+                if (SelectedPastSalaryType != "All")
+                {
+                    filtered = filtered.Where(r => r.PayType == SelectedPastSalaryType ||
+                        (SelectedPastSalaryType == "MonthlySalary" && r.PayType == "MonthlySalary"));
+                }
+                return filtered.ToList();
+            }
+        }
 
         // ─── Constructor ─────────────────────────────────────────────────────
 
@@ -319,6 +355,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 await _wageService.DeleteRunAsync(run.Id);
                 PastRuns.Remove(run);
+                OnPropertyChanged(nameof(FilteredPastRuns));
             }
             catch (Exception ex)
             {

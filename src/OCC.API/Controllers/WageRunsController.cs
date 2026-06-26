@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
+using OCC.API.Services;
 using OCC.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
@@ -16,10 +18,12 @@ namespace OCC.API.Controllers
     public class WageRunsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWageCalculationService _wageCalc;
 
-        public WageRunsController(AppDbContext context)
+        public WageRunsController(AppDbContext context, IWageCalculationService wageCalc)
         {
-            _context = context;
+            _context  = context;
+            _wageCalc = wageCalc;
         }
 
         // GET: api/WageRuns
@@ -106,8 +110,16 @@ namespace OCC.API.Controllers
                 gasPerPerson = request.InputTotalGasCharge / housedEmployees.Count;
             }
 
-            // 3. Fetch Attendance for the Period (exactly between StartDate and EndDate)
-            var attendanceEnd = request.EndDate > runDate ? runDate : request.EndDate; // Don't fetch past RunDate if it's earlier than EndDate, but also don't fetch past EndDate
+            // 3. Load CompanyProfile to resolve branch shift defaults (no hardcoded times)
+            CompanyDetails? companyDetails = null;
+            var profileSetting = await _context.AppSettings.FirstOrDefaultAsync(s => s.Key == "CompanyProfile");
+            if (profileSetting != null && !string.IsNullOrEmpty(profileSetting.Value))
+            {
+                companyDetails = JsonSerializer.Deserialize<CompanyDetails>(profileSetting.Value);
+            }
+
+            // 4. Fetch Attendance for the Period (exactly between StartDate and EndDate)
+            var attendanceEnd = request.EndDate > runDate ? runDate : request.EndDate;
             var attendance = await _context.AttendanceRecords
                 .Where(a => a.Date >= request.StartDate && a.Date <= attendanceEnd)
                 .ToListAsync();
@@ -136,7 +148,7 @@ namespace OCC.API.Controllers
                     EmployeeId = emp.Id,
                     EmployeeName = $"{emp.FirstName} {emp.LastName}",
                     EmployeeNumber = emp.EmployeeNumber,
-                    Branch = emp.Branch,
+                    Branch = emp.Branch ?? "",
                     BankName = emp.BankName,
                     EmploymentType = emp.EmploymentType.ToString(),
                     HourlyRate = (decimal)emp.HourlyRate,
@@ -181,13 +193,42 @@ namespace OCC.API.Controllers
                 var distinctDaysW1 = new HashSet<DateTime>();
                 var distinctDaysW2 = new HashSet<DateTime>();
 
+                // Resolve branch shift defaults for this employee if no personal shift is set
+                var empForCalc = emp;
+                if ((emp.ShiftStartTime == null || emp.ShiftEndTime == null) && companyDetails != null)
+                {
+                    // Map the employee's branch string to the Branch enum key
+                    var branchKey = emp.Branch?.Contains("Cape", StringComparison.OrdinalIgnoreCase) == true
+                        ? Branch.CPT
+                        : Branch.JHB;
+
+                    if (companyDetails.Branches.TryGetValue(branchKey, out var branchDetails))
+                    {
+                        // Clone with the branch shift so the original DB entity is untouched
+                        empForCalc = new Employee
+                        {
+                            Id                    = emp.Id,
+                            FirstName             = emp.FirstName,
+                            LastName              = emp.LastName,
+                            EmployeeNumber        = emp.EmployeeNumber,
+                            Role                  = emp.Role,
+                            Branch                = emp.Branch ?? "",
+                            EmploymentType        = emp.EmploymentType,
+                            RateType              = emp.RateType,
+                            HourlyRate            = emp.HourlyRate,
+                            LivesInCompanyHousing = emp.LivesInCompanyHousing,
+                            ShiftStartTime        = emp.ShiftStartTime ?? branchDetails.ShiftStartTime,
+                            ShiftEndTime          = emp.ShiftEndTime ?? branchDetails.ShiftEndTime
+                        };
+                    }
+                }
+
                 foreach (var record in empAttendance)
                 {
-                    // Basic Calc matching ViewModel logic
-                    var hours = CalculateHours(record, emp);
-                    line.NormalHours += hours.Normal;
-                    line.Overtime15Hours += hours.Overtime15;
-                    line.Overtime20Hours += hours.Overtime20;
+                    var hours = _wageCalc.CalculateHours(record, empForCalc);
+                    line.NormalHours         += hours.Normal;
+                    line.Overtime15Hours     += hours.Overtime15;
+                    line.Overtime20Hours     += hours.Overtime20;
                     line.LunchDeductionHours += hours.Lunch;
                     
                     if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
@@ -219,11 +260,16 @@ namespace OCC.API.Controllers
 
                         // Add Standard Shift (e.g. 9 hours or ShiftDiff)
                         double dailyHours = 9.0;
-                        if (emp.ShiftStartTime.HasValue && emp.ShiftEndTime.HasValue)
+                        if (empForCalc.ShiftStartTime.HasValue && empForCalc.ShiftEndTime.HasValue)
                         {
-                            dailyHours = (emp.ShiftEndTime.Value - emp.ShiftStartTime.Value).TotalHours;
-                            // Deduct Lunch? Simplify to 9 for now unless specified.
-                            // Better: Use Shift diff.
+                            dailyHours = (empForCalc.ShiftEndTime.Value - empForCalc.ShiftStartTime.Value).TotalHours;
+                            // Under the client rule, weekday shift gets a 1h lunch deduction if checkout is >= 13:00.
+                            // Since projected days are standard workdays ending after 13:00, we deduct the 1h lunch.
+                            if (empForCalc.ShiftEndTime.Value.Hours >= 13)
+                            {
+                                dailyHours -= 1.0;
+                            }
+                            if (dailyHours < 0) dailyHours = 0;
                         }
                         line.ProjectedHours += dailyHours;
                     }
@@ -250,10 +296,10 @@ namespace OCC.API.Controllers
                                 .ToListAsync();
 
                             double actualHoursInProjectedWindow = 0;
-                            foreach(var r in pastActualRecords)
+                            foreach (var r in pastActualRecords)
                             {
-                                var h = CalculateHours(r, emp);
-                                actualHoursInProjectedWindow += (h.Normal + h.Overtime15 + h.Overtime20); // Sum all valid work
+                                var h = _wageCalc.CalculateHours(r, empForCalc);
+                                actualHoursInProjectedWindow += (h.Normal + h.Overtime15 + h.Overtime20);
                             }
 
                             // Variance = Actual - Projected
@@ -462,79 +508,5 @@ namespace OCC.API.Controllers
              return NoContent();
         }
 
-        // Helper: Calculate Hours
-        private (double Normal, double Overtime15, double Overtime20, double Lunch) CalculateHours(AttendanceRecord r, Employee e)
-        {
-            if (r.CheckInTime == null || r.Status == AttendanceStatus.Absent) return (0, 0, 0, 0);
-            
-            DateTime start = r.CheckInTime.Value;
-            DateTime end = r.CheckOutTime ?? r.CheckInTime.Value; 
-            if (r.CheckOutTime == null) return (0, 0, 0, 0);
-
-            // 1. Calculate Standard Lunch Deduction (12:00 - 13:00)
-            double lunchDeduction = 0;
-            DateTime lunchStart = r.Date.Date.AddHours(12);
-            DateTime lunchEnd = r.Date.Date.AddHours(13);
-
-            // Find intersection of [start, end] and [lunchStart, lunchEnd]
-            var intersectStart = start > lunchStart ? start : lunchStart;
-            var intersectEnd = end < lunchEnd ? end : lunchEnd;
-
-            if (intersectStart < intersectEnd)
-            {
-                lunchDeduction = (intersectEnd - intersectStart).TotalHours;
-            }
-
-            var totalDuration = (end - start).TotalHours;
-            if (totalDuration <= 0) return (0, 0, 0, 0);
-
-            // Determine Multiplier
-            var dow = r.Date.DayOfWeek;
-            bool isSunday = dow == DayOfWeek.Sunday;
-            bool isSaturday = dow == DayOfWeek.Saturday;
-            bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(r.Date);
-            
-            if (isSunday || isHoliday)
-            {
-                // Lunch deduction applies as per "not paying for those"
-                return (0, 0, totalDuration - lunchDeduction, lunchDeduction);
-            }
-            
-            if (isSaturday)
-            {
-                return (0, totalDuration - lunchDeduction, 0, lunchDeduction);
-            }
-            
-            // Weekday: Check Shift Bounds
-            TimeSpan shiftStart = e.ShiftStartTime ?? new TimeSpan(7, 0, 0);
-            TimeSpan shiftEnd = e.ShiftEndTime ?? new TimeSpan(16, 0, 0);
-            
-            DateTime shiftStartDt = r.Date.Date.Add(shiftStart);
-            DateTime shiftEndDt = r.Date.Date.Add(shiftEnd);
-            
-            // Normal (Shift Overlap)
-            var overlapStart = start > shiftStartDt ? start : shiftStartDt;
-            var overlapEnd = end < shiftEndDt ? end : shiftEndDt;
-            
-            double normal = 0;
-            if (overlapStart < overlapEnd)
-            {
-                normal = (overlapEnd - overlapStart).TotalHours;
-                
-                // Deduct lunch from normal hours if it overlaps the shift
-                var normalLunchStart = overlapStart > lunchStart ? overlapStart : lunchStart;
-                var normalLunchEnd = overlapEnd < lunchEnd ? overlapEnd : lunchEnd;
-                
-                if (normalLunchStart < normalLunchEnd)
-                {
-                    normal -= (normalLunchEnd - normalLunchStart).TotalHours;
-                }
-            }
-            
-            double totalOT = totalDuration - (normal + lunchDeduction);
-            if (totalOT < 0) totalOT = 0; 
-            
-            return (normal, totalOT, 0, lunchDeduction);
-        }
     }
 }
