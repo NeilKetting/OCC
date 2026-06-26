@@ -286,6 +286,10 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
         <attndViews:AttendanceHistoryListView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type attndVm:AttendanceDetailViewModel}">
+        <attndViews:AttendanceDetailView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type attndVm:TeamManagementViewModel}">
         <attndViews:TeamManagementListView />
     </DataTemplate>

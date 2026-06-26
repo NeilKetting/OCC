@@ -160,15 +160,21 @@ namespace OCC.WpfClient.Infrastructure
             // so the ContextMenu can reach it via PlacementTarget.Tag
             style.Setters.Add(new Setter(FrameworkElement.TagProperty, new Binding("DataContext") { RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(DataGrid), 1) }));
             
-            // Check if ContextMenu is already set in the style
+            // Check if ContextMenu is already set in the style or any base style
             bool hasMenu = false;
-            foreach (Setter setter in style.Setters)
+            var currentStyle = style;
+            while (currentStyle != null)
             {
-                if (setter.Property == FrameworkElement.ContextMenuProperty)
+                foreach (var setter in currentStyle.Setters)
                 {
-                    hasMenu = true;
-                    break;
+                    if (setter is Setter s && s.Property == FrameworkElement.ContextMenuProperty)
+                    {
+                        hasMenu = true;
+                        break;
+                    }
                 }
+                if (hasMenu) break;
+                currentStyle = currentStyle.BasedOn;
             }
 
             if (!hasMenu)

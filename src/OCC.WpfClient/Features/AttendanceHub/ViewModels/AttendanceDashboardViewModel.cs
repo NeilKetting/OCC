@@ -12,10 +12,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     /// <summary>
     /// Dashboard showing live today's rollcall — who is clocked in, who hasn't arrived, totals.
     /// </summary>
-    public partial class AttendanceDashboardViewModel : ViewModelBase
+    public partial class AttendanceDashboardViewModel : OverlayHostViewModel
     {
         private readonly IAttendanceService _attendanceService;
         private readonly IEmployeeService _employeeService;
+        private readonly IProjectService _projectService;
+        private readonly IDialogService _dialogService;
+        private readonly IPdfService _pdfService;
         private readonly ILogger<AttendanceDashboardViewModel> _logger;
 
         private List<AttendanceStatusRow> _allRows = new();
@@ -40,10 +43,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public AttendanceDashboardViewModel(
             IAttendanceService attendanceService,
             IEmployeeService employeeService,
+            IProjectService projectService,
+            IDialogService dialogService,
+            IPdfService pdfService,
             ILogger<AttendanceDashboardViewModel> logger)
         {
             _attendanceService = attendanceService;
             _employeeService = employeeService;
+            _projectService = projectService;
+            _dialogService = dialogService;
+            _pdfService = pdfService;
             _logger = logger;
             Title = "Attendance Dashboard";
         }
@@ -88,7 +97,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         HoursWorked = record?.HoursWorked ?? 0,
                         RecordId = record?.Id,
                         IsClocked = openRecord != null,
-                        IsAutoClockIn = record?.IsAutoClockIn ?? false
+                        IsAutoClockIn = record?.IsAutoClockIn ?? false,
+                        Record = record
                     });
                 }
 
@@ -207,18 +217,31 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (row == null) return;
 
-            // Guard: if the row is already showing as clocked in the UI should have hidden
-            // the button, but protect against race conditions / stale data.
             if (row.IsClocked)
             {
                 NotifyError("Already Clocked In", $"{row.EmployeeName} already has an active shift. Please clock them out first.");
-                await LoadDashboardDataAsync(); // Refresh so the UI reflects reality.
+                await LoadDashboardDataAsync();
                 return;
             }
 
+            var reason = await _dialogService.ShowInputDialogAsync("Late Arrival / Presence Note", "Enter reason for arriving late / note (optional):");
+            if (reason == null) return; // User cancelled
+
             try
             {
-                await _attendanceService.ClockInAsync(row.EmployeeId, row.Branch);
+                var now = DateTime.Now;
+                var record = new AttendanceRecord
+                {
+                    EmployeeId = row.EmployeeId,
+                    Date = now.Date,
+                    CheckInTime = now,
+                    ClockInTime = now.TimeOfDay,
+                    Branch = row.Branch,
+                    Status = AttendanceStatus.Present,
+                    Notes = !string.IsNullOrWhiteSpace(reason) ? $"Arrival/Late Note: {reason}" : string.Empty
+                };
+
+                await _attendanceService.CreateAttendanceRecordAsync(record);
                 NotifySuccess("Clocked In", $"{row.EmployeeName} has been clocked in.");
                 await LoadDashboardDataAsync();
             }
@@ -226,17 +249,45 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 _logger.LogError(ex, "Error clocking in employee {Id}", row.EmployeeId);
                 NotifyError("Clock-In Failed", ex.Message);
-                await LoadDashboardDataAsync(); // Refresh so stale state doesn't persist.
+                await LoadDashboardDataAsync();
             }
         }
 
         [RelayCommand]
         private async Task ClockOutEmployee(AttendanceStatusRow? row)
         {
-            if (row?.RecordId == null) return;
+            if (row == null) return;
+
+            // Find the record to update
+            var record = row.Record;
+            if (record == null && row.RecordId != null)
+            {
+                // Fallback: look up in active rows or fetch todays attendance
+                var today = DateTime.Today;
+                var records = await _attendanceService.GetTodaysAttendanceAsync();
+                record = records.FirstOrDefault(r => r.Id == row.RecordId.Value);
+            }
+
+            if (record == null)
+            {
+                NotifyError("Clock-Out Failed", "No active attendance record found to clock out.");
+                return;
+            }
+
+            var reason = await _dialogService.ShowInputDialogAsync("Clock Out Reason", "Enter the reason for clocking out (optional):");
+            if (reason == null) return; // User cancelled
+
             try
             {
-                await _attendanceService.ClockOutAsync(row.RecordId.Value);
+                record.CheckOutTime = DateTime.Now;
+                if (!string.IsNullOrWhiteSpace(reason))
+                {
+                    record.Notes = string.IsNullOrWhiteSpace(record.Notes)
+                        ? $"Clock Out Reason: {reason}"
+                        : $"{record.Notes}; Clock Out Reason: {reason}";
+                }
+
+                await _attendanceService.UpdateAttendanceRecordAsync(record);
                 NotifySuccess("Clocked Out", $"{row.EmployeeName} has been clocked out.");
                 await LoadDashboardDataAsync();
             }
@@ -245,6 +296,37 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 _logger.LogError(ex, "Error clocking out employee {Id}", row.EmployeeId);
                 NotifyError("Clock-Out Failed", ex.Message);
             }
+        }
+
+        [RelayCommand]
+        private void EditEmployee(AttendanceStatusRow? row)
+        {
+            if (row == null) return;
+
+            var record = row.Record ?? new AttendanceRecord
+            {
+                Id = Guid.Empty,
+                EmployeeId = row.EmployeeId,
+                Date = DateTime.Today,
+                Status = AttendanceStatus.Present
+            };
+
+            var detailVm = new AttendanceDetailViewModel(
+                record,
+                _attendanceService,
+                _employeeService,
+                _projectService,
+                _dialogService,
+                _logger,
+                _pdfService);
+
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res != null) // Saved successfully
+                {
+                    await LoadDashboardDataAsync();
+                }
+            });
         }
     }
 
@@ -262,6 +344,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public double HoursWorked { get; set; }
         public bool IsClocked { get; set; }
         public bool IsAutoClockIn { get; set; }
+        public AttendanceRecord? Record { get; set; }
         public bool IsAbsent => Status == AttendanceStatus.Absent;
 
         public string StatusLabel => (CheckInTime.HasValue && CheckOutTime.HasValue && Status != AttendanceStatus.Absent)

@@ -1,8 +1,11 @@
+using OCC.WpfClient.Infrastructure;
 using System.Windows.Controls;
 
 namespace OCC.WpfClient.Features.AttendanceHub.Views
 {
-    public partial class AttendanceDashboardView : UserControl
+    public class AttendanceDashboardViewBase : ListViewBase { }
+
+    public partial class AttendanceDashboardView : AttendanceDashboardViewBase
     {
         public AttendanceDashboardView()
         {

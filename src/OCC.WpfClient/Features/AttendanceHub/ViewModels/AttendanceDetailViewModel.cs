@@ -140,7 +140,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 if (IsNew)
                 {
-                    SelectedEmployee = Employees.FirstOrDefault();
+                    if (EditingRecord.EmployeeId != Guid.Empty)
+                    {
+                        SelectedEmployee = Employees.FirstOrDefault(e => e.Id == EditingRecord.EmployeeId);
+                    }
+                    SelectedEmployee ??= Employees.FirstOrDefault();
                     Status = AttendanceStatus.Present;
                     SelectedProject = Projects.FirstOrDefault(p => p.Id == SelectSiteId);
                 }
