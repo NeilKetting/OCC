@@ -77,4 +77,38 @@ namespace OCC.Shared.DTOs
         public string? EmergencyContactPhone { get; set; }
         public byte[]? RowVersion { get; set; }
     }
+
+    public class EmployeeReferencesDto
+    {
+        public int AttendanceCount { get; set; }
+        public int TimeRecordCount { get; set; }
+        public int TeamMemberCount { get; set; }
+        public int ProjectTeamMemberCount { get; set; }
+        public int SiteDeploymentMemberCount { get; set; }
+        public int LeaveRequestCount { get; set; }
+        public int OvertimeRequestCount { get; set; }
+        public int EmployeeLoanCount { get; set; }
+        public int TaskAssignmentCount { get; set; }
+        public int ClockingEventCount { get; set; }
+        public int DailyTimesheetCount { get; set; }
+        public int HseqTrainingCount { get; set; }
+        public int WageRunCount { get; set; }
+        public int ProjectManagerCount { get; set; }
+
+        public bool HasReferences =>
+            AttendanceCount > 0 ||
+            TimeRecordCount > 0 ||
+            TeamMemberCount > 0 ||
+            ProjectTeamMemberCount > 0 ||
+            SiteDeploymentMemberCount > 0 ||
+            LeaveRequestCount > 0 ||
+            OvertimeRequestCount > 0 ||
+            EmployeeLoanCount > 0 ||
+            TaskAssignmentCount > 0 ||
+            ClockingEventCount > 0 ||
+            DailyTimesheetCount > 0 ||
+            HseqTrainingCount > 0 ||
+            WageRunCount > 0 ||
+            ProjectManagerCount > 0;
+    }
 }

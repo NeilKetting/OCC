@@ -24,7 +24,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
     /// It coordinates navigation, multi-tab (Hubs) management, real-time communications (SignalR),
     /// database health polling, user activity/inactivity session monitoring, and app-wide toasts/messages.
     /// </summary>
-    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>, IRecipient<OpenChatSessionMessage>
     {
         #region Private Fields & Services
 
@@ -379,6 +379,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             WeakReferenceMessenger.Default.Register<StatusUpdateMessage>(this);
             WeakReferenceMessenger.Default.Register<PreferenceChangedMessage>(this);
             WeakReferenceMessenger.Default.Register<ImportProgressMessage>(this);
+            WeakReferenceMessenger.Default.Register<OpenChatSessionMessage>(this);
             
             // Connect to real-time SignalR notifications and user lists
             _signalRService.UserListUpdated += OnUserListUpdated;
@@ -402,6 +403,18 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _dbPollingCts = new CancellationTokenSource();
             _shellTimingCts = new CancellationTokenSource();
             _dbPollingTask = StartDbPollingAsync(_dbPollingCts.Token);
+
+            // Set Dashboard as the default active hub/tab upon loading
+            try
+            {
+                var dashboard = _serviceProvider.GetRequiredService<DashboardViewModel>();
+                OpenHubs.Add(dashboard);
+                ActiveHub = dashboard;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load DashboardViewModel as the default landing view.");
+            }
         }
 
         #endregion
@@ -480,6 +493,15 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private async Task Logout()
         {
             await _authService.LogoutAsync();
+
+            // Restore the window state and dimensions for the Login view
+            WeakReferenceMessenger.Default.Send(new ResizeWindowMessage(new WindowSizeInfo
+            {
+                Width = 1024,
+                Height = 700,
+                State = System.Windows.WindowState.Normal
+            }));
+
             Navigation.NavigateTo("Auth");
         }
 
@@ -1245,6 +1267,23 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             if (info.IsComplete)
             {
                 _ = _shellTimingService.HideImportProgressAsync(() => IsImportProgressVisible = false, _shellTimingCts?.Token ?? CancellationToken.None);
+            }
+        }
+
+        /// <summary>
+        /// Handles OpenChatSessionMessage by opening the Chat hub and focusing the target session.
+        /// </summary>
+        public void Receive(OpenChatSessionMessage message)
+        {
+            var sessionId = message.Value;
+            
+            // Navigate/open the Chat Hub
+            OpenHub(NavigationRoutes.Chat);
+            
+            // Focus the session inside ChatViewModel
+            if (ActiveHub is ChatViewModel chatVm)
+            {
+                chatVm.SelectSessionById(sessionId);
             }
         }
 

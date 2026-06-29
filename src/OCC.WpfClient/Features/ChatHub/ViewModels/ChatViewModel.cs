@@ -42,6 +42,8 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
         [ObservableProperty]
         private ObservableCollection<ChatSessionModel> _chatSessions = new();
 
+        private Guid? _pendingSessionIdToSelect;
+
         public ICollectionView SessionsView { get; }
 
         [ObservableProperty]
@@ -435,12 +437,36 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                                 _logger.LogError(ex, "Error processing chat session {SessionId}", dto.Id);
                             }
                         }
+
+                        if (_pendingSessionIdToSelect.HasValue)
+                        {
+                            var pendingSession = ChatSessions.FirstOrDefault(s => s.Id == _pendingSessionIdToSelect.Value);
+                            if (pendingSession != null)
+                            {
+                                SelectedSession = pendingSession;
+                            }
+                            _pendingSessionIdToSelect = null;
+                        }
                     });
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to load sessions: {ex.Message}");
+            }
+        }
+
+        public void SelectSessionById(Guid sessionId)
+        {
+            var session = ChatSessions.FirstOrDefault(s => s.Id == sessionId);
+            if (session != null)
+            {
+                SelectedSession = session;
+                _pendingSessionIdToSelect = null;
+            }
+            else
+            {
+                _pendingSessionIdToSelect = sessionId;
             }
         }
 

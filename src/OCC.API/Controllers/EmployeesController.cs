@@ -193,6 +193,94 @@ namespace OCC.API.Controllers
             }
         }
 
+        // GET: api/Employees/5/references
+        [HttpGet("{id}/references")]
+        public async Task<ActionResult<EmployeeReferencesDto>> GetEmployeeReferences(Guid id)
+        {
+            try
+            {
+                var dto = new EmployeeReferencesDto
+                {
+                    AttendanceCount = await _context.AttendanceRecords.CountAsync(a => a.EmployeeId == id),
+                    TimeRecordCount = await _context.TimeRecords.CountAsync(t => t.EmployeeId == id),
+                    TeamMemberCount = await _context.TeamMembers.CountAsync(t => t.EmployeeId == id),
+                    ProjectTeamMemberCount = await _context.ProjectTeamMembers.CountAsync(t => t.EmployeeId == id),
+                    SiteDeploymentMemberCount = await _context.SiteDeploymentMembers.CountAsync(s => s.EmployeeId == id),
+                    LeaveRequestCount = await _context.LeaveRequests.CountAsync(l => l.EmployeeId == id),
+                    OvertimeRequestCount = await _context.OvertimeRequests.CountAsync(o => o.EmployeeId == id),
+                    EmployeeLoanCount = await _context.EmployeeLoans.CountAsync(e => e.EmployeeId == id),
+                    TaskAssignmentCount = await _context.TaskAssignments.CountAsync(t => t.AssigneeId == id),
+                    ClockingEventCount = await _context.ClockingEvents.CountAsync(c => c.EmployeeId == id),
+                    DailyTimesheetCount = await _context.DailyTimesheets.CountAsync(d => d.EmployeeId == id),
+                    HseqTrainingCount = await _context.HseqTrainingRecords.CountAsync(h => h.EmployeeId == id),
+                    WageRunCount = await _context.WageRunLines.CountAsync(w => w.EmployeeId == id),
+                    ProjectManagerCount = await _context.Projects.CountAsync(p => p.SiteManagerId == id)
+                };
+
+                return Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking references for employee {Id}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        // DELETE: api/Employees/5/permanent
+        [HttpDelete("{id}/permanent")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PermanentDeleteEmployee(Guid id)
+        {
+            try
+            {
+                var employee = await _context.Employees.FindAsync(id);
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+
+                // Delete or disassociate references:
+                
+                // 1. Projects Site Manager - nullify
+                var projects = await _context.Projects.Where(p => p.SiteManagerId == id).ToListAsync();
+                foreach (var p in projects) p.SiteManagerId = null;
+
+                // 2. SiteDeployments site manager - nullify
+                var siteDeployments = await _context.SiteDeployments.Where(s => s.ReceivedBySiteManagerId == id).ToListAsync();
+                foreach (var sd in siteDeployments) sd.ReceivedBySiteManagerId = null;
+
+                // 3. Delete other direct references:
+                _context.TaskAssignments.RemoveRange(_context.TaskAssignments.Where(t => t.AssigneeId == id));
+                _context.TeamMembers.RemoveRange(_context.TeamMembers.Where(t => t.EmployeeId == id));
+                _context.ProjectTeamMembers.RemoveRange(_context.ProjectTeamMembers.Where(t => t.EmployeeId == id));
+                _context.TimeRecords.RemoveRange(_context.TimeRecords.Where(t => t.EmployeeId == id));
+                _context.AttendanceRecords.RemoveRange(_context.AttendanceRecords.Where(t => t.EmployeeId == id));
+                _context.LeaveRequests.RemoveRange(_context.LeaveRequests.Where(t => t.EmployeeId == id));
+                _context.OvertimeRequests.RemoveRange(_context.OvertimeRequests.Where(o => o.EmployeeId == id));
+                _context.EmployeeLoans.RemoveRange(_context.EmployeeLoans.Where(e => e.EmployeeId == id));
+                _context.SiteDeploymentMembers.RemoveRange(_context.SiteDeploymentMembers.Where(s => s.EmployeeId == id));
+                _context.HseqTrainingRecords.RemoveRange(_context.HseqTrainingRecords.Where(h => h.EmployeeId == id));
+                _context.DailyTimesheets.RemoveRange(_context.DailyTimesheets.Where(d => d.EmployeeId == id));
+                _context.WageRunLines.RemoveRange(_context.WageRunLines.Where(w => w.EmployeeId == id));
+                _context.ClockingEvents.RemoveRange(_context.ClockingEvents.Where(c => c.EmployeeId == id));
+
+                // 4. Suppress Soft Delete on EF DBContext and delete employee record
+                _context.SupressSoftDelete = true;
+                _context.Employees.Remove(employee);
+
+                await _context.SaveChangesAsync();
+                
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Employee", "Delete", id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error permanently deleting employee {Id}", id);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         private bool EmployeeExists(Guid id)
         {
             return _context.Employees.Any(e => e.Id == id);

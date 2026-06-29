@@ -158,5 +158,41 @@ namespace OCC.WpfClient.Services
                 throw;
             }
         }
+
+        public async Task<EmployeeReferencesDto?> GetEmployeeReferencesAsync(Guid id)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl($"api/Employees/{id}/references");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<EmployeeReferencesDto>(url, _options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting employee references for {Id} from {Url}", id, url);
+                return null;
+            }
+        }
+
+        public async Task<bool> PermanentDeleteEmployeeAsync(Guid id)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl($"api/Employees/{id}/permanent");
+            try
+            {
+                var response = await _httpClient.DeleteAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new HttpRequestException($"Error permanently deleting employee: {response.StatusCode}. Details: {errorContent}", null, response.StatusCode);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error permanently deleting employee {Id} at {Url}", id, url);
+                throw;
+            }
+        }
     }
 }

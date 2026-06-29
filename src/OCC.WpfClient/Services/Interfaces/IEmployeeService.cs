@@ -13,5 +13,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<EmployeeDto?> CreateEmployeeAsync(Employee employee);
         Task<bool> UpdateEmployeeAsync(Employee employee);
         Task<bool> DeleteEmployeeAsync(Guid id);
+        Task<EmployeeReferencesDto?> GetEmployeeReferencesAsync(Guid id);
+        Task<bool> PermanentDeleteEmployeeAsync(Guid id);
     }
 }

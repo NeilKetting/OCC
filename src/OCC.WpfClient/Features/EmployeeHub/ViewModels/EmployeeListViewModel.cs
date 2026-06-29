@@ -245,31 +245,151 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             var targets = GetDeleteTargets(parameter);
             if (!targets.Any()) return;
 
-            string title = targets.Count > 1 ? "Deactivate Multiple Employees" : "Deactivate Employee";
-            string message = targets.Count > 1 
-                ? $"You are about to make {targets.Count} employees inactive. Are you sure you want to proceed?"
-                : $"Are you sure you want to make '{targets[0].FirstName} {targets[0].LastName}' inactive?";
-
-            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
-            if (!confirmed) return;
-
-            try
+            if (targets.Count == 1)
             {
-                IsBusy = true;
-                BusyText = targets.Count > 1 ? "Deactivating employees..." : "Deactivating employee...";
-                foreach (var t in targets)
+                var target = targets[0];
+                try
                 {
-                    await _employeeService.DeleteEmployeeAsync(t.Id);
+                    IsBusy = true;
+                    BusyText = "Checking database references...";
+                    var refs = await _employeeService.GetEmployeeReferencesAsync(target.Id);
+                    IsBusy = false;
+
+                    bool isAdmin = _authService.CurrentUser?.UserRole == OCC.Shared.Models.UserRole.Admin;
+
+                    if (refs != null && refs.HasReferences)
+                    {
+                        // Build a breakdown message of where this employee is referenced
+                        var sb = new System.Text.StringBuilder();
+                        sb.AppendLine($"'{target.FirstName} {target.LastName}' has the following database references:");
+                        if (refs.AttendanceCount > 0) sb.AppendLine($"• Attendance Records: {refs.AttendanceCount}");
+                        if (refs.TimeRecordCount > 0) sb.AppendLine($"• Time Records: {refs.TimeRecordCount}");
+                        if (refs.TeamMemberCount > 0) sb.AppendLine($"• Team Membership: {refs.TeamMemberCount}");
+                        if (refs.ProjectTeamMemberCount > 0) sb.AppendLine($"• Project Team Membership: {refs.ProjectTeamMemberCount}");
+                        if (refs.SiteDeploymentMemberCount > 0) sb.AppendLine($"• Site Deployment Assignments: {refs.SiteDeploymentMemberCount}");
+                        if (refs.LeaveRequestCount > 0) sb.AppendLine($"• Leave Requests: {refs.LeaveRequestCount}");
+                        if (refs.OvertimeRequestCount > 0) sb.AppendLine($"• Overtime Requests: {refs.OvertimeRequestCount}");
+                        if (refs.EmployeeLoanCount > 0) sb.AppendLine($"• Employee Loans: {refs.EmployeeLoanCount}");
+                        if (refs.TaskAssignmentCount > 0) sb.AppendLine($"• Task Assignments: {refs.TaskAssignmentCount}");
+                        if (refs.ClockingEventCount > 0) sb.AppendLine($"• Clocking Events: {refs.ClockingEventCount}");
+                        if (refs.DailyTimesheetCount > 0) sb.AppendLine($"• Daily Timesheets: {refs.DailyTimesheetCount}");
+                        if (refs.HseqTrainingCount > 0) sb.AppendLine($"• HSEQ Training Records: {refs.HseqTrainingCount}");
+                        if (refs.WageRunCount > 0) sb.AppendLine($"• Wage Run Items: {refs.WageRunCount}");
+                        if (refs.ProjectManagerCount > 0) sb.AppendLine($"• Project Site Manager roles: {refs.ProjectManagerCount}");
+
+                        sb.AppendLine();
+
+                        if (isAdmin)
+                        {
+                            sb.AppendLine("Deactivating will mark them as inactive. Permanently deleting will purge all references and delete the employee record from the database. (Warning: Permanent deletion cannot be undone)");
+                            var choice = await _dialogService.ShowThreeButtonDialogAsync("Delete Employee Options", sb.ToString(), "Deactivate (Soft Delete)", "Delete Permanently (Hard)", "Cancel");
+                            
+                            if (choice == CustomDialogResult.Primary)
+                            {
+                                IsBusy = true;
+                                BusyText = "Deactivating employee...";
+                                await _employeeService.DeleteEmployeeAsync(target.Id);
+                                await LoadDataAsync();
+                            }
+                            else if (choice == CustomDialogResult.Secondary)
+                            {
+                                IsBusy = true;
+                                BusyText = "Permanently deleting employee and references...";
+                                await _employeeService.PermanentDeleteEmployeeAsync(target.Id);
+                                await LoadDataAsync();
+                            }
+                        }
+                        else
+                        {
+                            sb.AppendLine("You do not have administrative permissions to permanently delete records in use. You can only Deactivate (Soft Delete) this employee.");
+                            var confirmed = await _dialogService.ShowConfirmationAsync("Deactivate Employee", sb.ToString());
+                            if (confirmed)
+                            {
+                                IsBusy = true;
+                                BusyText = "Deactivating employee...";
+                                await _employeeService.DeleteEmployeeAsync(target.Id);
+                                await LoadDataAsync();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // No references found
+                        string title = "Deactivate Employee";
+                        string message = $"Are you sure you want to deactivate '{target.FirstName} {target.LastName}'?";
+                        
+                        if (isAdmin)
+                        {
+                            // Admins get choice of soft/hard even with 0 references
+                            message = $"No database references found. Would you like to deactivate (soft delete) or permanently delete (hard delete) '{target.FirstName} {target.LastName}'?";
+                            var choice = await _dialogService.ShowThreeButtonDialogAsync(title, message, "Deactivate", "Delete Permanently", "Cancel");
+                            
+                            if (choice == CustomDialogResult.Primary)
+                            {
+                                IsBusy = true;
+                                BusyText = "Deactivating employee...";
+                                await _employeeService.DeleteEmployeeAsync(target.Id);
+                                await LoadDataAsync();
+                            }
+                            else if (choice == CustomDialogResult.Secondary)
+                            {
+                                IsBusy = true;
+                                BusyText = "Permanently deleting employee...";
+                                await _employeeService.PermanentDeleteEmployeeAsync(target.Id);
+                                await LoadDataAsync();
+                            }
+                        }
+                        else
+                        {
+                            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+                            if (confirmed)
+                            {
+                                IsBusy = true;
+                                BusyText = "Deactivating employee...";
+                                await _employeeService.DeleteEmployeeAsync(target.Id);
+                                await LoadDataAsync();
+                            }
+                        }
+                    }
                 }
-                await LoadDataAsync();
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete employee");
+                    await _dialogService.ShowAlertAsync("Deletion Error", ex.Message);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Bulk delete failed");
-            }
-            finally
-            {
-                IsBusy = false;
+                // Bulk deactivation
+                string title = "Deactivate Multiple Employees";
+                string message = $"You are about to make {targets.Count} employees inactive. Are you sure you want to proceed?";
+
+                var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+                if (!confirmed) return;
+
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Deactivating employees...";
+                    foreach (var t in targets)
+                    {
+                        await _employeeService.DeleteEmployeeAsync(t.Id);
+                    }
+                    await LoadDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Bulk deactivation failed");
+                    await _dialogService.ShowAlertAsync("Deletion Error", ex.Message);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
         }
 

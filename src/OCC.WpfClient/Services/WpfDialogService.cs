@@ -31,6 +31,13 @@ namespace OCC.WpfClient.Services
             return Task.FromResult(dialog.Result);
         }
 
+        public Task<CustomDialogResult> ShowThreeButtonDialogAsync(string title, string message, string primaryText, string secondaryText, string cancelText)
+        {
+            var dialog = new CustomDialogView(title, message, primaryText, secondaryText, cancelText);
+            dialog.ShowDialog();
+            return Task.FromResult(dialog.Result);
+        }
+
         public string? ShowOpenFileDialog(string filter, string title)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
