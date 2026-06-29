@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <!-- Row 0: Header Section -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,25">
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
             <Grid Margin="0,0,0,10">
                 <StackPanel>
                     <TextBlock Foreground="White" FontSize="28" FontWeight="SemiBold">
@@ -40,7 +40,11 @@
                 </StackPanel>
 
                 <!-- Refresh Button -->
-                <Button Content="Refresh" Command="{Binding RefreshCommand}" HorizontalAlignment="Right" VerticalAlignment="Center" Width="100" Height="32" Style="{StaticResource PrimaryButton}"/>
+                <Button Content="Refresh" Command="{Binding RefreshCommand}" 
+                        HorizontalAlignment="Right" 
+                        VerticalAlignment="Center" 
+                        Width="100" 
+                        Height="32" Style="{StaticResource CreateIconButton}"/>
             </Grid>
 
             <!-- Birthday Greeting Banner -->
@@ -402,11 +406,21 @@
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <!-- Clock In/Out -->
-                    <Button Content="Log Attendance" Command="{Binding NavigateToRouteCommand}" CommandParameter="AttendanceLive" Margin="0,0,10,0" Height="32" Padding="15,0" Style="{StaticResource PrimaryButton}"/>
+                    <Button Content="Log Attendance" 
+                            Command="{Binding NavigateToRouteCommand}" 
+                            CommandParameter="AttendanceLive" Margin="0,0,10,0" 
+                            Height="32" Padding="15,0" 
+                            Style="{StaticResource PrimaryButton}"/>
                     <!-- Snag List -->
-                    <Button Content="View Snags" Command="{Binding NavigateToRouteCommand}" CommandParameter="SnagList" Margin="0,0,10,0" Height="32" Padding="15,0" Style="{StaticResource PrimaryButton}"/>
+                    <Button Content="View Snags" 
+                            Command="{Binding NavigateToRouteCommand}" 
+                            CommandParameter="SnagList" Margin="0,0,10,0" 
+                            Height="32" Padding="15,0" 
+                            Style="{StaticResource PrimaryButton}"/>
                     <!-- Profile settings -->
-                    <Button Content="System Settings" Command="{Binding NavigateToRouteCommand}" CommandParameter="CompanySettings" Height="32" Padding="15,0" Style="{StaticResource PrimaryButton}"/>
+                    <Button Content="System Settings" Command="{Binding NavigateToRouteCommand}" CommandParameter="CompanySettings" 
+                            Height="32" Padding="15,0" 
+                            Style="{StaticResource PrimaryButton}"/>
                 </StackPanel>
             </Grid>
         </Border>

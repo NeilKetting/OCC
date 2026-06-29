@@ -43,7 +43,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value=".3"/>
         <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
         <Setter Property="Padding" Value="16,0"/>
         <Setter Property="Height" Value="40"/>

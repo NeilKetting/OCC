@@ -240,29 +240,8 @@
                     <!-- Today button -->
                     <Button Grid.Column="2"
                             Content="Today"
-                            Command="{Binding GoToTodayCommand}"
-                            Padding="14,6" FontSize="12" FontWeight="SemiBold"
-                            Background="#2E9DFF" Foreground="White"
-                            BorderThickness="0" Cursor="Hand">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}"
-                                        CornerRadius="4"
-                                        Padding="{TemplateBinding Padding}">
-                                    <ContentPresenter HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#49AEFF"/>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter Property="Background" Value="#1A7DD9"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                            Style="{StaticResource CreateIconButton}"
+                            Command="{Binding GoToTodayCommand}"/>
                 </Grid>
             </Border>
 

@@ -857,6 +857,10 @@
                                                 <Setter Property="Fill" Value="#10B981"/>
                                                 <!-- Green when Ready -->
                                             </MultiDataTrigger>
+                                            <DataTrigger Binding="{Binding IsDbConnected}" Value="False">
+                                                <Setter Property="Fill" Value="{StaticResource ErrorRed}"/>
+                                                <!-- Red when Offline -->
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Ellipse.Style>
@@ -881,6 +885,10 @@
                                                     </MultiDataTrigger.Conditions>
                                                     <Setter Property="Visibility" Value="Visible"/>
                                                 </MultiDataTrigger>
+                                                <DataTrigger Binding="{Binding IsDbConnected}" Value="False">
+                                                    <Setter Property="Foreground" Value="{StaticResource ErrorRed}"/>
+                                                    <!-- Red text when Offline -->
+                                                </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>

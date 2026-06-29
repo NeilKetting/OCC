@@ -948,6 +948,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 _logger.LogError(ex, "Database polling stopped unexpectedly.");
                 IsDbConnected = false;
                 DbStatusText = "Offline: Disconnected";
+                StatusMessage = "We are not connected to the API - please check your internet connection.";
             }
         }
 
@@ -960,6 +961,15 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             IsDbConnected = status.IsConnected;
             DbStatusText = status.StatusText;
             DatabaseName = status.DatabaseName;
+
+            if (!IsDbConnected)
+            {
+                StatusMessage = "We are not connected to the API - please check your internet connection.";
+            }
+            else if (StatusMessage == "We are not connected to the API - please check your internet connection.")
+            {
+                StatusMessage = "Ready";
+            }
         }
 
         #endregion
