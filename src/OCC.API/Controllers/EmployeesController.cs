@@ -239,30 +239,28 @@ namespace OCC.API.Controllers
                     return NotFound();
                 }
 
-                // Delete or disassociate references:
+                // Delete or disassociate references (using direct SQL commands to bypass column mismatch schema checks in EF tracking):
                 
                 // 1. Projects Site Manager - nullify
-                var projects = await _context.Projects.Where(p => p.SiteManagerId == id).ToListAsync();
-                foreach (var p in projects) p.SiteManagerId = null;
+                await _context.Projects.IgnoreQueryFilters().Where(p => p.SiteManagerId == id).ExecuteUpdateAsync(s => s.SetProperty(p => p.SiteManagerId, (Guid?)null));
 
                 // 2. SiteDeployments site manager - nullify
-                var siteDeployments = await _context.SiteDeployments.Where(s => s.ReceivedBySiteManagerId == id).ToListAsync();
-                foreach (var sd in siteDeployments) sd.ReceivedBySiteManagerId = null;
+                await _context.SiteDeployments.IgnoreQueryFilters().Where(s => s.ReceivedBySiteManagerId == id).ExecuteUpdateAsync(s => s.SetProperty(sd => sd.ReceivedBySiteManagerId, (Guid?)null));
 
                 // 3. Delete other direct references:
-                _context.TaskAssignments.RemoveRange(_context.TaskAssignments.Where(t => t.AssigneeId == id));
-                _context.TeamMembers.RemoveRange(_context.TeamMembers.Where(t => t.EmployeeId == id));
-                _context.ProjectTeamMembers.RemoveRange(_context.ProjectTeamMembers.Where(t => t.EmployeeId == id));
-                _context.TimeRecords.RemoveRange(_context.TimeRecords.Where(t => t.EmployeeId == id));
-                _context.AttendanceRecords.RemoveRange(_context.AttendanceRecords.Where(t => t.EmployeeId == id));
-                _context.LeaveRequests.RemoveRange(_context.LeaveRequests.Where(t => t.EmployeeId == id));
-                _context.OvertimeRequests.RemoveRange(_context.OvertimeRequests.Where(o => o.EmployeeId == id));
-                _context.EmployeeLoans.RemoveRange(_context.EmployeeLoans.Where(e => e.EmployeeId == id));
-                _context.SiteDeploymentMembers.RemoveRange(_context.SiteDeploymentMembers.Where(s => s.EmployeeId == id));
-                _context.HseqTrainingRecords.RemoveRange(_context.HseqTrainingRecords.Where(h => h.EmployeeId == id));
-                _context.DailyTimesheets.RemoveRange(_context.DailyTimesheets.Where(d => d.EmployeeId == id));
-                _context.WageRunLines.RemoveRange(_context.WageRunLines.Where(w => w.EmployeeId == id));
-                _context.ClockingEvents.RemoveRange(_context.ClockingEvents.Where(c => c.EmployeeId == id));
+                await _context.TaskAssignments.IgnoreQueryFilters().Where(t => t.AssigneeId == id).ExecuteDeleteAsync();
+                await _context.TeamMembers.IgnoreQueryFilters().Where(t => t.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.ProjectTeamMembers.IgnoreQueryFilters().Where(t => t.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.TimeRecords.IgnoreQueryFilters().Where(t => t.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.AttendanceRecords.IgnoreQueryFilters().Where(t => t.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.LeaveRequests.IgnoreQueryFilters().Where(t => t.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.OvertimeRequests.IgnoreQueryFilters().Where(o => o.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.EmployeeLoans.IgnoreQueryFilters().Where(e => e.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.SiteDeploymentMembers.IgnoreQueryFilters().Where(s => s.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.HseqTrainingRecords.IgnoreQueryFilters().Where(h => h.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.DailyTimesheets.IgnoreQueryFilters().Where(d => d.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.WageRunLines.IgnoreQueryFilters().Where(w => w.EmployeeId == id).ExecuteDeleteAsync();
+                await _context.ClockingEvents.IgnoreQueryFilters().Where(c => c.EmployeeId == id).ExecuteDeleteAsync();
 
                 // 4. Suppress Soft Delete on EF DBContext and delete employee record
                 _context.SupressSoftDelete = true;

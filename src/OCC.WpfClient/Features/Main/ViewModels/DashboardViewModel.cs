@@ -91,6 +91,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         [ObservableProperty]
         private bool _isLoadingChats;
 
+        // The task completion rate percentage
+        [ObservableProperty]
+        private int _completionRate;
+
+        // Subtext description of completed tasks (e.g. "x of y completed")
+        [ObservableProperty]
+        private string _completionRateText = string.Empty;
+
         #endregion
 
         #region Constructors
@@ -167,6 +175,12 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 
                 TaskCount = taskList.Count(t => !t.IsComplete);
                 TodoCount = taskList.Count(t => t.Type == TaskType.PersonalToDo && !t.IsComplete);
+
+                // Calculate real productivity/completion stats dynamically
+                var totalTasksCount = taskList.Count;
+                var completedTasksCount = taskList.Count(t => t.IsComplete);
+                CompletionRate = totalTasksCount > 0 ? (int)Math.Round((double)completedTasksCount / totalTasksCount * 100) : 100;
+                CompletionRateText = $"{completedTasksCount} of {totalTasksCount} tasks done";
 
                 _toastService.ShowSuccess("System Active", "Toast Notification System is now live!");
 

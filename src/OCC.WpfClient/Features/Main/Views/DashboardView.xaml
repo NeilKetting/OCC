@@ -122,13 +122,13 @@
                 </Grid>
             </Border>
 
-            <!-- Productivity Card -->
+            <!-- Productivity Card (Task Completion) -->
             <Border Style="{StaticResource GlassCard}" Margin="10,0,0,0" Padding="20,15">
                 <Grid>
                     <StackPanel>
-                        <TextBlock Text="PRODUCTIVITY" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock Text="84%" Foreground="White" FontSize="36" FontWeight="Bold" Margin="0,5,0,2"/>
-                        <TextBlock Text="Trend: +12%" Foreground="#49FF8F00" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Text="TASK COMPLETION" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding CompletionRate, StringFormat={}{0}%}" Foreground="White" FontSize="36" FontWeight="Bold" Margin="0,5,0,2"/>
+                        <TextBlock Text="{Binding CompletionRateText}" Foreground="{StaticResource TextSub}" FontSize="12"/>
                     </StackPanel>
                     <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1A00FF88">
                         <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18"/>
