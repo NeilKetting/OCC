@@ -61,6 +61,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // Access to user preferences for quick actions
         private readonly LocalSettingsService _localSettingsService;
 
+        private bool _isLoadingData;
+
         #endregion
 
         #region Properties & Observables
@@ -239,8 +241,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         /// </summary>
         private async System.Threading.Tasks.Task LoadData()
         {
+            if (_isLoadingData) return;
             try
             {
+                _isLoadingData = true;
+
                 var users = await _userService.GetUsersAsync();
                 UserCount = users.Count();
 
@@ -255,8 +260,6 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 var completedTasksCount = taskList.Count(t => t.IsComplete);
                 CompletionRate = totalTasksCount > 0 ? (int)Math.Round((double)completedTasksCount / totalTasksCount * 100) : 100;
                 CompletionRateText = $"{completedTasksCount} of {totalTasksCount} tasks done";
-
-                _toastService.ShowSuccess("System Active", "Toast Notification System is now live!");
 
                 // Check for employee birthdays today and trigger sticky toasts / local greetings
                 try
@@ -311,6 +314,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             catch 
             { 
                 // Fallback / Ignore background load failures silently
+            }
+            finally
+            {
+                _isLoadingData = false;
             }
         }
 
