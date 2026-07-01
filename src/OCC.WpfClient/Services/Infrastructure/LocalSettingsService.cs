@@ -34,6 +34,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         public bool CalendarShowBirthdays { get; set; } = true;
         public bool CalendarShowLeave { get; set; } = true;
         public System.Collections.Generic.List<Guid>? CalendarSelectedProjectIds { get; set; }
+        public System.Collections.Generic.List<string>? QuickActions { get; set; }
     }
 
     public class LocalSettingsService

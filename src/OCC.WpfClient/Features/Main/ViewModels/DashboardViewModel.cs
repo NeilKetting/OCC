@@ -49,6 +49,18 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // Environment URLs
         private readonly ConnectionSettings _connectionSettings;
 
+        // Decryption of chat messages
+        private readonly ILocalEncryptionService _encryptionService;
+
+        // SignalR for real-time unread messages
+        private readonly ISignalRService _signalRService;
+
+        // Permissions check for quick actions & navigation
+        private readonly IPermissionService _permissionService;
+
+        // Access to user preferences for quick actions
+        private readonly LocalSettingsService _localSettingsService;
+
         #endregion
 
         #region Properties & Observables
@@ -99,6 +111,12 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         [ObservableProperty]
         private string _completionRateText = string.Empty;
 
+        [ObservableProperty]
+        private bool _isShortcutPickerOpen;
+
+        public ObservableCollection<QuickShortcutOption> ActiveQuickActions { get; } = new();
+        public ObservableCollection<QuickShortcutOption> ShortcutOptions { get; } = new();
+
         #endregion
 
         #region Constructors
@@ -115,7 +133,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             IEmployeeService employeeService,
             ICalendarService calendarService,
             IHttpClientFactory httpClientFactory,
-            ConnectionSettings connectionSettings)
+            ConnectionSettings connectionSettings,
+            ILocalEncryptionService encryptionService,
+            ISignalRService signalRService,
+            IPermissionService permissionService,
+            LocalSettingsService localSettingsService)
         {
             _userService = userService;
             _toastService = toastService;
@@ -125,10 +147,18 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _calendarService = calendarService;
             _httpClientFactory = httpClientFactory;
             _connectionSettings = connectionSettings;
+            _encryptionService = encryptionService;
+            _signalRService = signalRService;
+            _permissionService = permissionService;
+            _localSettingsService = localSettingsService;
             Title = "Dashboard";
             
             UserName = _authService.CurrentUser?.DisplayName ?? "User";
             Greeting = GetGreeting();
+            InitializeQuickActions();
+            
+            _signalRService.ChatMessageReceived += OnChatMessageReceived;
+            
             _ = LoadData();
         }
 
@@ -154,6 +184,50 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private async System.Threading.Tasks.Task Refresh()
         {
             await LoadData();
+        }
+
+        [RelayCommand]
+        private void NavigateToEvent(CalendarEvent ev)
+        {
+            if (ev == null) return;
+            if (ev.Type == CalendarEventType.Task && ev.OriginalSource is ProjectTask task)
+            {
+                if (task.ProjectId.HasValue)
+                {
+                    WeakReferenceMessenger.Default.Send(new OpenProjectTaskMessage(task.ProjectId.Value, task.Id));
+                }
+            }
+            else
+            {
+                WeakReferenceMessenger.Default.Send(new OpenHubMessage("Calendar"));
+            }
+        }
+
+        [RelayCommand]
+        private void OpenShortcutPicker()
+        {
+            foreach (var opt in ShortcutOptions)
+            {
+                opt.IsSelected = ActiveQuickActions.Any(a => a.Route == opt.Route);
+            }
+            IsShortcutPickerOpen = true;
+        }
+
+        [RelayCommand]
+        private void SaveShortcuts()
+        {
+            var selectedRoutes = ShortcutOptions.Where(o => o.IsSelected).Select(o => o.Route).ToList();
+            _localSettingsService.Settings.QuickActions = selectedRoutes;
+            _localSettingsService.Save();
+            
+            RefreshActiveQuickActions(selectedRoutes);
+            IsShortcutPickerOpen = false;
+        }
+
+        [RelayCommand]
+        private void CancelShortcuts()
+        {
+            IsShortcutPickerOpen = false;
         }
 
         #endregion
@@ -299,6 +373,10 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                                     s.Name = $"{otherUser.FirstName} {otherUser.LastName}";
                                 }
                             }
+                            if (s.LastMessage != null && !s.LastMessage.HasAttachment && !string.IsNullOrEmpty(s.SharedAesKey))
+                            {
+                                s.LastMessage.Content = _encryptionService.DecryptMessage(s.LastMessage.Content, s.SharedAesKey);
+                            }
                             UnreadSessions.Add(s);
                         }
                     }
@@ -325,6 +403,93 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             return "Good evening";
         }
 
+        private void InitializeQuickActions()
+        {
+            var allShortcuts = new System.Collections.Generic.List<QuickShortcutOption>
+            {
+                new QuickShortcutOption { Label = "Log Attendance", Route = NavigationRoutes.AttendanceLive, IconCode = "\uE916", PermissionKey = NavigationRoutes.AttendanceLive },
+                new QuickShortcutOption { Label = "View Snags", Route = NavigationRoutes.SnagList, IconCode = "\uE72A", PermissionKey = NavigationRoutes.SnagList },
+                new QuickShortcutOption { Label = "System Settings", Route = NavigationRoutes.CompanySettings, IconCode = "\uE713", PermissionKey = NavigationRoutes.CompanySettings },
+                new QuickShortcutOption { Label = "Chat Hub", Route = NavigationRoutes.Chat, IconCode = "\uE8BD", PermissionKey = NavigationRoutes.Chat },
+                new QuickShortcutOption { Label = "Calendar", Route = NavigationRoutes.Calendar, IconCode = "\uE787", PermissionKey = NavigationRoutes.Calendar },
+                new QuickShortcutOption { Label = "Projects Portfolio", Route = NavigationRoutes.Projects, IconCode = "\uE82D", PermissionKey = NavigationRoutes.Projects },
+                new QuickShortcutOption { Label = "Project Dashboard", Route = NavigationRoutes.ProjectDashboard, IconCode = "\uE9D9", PermissionKey = NavigationRoutes.ProjectDashboard },
+                new QuickShortcutOption { Label = "Suppliers", Route = NavigationRoutes.Suppliers, IconCode = "\uE716", PermissionKey = NavigationRoutes.Suppliers },
+                new QuickShortcutOption { Label = "Inventory", Route = NavigationRoutes.Inventory, IconCode = "\uE950", PermissionKey = NavigationRoutes.Inventory },
+                new QuickShortcutOption { Label = "Purchase Orders", Route = NavigationRoutes.PurchaseOrder, IconCode = "\uE8A1", PermissionKey = NavigationRoutes.PurchaseOrder },
+                new QuickShortcutOption { Label = "Picking Orders", Route = NavigationRoutes.Picking, IconCode = "\uE73E", PermissionKey = NavigationRoutes.Picking },
+                new QuickShortcutOption { Label = "Subcontractors", Route = NavigationRoutes.SubContractors, IconCode = "\uE77B", PermissionKey = NavigationRoutes.SubContractors },
+                new QuickShortcutOption { Label = "HSEQ", Route = NavigationRoutes.HealthSafety, IconCode = "\uEA18", PermissionKey = NavigationRoutes.HealthSafety },
+                new QuickShortcutOption { Label = "Audit Log", Route = NavigationRoutes.AuditLog, IconCode = "\uE81C", PermissionKey = NavigationRoutes.AuditLog },
+                new QuickShortcutOption { Label = "User Management", Route = NavigationRoutes.UserManagement, IconCode = "\uE77B", PermissionKey = NavigationRoutes.UserManagement }
+            };
+
+            var allowedOptions = allShortcuts.Where(o => string.IsNullOrEmpty(o.PermissionKey) || _permissionService.CanAccess(o.PermissionKey)).ToList();
+
+            ShortcutOptions.Clear();
+            foreach (var opt in allowedOptions)
+            {
+                ShortcutOptions.Add(opt);
+            }
+
+            var savedRoutes = _localSettingsService.Settings.QuickActions;
+            if (savedRoutes == null)
+            {
+                savedRoutes = new System.Collections.Generic.List<string> { NavigationRoutes.AttendanceLive, NavigationRoutes.SnagList, NavigationRoutes.CompanySettings };
+                _localSettingsService.Settings.QuickActions = savedRoutes;
+                _localSettingsService.Save();
+            }
+
+            RefreshActiveQuickActions(savedRoutes);
+        }
+
+        private void RefreshActiveQuickActions(System.Collections.Generic.List<string> savedRoutes)
+        {
+            ActiveQuickActions.Clear();
+            foreach (var route in savedRoutes)
+            {
+                var match = ShortcutOptions.FirstOrDefault(o => o.Route == route);
+                if (match != null)
+                {
+                    ActiveQuickActions.Add(match);
+                }
+            }
+        }
+
+        protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.PropertyName == nameof(IsActiveHub) && IsActiveHub)
+            {
+                _ = LoadData();
+            }
+        }
+
+        private void OnChatMessageReceived(ChatMessageDto message)
+        {
+            _ = LoadUnreadChatsAsync();
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            if (_signalRService != null)
+            {
+                _signalRService.ChatMessageReceived -= OnChatMessageReceived;
+            }
+        }
+
         #endregion
+    }
+
+    public partial class QuickShortcutOption : ObservableObject
+    {
+        public string Label { get; set; } = string.Empty;
+        public string Route { get; set; } = string.Empty;
+        public string IconCode { get; set; } = string.Empty;
+        public string PermissionKey { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        private bool _isSelected;
     }
 }

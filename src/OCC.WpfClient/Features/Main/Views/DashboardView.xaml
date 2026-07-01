@@ -16,7 +16,8 @@
         <converters:UserColorConverter x:Key="UserColorConverter"/>
     </UserControl.Resources>
 
-    <Grid Margin="30">
+    <Grid>
+        <Grid Margin="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- Header & Birthday -->
             <RowDefinition Height="Auto" /> <!-- Summary Cards -->
@@ -210,55 +211,72 @@
                             <ItemsControl ItemsSource="{Binding UpcomingEvents}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type calModels:CalendarEvent}">
-                                        <Border Background="#0DFFFFFF" CornerRadius="10" Padding="15,10" Margin="0,0,0,10" BorderThickness="1" BorderBrush="#08FFFFFF">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/> <!-- Icon -->
-                                                    <ColumnDefinition Width="*"/>    <!-- Text details -->
-                                                    <ColumnDefinition Width="Auto"/> <!-- Date/Tag -->
-                                                </Grid.ColumnDefinitions>
+                                        <!-- Clickable Event Card -->
+                                        <Button Command="{Binding DataContext.NavigateToEventCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,10" Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="cardBorder" Background="#0DFFFFFF" CornerRadius="10" Padding="15,10" BorderThickness="1" BorderBrush="#08FFFFFF">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/> <!-- Icon -->
+                                                                <ColumnDefinition Width="*"/>    <!-- Text details -->
+                                                                <ColumnDefinition Width="Auto"/> <!-- Date/Tag -->
+                                                            </Grid.ColumnDefinitions>
 
-                                                <!-- Type Icon -->
-                                                <Border x:Name="IconBorder" Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#1C2E9DFF" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                    <TextBlock x:Name="IconTxt" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
+                                                            <!-- Type Icon -->
+                                                            <Border x:Name="IconBorder" Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#1C2E9DFF" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                                <TextBlock x:Name="IconTxt" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
 
-                                                <!-- Text info -->
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Title}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding Description}" Style="{StaticResource FormLabelText}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" Opacity="0.7"/>
-                                                </StackPanel>
+                                                            <!-- Text info -->
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                                    <TextBlock Text="{Binding ProjectName}" Foreground="{StaticResource AccentBlue}" FontSize="11" FontWeight="SemiBold" 
+                                                                               Visibility="{Binding ProjectName, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,0,6,0"/>
+                                                                    <TextBlock Text="•" Foreground="{StaticResource TextSub}" FontSize="11" 
+                                                                               Visibility="{Binding ProjectName, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,0,6,0"/>
+                                                                    <TextBlock Text="{Binding Description}" Style="{StaticResource FormLabelText}" FontSize="11" TextTrimming="CharacterEllipsis" Opacity="0.7"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
 
-                                                <!-- Date Info -->
-                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,0,0">
-                                                    <TextBlock Text="{Binding StartDate, StringFormat={}{0:dd MMM}}" Foreground="White" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                                                    <TextBlock x:Name="TypeLabel" Text="Task" Foreground="{StaticResource TextSub}" FontSize="11" HorizontalAlignment="Right" Margin="0,2,0,0"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                        <DataTemplate.Triggers>
-                                            <!-- Public Holiday style -->
-                                            <DataTrigger Binding="{Binding Type}" Value="PublicHoliday">
-                                                <Setter TargetName="IconBorder" Property="Background" Value="#1AFF8F00"/>
-                                                <Setter TargetName="IconTxt" Property="Text" Value=""/>
-                                                <Setter TargetName="IconTxt" Property="Foreground" Value="{StaticResource OrangeBrush}"/>
-                                                <Setter TargetName="TypeLabel" Property="Text" Value="Holiday"/>
-                                            </DataTrigger>
-                                            <!-- Birthday style -->
-                                            <DataTrigger Binding="{Binding Type}" Value="Birthday">
-                                                <Setter TargetName="IconBorder" Property="Background" Value="#1AEC4899"/>
-                                                <Setter TargetName="IconTxt" Property="Text" Value=""/>
-                                                <Setter TargetName="IconTxt" Property="Foreground" Value="#EC4899"/>
-                                                <Setter TargetName="TypeLabel" Property="Text" Value="Birthday"/>
-                                            </DataTrigger>
-                                            <!-- Leave style -->
-                                            <DataTrigger Binding="{Binding Type}" Value="Leave">
-                                                <Setter TargetName="IconBorder" Property="Background" Value="#1ABE9DFF"/>
-                                                <Setter TargetName="IconTxt" Property="Text" Value=""/>
-                                                <Setter TargetName="IconTxt" Property="Foreground" Value="#BE9DFF"/>
-                                                <Setter TargetName="TypeLabel" Property="Text" Value="Leave"/>
-                                            </DataTrigger>
-                                        </DataTemplate.Triggers>
+                                                            <!-- Date Info -->
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,0,0">
+                                                                <TextBlock Text="{Binding StartDate, StringFormat={}{0:dd MMM}}" Foreground="White" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                                                <TextBlock x:Name="TypeLabel" Text="Task" Foreground="{StaticResource TextSub}" FontSize="11" HorizontalAlignment="Right" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="cardBorder" Property="Background" Value="#1AFFFFFF"/>
+                                                            <Setter TargetName="cardBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                                        </Trigger>
+                                                        <!-- Public Holiday style -->
+                                                        <DataTrigger Binding="{Binding Type}" Value="PublicHoliday">
+                                                            <Setter TargetName="IconBorder" Property="Background" Value="#1AFF8F00"/>
+                                                            <Setter TargetName="IconTxt" Property="Text" Value=""/>
+                                                            <Setter TargetName="IconTxt" Property="Foreground" Value="{StaticResource OrangeBrush}"/>
+                                                            <Setter TargetName="TypeLabel" Property="Text" Value="Holiday"/>
+                                                        </DataTrigger>
+                                                        <!-- Birthday style -->
+                                                        <DataTrigger Binding="{Binding Type}" Value="Birthday">
+                                                            <Setter TargetName="IconBorder" Property="Background" Value="#1AEC4899"/>
+                                                            <Setter TargetName="IconTxt" Property="Text" Value=""/>
+                                                            <Setter TargetName="IconTxt" Property="Foreground" Value="#EC4899"/>
+                                                            <Setter TargetName="TypeLabel" Property="Text" Value="Birthday"/>
+                                                        </DataTrigger>
+                                                        <!-- Leave style -->
+                                                        <DataTrigger Binding="{Binding Type}" Value="Leave">
+                                                            <Setter TargetName="IconBorder" Property="Background" Value="#1ABE9DFF"/>
+                                                            <Setter TargetName="IconTxt" Property="Text" Value=""/>
+                                                            <Setter TargetName="IconTxt" Property="Foreground" Value="#BE9DFF"/>
+                                                            <Setter TargetName="TypeLabel" Property="Text" Value="Leave"/>
+                                                        </DataTrigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -405,24 +423,87 @@
                 <TextBlock Text="Quick Actions" Foreground="White" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0"/>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <!-- Clock In/Out -->
-                    <Button Content="Log Attendance" 
-                            Command="{Binding NavigateToRouteCommand}" 
-                            CommandParameter="AttendanceLive" Margin="0,0,10,0" 
-                            Height="32" Padding="15,0" 
-                            Style="{StaticResource PrimaryButton}"/>
-                    <!-- Snag List -->
-                    <Button Content="View Snags" 
-                            Command="{Binding NavigateToRouteCommand}" 
-                            CommandParameter="SnagList" Margin="0,0,10,0" 
-                            Height="32" Padding="15,0" 
-                            Style="{StaticResource PrimaryButton}"/>
-                    <!-- Profile settings -->
-                    <Button Content="System Settings" Command="{Binding NavigateToRouteCommand}" CommandParameter="CompanySettings" 
-                            Height="32" Padding="15,0" 
-                            Style="{StaticResource PrimaryButton}"/>
+                    <ItemsControl ItemsSource="{Binding ActiveQuickActions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.NavigateToRouteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                        CommandParameter="{Binding Route}" 
+                                        Margin="0,0,10,0" 
+                                        Height="32" Padding="12,0" 
+                                        Style="{StaticResource PrimaryButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    
+                    <Button Content="⚙ Customize" 
+                            Command="{Binding OpenShortcutPickerCommand}" 
+                            Height="32" Padding="12,0" 
+                            Style="{StaticResource CreateIconButton}"/>
                 </StackPanel>
             </Grid>
         </Border>
     </Grid>
+
+    <!-- Shortcut Customization Modal Overlay -->
+    <Grid Background="#A0000000" 
+          Visibility="{Binding IsShortcutPickerOpen, Converter={StaticResource BooleanToVisibilityConverter}}"
+          HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Border Style="{StaticResource GlassCard}" 
+                Width="480" Height="500" 
+                HorizontalAlignment="Center" VerticalAlignment="Center" 
+                Padding="25" CornerRadius="16" BorderThickness="1" BorderBrush="#20FFFFFF">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                    <TextBlock Text="Customize Quick Actions" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="Select which shortcuts you want to pin to your quick actions bar." Style="{StaticResource FormLabelText}" FontSize="12" Margin="0,4,0,0" Opacity="0.75"/>
+                </StackPanel>
+                
+                <!-- Checklist -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15">
+                    <ItemsControl ItemsSource="{Binding ShortcutOptions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected}" Margin="0,4" Padding="10,0" VerticalContentAlignment="Center">
+                                    <CheckBox.Style>
+                                        <Style TargetType="CheckBox">
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="FontSize" Value="14" />
+                                        </Style>
+                                    </CheckBox.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource AccentBlue}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                
+                <!-- Footer Buttons -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel" Command="{Binding CancelShortcutsCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Width="90" Height="32"/>
+                    <Button Content="Save Actions" Command="{Binding SaveShortcutsCommand}" Style="{StaticResource PrimaryButton}" Width="120" Height="32"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Grid>
 </UserControl>

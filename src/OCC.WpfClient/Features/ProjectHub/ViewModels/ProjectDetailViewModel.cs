@@ -250,6 +250,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Project?.Progress
         };
 
+        public void SelectTask(Guid taskId)
+        {
+            CurrentView = _tasksVM;
+            var task = _tasksVM.Tasks.FirstOrDefault(t => t.Id == taskId);
+            if (task != null)
+            {
+                _tasksVM.SelectedTask = task;
+            }
+        }
+
         protected override async Task ExecuteSaveAsync()
         {
             if (Project == null) return;

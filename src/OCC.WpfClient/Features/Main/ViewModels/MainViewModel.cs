@@ -24,7 +24,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
     /// It coordinates navigation, multi-tab (Hubs) management, real-time communications (SignalR),
     /// database health polling, user activity/inactivity session monitoring, and app-wide toasts/messages.
     /// </summary>
-    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>, IRecipient<OpenChatSessionMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>, IRecipient<OpenChatSessionMessage>, IRecipient<OpenProjectTaskMessage>
     {
         #region Private Fields & Services
 
@@ -380,6 +380,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             WeakReferenceMessenger.Default.Register<PreferenceChangedMessage>(this);
             WeakReferenceMessenger.Default.Register<ImportProgressMessage>(this);
             WeakReferenceMessenger.Default.Register<OpenChatSessionMessage>(this);
+            WeakReferenceMessenger.Default.Register<OpenProjectTaskMessage>(this);
             
             // Connect to real-time SignalR notifications and user lists
             _signalRService.UserListUpdated += OnUserListUpdated;
@@ -1181,6 +1182,40 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _ = hub.LoadProjectAsync(projectId);
             OpenHubs.Add(hub);
             ActiveHub = hub;
+        }
+
+        /// <summary>
+        /// Handles OpenProjectTaskMessages by loading the specific project ID and selecting the specific task.
+        /// </summary>
+        public void Receive(OpenProjectTaskMessage message)
+        {
+            var (projectId, taskId) = message.Value;
+
+            // Check permissions
+            if (!_permissionService.CanAccess(NavigationRoutes.Projects))
+            {
+                _logger.LogWarning("Unauthorized access attempt to Projects via task click");
+                WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage("Access Denied", "You do not have permission to access the project feature.", ToastType.Error)));
+                return;
+            }
+
+            // Check if project tab is already open
+            var existing = OpenHubs.OfType<ProjectDetailViewModel>().FirstOrDefault(p => p.ProjectId == projectId);
+            if (existing != null)
+            {
+                ActiveHub = existing;
+                existing.SelectTask(taskId);
+                return;
+            }
+
+            var hub = _serviceProvider.GetRequiredService<ProjectDetailViewModel>();
+            App.Current.Dispatcher.Invoke(async () =>
+            {
+                await hub.LoadProjectAsync(projectId);
+                OpenHubs.Add(hub);
+                ActiveHub = hub;
+                hub.SelectTask(taskId);
+            });
         }
 
         /// <summary>
