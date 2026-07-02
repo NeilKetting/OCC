@@ -223,6 +223,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // --- Permission Helper Properties for Menu UI Bindings ---
         // These query the PermissionService to decide which main menu options should be visible/enabled.
         
+        public bool CanAccessDashboard => _permissionService.CanAccess(NavigationRoutes.Home);
+        public bool CanAccessCalendar => _permissionService.CanAccess(NavigationRoutes.Calendar);
         public bool CanAccessChat => _permissionService.CanAccess(NavigationRoutes.Chat);
         public bool CanAccessStaff => _permissionService.CanAccess(NavigationRoutes.StaffManagement);
         public bool CanAccessAttendance => _permissionService.CanAccess(NavigationRoutes.AttendanceLive);
@@ -677,9 +679,6 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         [RelayCommand]
         private void CloseHub(ViewModelBase hub)
         {
-            // Protect the Dashboard from being closed as it acts as the primary landing page
-            if (hub.Title == "Dashboard") return;
-            
             if (hub == CurrentReportBug)
             {
                 CurrentReportBug = null;

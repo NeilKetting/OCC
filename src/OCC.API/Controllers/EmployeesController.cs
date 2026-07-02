@@ -124,7 +124,13 @@ namespace OCC.API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(employee).State = EntityState.Modified;
+            var existingEmployee = await _context.Employees.FindAsync(id);
+            if (existingEmployee == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingEmployee).CurrentValues.SetValues(employee);
 
             try
             {

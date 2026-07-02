@@ -82,7 +82,14 @@ namespace OCC.API.Controllers
         public async Task<IActionResult> PutTimeRecord(Guid id, TimeRecord record)
         {
             if (id != record.Id) return BadRequest();
-            _context.Entry(record).State = EntityState.Modified;
+
+            var existingRecord = await _context.TimeRecords.FindAsync(id);
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingRecord).CurrentValues.SetValues(record);
 
             try
             {

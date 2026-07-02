@@ -73,11 +73,17 @@ namespace OCC.API.Controllers
         {
             if (id != request.Id) return BadRequest();
 
-            if (request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave)
+            var existingRequest = await _context.LeaveRequests.FindAsync(id);
+            if (existingRequest == null)
             {
-                request.IsUnpaid = true;
+                return NotFound();
             }
-            _context.Entry(request).State = EntityState.Modified;
+
+            _context.Entry(existingRequest).CurrentValues.SetValues(request);
+            if (existingRequest.LeaveType == LeaveType.Unpaid || existingRequest.LeaveType == LeaveType.AbsentWithoutLeave)
+            {
+                existingRequest.IsUnpaid = true;
+            }
 
             try
             {

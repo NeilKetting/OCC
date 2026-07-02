@@ -217,6 +217,25 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             }
         }
 
+        private async Task LoadBugsInternalAsync()
+        {
+            var previousId = SelectedBug?.Id;
+            var list = await _bugService.GetBugReportsAsync(IncludeArchived);
+            
+            _allBugsCache = list.ToList();
+            ApplyFilters();
+            
+            if (previousId.HasValue)
+            {
+                SelectedBug = Bugs.FirstOrDefault(x => x.Id == previousId.Value);
+            }
+            
+            if (SelectedBug == null && Bugs.Any() && !previousId.HasValue)
+            {
+                SelectedBug = Bugs.First();
+            }
+        }
+
         [RelayCommand]
         private async Task LoadBugs()
         {
@@ -224,21 +243,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             IsBusy = true;
             try
             {
-                var previousId = SelectedBug?.Id;
-                var list = await _bugService.GetBugReportsAsync(IncludeArchived);
-                
-                _allBugsCache = list.ToList();
-                ApplyFilters();
-                
-                if (previousId.HasValue)
-                {
-                    SelectedBug = Bugs.FirstOrDefault(x => x.Id == previousId.Value);
-                }
-                
-                if (SelectedBug == null && Bugs.Any() && !previousId.HasValue)
-                {
-                    SelectedBug = Bugs.First();
-                }
+                await LoadBugsInternalAsync();
             }
             catch (Exception ex)
             {
@@ -253,8 +258,9 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand(CanExecute = nameof(CanSendComment))]
         private async Task SendCommentAsync()
         {
-            if (SelectedBug == null || string.IsNullOrWhiteSpace(NewCommentText)) return;
+            if (SelectedBug == null || string.IsNullOrWhiteSpace(NewCommentText) || IsBusy) return;
 
+            IsBusy = true;
             try
             {
                 await _bugService.AddCommentAsync(SelectedBug.Id, NewCommentText, null);
@@ -265,14 +271,19 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             {
                 _logger.LogError(ex, "Error sending comment");
             }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
-        private bool CanSendComment() => !string.IsNullOrWhiteSpace(NewCommentText) && SelectedBug != null;
+        private bool CanSendComment() => !string.IsNullOrWhiteSpace(NewCommentText) && SelectedBug != null && !IsBusy;
 
         [RelayCommand]
         private async Task MarkAsSolutionAsync(BugComment comment)
         {
-            if (comment == null || !IsDev) return;
+            if (comment == null || !IsDev || IsBusy) return;
+            IsBusy = true;
             try
             {
                 await _bugService.MarkAsSolutionAsync(comment.Id);
@@ -282,54 +293,130 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             {
                 _logger.LogError(ex, "Error marking solution");
             }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
         private async Task MoveToInProgressAsync()
         {
-            if (SelectedBug == null || !CanManageBugs) return;
-            await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to In Progress.", "In Progress");
-            await LoadBugs();
+            if (SelectedBug == null || !CanManageBugs || IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to In Progress.", "In Progress");
+                await LoadBugsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error moving status to In Progress");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
         private async Task MoveToPlanningAsync()
         {
-            if (SelectedBug == null || !CanManageBugs) return;
-            await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to Planning stage.", "Planning");
-            await LoadBugs();
+            if (SelectedBug == null || !CanManageBugs || IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await _bugService.AddCommentAsync(SelectedBug.Id, "Moved to Planning stage.", "Planning");
+                await LoadBugsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error moving status to Planning");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
         private async Task MoveToFeatureUpdateAsync()
         {
-            if (SelectedBug == null || !CanManageBugs) return;
-            await _bugService.AddCommentAsync(SelectedBug.Id, "Reclassified as a Feature Update.", "Feature Update");
-            await LoadBugs();
+            if (SelectedBug == null || !CanManageBugs || IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await _bugService.AddCommentAsync(SelectedBug.Id, "Reclassified as a Feature Update.", "Feature Update");
+                await LoadBugsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error moving status to Feature Update");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
         private async Task MarkFixedAsync()
         {
-            if (SelectedBug == null || !CanManageBugs) return;
-            await _bugService.AddCommentAsync(SelectedBug.Id, "Developer marked this issue as Fixed.", "Fixed");
-            await LoadBugs();
+            if (SelectedBug == null || !CanManageBugs || IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await _bugService.AddCommentAsync(SelectedBug.Id, "Developer marked this issue as Fixed.", "Fixed");
+                await LoadBugsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking bug as fixed");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
         private async Task RequestInfoAsync()
         {
-            if (SelectedBug == null || !CanManageBugs) return;
-            await _bugService.AddCommentAsync(SelectedBug.Id, "Developer requested more information.", "Waiting for Client");
-            await LoadBugs();
+            if (SelectedBug == null || !CanManageBugs || IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await _bugService.AddCommentAsync(SelectedBug.Id, "Developer requested more information.", "Waiting for Client");
+                await LoadBugsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error requesting info");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
         private async Task CloseBugAsync()
         {
-            if (SelectedBug == null || !CanManageBugs) return;
-            await _bugService.AddCommentAsync(SelectedBug.Id, "Developer closed the bug.", "Closed");
-            await LoadBugs();
+            if (SelectedBug == null || !CanManageBugs || IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await _bugService.AddCommentAsync(SelectedBug.Id, "Developer closed the bug.", "Closed");
+                await LoadBugsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error closing bug");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
@@ -344,7 +431,7 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         [RelayCommand]
         private async Task DeleteBugAsync()
         {
-            if (SelectedBug == null || !CanDeleteSelectedBug) return;
+            if (SelectedBug == null || !CanDeleteSelectedBug || IsBusy) return;
             try
             {
                 var title = "Delete Bug Report";
@@ -355,15 +442,20 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
                 var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
                 if (!confirmed) return;
 
+                IsBusy = true;
                 var permanent = IsDev || IsAdmin;
                 await _bugService.DeleteBugAsync(SelectedBug.Id, permanent);
                 
                 SelectedBug = null;
-                await LoadBugs();
+                await LoadBugsInternalAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting bug");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

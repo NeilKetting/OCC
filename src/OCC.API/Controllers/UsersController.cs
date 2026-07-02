@@ -196,7 +196,11 @@ namespace OCC.API.Controllers
                 return BadRequest();
             }
 
-            var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (existingUser == null)
+            {
+                return NotFound();
+            }
 
             var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
@@ -250,7 +254,7 @@ namespace OCC.API.Controllers
                 }
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            _context.Entry(existingUser!).CurrentValues.SetValues(user);
 
             try
             {

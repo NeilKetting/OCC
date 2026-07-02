@@ -461,7 +461,6 @@ namespace OCC.API.Controllers
                             loan.IsActive = false;
                             loan.EndDate = run.EndDate;
                         }
-                        _context.Entry(loan).State = EntityState.Modified;
                     }
                 }
             }

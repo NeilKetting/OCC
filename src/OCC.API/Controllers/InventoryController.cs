@@ -131,9 +131,16 @@ namespace OCC.API.Controllers
             if (id != item.Id)
                 return BadRequest();
 
+            var existingItem = await _context.InventoryItems.FindAsync(id);
+            if (existingItem == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingItem).CurrentValues.SetValues(item);
+
             try
             {
-                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Inventory item {Description} updated by {User}", item.Description, User.FindFirst(ClaimTypes.Name)?.Value);

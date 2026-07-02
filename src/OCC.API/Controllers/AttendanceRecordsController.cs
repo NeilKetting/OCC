@@ -106,10 +106,14 @@ namespace OCC.API.Controllers
             if (errorResponse != null)
                 return BadRequest(errorResponse);
 
-            // Calculate hours before saving
-            CalculateHoursWorked(record);
+            var existingRecord = await _context.AttendanceRecords.FindAsync(id);
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
 
-            _context.Entry(record).State = EntityState.Modified;
+            _context.Entry(existingRecord).CurrentValues.SetValues(record);
+            CalculateHoursWorked(existingRecord);
 
             try
             {

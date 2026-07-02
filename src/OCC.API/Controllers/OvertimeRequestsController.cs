@@ -69,7 +69,13 @@ namespace OCC.API.Controllers
         {
             if (id != request.Id) return BadRequest();
 
-            _context.Entry(request).State = EntityState.Modified;
+            var existingRequest = await _context.OvertimeRequests.FindAsync(id);
+            if (existingRequest == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingRequest).CurrentValues.SetValues(request);
 
             try
             {

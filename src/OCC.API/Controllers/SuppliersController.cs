@@ -117,7 +117,13 @@ namespace OCC.API.Controllers
         public async Task<IActionResult> PutSupplier(Guid id, Supplier supplier)
         {
             if (id != supplier.Id) return BadRequest();
-            _context.Entry(supplier).State = EntityState.Modified;
+            var existingSupplier = await _context.Suppliers.FindAsync(id);
+            if (existingSupplier == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingSupplier).CurrentValues.SetValues(supplier);
 
             try
             {

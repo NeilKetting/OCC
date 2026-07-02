@@ -93,7 +93,13 @@ namespace OCC.API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(team).State = EntityState.Modified;
+            var existingTeam = await _context.Teams.FindAsync(id);
+            if (existingTeam == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingTeam).CurrentValues.SetValues(team);
 
             try
             {

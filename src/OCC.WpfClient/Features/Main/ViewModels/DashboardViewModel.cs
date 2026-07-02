@@ -61,7 +61,13 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // Access to user preferences for quick actions
         private readonly LocalSettingsService _localSettingsService;
 
+        // Retrieves support tickets
+        private readonly IBugReportService _bugService;
+
         private bool _isLoadingData;
+
+        [ObservableProperty]
+        private bool _isLoadingSupportTickets;
 
         #endregion
 
@@ -98,6 +104,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // Collections for upcoming events and unread chats
         public ObservableCollection<CalendarEvent> UpcomingEvents { get; } = new();
         public ObservableCollection<ChatSessionDto> UnreadSessions { get; } = new();
+        public ObservableCollection<BugReport> OpenSupportTickets { get; } = new();
+        public ObservableCollection<BugReport> SupportTicketsNeedingFeedback { get; } = new();
 
         [ObservableProperty]
         private bool _isLoadingEvents;
@@ -139,7 +147,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             ILocalEncryptionService encryptionService,
             ISignalRService signalRService,
             IPermissionService permissionService,
-            LocalSettingsService localSettingsService)
+            LocalSettingsService localSettingsService,
+            IBugReportService bugService)
         {
             _userService = userService;
             _toastService = toastService;
@@ -153,6 +162,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _signalRService = signalRService;
             _permissionService = permissionService;
             _localSettingsService = localSettingsService;
+            _bugService = bugService;
             Title = "Dashboard";
             
             UserName = _authService.CurrentUser?.DisplayName ?? "User";
@@ -310,6 +320,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
                 // Load unread chats
                 _ = LoadUnreadChatsAsync();
+
+                // Load support tickets
+                _ = LoadSupportTicketsAsync();
             }
             catch 
             { 
@@ -396,6 +409,74 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             finally
             {
                 IsLoadingChats = false;
+            }
+        }
+
+        public async System.Threading.Tasks.Task LoadSupportTicketsAsync()
+        {
+            try
+            {
+                IsLoadingSupportTickets = true;
+
+                var bugs = await _bugService.GetBugReportsAsync(includeArchived: false);
+                var bugList = bugs.ToList();
+
+                var currentUserId = _authService.CurrentUser?.Id;
+                var isDevOrAdmin = _permissionService.IsDev || _authService.CurrentUser?.UserRole == UserRole.Admin;
+
+                var openBugs = new List<BugReport>();
+                var needingFeedback = new List<BugReport>();
+
+                if (isDevOrAdmin)
+                {
+                    // Admin / Dev sees all open support tickets
+                    openBugs = bugList.Where(b => b.Status != "Closed" && b.Status != "Resolved").ToList();
+                }
+                else
+                {
+                    // Regular user sees their own open tickets
+                    var myBugs = bugList.Where(b => b.ReporterId == currentUserId && b.Status != "Closed" && b.Status != "Resolved").ToList();
+                    openBugs = myBugs;
+
+                    // Fetch full details of user's active tickets to check for developer comments or "Waiting for Client" status
+                    foreach (var bugSummary in myBugs)
+                    {
+                        var fullBug = await _bugService.GetBugReportAsync(bugSummary.Id);
+                        if (fullBug != null)
+                        {
+                            var lastComment = fullBug.Comments.OrderBy(c => c.CreatedAtUtc).LastOrDefault();
+                            bool lastCommentIsFromDev = lastComment != null && (lastComment.IsDevComment || lastComment.AuthorEmail != _authService.CurrentUser?.Email);
+
+                            if (fullBug.Status == "Waiting for Client" || lastCommentIsFromDev)
+                            {
+                                needingFeedback.Add(fullBug);
+                            }
+                        }
+                    }
+                }
+
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    OpenSupportTickets.Clear();
+                    SupportTicketsNeedingFeedback.Clear();
+
+                    foreach (var bug in openBugs.Take(10))
+                    {
+                        OpenSupportTickets.Add(bug);
+                    }
+                    foreach (var bug in needingFeedback.Take(10))
+                    {
+                        SupportTicketsNeedingFeedback.Add(bug);
+                    }
+                });
+            }
+            catch
+            {
+                // Ignore background errors
+            }
+            finally
+            {
+                IsLoadingSupportTickets = false;
             }
         }
 

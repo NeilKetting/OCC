@@ -215,10 +215,8 @@
             </Grid>
         </Border>
 
-        
-
         <!-- ══════════════════ DATA GRID ══════════════════ -->
-        <Border Grid.Row="3" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1">
+        <Border Grid.Row="3" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1" CornerRadius="0">
             <DataGrid ItemsSource="{Binding Items}"
                       SelectedItem="{Binding SelectedItem}"
                       AutoGenerateColumns="False"

@@ -59,7 +59,13 @@ namespace OCC.API.Controllers
         {
             if (id != holiday.Id) return BadRequest();
 
-            _context.Entry(holiday).State = EntityState.Modified;
+            var existingHoliday = await _context.PublicHolidays.FindAsync(id);
+            if (existingHoliday == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingHoliday).CurrentValues.SetValues(holiday);
 
             try
             {

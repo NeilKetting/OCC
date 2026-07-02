@@ -19,11 +19,17 @@ namespace OCC.WpfClient.Features.Splash
         public void RegisterRoutes(INavigationService navigationService)
         {
             navigationService.RegisterRoute("Splash", typeof(SplashViewModel));
+            navigationService.RegisterRoute(NavigationRoutes.Home, typeof(OCC.WpfClient.Features.Main.ViewModels.DashboardViewModel));
         }
 
         public IEnumerable<NavItem> GetNavigationItems()
         {
-            yield break;
+            yield return new NavItem(
+                label:     "Dashboard",
+                route:     NavigationRoutes.Home,
+                category:  "Workspace",
+                iconColor: "#00FF88",
+                iconCode:  "\uE80F");
         }
     }
 }

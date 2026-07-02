@@ -363,9 +363,6 @@ namespace OCC.API.Controllers
                     await MarkChildrenCompleted(existingTask);
                 }
 
-                // Signal automated project status if progress starts
-                _context.Entry(existingTask).State = EntityState.Modified;
-
                 var updatedTaskIds = new List<Guid> { id };
 
                 // 2. Perform Rollup: Update parent task progress based on child changes
@@ -726,7 +723,6 @@ namespace OCC.API.Controllers
                         project.EndDate = newEndDate;
                         _logger.LogInformation("Project {Id} updated. Status: {OldStatus}->{NewStatus}, EndDate: {OldEndDate}->{NewEndDate}", 
                             project.Id, dbStatus, newStatus, oldEndDate, newEndDate);
-                        _context.Entry(project).State = EntityState.Modified;
                     }
                 }
             }

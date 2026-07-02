@@ -81,7 +81,13 @@ namespace OCC.API.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            _context.Entry(record).State = EntityState.Modified;
+            var existingRecord = await _context.HseqTrainingRecords.FindAsync(id);
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingRecord).CurrentValues.SetValues(record);
 
             try
             {

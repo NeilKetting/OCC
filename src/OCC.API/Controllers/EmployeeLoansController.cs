@@ -112,7 +112,13 @@ namespace OCC.API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(loan).State = EntityState.Modified;
+            var existingLoan = await _context.EmployeeLoans.FindAsync(id);
+            if (existingLoan == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingLoan).CurrentValues.SetValues(loan);
 
             try
             {

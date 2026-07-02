@@ -236,7 +236,6 @@ namespace OCC.API.Controllers
             {
                 // Validate Status? (Open, Resolved, Closed)
                 bugReport.Status = status;
-                _context.Entry(bugReport).State = EntityState.Modified;
             }
 
             await _context.SaveChangesAsync();

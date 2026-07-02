@@ -54,6 +54,7 @@ namespace OCC.WpfClient.Services
             var basic = new[] 
             { 
                 NavigationRoutes.Home, 
+                NavigationRoutes.Calendar, 
                 NavigationRoutes.Notifications, 
                 NavigationRoutes.UserPreferences, 
                 NavigationRoutes.Feature_BugReports, 

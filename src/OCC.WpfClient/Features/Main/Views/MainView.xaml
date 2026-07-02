@@ -134,6 +134,20 @@
                     <MenuItem Header="Delete"/>
                 </MenuItem>
                 <MenuItem Header="Hubs">
+                    <MenuItem Header="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Home"
+                              Visibility="{Binding CanAccessDashboard, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Header="Calendar" Command="{Binding NavigateCommand}" CommandParameter="Calendar"
+                              Visibility="{Binding CanAccessCalendar, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <MenuItem.Icon>
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+
                     <MenuItem Header="Chat" Command="{Binding NavigateCommand}" CommandParameter="Chat"
                               Visibility="{Binding CanAccessChat, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <MenuItem.Icon>

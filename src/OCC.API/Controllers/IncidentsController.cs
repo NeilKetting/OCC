@@ -65,12 +65,13 @@ namespace OCC.API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(incident).State = EntityState.Modified;
-            
-            // Handle Photos Update? Usually simpler to handle separately or assume full graph update if careful.
-            // For now, assume incident structure includes photos.
-            // But EF Core detached entities might need help.
-            // Let's rely on basic update first.
+            var existingIncident = await _context.Incidents.FindAsync(id);
+            if (existingIncident == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingIncident).CurrentValues.SetValues(incident);
 
             try
             {

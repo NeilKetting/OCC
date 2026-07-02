@@ -84,7 +84,13 @@ namespace OCC.API.Controllers
         public async Task<IActionResult> PutAppSetting(Guid id, AppSetting setting)
         {
             if (id != setting.Id) return BadRequest();
-            _context.Entry(setting).State = EntityState.Modified;
+            var existingSetting = await _context.AppSettings.FindAsync(id);
+            if (existingSetting == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingSetting).CurrentValues.SetValues(setting);
 
             try
             {

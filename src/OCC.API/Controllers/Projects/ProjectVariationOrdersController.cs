@@ -88,7 +88,13 @@ namespace OCC.API.Controllers.Projects
                 return BadRequest();
             }
 
-            _context.Entry(variationOrder).State = EntityState.Modified;
+            var existingVO = await _context.ProjectVariationOrders.FindAsync(id);
+            if (existingVO == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(existingVO).CurrentValues.SetValues(variationOrder);
 
             try
             {

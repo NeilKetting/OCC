@@ -57,7 +57,6 @@ namespace OCC.API.Controllers
                     
                     if (oldStatus != p.Status)
                     {
-                        _context.Entry(p).State = EntityState.Modified;
                         anyChanges = true;
                         _logger.LogInformation("Updating DB Status for Project {Name} from {Old} to {New}", p.Name, oldStatus, p.Status);
                     }
@@ -292,12 +291,16 @@ namespace OCC.API.Controllers
             if (id != project.Id) return BadRequest();
 
             // Track if Site Manager has changed to send notification
-            var existingProject = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-            bool siteManagerChanged = existingProject != null && existingProject.SiteManagerId != project.SiteManagerId;
+            var existingProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == id);
+            if (existingProject == null)
+            {
+                return NotFound();
+            }
 
-            NotificationsController.LogPush($"[PUT] Project {id} Update. SiteManagerChanged: {siteManagerChanged} (Old: {existingProject?.SiteManagerId} -> New: {project.SiteManagerId})");
+            bool siteManagerChanged = existingProject.SiteManagerId != project.SiteManagerId;
+            NotificationsController.LogPush($"[PUT] Project {id} Update. SiteManagerChanged: {siteManagerChanged} (Old: {existingProject.SiteManagerId} -> New: {project.SiteManagerId})");
 
-            _context.Entry(project).State = EntityState.Modified;
+            _context.Entry(existingProject).CurrentValues.SetValues(project);
 
             try
             {
