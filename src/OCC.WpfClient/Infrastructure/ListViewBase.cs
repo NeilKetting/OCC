@@ -364,9 +364,9 @@ namespace OCC.WpfClient.Infrastructure
                     
                     if (isMultiSelect)
                     {
-                        bool isDeleteAction = header.Contains("delete") || header.Contains("archive") || header.Contains("remove");
+                        bool isAllowedMultiAction = header.Contains("delete") || header.Contains("archive") || header.Contains("remove") || header.Contains("assign");
                         
-                        if (isDeleteAction)
+                        if (isAllowedMultiAction)
                         {
                             mi.IsEnabled = true;
                             mi.CommandParameter = selectedItems;

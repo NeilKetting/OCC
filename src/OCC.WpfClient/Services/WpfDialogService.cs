@@ -62,5 +62,21 @@ namespace OCC.WpfClient.Services
             }
             return Task.FromResult<string?>(null);
         }
+
+        public Task<(Guid? ProjectId, string? CustomSite)?> ShowAssignProjectDialogAsync(System.Collections.Generic.List<OCC.Shared.DTOs.ProjectSummaryDto> projects)
+        {
+            var currentWindow = Application.Current.MainWindow;
+            var dialog = new AssignProjectDialogView(projects)
+            {
+                Owner = currentWindow
+            };
+
+            if (dialog.ShowDialog() == true && !dialog.IsCancelled)
+            {
+                return Task.FromResult<(Guid? ProjectId, string? CustomSite)?>((dialog.SelectedProjectId, dialog.CustomSite));
+            }
+
+            return Task.FromResult<(Guid? ProjectId, string? CustomSite)?>(null);
+        }
     }
 }

@@ -445,6 +445,73 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         [RelayCommand]
+        private async Task AssignProject(object? parameter)
+        {
+            var targets = new List<AttendanceHistoryRow>();
+            if (parameter is System.Collections.IList list)
+            {
+                foreach (var item in list)
+                {
+                    if (item is AttendanceHistoryRow r)
+                        targets.Add(r);
+                }
+            }
+            else if (parameter is AttendanceHistoryRow row)
+            {
+                targets.Add(row);
+            }
+            else if (SelectedItem != null)
+            {
+                targets.Add(SelectedItem);
+            }
+
+            if (!targets.Any()) return;
+
+            // Fetch list of projects for selection
+            var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: false);
+            var pList = new List<OCC.Shared.DTOs.ProjectSummaryDto>
+            {
+                new OCC.Shared.DTOs.ProjectSummaryDto { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Name = "-- Please Select a Site --" },
+                new OCC.Shared.DTOs.ProjectSummaryDto { Id = Guid.Empty, Name = "Other (Specify)..." }
+            };
+            pList.AddRange(projects.OrderBy(p => p.Name));
+
+            // Open dialog
+            var result = await _dialogService.ShowAssignProjectDialogAsync(pList);
+            if (result == null) return; // Cancelled
+
+            var selectedProjId = result.Value.ProjectId;
+            var customSite = result.Value.CustomSite;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Assigning project...";
+
+                foreach (var target in targets)
+                {
+                    var record = target.Record;
+                    record.ProjectId = selectedProjId;
+                    record.CustomSite = customSite;
+
+                    await _attendanceService.UpdateAttendanceRecordAsync(record);
+                }
+
+                NotifySuccess("Assigned", targets.Count > 1 ? $"{targets.Count} records assigned to project." : "Record assigned to project.");
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error assigning project to attendance record(s)");
+                NotifyError("Error", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
         private void EditRecord(object? parameter)
         {
             var row = parameter as AttendanceHistoryRow ?? SelectedItem;

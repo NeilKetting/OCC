@@ -213,8 +213,7 @@ namespace OCC.API.Controllers
             if (record.CheckInTime.HasValue && record.CheckInTime.Value > now.AddMinutes(1))
                 return "Clock-in time cannot be in the future.";
             
-            if (record.CheckOutTime.HasValue && record.CheckOutTime.Value > now.AddMinutes(1))
-                return "Clock-out time cannot be in the future.";
+
 
             // 2. Order check
             if (record.CheckInTime.HasValue && record.CheckOutTime.HasValue)

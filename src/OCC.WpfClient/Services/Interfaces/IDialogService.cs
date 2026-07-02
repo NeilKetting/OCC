@@ -17,5 +17,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<CustomDialogResult> ShowThreeButtonDialogAsync(string title, string message, string primaryText, string secondaryText, string cancelText);
         string? ShowOpenFileDialog(string filter, string title);
         Task<string?> ShowInputDialogAsync(string title, string message, string defaultValue = "");
+        Task<(Guid? ProjectId, string? CustomSite)?> ShowAssignProjectDialogAsync(List<OCC.Shared.DTOs.ProjectSummaryDto> projects);
     }
 }

@@ -235,6 +235,34 @@
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                         <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.EditRecordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
                         <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                        <Setter Property="ContextMenu">
+                            <Setter.Value>
+                                <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                    <MenuItem Header="Open" Command="{Binding PlacementTarget.Tag.EditRecordCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="&#xE8A7;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource SuccessGreen}"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="Edit" Command="{Binding PlacementTarget.Tag.EditRecordCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource AccentBlue}"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="Assign to Project" Command="{Binding PlacementTarget.Tag.AssignProjectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="&#xE815;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource SecondaryGold}"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator/>
+                                    <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteRecordCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource ErrorRed}"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
