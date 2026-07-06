@@ -71,6 +71,90 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         // ── Status filter ────────────────────────────────────────────────────
         [ObservableProperty] private int _selectedFilterIndex; // 0 All, 1 Pending, 2 Approved, 3 Rejected
 
+        // ── Date range filter ────────────────────────────────────────────────
+        [ObservableProperty] private DateTime _fromDate = DateTime.Today.AddDays(-30);
+        [ObservableProperty] private DateTime _toDate = DateTime.Today;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsCustomTimeSpan))]
+        private int _selectedTimeSpanIndex = 0; // Default: All Time
+
+        public bool IsCustomTimeSpan => SelectedTimeSpanIndex == 6;
+        private bool _isUpdatingTimeSpan;
+
+        partial void OnFromDateChanged(DateTime value)
+        {
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 6)
+            {
+                FilterItems();
+            }
+        }
+
+        partial void OnToDateChanged(DateTime value)
+        {
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 6)
+            {
+                FilterItems();
+            }
+        }
+
+        partial void OnSelectedTimeSpanIndexChanged(int value)
+        {
+            if (value == 6) return; // Custom
+
+            _isUpdatingTimeSpan = true;
+            try
+            {
+                if (value == 1) // Today
+                {
+                    FromDate = DateTime.Today;
+                    ToDate = DateTime.Today;
+                }
+                else if (value == 2) // This Week
+                {
+                    DateTime start = DateTime.Today;
+                    while (start.DayOfWeek != DayOfWeek.Saturday) start = start.AddDays(-1);
+                    FromDate = start;
+                    ToDate = start.AddDays(6);
+                }
+                else if (value == 3) // Last Week
+                {
+                    DateTime start = DateTime.Today;
+                    while (start.DayOfWeek != DayOfWeek.Saturday) start = start.AddDays(-1);
+                    start = start.AddDays(-7);
+                    FromDate = start;
+                    ToDate = start.AddDays(6);
+                }
+                else if (value == 4) // This Month
+                {
+                    DateTime firstDay = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    FromDate = firstDay;
+                    ToDate = firstDay.AddMonths(1).AddDays(-1);
+                }
+                else if (value == 5) // Last Month
+                {
+                    DateTime firstDay = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1);
+                    FromDate = firstDay;
+                    ToDate = firstDay.AddMonths(1).AddDays(-1);
+                }
+            }
+            finally
+            {
+                _isUpdatingTimeSpan = false;
+            }
+
+            FilterItems();
+        }
+
+        [RelayCommand]
+        private void SetFilterStatus(object? parameter)
+        {
+            if (parameter != null && int.TryParse(parameter.ToString(), out var index))
+            {
+                SelectedFilterIndex = index;
+            }
+        }
+
         partial void OnSelectedFilterIndexChanged(int value) => FilterItems();
         partial void OnStartDateChanged(DateTime value) => RecalculateDays();
         partial void OnEndDateChanged(DateTime value) => RecalculateDays();
@@ -135,6 +219,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 3 => filtered.Where(r => r.Status == LeaveStatus.Rejected),
                 _ => filtered
             };
+
+            if (SelectedTimeSpanIndex != 0)
+            {
+                filtered = filtered.Where(r => r.StartDate.Date <= ToDate.Date && r.EndDate.Date >= FromDate.Date);
+            }
 
             var result = filtered.OrderByDescending(r => r.CreatedDate).ToList();
             Items = new ObservableCollection<LeaveRequest>(result);

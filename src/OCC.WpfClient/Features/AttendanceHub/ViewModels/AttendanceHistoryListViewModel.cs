@@ -47,7 +47,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsCustomTimeSpan))]
-        private int _selectedTimeSpanIndex = 6; // Default: Custom (updated for This Month option)
+        private int _selectedTimeSpanIndex = 0; // Default: All Time
 
         [ObservableProperty] private int _selectedRateTypeIndex = 0; // Default: All
         [ObservableProperty] private int _totalHours;

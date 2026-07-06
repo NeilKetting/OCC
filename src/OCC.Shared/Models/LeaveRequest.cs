@@ -61,6 +61,9 @@ namespace OCC.Shared.Models
         /// If true, this leave will not be paid (e.g., if annual leave balance is zero).
         /// </summary>
         public bool IsUnpaid { get; set; }
+
+        /// <summary> Helper property returning the combined employee display name for report printing. </summary>
+        public string EmployeeName => Employee != null ? $"{Employee.FirstName} {Employee.LastName}".Trim() : string.Empty;
     }
 
     /// <summary>
