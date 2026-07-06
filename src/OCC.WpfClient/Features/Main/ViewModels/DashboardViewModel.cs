@@ -25,6 +25,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
     {
         #region Private Fields
 
+        private static readonly System.Collections.Generic.HashSet<Guid> _shownBirthdayEmployeeIds = new();
+        private static DateTime _lastBirthdayCheckDate;
+
         // Manages user querying
         private readonly IUserService _userService;
 
@@ -275,6 +278,13 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 try
                 {
                     var today = DateTime.Today;
+
+                    if (_lastBirthdayCheckDate != today)
+                    {
+                        _shownBirthdayEmployeeIds.Clear();
+                        _lastBirthdayCheckDate = today;
+                    }
+
                     var employees = await _employeeService.GetEmployeesAsync();
                     var birthdayEmployees = employees
                         .Where(e => e.Status == EmployeeStatus.Active &&
@@ -284,7 +294,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
                     foreach (var emp in birthdayEmployees)
                     {
-                        _toastService.ShowInfo("Employee Birthday 🎉", $"Happy Birthday to {emp.DisplayName}! 🎂", isSticky: true);
+                        if (!_shownBirthdayEmployeeIds.Contains(emp.Id))
+                        {
+                            _toastService.ShowInfo("Employee Birthday 🎉", $"Happy Birthday to {emp.DisplayName}! 🎂");
+                            _shownBirthdayEmployeeIds.Add(emp.Id);
+                        }
                     }
 
                     // Check if today is the CURRENT LOGGED-IN user's birthday!

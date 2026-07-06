@@ -107,15 +107,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _editingRecord = new AttendanceRecord
             {
                 Id = record.Id,
+                UserId = record.UserId,
                 EmployeeId = record.EmployeeId,
                 Date = record.Date,
+                ProjectId = record.ProjectId,
+                Status = record.Status,
+                Latitude = record.Latitude,
+                Longitude = record.Longitude,
                 CheckInTime = record.CheckInTime,
                 CheckOutTime = record.CheckOutTime,
-                Status = record.Status,
-                Branch = record.Branch,
-                Notes = record.Notes,
                 HoursWorked = record.HoursWorked,
+                Notes = record.Notes,
+                LeaveReason = record.LeaveReason,
                 DoctorsNoteImagePath = record.DoctorsNoteImagePath,
+                Branch = record.Branch,
+                ClockInTime = record.ClockInTime,
+                CachedHourlyRate = record.CachedHourlyRate,
+                IsAutoClockIn = record.IsAutoClockIn,
+                CustomSite = record.CustomSite,
                 RowVersion = record.RowVersion
             };
 
@@ -161,6 +170,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     {
                         SelectedProject = Projects.FirstOrDefault(p => p.Id == Guid.Empty);
                         CustomSiteName = EditingRecord.CustomSite;
+                    }
+                    else if (EditingRecord.IsAutoClockIn)
+                    {
+                        SelectedProject = Projects.FirstOrDefault(p => p.Id == SelectSiteId);
                     }
                     else if (IsProjectSelectorVisible && !string.IsNullOrEmpty(EditingRecord.Notes))
                     {
