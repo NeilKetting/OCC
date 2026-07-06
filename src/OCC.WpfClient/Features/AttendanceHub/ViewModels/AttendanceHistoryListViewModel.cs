@@ -607,9 +607,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 var weeksList = new List<WeeklyAttendanceReportWeekModel>();
 
-                // Load all active employees and filter/sort them
-                var activeEmps = (await _employeeService.GetEmployeesAsync())
-                    .Where(e => e.Status == EmployeeStatus.Active);
+                // Load all employees to check status later, and filter active ones
+                var allEmployees = (await _employeeService.GetEmployeesAsync()).ToList();
+                var activeEmps = allEmployees.Where(e => e.Status == EmployeeStatus.Active);
 
                 if (SelectedBranchIndex == 1)
                 {
@@ -669,6 +669,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     }
                     foreach (var extraName in weekEmployeeNames)
                     {
+                        var empInfo = allEmployees.FirstOrDefault(e => $"{e.FirstName} {e.LastName}".Trim().Equals(extraName, StringComparison.OrdinalIgnoreCase));
+                        if (empInfo != null && empInfo.Status != EmployeeStatus.Active)
+                        {
+                            continue;
+                        }
+
                         if (!allWeekEmployees.Any(name => name.Equals(extraName, StringComparison.OrdinalIgnoreCase)))
                         {
                             allWeekEmployees.Add(extraName);
