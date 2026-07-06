@@ -190,7 +190,14 @@ namespace OCC.API.Controllers
                     double lunchHours = 0;
                     if (duration.TotalHours > 5)
                     {
-                        lunchHours = 0.75;
+                        var dow = record.Date.DayOfWeek;
+                        bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                        bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+                        
+                        if (!isWeekend && !isHoliday)
+                        {
+                            lunchHours = 0.75;
+                        }
                     }
                     record.HoursWorked = Math.Max(0, Math.Round(duration.TotalHours - lunchHours, 2));
                 }
