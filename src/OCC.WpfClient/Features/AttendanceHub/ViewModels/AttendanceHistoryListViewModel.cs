@@ -254,6 +254,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         public string GetProjectName(AttendanceRecord r)
         {
+            if (r.Status == AttendanceStatus.Absent || 
+                r.Status == AttendanceStatus.Sick || 
+                r.Status == AttendanceStatus.LeaveAuthorized || 
+                r.Status == AttendanceStatus.UnpaidSick)
+            {
+                return string.Empty;
+            }
+
             if (r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var n))
                 return n;
 
