@@ -128,6 +128,9 @@
                                         <CheckBox Content="Clock In" IsChecked="{Binding IsClockInColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Clock Out" IsChecked="{Binding IsClockOutColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Hours" IsChecked="{Binding IsHoursColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="O/T Sat" IsChecked="{Binding IsOtSatColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="O/T Sun" IsChecked="{Binding IsOtSunColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="O/T Hol" IsChecked="{Binding IsOtHolColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Branch" IsChecked="{Binding IsBranchColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Notes" IsChecked="{Binding IsNotesColumnVisible}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                     </StackPanel>
@@ -272,7 +275,10 @@
                     <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="100" Visibility="{Binding Data.IsStatusColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="CLOCK IN" Binding="{Binding CheckInTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockInColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="CLOCK OUT" Binding="{Binding CheckOutTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockOutColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                    <DataGridTextColumn Header="HOURS" Binding="{Binding HoursWorked, StringFormat={}{0:F1}}" Width="Auto" Visibility="{Binding Data.IsHoursColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="HOURS" Binding="{Binding HoursWorked, StringFormat={}{0:F2}}" Width="Auto" Visibility="{Binding Data.IsHoursColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="O/T SAT" Binding="{Binding OtSaturday}" Width="Auto" Visibility="{Binding Data.IsOtSatColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="O/T SUN" Binding="{Binding OtSunday}" Width="Auto" Visibility="{Binding Data.IsOtSunColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="O/T HOL" Binding="{Binding OtHoliday}" Width="Auto" Visibility="{Binding Data.IsOtHolColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Visibility="{Binding Data.IsBranchColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="NOTES" Binding="{Binding Notes}" Width="Auto" Visibility="{Binding Data.IsNotesColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <!-- Actions -->

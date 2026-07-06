@@ -186,17 +186,17 @@ namespace OCC.API.Controllers
                 var duration = record.CheckOutTime.Value - record.CheckInTime.Value;
                 if (duration.TotalHours > 0)
                 {
-                    // Subtract lunch (standard 45 mins = 0.75 hours) if worked more than 5 hours
                     double lunchHours = 0;
-                    if (duration.TotalHours > 5)
+                    var dow = record.Date.DayOfWeek;
+                    bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                    bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+                    
+                    if (!isWeekend && !isHoliday)
                     {
-                        var dow = record.Date.DayOfWeek;
-                        bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
-                        bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
-                        
-                        if (!isWeekend && !isHoliday)
+                        // Unpaid lunch is 1 hour (12:00-13:00). Deduct 1 hour only if checkout is at or after 13:00.
+                        if (record.CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))
                         {
-                            lunchHours = 0.75;
+                            lunchHours = 1.0;
                         }
                     }
                     record.HoursWorked = Math.Max(0, Math.Round(duration.TotalHours - lunchHours, 2));

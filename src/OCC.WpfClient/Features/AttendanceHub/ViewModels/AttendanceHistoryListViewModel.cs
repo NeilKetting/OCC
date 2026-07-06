@@ -65,6 +65,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isHoursColumnVisible = true;
         [ObservableProperty] private bool _isBranchColumnVisible = true;
         [ObservableProperty] private bool _isNotesColumnVisible = true;
+        [ObservableProperty] private bool _isOtSatColumnVisible = true;
+        [ObservableProperty] private bool _isOtSunColumnVisible = true;
+        [ObservableProperty] private bool _isOtHolColumnVisible = true;
 
         // Rich employee name lookup for display
         private Dictionary<Guid, string> _employeeNameMap = new();
@@ -722,15 +725,60 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                                         dayPrint.TimeIn = dayRow.CheckInTime?.ToString("HH:mm") ?? string.Empty;
                                         dayPrint.TimeOut = dayRow.CheckOutTime?.ToString("HH:mm") ?? string.Empty;
 
+                                        // Calculate actual hours worked dynamically to account for weekend/holiday lunch rule immediately (even for past/saved records)
+                                        double actualHours = 0;
+                                        if (dayRow.CheckInTime.HasValue && dayRow.CheckOutTime.HasValue)
+                                        {
+                                            var duration = dayRow.CheckOutTime.Value - dayRow.CheckInTime.Value;
+                                            if (duration.TotalHours > 0)
+                                            {
+                                                double lunch = 0;
+                                                var dow = dayDate.DayOfWeek;
+                                                bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                                                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(dayDate);
+                                                if (!isWeekend && !isHoliday)
+                                                {
+                                                    if (dayRow.CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))
+                                                    {
+                                                        lunch = 1.0;
+                                                    }
+                                                }
+                                                actualHours = Math.Max(0, Math.Round(duration.TotalHours - lunch, 2));
+                                            }
+                                        }
+
                                         // Overtime calculation
-                                        if (dayDate.DayOfWeek == DayOfWeek.Saturday || dayDate.DayOfWeek == DayOfWeek.Sunday)
-                                        {
-                                            dayPrint.Overtime = dayRow.HoursWorked > 0 ? dayRow.HoursWorked.ToString("F1") : string.Empty;
-                                        }
-                                        else
-                                        {
-                                            dayPrint.Overtime = dayRow.HoursWorked > 8.75 ? (dayRow.HoursWorked - 8.75).ToString("F1") : string.Empty;
-                                        }
+                                        var dowOfDate = dayDate.DayOfWeek;
+                                        bool isOtDay = dowOfDate == DayOfWeek.Saturday || dowOfDate == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(dayDate);
+                                        
+                                         if (isOtDay)
+                                         {
+                                             dayPrint.Overtime = actualHours > 0 ? actualHours.ToString("F2") : string.Empty;
+                                         }
+                                         else
+                                         {
+                                             // Find standard workday hours for this employee
+                                             double standardWorkdayHours = 8.75;
+                                             var employee = sortedEmployees.FirstOrDefault(e => $"{e.FirstName} {e.LastName}".Trim().Equals(empName, StringComparison.OrdinalIgnoreCase));
+                                             if (employee != null)
+                                             {
+                                                 var shiftStart = employee.ShiftStartTime ?? new TimeSpan(7, 0, 0);
+                                                 var shiftEnd = employee.ShiftEndTime ?? 
+                                                     (string.Equals(employee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) 
+                                                         ? new TimeSpan(16, 30, 0) 
+                                                         : new TimeSpan(16, 45, 0));
+                                                 
+                                                 var standardDuration = (shiftEnd - shiftStart).TotalHours;
+                                                 double standardLunch = 0.0;
+                                                 if (shiftEnd >= new TimeSpan(13, 0, 0))
+                                                 {
+                                                     standardLunch = 1.0;
+                                                 }
+                                                 standardWorkdayHours = Math.Max(0, standardDuration - standardLunch);
+                                             }
+
+                                             dayPrint.Overtime = actualHours > standardWorkdayHours ? (actualHours - standardWorkdayHours).ToString("F2") : string.Empty;
+                                         }
                                     }
                                 }
                             }
@@ -794,8 +842,96 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public AttendanceStatus Status        => Record.Status;
         public DateTime?       CheckInTime    => Record.CheckInTime;
         public DateTime?       CheckOutTime   => Record.CheckOutTime;
-        public double          HoursWorked    => Record.HoursWorked;
+        public double?         HoursWorked
+        {
+            get
+            {
+                var dow = Date.DayOfWeek;
+                bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
+                
+                if (isWeekend || isHoliday)
+                {
+                    return null;
+                }
+
+                return CalculateActualHours();
+            }
+        }
         public string?         Branch         => Record.Branch;
         public string?         Notes          => Record.Notes;
+
+        private double CalculateActualHours()
+        {
+            if (CheckInTime == null || CheckOutTime == null)
+                return 0;
+
+            var duration = CheckOutTime.Value - CheckInTime.Value;
+            if (duration.TotalHours <= 0)
+                return 0;
+
+            double lunch = 0;
+            var dow = Date.DayOfWeek;
+            bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+            bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
+            
+            if (!isWeekend && !isHoliday)
+            {
+                // Unpaid lunch is 1 hour (12:00-13:00). Deduct 1 hour only if checkout is at or after 13:00.
+                if (CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))
+                {
+                    lunch = 1.0;
+                }
+            }
+            return Math.Max(0, Math.Round(duration.TotalHours - lunch, 2));
+        }
+
+        public string OtSaturday
+        {
+            get
+            {
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick)
+                    return string.Empty;
+
+                if (Date.DayOfWeek == DayOfWeek.Saturday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
+                {
+                    var hrs = CalculateActualHours();
+                    return hrs > 0 ? hrs.ToString("F2") : string.Empty;
+                }
+                return string.Empty;
+            }
+        }
+
+        public string OtSunday
+        {
+            get
+            {
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick)
+                    return string.Empty;
+
+                if (Date.DayOfWeek == DayOfWeek.Sunday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
+                {
+                    var hrs = CalculateActualHours();
+                    return hrs > 0 ? hrs.ToString("F2") : string.Empty;
+                }
+                return string.Empty;
+            }
+        }
+
+        public string OtHoliday
+        {
+            get
+            {
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick)
+                    return string.Empty;
+
+                if (OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
+                {
+                    var hrs = CalculateActualHours();
+                    return hrs > 0 ? hrs.ToString("F2") : string.Empty;
+                }
+                return string.Empty;
+            }
+        }
     }
 }
