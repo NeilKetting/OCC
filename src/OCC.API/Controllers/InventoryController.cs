@@ -107,6 +107,7 @@ namespace OCC.API.Controllers
                 if (item == null) return BadRequest("Item data is null.");
 
                 item.Id = Guid.NewGuid();
+                item.QuantityOnHand = item.JhbQuantity + item.CptQuantity;
 
                 _context.InventoryItems.Add(item);
                 await _context.SaveChangesAsync();
@@ -137,6 +138,7 @@ namespace OCC.API.Controllers
                 return NotFound();
             }
 
+            item.QuantityOnHand = item.JhbQuantity + item.CptQuantity;
             _context.Entry(existingItem).CurrentValues.SetValues(item);
 
             try

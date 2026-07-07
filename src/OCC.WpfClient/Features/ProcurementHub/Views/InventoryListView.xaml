@@ -98,7 +98,9 @@
                                         <CheckBox Content="SKU" IsChecked="{Binding IsSkuVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Description" IsChecked="{Binding IsDescriptionVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Category" IsChecked="{Binding IsCategoryVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Quantity" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="Total Qty" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="JHB Qty" IsChecked="{Binding IsJhbQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        <CheckBox Content="CPT Qty" IsChecked="{Binding IsCptQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Location" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                         <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
                                     </StackPanel>
@@ -126,7 +128,7 @@
 
                         <!-- Filters -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0,0,0">
-                            <ComboBox Height="30" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0" SelectedIndex="0">
+                            <ComboBox Height="30" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0" SelectedValue="{Binding SelectedCategoryFilter, Mode=TwoWay}" SelectedValuePath="Content">
                                 <ComboBoxItem Content="All Categories" />
                                 <ComboBoxItem Content="Tools" />
                                 <ComboBoxItem Content="Electrical" />
@@ -134,12 +136,14 @@
                                 <ComboBoxItem Content="Materials" />
                             </ComboBox>
 
-                            <ComboBox Height="30" Style="{StaticResource ModernComboBox}" SelectedIndex="0">
+                            <ComboBox Height="30" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0" SelectedValue="{Binding SelectedStatusFilter, Mode=TwoWay}" SelectedValuePath="Content">
                                 <ComboBoxItem Content="All Statuses" />
                                 <ComboBoxItem Content="OK" />
                                 <ComboBoxItem Content="Low Stock" />
                                 <ComboBoxItem Content="Out of Stock" />
                             </ComboBox>
+
+                            <ComboBox ItemsSource="{Binding BranchOptions}" SelectedValue="{Binding SelectedBranchFilter, Mode=TwoWay}" Width="100" Height="30" Style="{StaticResource ModernComboBox}"/>
                         </StackPanel>
 
                         <!-- Stats -->
@@ -158,15 +162,15 @@
             <!-- DataGrid Section -->
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="2" ClipToBounds="True" CornerRadius="0"
                     Margin="10,0,10,10">
-                <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False" 
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" 
                           Background="Transparent" BorderThickness="0" CanUserAddRows="False"
                           IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
                           Style="{StaticResource ModernDataGrid}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="150" Visibility="{Binding Data.IsSkuVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="Auto" Visibility="{Binding Data.IsSkuVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="Auto" Visibility="{Binding Data.IsDescriptionVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="CATEGORY" Binding="{Binding Category, Converter={StaticResource FriendlyEnumConverter}}" Width="150" Visibility="{Binding Data.IsCategoryVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="QUANTITY" Binding="{Binding QuantityOnHand}" Width="120" Visibility="{Binding Data.IsQuantityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Header="CATEGORY" Binding="{Binding Category, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsCategoryVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="TOTAL QTY" Binding="{Binding QuantityOnHand}" Width="Auto" Visibility="{Binding Data.IsQuantityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -179,9 +183,29 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="LOCATION" Binding="{Binding Location}" Width="150" Visibility="{Binding Data.IsLocationVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                        <DataGridTextColumn Header="STATUS" Binding="{Binding Status, Converter={StaticResource FriendlyEnumConverter}}" Width="120" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="JHB QTY" Binding="{Binding JhbQuantity}" Width="Auto" Visibility="{Binding Data.IsJhbQuantityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="CPT QTY" Binding="{Binding CptQuantity}" Width="Auto" Visibility="{Binding Data.IsCptQuantityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="LOCATION" Binding="{Binding Location}" Width="Auto" Visibility="{Binding Data.IsLocationVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="STATUS" Binding="{Binding Status, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                        </Style>
+                    </DataGrid.RowStyle>
                 </DataGrid>
             </Border>
 

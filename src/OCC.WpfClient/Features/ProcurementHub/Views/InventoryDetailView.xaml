@@ -40,7 +40,7 @@
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="10,0,0,0">
                         <TextBlock Text="UNIT OF MEASURE" Style="{StaticResource FormLabelText}"/>
-                        <TextBox Text="{Binding Item.UnitOfMeasure}" Style="{StaticResource ModernInput}"/>
+                        <ComboBox SelectedValue="{Binding Item.UnitOfMeasure}" ItemsSource="{Binding AvailableUOMs}" Style="{StaticResource ModernComboBox}" Height="36"/>
                     </StackPanel>
                 </Grid>
 

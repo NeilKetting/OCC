@@ -50,7 +50,11 @@ namespace OCC.Shared.Models
         public double CptQuantity { get; set; }
 
         /// <summary> Total aggregate quantity across all branches. </summary>
-        public double QuantityOnHand { get; set; }
+        public double QuantityOnHand
+        {
+            get => JhbQuantity + CptQuantity;
+            set { }
+        }
 
         /// <summary> The stock level threshold at which a restock should be triggered for JHB. </summary>
         public double JhbReorderPoint { get; set; }

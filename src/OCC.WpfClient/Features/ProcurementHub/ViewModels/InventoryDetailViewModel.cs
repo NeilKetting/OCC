@@ -13,7 +13,7 @@ using OCC.WpfClient.Services.Interfaces;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 {
-    public partial class InventoryDetailViewModel : ViewModelBase
+    public partial class InventoryDetailViewModel : OverlayViewModel
     {
         private readonly IInventoryService _inventoryService;
         private readonly IToastService _toastService;
@@ -21,6 +21,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         [ObservableProperty] private InventoryItem _item = new();
         [ObservableProperty] private bool _isEditMode;
+
+        public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack" };
 
         public InventoryDetailViewModel(
             IInventoryService inventoryService,
@@ -52,13 +54,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             try
             {
                 IsBusy = true;
+                Item.QuantityOnHand = Item.JhbQuantity + Item.CptQuantity;
                 if (IsEditMode)
                     await _inventoryService.UpdateItemAsync(Item);
                 else
                     await _inventoryService.CreateItemAsync(Item);
 
                 _toastService.ShowSuccess("Success", "Inventory item saved.");
-                Close();
+                Close(true);
             }
             catch (Exception ex)
             {
@@ -69,12 +72,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 IsBusy = false;
             }
-        }
-
-        [RelayCommand]
-        private void Close()
-        {
-            WeakReferenceMessenger.Default.Send(new CloseOverlayMessage());
         }
     }
 }

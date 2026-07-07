@@ -21,6 +21,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly IToastService _toastService;
         private readonly ILogger<InventoryListViewModel> _logger;
         private readonly LocalSettingsService _settingsService;
+        private readonly IDialogService _dialogService;
         private List<InventoryItem> _allInventory = new();
 
         // Column Visibility
@@ -28,10 +29,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private bool _isDescriptionVisible = true;
         [ObservableProperty] private bool _isCategoryVisible = true;
         [ObservableProperty] private bool _isQuantityVisible = true;
+        [ObservableProperty] private bool _isJhbQuantityVisible = true;
+        [ObservableProperty] private bool _isCptQuantityVisible = true;
         [ObservableProperty] private bool _isLocationVisible = true;
         [ObservableProperty] private bool _isStatusVisible = true;
 
-        
+        [ObservableProperty] private string _selectedCategoryFilter = "All Categories";
+        [ObservableProperty] private string _selectedStatusFilter = "All Statuses";
+        [ObservableProperty] private string _selectedBranchFilter = "All";
 
         [ObservableProperty] private int _lowStockCount;
 
@@ -45,18 +50,24 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             new() { Header = "Qty", PropertyName = "QuantityOnHand", Width = 1 }
         };
 
+        // Standard commands for centralized UI
+        public override IRelayCommand<object>? OpenCommand => OpenItemCommand;
+        public override IRelayCommand<object>? EditCommand => EditItemCommand;
+        public override IRelayCommand<object>? DeleteCommand => DeleteSelectedItemsCommand;
 
         public InventoryListViewModel(
             IInventoryService inventoryService, 
             IToastService toastService, 
             ILogger<InventoryListViewModel> logger,
             LocalSettingsService settingsService,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            IDialogService dialogService) : base(pdfService)
         {
             _inventoryService = inventoryService;
             _toastService = toastService;
             _logger = logger;
             _settingsService = settingsService;
+            _dialogService = dialogService;
             Title = "Inventory Management";
 
             LoadLayout();
@@ -119,6 +130,40 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     (i.Category?.ToLower().Contains(query) ?? false));
             }
 
+            if (SelectedCategoryFilter != "All Categories" && !string.IsNullOrWhiteSpace(SelectedCategoryFilter))
+            {
+                var cat = SelectedCategoryFilter.ToLower();
+                filtered = filtered.Where(i => i.Category?.ToLower() == cat);
+            }
+
+            if (SelectedStatusFilter != "All Statuses" && !string.IsNullOrWhiteSpace(SelectedStatusFilter))
+            {
+                if (SelectedStatusFilter == "OK")
+                {
+                    filtered = filtered.Where(i => i.Status == InventoryStatus.OK);
+                }
+                else if (SelectedStatusFilter == "Low Stock")
+                {
+                    filtered = filtered.Where(i => i.Status == InventoryStatus.Low);
+                }
+                else if (SelectedStatusFilter == "Out of Stock")
+                {
+                    filtered = filtered.Where(i => i.QuantityOnHand <= 0);
+                }
+            }
+
+            if (SelectedBranchFilter != "All" && !string.IsNullOrWhiteSpace(SelectedBranchFilter))
+            {
+                if (SelectedBranchFilter == "JHB")
+                {
+                    filtered = filtered.Where(i => i.JhbQuantity > 0);
+                }
+                else if (SelectedBranchFilter == "CPT")
+                {
+                    filtered = filtered.Where(i => i.CptQuantity > 0);
+                }
+            }
+
             Items = new ObservableCollection<InventoryItem>(filtered.ToList());
             TotalCount = Items.Count;
         }
@@ -134,9 +179,92 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private void AddItem()
         {
             _logger.LogInformation("Add Item command triggered");
-            // Open the detail view in a drawer
-            OpenOverlay(new InventoryDetailViewModel(_inventoryService, _toastService, _logger));
+            var detailVm = new InventoryDetailViewModel(_inventoryService, _toastService, _logger);
+            OpenOverlay(detailVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
         }
+
+        [RelayCommand]
+        private void OpenItem(object? parameter)
+        {
+            _ = EditItem(parameter);
+        }
+
+        [RelayCommand]
+        private async Task EditItem(object? parameter)
+        {
+            var target = parameter as InventoryItem ?? SelectedItem;
+            if (target == null) return;
+
+            try
+            {
+                IsBusy = true;
+                var item = await _inventoryService.GetInventoryItemAsync(target.Id);
+                if (item != null)
+                {
+                    var detailVm = new InventoryDetailViewModel(_inventoryService, _toastService, _logger);
+                    detailVm.SetItem(item);
+                    OpenOverlay(detailVm, async (res) =>
+                    {
+                        if (res is bool saved && saved)
+                        {
+                            await LoadDataAsync();
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading inventory item details");
+                _toastService.ShowError("Error", "Could not load inventory item details. Please try again.");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteSelectedItems(object? parameter)
+        {
+            var targets = GetDeleteTargets(parameter);
+            if (!targets.Any()) return;
+
+            string title = targets.Count > 1 ? "Delete Multiple Items" : "Delete Item";
+            string message = targets.Count > 1
+                ? $"You are about to delete {targets.Count} inventory items. This action cannot be undone. Are you sure you want to proceed?"
+                : $"Are you sure you want to delete inventory item '{targets[0].Sku}'? This action cannot be undone.";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(title, message);
+            if (!confirmed) return;
+
+            try
+            {
+                IsBusy = true;
+                foreach (var t in targets)
+                {
+                    await _inventoryService.DeleteItemAsync(t.Id);
+                }
+                await LoadDataAsync();
+                _toastService.ShowSuccess("Success", targets.Count > 1 ? "Selected items deleted." : "Item deleted.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting inventory items");
+                _toastService.ShowError("Error", $"Failed to delete inventory item(s): {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public List<string> BranchOptions { get; } = new() { "All", "JHB", "CPT" };
 
         private void LoadLayout()
         {
@@ -147,6 +275,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsDescriptionVisible = layout.Columns.FirstOrDefault(c => c.Header == "Description")?.IsVisible ?? true;
                 IsCategoryVisible = layout.Columns.FirstOrDefault(c => c.Header == "Category")?.IsVisible ?? true;
                 IsQuantityVisible = layout.Columns.FirstOrDefault(c => c.Header == "Quantity")?.IsVisible ?? true;
+                IsJhbQuantityVisible = layout.Columns.FirstOrDefault(c => c.Header == "JHB Qty")?.IsVisible ?? true;
+                IsCptQuantityVisible = layout.Columns.FirstOrDefault(c => c.Header == "CPT Qty")?.IsVisible ?? true;
                 IsLocationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Location")?.IsVisible ?? true;
                 IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
             }
@@ -162,6 +292,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     new() { Header = "Description", IsVisible = IsDescriptionVisible },
                     new() { Header = "Category", IsVisible = IsCategoryVisible },
                     new() { Header = "Quantity", IsVisible = IsQuantityVisible },
+                    new() { Header = "JHB Qty", IsVisible = IsJhbQuantityVisible },
+                    new() { Header = "CPT Qty", IsVisible = IsCptQuantityVisible },
                     new() { Header = "Location", IsVisible = IsLocationVisible },
                     new() { Header = "Status", IsVisible = IsStatusVisible }
                 }
@@ -174,9 +306,13 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         partial void OnIsDescriptionVisibleChanged(bool value) => SaveLayout();
         partial void OnIsCategoryVisibleChanged(bool value) => SaveLayout();
         partial void OnIsQuantityVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsJhbQuantityVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsCptQuantityVisibleChanged(bool value) => SaveLayout();
         partial void OnIsLocationVisibleChanged(bool value) => SaveLayout();
         partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
 
-        
+        partial void OnSelectedCategoryFilterChanged(string value) => FilterItems();
+        partial void OnSelectedStatusFilterChanged(string value) => FilterItems();
+        partial void OnSelectedBranchFilterChanged(string value) => FilterItems();
     }
 }
