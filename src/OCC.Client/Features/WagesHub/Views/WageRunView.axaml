@@ -393,6 +393,11 @@
 									<TextBlock Text="{Binding DaysWeek1Display, StringFormat={}{0:0.#}}" HorizontalAlignment="Center"/>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
+							<DataGridTemplateColumn.CellEditingTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding DaysWeek1Display, StringFormat={}{0:0.#}}" TextAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellEditingTemplate>
 						</DataGridTemplateColumn>
 
 						<DataGridTemplateColumn Width="Auto">
@@ -460,7 +465,12 @@
 						</StackPanel>
 					</Button>
 
-					<CheckBox Content="Salary Version" IsChecked="{Binding IsSalaryVersion}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+					<Button Command="{Binding PrintSalaryVersionCommand}" Classes="Secondary" IsEnabled="{Binding IsGenerated}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconPrint}" Foreground="{DynamicResource TextPrimary}"/>
+							<TextBlock Text="Salary Version"/>
+						</StackPanel>
+					</Button>
 
 					<Button Command="{Binding PrintSupervisorPaymentsCommand}" Classes="Secondary" IsEnabled="{Binding IsGenerated}">
 						<StackPanel Orientation="Horizontal" Spacing="8">

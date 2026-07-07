@@ -337,6 +337,9 @@ namespace OCC.API.Controllers
                     }
                 }
 
+                // Recalculate TotalDaysWorked to include the deducted days offset (Week 1)
+                line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
+
                 // D. Total Wage
                 // Formula: ((Normal + Projected + Variance) * Rate) + (OT15 * Rate * 1.5) + (OT20 * Rate * 2.0)
                 

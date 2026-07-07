@@ -285,7 +285,7 @@ namespace OCC.Client.Features.WagesHub.ViewModels
                     runToPrint.Lines = Lines.Select(l => l.Model).ToList();
                 }
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, IsSalaryVersion);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false);
                 
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
@@ -297,6 +297,49 @@ namespace OCC.Client.Features.WagesHub.ViewModels
             catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task PrintSalaryVersion()
+        {
+            if (_currentDraft == null && !Lines.Any()) return;
+
+            try
+            {
+                BusyText = "Generating Salary Version PDF...";
+                IsBusy = true;
+
+                var runToPrint = _currentDraft ?? new OCC.Shared.Models.WageRun
+                {
+                    StartDate = StartDate,
+                    EndDate = EndDate,
+                    Branch = SelectedBranch,
+                    PayType = SelectedPayType,
+                    Lines = Lines.Select(l => l.Model).ToList()
+                };
+
+                if (_currentDraft != null)
+                {
+                    runToPrint.Lines = Lines.Select(l => l.Model).ToList();
+                }
+
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true);
+                
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate Salary PDF: {ex.Message}");
             }
             finally
             {

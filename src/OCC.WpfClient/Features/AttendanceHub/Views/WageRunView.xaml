@@ -54,18 +54,17 @@
                     <Button Style="{StaticResource PrintButton}" Command="{Binding PrintPdfCommand}" ToolTip="Print Wage Run PDF"
                             Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
                     </Button>
-                    <!-- Salary PDF Toggle -->
-                    <CheckBox Content="Salary Version" IsChecked="{Binding IsSalaryVersion}" Foreground="White" VerticalAlignment="Center" Margin="8,0,0,0"
-                              Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}" FontSize="11" FontWeight="SemiBold"/>
+                    <!-- Salary PDF Button -->
+                    <Button Command="{Binding PrintSalaryVersionCommand}" ToolTip="Print Salary Version PDF"
+                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource PrintButton}"
+                            Content="Print Salary Version"/>
+
                     <!-- Print Supervisor Payments PDF -->
                     <Button Command="{Binding PrintSupervisorPaymentsCommand}" ToolTip="Print Supervisor Payments Checklist PDF"
+                            Style="{StaticResource PrintButton}"
                             Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource GhostButton}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE73A;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0" Foreground="{StaticResource AccentBlue}"/>
-                            <TextBlock Text="SUP FEES" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="11"/>
-                        </StackPanel>
-                    </Button>
+                            Content="Supervisor Payment Check List"/>
                     <!-- Finalize -->
                     <Button Command="{Binding FinalizeRunCommand}" Margin="8,0,0,0"
                             Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
@@ -162,9 +161,12 @@
                                     <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Bank" IsChecked="{Binding IsBankVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Account Number" IsChecked="{Binding IsBankAccountVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Comments" IsChecked="{Binding IsCommentsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Total Rem" IsChecked="{Binding IsTotalRemVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Days" IsChecked="{Binding IsDaysVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                    <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                 </StackPanel>
                             </Border>
                         </Popup>
@@ -410,13 +412,13 @@
                         </DataGridTextColumn>
                         <!-- BANK -->
                         <DataGridTextColumn Header="BANK" Binding="{Binding BankName}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsTotalNettVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                                            Visibility="{Binding Data.IsBankVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- BANK ACC -->
                         <DataGridTextColumn Header="ACCOUNT NUMBER" Binding="{Binding BankAccountNumber}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsTotalNettVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                                            Visibility="{Binding Data.IsBankAccountVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- USER COMMENTS -->
                         <DataGridTemplateColumn Header="COMMENTS" Width="Auto"
-                                                Visibility="{Binding Data.IsNotesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                                Visibility="{Binding Data.IsCommentsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Comments}"/>
@@ -449,12 +451,19 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- W1, W2, W3, TOT D -->
-                        <DataGridTextColumn Header="WEEK 1" Binding="{Binding DaysWeek1Display, StringFormat='0.#'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="WEEK 1" Width="Auto"
+                                                Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DaysWeek1Display, StringFormat='0.#'}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding DaysWeek1Display, UpdateSourceTrigger=LostFocus, StringFormat='0.#'}" TextAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn Header="WEEK 2" Binding="{Binding DaysWeek2Display}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
@@ -563,7 +572,7 @@
         <Border Grid.RowSpan="4" Background="#88000000" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ProgressBar IsIndeterminate="True" Width="200" Height="4"
-                             Foreground="{StaticResource OrangeBrush}" BorderThickness="0"/>
+                             Foreground="{StaticResource AccentBlue}" BorderThickness="0"/>
                 <TextBlock Text="{Binding BusyText}" Foreground="White" FontSize="13"
                            HorizontalAlignment="Center" Margin="0,12,0,0"/>
             </StackPanel>

@@ -1591,7 +1591,7 @@ namespace OCC.WpfClient.Services
                     {
                         page.Margin(10);
                         page.Size(PageSizes.A4.Landscape());
-                        page.DefaultTextStyle(x => x.FontSize(6.5f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
+                        page.DefaultTextStyle(x => x.FontSize(4.8f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
 
                         page.Header().Element(c => ComposeWageHeader(c, wageRun));
                         page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments));
@@ -1722,12 +1722,12 @@ namespace OCC.WpfClient.Services
             {
                 col.Item().Row(row =>
                 {
-                    row.RelativeItem().Text("ORANGE CIRCLE CONSTRUCTION Ltd").FontSize(10).ExtraBold();
-                    row.RelativeItem().AlignCenter().Text("STAFF WAGES (OCC)").FontSize(10).SemiBold();
+                    row.RelativeItem().Text("ORANGE CIRCLE CONSTRUCTION Ltd").FontSize(8).ExtraBold();
+                    row.RelativeItem().AlignCenter().Text("STAFF WAGES (OCC)").FontSize(8).SemiBold();
                     row.RelativeItem().AlignRight().Text(t =>
                     {
-                        t.Span("Date: ").SemiBold();
-                        t.Span(wageRun.EndDate.ToString("dd/MM/yyyy")).Underline();
+                        t.Span("Date: ").SemiBold().FontSize(8);
+                        t.Span(wageRun.EndDate.ToString("dd/MM/yyyy")).Underline().FontSize(8);
                     });
                 });
             });
@@ -1741,7 +1741,7 @@ namespace OCC.WpfClient.Services
 
                 if (allLines.Any())
                 {
-                    col.Item().PaddingTop(5).Text("OCC STAFF WAGES").FontSize(8).ExtraBold();
+                    col.Item().PaddingTop(5).Text("OCC STAFF WAGES").FontSize(6).ExtraBold();
                     col.Item().Element(c => ComposeWageTable(c, allLines, hideAfterComments));
                 }
 
@@ -1835,7 +1835,7 @@ namespace OCC.WpfClient.Services
                     static IContainer WageHeaderStyle(IContainer c) =>
                         c.Border(0.5f).Background(Colors.Grey.Lighten4).Padding(1)
                          .AlignCenter().AlignMiddle()
-                         .DefaultTextStyle(x => x.Bold().FontSize(5.5f));
+                         .DefaultTextStyle(x => x.Bold().FontSize(4.0f));
                 });
 
                 int index = 1;
@@ -1892,8 +1892,8 @@ namespace OCC.WpfClient.Services
                             table.Cell().Element(WageSubRowStyle);
                         }
 
-                        table.Cell().Element(WageSubRowStyle).AlignRight().Text("SUPERVISOR FEE").Bold().FontSize(5.5f);
-                        table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(5.5f);
+                        table.Cell().Element(WageSubRowStyle).AlignRight().Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
+                        table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
 
                         int remCount = hideAfterComments ? 4 : 10;
                         for (int i = 0; i < remCount; i++)

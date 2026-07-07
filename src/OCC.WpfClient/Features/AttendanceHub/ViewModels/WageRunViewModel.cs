@@ -105,6 +105,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isTotalRemVisible = true;
         [ObservableProperty] private bool _isDaysVisible = true;
         [ObservableProperty] private bool _isNotesVisible = true;
+        [ObservableProperty] private bool _isBankVisible = true;
+        [ObservableProperty] private bool _isBankAccountVisible = true;
+        [ObservableProperty] private bool _isCommentsVisible = true;
 
         // ─── Past runs list ───────────────────────────────────────────────────
 
@@ -329,13 +332,44 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 };
                 runToPrint.Lines = Lines.Select(l => l.Model).ToList();
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, IsSalaryVersion);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating wage run PDF");
                 System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task PrintSalaryVersionAsync()
+        {
+            if (_currentDraft == null && !Lines.Any()) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Salary Version PDF...";
+
+                var runToPrint = _currentDraft ?? new WageRun
+                {
+                    StartDate = StartDate,
+                    EndDate   = EndDate,
+                    Branch    = SelectedBranch,
+                    PayType   = SelectedPayType,
+                };
+                runToPrint.Lines = Lines.Select(l => l.Model).ToList();
+
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true);
+                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating salary version PDF");
+                System.Windows.MessageBox.Show($"Failed to generate Salary PDF:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
