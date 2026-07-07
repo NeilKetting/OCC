@@ -39,20 +39,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public decimal? StdOtRate       => Model.HourlyRate * 1.5m;
         public decimal? SatOtRate       => Model.HourlyRate * 1.5m;
         public decimal? SunPHolRate     => Model.HourlyRate * 2.0m;
+        public decimal DecOtRate        => Model.HourlyRate;
+        public double DecOtHrs          => 0.0;
+        public decimal DecTotal         => 0.00m;
+        public double SatOt             => 0.0;
 
         /// <summary>Rate per day = HourlyRate × 8.75 standard hours</summary>
         public decimal? RatePDayDisplay => Model.HourlyRate * 8.75m;
 
-        // Day counts — double in model, show as integer for display
-        public int DaysWeek1Display  => (int)Model.DaysWorkedWeek1;
+        // Day counts
+        public double DaysWeek1Display => Model.DaysWorkedWeek1;
         public int DaysWeek2Display  => (int)Model.DaysWorkedWeek2;
+        public int DaysWeek3Display  => (int)Model.DaysWorkedWeek3;
         public int TotalDaysDisplay  => (int)Model.TotalDaysWorked;
 
         // Hours per day (standard)
         public double HrsPDayDisplay => 8.75;
 
         // Sat OT column is always 0 in current payroll logic (Sat = OT15)
-        public double SatOt => 0;
 
         // Deduction display strings (blank if zero, for cleaner grid)
         public string DeductionLoanDisplay    => Model.DeductionLoan    > 0 ? Model.DeductionLoan.ToString("F2")    : string.Empty;
@@ -60,16 +64,32 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public string DeductionGasDisplay     => Model.DeductionGas     > 0 ? Model.DeductionGas.ToString("F2")     : string.Empty;
         public string OtherDisplay            => Model.DeductionOther   > 0 ? Model.DeductionOther.ToString("F2")   : string.Empty;
         public string DeductionPPEDisplay     => Model.DeductionPPE     > 0 ? Model.DeductionPPE.ToString("F2")     : string.Empty;
-        public bool   HasSupervisorFee        => Model.IncentiveSupervisor > 0;
+        public string BankAccountNumber       => Model.BankAccountNumber ?? string.Empty;
+        public string BankName                => Model.BankName ?? string.Empty;
+
+        public string Comments
+        {
+            get => Model.Comments ?? string.Empty;
+            set
+            {
+                if (Model.Comments != value)
+                {
+                    Model.Comments = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public string VarianceNotes           => Model.VarianceNotes ?? string.Empty;
 
         // Computed financials
-        /// <summary>TotalRem = NetPay + IncentiveSupervisor (gross before net deductions)</summary>
-        public decimal TotalRem     => (Model.NetPay) + Model.IncentiveSupervisor;
+        /// <summary>TotalRem = TotalWage (supervisor fee is excluded as it's a cash incentive)</summary>
+        public decimal TotalRem     => Model.TotalWage;
         public decimal NetPay       => Model.NetPay;
         public decimal TotalWage    => Model.TotalWage;
         public decimal HourlyRate   => Model.HourlyRate;
         public double  VarianceHours => Model.VarianceHours;
+        public bool   HasSupervisorFee        => Model.IncentiveSupervisor > 0;
 
         // ─── Editable Properties (trigger recalc) ─────────────────────────────
 

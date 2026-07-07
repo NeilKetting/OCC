@@ -466,5 +466,107 @@ namespace OCC.Tests.API.Controllers
             Assert.Equal(8.0, result.Normal, precision: 2); // default shift applied
             Assert.Equal(1.0, result.Lunch,  precision: 2);
         }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // LEAVE & SICK STATUS TESTS
+        // ═══════════════════════════════════════════════════════════════════════
+
+        [Fact]
+        public void CalculateHours_SickLeave_ReturnsStandardHours_WithoutTimes()
+        {
+            // Employee with default 07:00-16:00 shift (9 hours, minus 1 hour lunch = 8 hours normal)
+            var svc = CreateService();
+            var emp = DefaultEmployee();
+            
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.Sick,
+                CheckInTime = null,
+                CheckOutTime = null
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(8.0, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime15, precision: 2);
+            Assert.Equal(0.0, result.Overtime20, precision: 2);
+            Assert.Equal(0.0, result.Lunch, precision: 2);
+        }
+
+        [Fact]
+        public void CalculateHours_LeaveAuthorized_ReturnsStandardHours_WithoutTimes()
+        {
+            // Employee with custom 06:00-15:00 shift (9 hours, minus 1 hour lunch = 8 hours normal)
+            var svc = CreateService();
+            var emp = new Employee
+            {
+                Id = Guid.NewGuid(),
+                ShiftStartTime = new TimeSpan(6, 0, 0),
+                ShiftEndTime = new TimeSpan(15, 0, 0)
+            };
+
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.LeaveAuthorized,
+                CheckInTime = null,
+                CheckOutTime = null
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(8.0, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Lunch, precision: 2);
+        }
+
+        [Fact]
+        public void CalculateHours_UnpaidSick_ReturnsZeroHours()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee();
+
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.UnpaidSick,
+                CheckInTime = null,
+                CheckOutTime = null
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(0.0, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime15, precision: 2);
+            Assert.Equal(0.0, result.Overtime20, precision: 2);
+        }
+
+        [Fact]
+        public void CalculateHours_AbsentWithoutTimes_ReturnsZeroHours()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee();
+
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.Absent,
+                CheckInTime = null,
+                CheckOutTime = null
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(0.0, result.Normal, precision: 2);
+        }
     }
 }
+

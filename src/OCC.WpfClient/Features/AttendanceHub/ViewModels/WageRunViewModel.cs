@@ -46,6 +46,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private decimal _defaultSupervisorFee = 500m;
         [ObservableProperty] private decimal _companyHousingWashingFee = 0m;
         [ObservableProperty] private string _notes = string.Empty;
+        [ObservableProperty] private bool _isSalaryVersion;
 
         public ObservableCollection<string> PayTypeOptions { get; } = new()
         {
@@ -328,13 +329,44 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 };
                 runToPrint.Lines = Lines.Select(l => l.Model).ToList();
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, IsSalaryVersion);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating wage run PDF");
                 System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task PrintSupervisorPaymentsAsync()
+        {
+            if (_currentDraft == null && !Lines.Any()) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Supervisor Payments PDF...";
+
+                var runToPrint = _currentDraft ?? new WageRun
+                {
+                    StartDate = StartDate,
+                    EndDate   = EndDate,
+                    Branch    = SelectedBranch,
+                    PayType   = SelectedPayType,
+                };
+                runToPrint.Lines = Lines.Select(l => l.Model).ToList();
+
+                var path = await _pdfService.GenerateSupervisorChecklistPdfAsync(runToPrint);
+                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating supervisor payments PDF");
+                System.Windows.MessageBox.Show($"Failed to generate supervisor payments PDF:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }

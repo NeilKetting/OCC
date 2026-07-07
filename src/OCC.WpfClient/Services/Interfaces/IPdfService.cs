@@ -29,10 +29,15 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<string> GenerateLeaveFormPdfAsync(OCC.Shared.Models.LeaveRequest request);
 
         /// <summary>
-        /// Generates a landscape A4 wage run sheet identical to the OCC.Client PDF, 
-        /// including all 24 columns (BAS, name, rate, hours, deductions, totals, days).
+        /// Generates a landscape A4 wage run sheet, 
+        /// optionally hiding columns after the comments section for salary/payment purposes.
         /// </summary>
-        Task<string> GenerateWageRunPdfAsync(WageRun wageRun);
+        Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false);
+
+        /// <summary>
+        /// Generates a checklist PDF for supervisor cash payments.
+        /// </summary>
+        Task<string> GenerateSupervisorChecklistPdfAsync(WageRun wageRun);
 
         /// <summary>
         /// Generates an A4 employee loan agreement with repayment schedule and signature blocks.

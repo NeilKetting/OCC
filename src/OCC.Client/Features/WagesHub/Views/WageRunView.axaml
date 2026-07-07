@@ -171,6 +171,27 @@
 							</DataGridTextColumn.Header>
 						</DataGridTextColumn>
 
+						<!-- 9. DEC O/T RATE -->
+						<DataGridTextColumn Binding="{Binding DecOtRate, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="DEC O/T&#x0a;RATE" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 10. DEC O/T HRS -->
+						<DataGridTextColumn Binding="{Binding DecOtHrs, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="DEC O/T&#x0a;HRS" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
+						<!-- 11. DEC TOTAL -->
+						<DataGridTextColumn Binding="{Binding DecTotal, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+							<DataGridTextColumn.Header>
+								<TextBlock Text="DEC&#x0a;TOTAL" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTextColumn.Header>
+						</DataGridTextColumn>
+
 						<!-- 12. $TD O/T -->
 						<DataGridTemplateColumn Width="Auto" MinWidth="75">
 							<DataGridTemplateColumn.Header>
@@ -286,6 +307,54 @@
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
 
+						<!-- BANK -->
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="BANK" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding BankName}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- BANK ACC -->
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="ACCOUNT NUMBER" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding BankAccountNumber}" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- USER COMMENTS -->
+						<DataGridTemplateColumn Width="Auto" MinWidth="150">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="COMMENTS" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding Comments, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Left" Margin="2,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<!-- NOTES (SYSTEM) -->
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<TextBlock Text="NOTES" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding VarianceNotes}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
 						<!-- COMPUTED BLUE AREA -->
 						<DataGridTemplateColumn Width="Auto">
 							<DataGridTemplateColumn.Header>
@@ -316,12 +385,12 @@
 						<DataGridTemplateColumn Width="Auto">
 							<DataGridTemplateColumn.Header>
 								<Border Background="#E3F2FD" Padding="4" Margin="-4">
-									<TextBlock Text="DAYS&#x0a;WEEK 1" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+									<TextBlock Text="WEEK 1" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
 								</Border>
 							</DataGridTemplateColumn.Header>
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
-									<TextBlock Text="{Binding DaysWeek1Display}" HorizontalAlignment="Center"/>
+									<TextBlock Text="{Binding DaysWeek1Display, StringFormat={}{0:0.#}}" HorizontalAlignment="Center"/>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
@@ -329,12 +398,25 @@
 						<DataGridTemplateColumn Width="Auto">
 							<DataGridTemplateColumn.Header>
 								<Border Background="#E3F2FD" Padding="4" Margin="-4">
-									<TextBlock Text="DAYS&#x0a;WEEK 2" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+									<TextBlock Text="WEEK 2" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
 								</Border>
 							</DataGridTemplateColumn.Header>
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<TextBlock Text="{Binding DaysWeek2Display}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTemplateColumn Width="Auto">
+							<DataGridTemplateColumn.Header>
+								<Border Background="#E3F2FD" Padding="4" Margin="-4">
+									<TextBlock Text="WEEK 3" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
+								</Border>
+							</DataGridTemplateColumn.Header>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding DaysWeek3Display}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
@@ -348,19 +430,6 @@
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
 									<TextBlock Text="{Binding TotalDaysDisplay}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
-								</DataTemplate>
-							</DataGridTemplateColumn.CellTemplate>
-						</DataGridTemplateColumn>
-
-						<DataGridTemplateColumn Width="Auto">
-							<DataGridTemplateColumn.Header>
-								<Border Background="#E3F2FD" Padding="4" Margin="-4">
-									<TextBlock Text="HRS&#x0a;P/DAY" FontWeight="Bold" FontSize="9" TextAlignment="Center" Foreground="#1565C0"/>
-								</Border>
-							</DataGridTemplateColumn.Header>
-							<DataGridTemplateColumn.CellTemplate>
-								<DataTemplate>
-									<TextBlock Text="{Binding HrsPDayDisplay, StringFormat={}{0:F2}}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,4"/>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
@@ -388,6 +457,15 @@
 						<StackPanel Orientation="Horizontal" Spacing="8">
 							<PathIcon Data="{StaticResource IconPrint}" Foreground="{DynamicResource TextPrimary}"/>
 							<TextBlock Text="Print PDF"/>
+						</StackPanel>
+					</Button>
+
+					<CheckBox Content="Salary Version" IsChecked="{Binding IsSalaryVersion}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+					<Button Command="{Binding PrintSupervisorPaymentsCommand}" Classes="Secondary" IsEnabled="{Binding IsGenerated}">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<PathIcon Data="{StaticResource IconPrint}" Foreground="{DynamicResource TextPrimary}"/>
+							<TextBlock Text="Sup Fees Checklist"/>
 						</StackPanel>
 					</Button>
 

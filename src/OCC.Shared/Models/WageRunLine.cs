@@ -36,6 +36,12 @@ namespace OCC.Shared.Models
         /// <summary> Snapshot of the employee's bank name. </summary>
         public string? BankName { get; set; }
 
+        /// <summary> Snapshot of the employee's bank account number. </summary>
+        public string? BankAccountNumber { get; set; }
+
+        /// <summary> Custom user comments for this line. </summary>
+        public string? Comments { get; set; }
+
         /// <summary> Snapshot of employment type (Permanent/Contract). </summary>
         public string EmploymentType { get; set; } = string.Empty;
 
@@ -103,6 +109,9 @@ namespace OCC.Shared.Models
         
         /// <summary> Snapshot of worked days in the second week of the cycle. </summary>
         public double DaysWorkedWeek2 { get; set; }
+
+        /// <summary> Snapshot of worked days in the third week of the cycle (Week 2 actual). </summary>
+        public double DaysWorkedWeek3 { get; set; }
         
         /// <summary> Total days worked during the period. </summary>
         public double TotalDaysWorked { get; set; }

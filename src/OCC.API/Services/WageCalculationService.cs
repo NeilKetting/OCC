@@ -42,8 +42,25 @@ namespace OCC.API.Services
         /// <inheritdoc/>
         public HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee)
         {
-            // Guard: no check-in or absent → nothing to pay
-            if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent)
+            // Paid leave check: Sick or LeaveAuthorized
+            if (record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
+            {
+                // Shift bounds for this employee
+                TimeSpan leaveShiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
+                TimeSpan leaveShiftEnd   = employee.ShiftEndTime   ?? _options.DefaultShiftEnd;
+
+                double leaveNormal = (leaveShiftEnd - leaveShiftStart).TotalHours;
+                if (_options.UseLunchEndThreshold && leaveShiftEnd.Hours >= 13)
+                {
+                    leaveNormal -= 1.0;
+                }
+
+                if (leaveNormal < 0) leaveNormal = 0;
+                return new HoursBreakdown(leaveNormal, 0, 0, 0);
+            }
+
+            // Guard: no check-in or absent/unpaid sick → nothing to pay
+            if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick)
                 return new HoursBreakdown(0, 0, 0, 0);
 
             // Guard: no check-out → can't compute duration

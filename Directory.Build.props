@@ -7,5 +7,6 @@
     <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == ''">C:\Users\Neil\AppData\Local\Android\Sdk</AndroidSdkDirectory>
     <JavaSdkDirectory Condition="'$(JavaSdkDirectory)' == ''">C:\Program Files\Java\jdk-21</JavaSdkDirectory>
     <SkipWorkloadIntegrityCheck>true</SkipWorkloadIntegrityCheck>
+    <NoWarn>$(NoWarn);NU1901;NU1902;NU1903;NU1904;CS8618;XA0141</NoWarn>
   </PropertyGroup>
 </Project>

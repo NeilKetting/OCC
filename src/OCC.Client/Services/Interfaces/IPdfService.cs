@@ -9,6 +9,7 @@ namespace OCC.Client.Services.Interfaces
         Task<string> GenerateOrderPdfAsync(Order order, bool isPrintVersion = false);
         Task<string> GenerateEmployeeReportPdfAsync<T>(Employee employee, DateTime start, DateTime end, System.Collections.Generic.IEnumerable<T> data, System.Collections.Generic.Dictionary<string, string> summary);
         Task<string> GenerateLoanSchedulePdfAsync(EmployeeLoan loan, Employee employee);
-        Task<string> GenerateWageRunPdfAsync(WageRun wageRun);
+        Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false);
+        Task<string> GenerateSupervisorChecklistPdfAsync(WageRun wageRun);
     }
 }

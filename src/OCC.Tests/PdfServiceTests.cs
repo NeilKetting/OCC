@@ -194,7 +194,7 @@ namespace OCC.Tests
                 weeks);
 
             // Copy to workspace root for user visual inspection
-            var targetPath = @"c:\Users\Neil\source\repos\NeilKetting\OrangeCircleConstruction-master\SampleWeeklyAttendanceReport.pdf";
+            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleWeeklyAttendanceReport.pdf";
             try
             {
                 if (File.Exists(targetPath))

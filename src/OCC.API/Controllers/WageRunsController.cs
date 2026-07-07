@@ -150,6 +150,8 @@ namespace OCC.API.Controllers
                     EmployeeNumber = emp.EmployeeNumber,
                     Branch = emp.Branch ?? "",
                     BankName = emp.BankName,
+                    BankAccountNumber = emp.AccountNumber,
+                    Comments = string.Empty,
                     EmploymentType = emp.EmploymentType.ToString(),
                     HourlyRate = (decimal)emp.HourlyRate,
                     DeductionGas = 0, // Initialized to 0, set below
@@ -223,6 +225,18 @@ namespace OCC.API.Controllers
                     }
                 }
 
+                // Calculate standard weekday shift duration for the employee
+                double dailyHours = 9.0;
+                if (empForCalc.ShiftStartTime.HasValue && empForCalc.ShiftEndTime.HasValue)
+                {
+                    dailyHours = (empForCalc.ShiftEndTime.Value - empForCalc.ShiftStartTime.Value).TotalHours;
+                    if (empForCalc.ShiftEndTime.Value.Hours >= 13)
+                    {
+                        dailyHours -= 1.0;
+                    }
+                    if (dailyHours < 0) dailyHours = 0;
+                }
+
                 foreach (var record in empAttendance)
                 {
                     var hours = _wageCalc.CalculateHours(record, empForCalc);
@@ -241,9 +255,22 @@ namespace OCC.API.Controllers
                     {
                         line.VarianceNotes += $"{record.Date:dd/MM}: Absent; ";
                     }
+                    else if (record.Status == AttendanceStatus.Sick)
+                    {
+                        line.VarianceNotes += $"{record.Date:dd/MM}: Sick; ";
+                    }
+                    else if (record.Status == AttendanceStatus.LeaveAuthorized)
+                    {
+                        line.VarianceNotes += $"{record.Date:dd/MM}: Leave; ";
+                    }
+                    else if (record.Status == AttendanceStatus.UnpaidSick)
+                    {
+                        line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
+                    }
                 }
-                line.DaysWorkedWeek1 = distinctDaysW1.Count;
-                line.DaysWorkedWeek2 = distinctDaysW2.Count;
+                line.DaysWorkedWeek1 = 0; // W1 (deducted days offset)
+                line.DaysWorkedWeek2 = distinctDaysW1.Count; // W2 (Week 1 actual worked)
+                line.DaysWorkedWeek3 = distinctDaysW2.Count; // W3 (Week 2 actual worked)
                 line.TotalDaysWorked = distinctDaysW1.Count + distinctDaysW2.Count;
 
                 // B. Calculate Projected Hours (RunDate+1 -> EndDate)
@@ -258,19 +285,6 @@ namespace OCC.API.Controllers
                         // Skip Weekend or Public Holiday
                         if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
 
-                        // Add Standard Shift (e.g. 9 hours or ShiftDiff)
-                        double dailyHours = 9.0;
-                        if (empForCalc.ShiftStartTime.HasValue && empForCalc.ShiftEndTime.HasValue)
-                        {
-                            dailyHours = (empForCalc.ShiftEndTime.Value - empForCalc.ShiftStartTime.Value).TotalHours;
-                            // Under the client rule, weekday shift gets a 1h lunch deduction if checkout is >= 13:00.
-                            // Since projected days are standard workdays ending after 13:00, we deduct the 1h lunch.
-                            if (empForCalc.ShiftEndTime.Value.Hours >= 13)
-                            {
-                                dailyHours -= 1.0;
-                            }
-                            if (dailyHours < 0) dailyHours = 0;
-                        }
                         line.ProjectedHours += dailyHours;
                     }
                 }
@@ -313,6 +327,11 @@ namespace OCC.API.Controllers
                             if (Math.Abs(line.VarianceHours) > 0.01)
                             {
                                 line.VarianceNotes = $"Adj from {lastRun.EndDate:MMM dd}: Paid {lastLine.ProjectedHours:F1}, Wrked {actualHoursInProjectedWindow:F1}";
+                            }
+
+                            if (line.VarianceHours < 0 && dailyHours > 0)
+                            {
+                                line.DaysWorkedWeek1 = Math.Round(line.VarianceHours / dailyHours, 1);
                             }
                         }
                     }

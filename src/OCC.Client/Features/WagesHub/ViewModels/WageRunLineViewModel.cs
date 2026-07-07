@@ -48,9 +48,11 @@ namespace OCC.Client.Features.WagesHub.ViewModels
         // 8. SUN-P'HOL RATE (2.0x)
         public decimal? SunPHolRate => Model?.HourlyRate * 2.0m;
 
-        // 9. DEC RATE - REMOVED PER USER
+        // 9. DEC RATE
+        public decimal? DecOtRate => Model?.HourlyRate;
 
-        // 10. DEC HRS - REMOVED PER USER
+        // 10. DEC HRS
+        public double? DecOtHrs => 0.0;
 
         // 11. DEC TOTAL
         public decimal? DecTotal => 0;
@@ -80,8 +82,9 @@ namespace OCC.Client.Features.WagesHub.ViewModels
 
         // --- COMPUTED DISPLAY SECTION ---
         public decimal? RatePDayDisplay => Model?.HourlyRate * 8.75m;
-        public int? DaysWeek1Display => (int?)(Model?.DaysWorkedWeek1 ?? 0);
+        public double? DaysWeek1Display => Model?.DaysWorkedWeek1 ?? 0;
         public int? DaysWeek2Display => (int?)(Model?.DaysWorkedWeek2 ?? 0);
+        public int? DaysWeek3Display => (int?)(Model?.DaysWorkedWeek3 ?? 0);
         public int? TotalDaysDisplay => (int?)(Model?.TotalDaysWorked ?? 0);
         public double? HrsPDayDisplay => 8.75;
 
@@ -167,11 +170,29 @@ namespace OCC.Client.Features.WagesHub.ViewModels
             set { if (Model != null && Model.IncentiveSupervisor != value) { Model.IncentiveSupervisor = value; RefreshTotalNett(); OnPropertyChanged(); } }
         }
 
+        public string BankAccountNumber => Model?.BankAccountNumber ?? string.Empty;
+
+        public string Comments
+        {
+            get => Model?.Comments ?? string.Empty;
+            set
+            {
+                if (Model != null && Model.Comments != value)
+                {
+                    Model.Comments = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public decimal NetPay => Model?.NetPay ?? 0;
-        public decimal TotalRem => (Model?.NetPay ?? 0) + (Model?.IncentiveSupervisor ?? 0);
+        /// <summary>TotalRem = TotalWage (supervisor fee is excluded as it's a cash incentive)</summary>
+        public decimal TotalRem => Model?.TotalWage ?? 0;
         public double VarianceHours => Model?.VarianceHours ?? 0;
         public decimal HourlyRate => Model?.HourlyRate ?? 0;
         public decimal TotalWage => Model?.TotalWage ?? 0;
         public string Branch => Model?.Branch ?? string.Empty;
+        public string BankName => Model?.BankName ?? string.Empty;
+        public string VarianceNotes => Model?.VarianceNotes ?? string.Empty;
     }
 }

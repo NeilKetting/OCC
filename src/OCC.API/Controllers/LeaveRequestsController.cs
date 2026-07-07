@@ -59,6 +59,11 @@ namespace OCC.API.Controllers
             _context.LeaveRequests.Add(request);
             await _context.SaveChangesAsync();
             
+            if (request.Status == LeaveStatus.Approved)
+            {
+                await GenerateAttendanceRecordsForLeaveAsync(request);
+            }
+
             await _hubContext.Clients.All.SendAsync("EntityUpdate", "LeaveRequest", "Create", request.Id);
             // Notify Admins
             string employeeName = request.Employee != null ? $"{request.Employee.FirstName} {request.Employee.LastName}" : "Unknown Employee";
@@ -79,6 +84,8 @@ namespace OCC.API.Controllers
                 return NotFound();
             }
 
+            var oldStatus = existingRequest.Status;
+
             _context.Entry(existingRequest).CurrentValues.SetValues(request);
             if (existingRequest.LeaveType == LeaveType.Unpaid || existingRequest.LeaveType == LeaveType.AbsentWithoutLeave)
             {
@@ -88,6 +95,17 @@ namespace OCC.API.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+
+                if (existingRequest.Status == LeaveStatus.Approved)
+                {
+                    await RemoveAttendanceRecordsForLeaveAsync(existingRequest.Id);
+                    await GenerateAttendanceRecordsForLeaveAsync(existingRequest);
+                }
+                else if (oldStatus == LeaveStatus.Approved && existingRequest.Status != LeaveStatus.Approved)
+                {
+                    await RemoveAttendanceRecordsForLeaveAsync(existingRequest.Id);
+                }
+
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "LeaveRequest", "Update", id);
             }
             catch (DbUpdateConcurrencyException)
@@ -106,6 +124,11 @@ namespace OCC.API.Controllers
             var request = await _context.LeaveRequests.FindAsync(id);
             if (request == null) return NotFound();
 
+            if (request.Status == LeaveStatus.Approved)
+            {
+                await RemoveAttendanceRecordsForLeaveAsync(request.Id);
+            }
+
             _context.LeaveRequests.Remove(request);
             await _context.SaveChangesAsync();
             
@@ -115,5 +138,74 @@ namespace OCC.API.Controllers
         }
 
         private bool LeaveRequestExists(Guid id) => _context.LeaveRequests.Any(e => e.Id == id);
+
+        private async Task GenerateAttendanceRecordsForLeaveAsync(LeaveRequest request)
+        {
+            var employee = await _context.Employees.FindAsync(request.EmployeeId);
+            if (employee == null) return;
+
+            var holidays = await _context.PublicHolidays.Select(h => h.Date.Date).ToListAsync();
+            var holidayDates = new HashSet<DateTime>(holidays);
+
+            var notesToken = $"[LeaveRequest:{request.Id}]";
+            var statusMap = request.LeaveType switch
+            {
+                LeaveType.Annual => AttendanceStatus.LeaveAuthorized,
+                LeaveType.Sick => AttendanceStatus.Sick,
+                LeaveType.Unpaid => AttendanceStatus.UnpaidSick,
+                LeaveType.AbsentWithoutLeave => AttendanceStatus.Absent,
+                _ => AttendanceStatus.LeaveAuthorized
+            };
+
+            for (var day = request.StartDate.Date; day <= request.EndDate.Date; day = day.AddDays(1))
+            {
+                if (day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday) continue;
+                if (holidayDates.Contains(day)) continue;
+
+                var existing = await _context.AttendanceRecords
+                    .FirstOrDefaultAsync(a => a.EmployeeId == request.EmployeeId && a.Date.Date == day);
+
+                if (existing != null)
+                {
+                    if (existing.IsAutoClockIn || existing.Status == AttendanceStatus.Absent)
+                    {
+                        existing.Status = statusMap;
+                        existing.CheckInTime = null;
+                        existing.CheckOutTime = null;
+                        existing.HoursWorked = 0;
+                        existing.Notes = $"Approved Leave: {request.LeaveType}. {notesToken}";
+                    }
+                }
+                else
+                {
+                    var record = new AttendanceRecord
+                    {
+                        Id = Guid.NewGuid(),
+                        EmployeeId = request.EmployeeId,
+                        Date = day,
+                        Status = statusMap,
+                        Branch = employee.Branch,
+                        Notes = $"Approved Leave: {request.LeaveType}. {notesToken}",
+                        IsAutoClockIn = true
+                    };
+                    _context.AttendanceRecords.Add(record);
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task RemoveAttendanceRecordsForLeaveAsync(Guid requestId)
+        {
+            var notesToken = $"[LeaveRequest:{requestId}]";
+            var recordsToRemove = await _context.AttendanceRecords
+                .Where(a => a.Notes != null && a.Notes.Contains(notesToken))
+                .ToListAsync();
+
+            if (recordsToRemove.Any())
+            {
+                _context.AttendanceRecords.RemoveRange(recordsToRemove);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

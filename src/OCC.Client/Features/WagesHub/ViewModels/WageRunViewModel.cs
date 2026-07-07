@@ -52,6 +52,9 @@ namespace OCC.Client.Features.WagesHub.ViewModels
         private string _notes = string.Empty;
 
         [ObservableProperty]
+        private bool _isSalaryVersion;
+
+        [ObservableProperty]
         private string _selectedPayType = "Hourly";
 
         public ObservableCollection<string> PayTypeOptions { get; } = new ObservableCollection<string>
@@ -268,7 +271,6 @@ namespace OCC.Client.Features.WagesHub.ViewModels
                 BusyText = "Generating PDF...";
                 IsBusy = true;
 
-                // Sync VM lines back to model for the PDF
                 var runToPrint = _currentDraft ?? new OCC.Shared.Models.WageRun
                 {
                     StartDate = StartDate,
@@ -283,9 +285,8 @@ namespace OCC.Client.Features.WagesHub.ViewModels
                     runToPrint.Lines = Lines.Select(l => l.Model).ToList();
                 }
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, IsSalaryVersion);
                 
-                // Open the PDF
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = path,
@@ -296,6 +297,49 @@ namespace OCC.Client.Features.WagesHub.ViewModels
             catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task PrintSupervisorPayments()
+        {
+            if (_currentDraft == null && !Lines.Any()) return;
+
+            try
+            {
+                BusyText = "Generating Supervisor Checklist PDF...";
+                IsBusy = true;
+
+                var runToPrint = _currentDraft ?? new OCC.Shared.Models.WageRun
+                {
+                    StartDate = StartDate,
+                    EndDate = EndDate,
+                    Branch = SelectedBranch,
+                    PayType = SelectedPayType,
+                    Lines = Lines.Select(l => l.Model).ToList()
+                };
+
+                if (_currentDraft != null)
+                {
+                    runToPrint.Lines = Lines.Select(l => l.Model).ToList();
+                }
+
+                var path = await _pdfService.GenerateSupervisorChecklistPdfAsync(runToPrint);
+                
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate Supervisor Checklist PDF: {ex.Message}");
             }
             finally
             {
