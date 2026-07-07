@@ -619,7 +619,7 @@ namespace OCC.WpfClient.Services
                     container.Page(page =>
                     {
                         page.Margin(30);
-                        page.Size(PageSizes.A4.Landscape());
+                        page.Size(PageSizes.A4);
                         page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
 
                         page.Header().Element(c => ComposeGenericHeader(c, $"Employee Profile: {employee.DisplayName}", company));
@@ -641,52 +641,62 @@ namespace OCC.WpfClient.Services
         {
             container.Row(row =>
             {
-                row.RelativeItem().PaddingRight(10).Element(c => ComposeCard(c, "Personal & Contact Details", col =>
+                // Left Column
+                row.RelativeItem().PaddingRight(10).Column(col =>
                 {
-                    col.Item().Element(sc => InfoRow(sc, "First Name", employee.FirstName));
-                    col.Item().Element(sc => InfoRow(sc, "Last Name", employee.LastName));
-                    col.Item().Element(sc => InfoRow(sc, "Employee Number", employee.EmployeeNumber));
-                    col.Item().Element(sc => InfoRow(sc, "ID Type", employee.IdType.ToString()));
-                    col.Item().Element(sc => InfoRow(sc, "ID / Permit No.", employee.IdType == IdType.RSAId ? employee.IdNumber : (employee.PermitNumber ?? "-")));
-                    col.Item().Element(sc => InfoRow(sc, "Date of Birth", employee.DoB.ToString("yyyy-MM-dd")));
-                    col.Item().Element(sc => InfoRow(sc, "Tax Number", employee.TaxNumber ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Company Housing", employee.LivesInCompanyHousing ? "Yes" : "No"));
-                    col.Item().Element(sc => InfoRow(sc, "Email", employee.Email ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Phone", employee.Phone ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Physical Address", employee.PhysicalAddress ?? "-"));
-                }));
+                    col.Item().Element(c => ComposeCard(c, "Personal & Contact Details", innerCol =>
+                    {
+                        innerCol.Item().Element(sc => InfoRow(sc, "First Name", employee.FirstName));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Last Name", employee.LastName));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Employee Number", employee.EmployeeNumber));
+                        innerCol.Item().Element(sc => InfoRow(sc, "ID Type", employee.IdType.ToString()));
+                        innerCol.Item().Element(sc => InfoRow(sc, "ID / Permit No.", employee.IdType == IdType.RSAId ? employee.IdNumber : (employee.PermitNumber ?? "-")));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Date of Birth", employee.DoB.ToString("yyyy-MM-dd")));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Tax Number", employee.TaxNumber ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Company Housing", employee.LivesInCompanyHousing ? "Yes" : "No"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Email", employee.Email ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Phone", employee.Phone ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Physical Address", employee.PhysicalAddress ?? "-"));
+                    }));
 
-                row.RelativeItem().PaddingRight(10).Element(c => ComposeCard(c, "Employment & Leave", col =>
-                {
-                    col.Item().Element(sc => InfoRow(sc, "Role", employee.Role.ToString()));
-                    col.Item().Element(sc => InfoRow(sc, "Status", employee.Status.ToString()));
-                    col.Item().Element(sc => InfoRow(sc, "Employment Type", employee.EmploymentType.ToString()));
-                    col.Item().Element(sc => InfoRow(sc, "Contract Duration", employee.ContractDuration ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Branch", employee.Branch ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Employment Date", employee.EmploymentDate.ToString("yyyy-MM-dd")));
-                    col.Item().Element(sc => InfoRow(sc, "Shift Start", employee.ShiftStartTime?.ToString(@"hh\:mm") ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Shift End", employee.ShiftEndTime?.ToString(@"hh\:mm") ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Annual Leave Bal", $"{employee.AnnualLeaveBalance:F2} days"));
-                    col.Item().Element(sc => InfoRow(sc, "Sick Leave Bal", $"{employee.SickLeaveBalance:F2} days"));
-                    col.Item().Element(sc => InfoRow(sc, "Leave Cycle Start", employee.LeaveCycleStartDate?.ToString("yyyy-MM-dd") ?? "-"));
-                }));
+                    col.Item().PaddingTop(15).Element(c => ComposeCard(c, "Emergency & Next of Kin", innerCol =>
+                    {
+                        innerCol.Item().Element(sc => InfoRow(sc, "Next of Kin Name", employee.NextOfKinName ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Relation", employee.NextOfKinRelation ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Kin Phone", employee.NextOfKinPhone ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Emergency Contact", employee.EmergencyContactName ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Contact Phone", employee.EmergencyContactPhone ?? "-"));
+                    }));
+                });
 
-                row.RelativeItem().Element(c => ComposeCard(c, "Financial & Emergency Contacts", col =>
+                // Right Column
+                row.RelativeItem().PaddingLeft(10).Column(col =>
                 {
-                    col.Item().Element(sc => InfoRow(sc, "Rate Type", employee.RateType.ToString()));
-                    col.Item().Element(sc => InfoRow(sc, "Hourly Rate", $"R {employee.HourlyRate:N2}"));
-                    col.Item().Element(sc => InfoRow(sc, "Bank Name", employee.BankName ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Account Number", employee.AccountNumber ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Branch Code", employee.BranchCode ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Account Type", employee.AccountType ?? "-"));
-                    
-                    col.Item().PaddingTop(10).Text("Emergency Contacts").Bold().FontColor(ColorPrimary);
-                    col.Item().Element(sc => InfoRow(sc, "Next of Kin Name", employee.NextOfKinName ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Relation", employee.NextOfKinRelation ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Kin Phone", employee.NextOfKinPhone ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Emergency Contact", employee.EmergencyContactName ?? "-"));
-                    col.Item().Element(sc => InfoRow(sc, "Contact Phone", employee.EmergencyContactPhone ?? "-"));
-                }));
+                    col.Item().Element(c => ComposeCard(c, "Employment & Leave", innerCol =>
+                    {
+                        innerCol.Item().Element(sc => InfoRow(sc, "Role", employee.Role.ToString()));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Status", employee.Status.ToString()));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Employment Type", employee.EmploymentType.ToString()));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Contract Duration", employee.ContractDuration ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Branch", employee.Branch ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Employment Date", employee.EmploymentDate.ToString("yyyy-MM-dd")));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Shift Start", employee.ShiftStartTime?.ToString(@"hh\:mm") ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Shift End", employee.ShiftEndTime?.ToString(@"hh\:mm") ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Annual Leave Bal", $"{employee.AnnualLeaveBalance:F2} days"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Sick Leave Bal", $"{employee.SickLeaveBalance:F2} days"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Leave Cycle Start", employee.LeaveCycleStartDate?.ToString("yyyy-MM-dd") ?? "-"));
+                    }));
+
+                    col.Item().PaddingTop(15).Element(c => ComposeCard(c, "Financial Details", innerCol =>
+                    {
+                        innerCol.Item().Element(sc => InfoRow(sc, "Rate Type", employee.RateType.ToString()));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Hourly Rate", $"R {employee.HourlyRate:N2}"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Bank Name", employee.BankName ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Account Number", employee.AccountNumber ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Branch Code", employee.BranchCode ?? "-"));
+                        innerCol.Item().Element(sc => InfoRow(sc, "Account Type", employee.AccountType ?? "-"));
+                    }));
+                });
             });
 
             static void ComposeCard(IContainer container, string title, Action<ColumnDescriptor> content)
@@ -708,7 +718,7 @@ namespace OCC.WpfClient.Services
             {
                 container.BorderBottom(1).BorderColor(Colors.Grey.Lighten4).PaddingVertical(3).Row(row =>
                 {
-                    row.ConstantItem(110).Text(label).SemiBold().FontColor(Colors.Grey.Darken2);
+                    row.ConstantItem(100).Text(label).SemiBold().FontColor(Colors.Grey.Darken2);
                     row.RelativeItem().Text(value ?? "-");
                 });
             }
