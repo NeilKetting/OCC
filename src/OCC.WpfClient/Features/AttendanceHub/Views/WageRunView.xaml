@@ -451,19 +451,12 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- W1, W2, W3, TOT D -->
-                        <DataGridTemplateColumn Header="WEEK 1" Width="Auto"
-                                                Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DaysWeek1Display, StringFormat='0.#'}" HorizontalAlignment="Center"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                            <DataGridTemplateColumn.CellEditingTemplate>
-                                <DataTemplate>
-                                    <TextBox Text="{Binding DaysWeek1Display, UpdateSourceTrigger=LostFocus, StringFormat='0.#'}" TextAlignment="Center"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellEditingTemplate>
-                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="WEEK 1" Binding="{Binding DaysWeek1Display, StringFormat='0.#'}" Width="Auto" IsReadOnly="True"
+                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                         <DataGridTextColumn Header="WEEK 2" Binding="{Binding DaysWeek2Display}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>

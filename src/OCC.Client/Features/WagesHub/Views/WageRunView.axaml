@@ -393,11 +393,6 @@
 									<TextBlock Text="{Binding DaysWeek1Display, StringFormat={}{0:0.#}}" HorizontalAlignment="Center"/>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
-							<DataGridTemplateColumn.CellEditingTemplate>
-								<DataTemplate>
-									<TextBox Text="{Binding DaysWeek1Display, StringFormat={}{0:0.#}}" TextAlignment="Center"/>
-								</DataTemplate>
-							</DataGridTemplateColumn.CellEditingTemplate>
 						</DataGridTemplateColumn>
 
 						<DataGridTemplateColumn Width="Auto">

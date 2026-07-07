@@ -82,23 +82,7 @@ namespace OCC.Client.Features.WagesHub.ViewModels
 
         // --- COMPUTED DISPLAY SECTION ---
         public decimal? RatePDayDisplay => Model?.HourlyRate * 8.75m;
-        public double? DaysWeek1Display
-        {
-            get => Model?.DaysWorkedWeek1 ?? 0;
-            set
-            {
-                if (Model != null && value.HasValue && Math.Abs(Model.DaysWorkedWeek1 - value.Value) > 0.001)
-                {
-                    Model.DaysWorkedWeek1 = value.Value;
-                    Model.VarianceHours = value.Value * 8.75;
-                    Model.TotalDaysWorked = Model.DaysWorkedWeek1 + Model.DaysWorkedWeek2 + Model.DaysWorkedWeek3;
-                    
-                    RefreshTotalNett();
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(TotalDaysDisplay));
-                }
-            }
-        }
+        public double? DaysWeek1Display => Model?.DaysWorkedWeek1 ?? 0;
         public int? DaysWeek2Display => (int?)(Model?.DaysWorkedWeek2 ?? 0);
         public int? DaysWeek3Display => (int?)(Model?.DaysWorkedWeek3 ?? 0);
         public int? TotalDaysDisplay => (int?)(Model?.TotalDaysWorked ?? 0);

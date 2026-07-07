@@ -295,43 +295,41 @@ namespace OCC.API.Controllers
                     var lastLine = lastRun.Lines.FirstOrDefault(l => l.EmployeeId == emp.Id);
                     if (lastLine != null && lastLine.ProjectedHours > 0)
                     {
-                        // Check what ACTUALLY happened in that window
+                        // Check what ACTUALLY happened in that window by looking at Leave Management (LeaveRequests)
                         // Last Run Projected Window = (LastRun.RunDate + 1) -> LastRun.EndDate
-                        var lastRunProjectedStart = lastRun.RunDate.AddDays(1);
-                        var lastRunProjectedEnd = lastRun.EndDate;
+                        var lastRunProjectedStart = lastRun.RunDate.AddDays(1).Date;
+                        var lastRunProjectedEnd = lastRun.EndDate.Date;
 
                         if (lastRunProjectedStart <= lastRunProjectedEnd)
                         {
-                            // Fetch actual records for that past window
-                            var pastActualRecords = await _context.AttendanceRecords
-                                .Where(a => a.EmployeeId == emp.Id && 
-                                            a.Date >= lastRunProjectedStart && 
-                                            a.Date <= lastRunProjectedEnd)
+                            var leaveRequests = await _context.LeaveRequests
+                                .Where(lr => lr.EmployeeId == emp.Id &&
+                                             lr.Status == LeaveStatus.Approved &&
+                                             lr.StartDate <= lastRunProjectedEnd &&
+                                             lr.EndDate >= lastRunProjectedStart)
                                 .ToListAsync();
 
-                            double actualHoursInProjectedWindow = 0;
-                            foreach (var r in pastActualRecords)
+                            double leaveDeductionDays = 0;
+                            for (var d = lastRunProjectedStart; d <= lastRunProjectedEnd; d = d.AddDays(1))
                             {
-                                var h = _wageCalc.CalculateHours(r, empForCalc);
-                                actualHoursInProjectedWindow += (h.Normal + h.Overtime15 + h.Overtime20);
+                                // Skip weekends and public holidays as they are not standard working days to deduct
+                                if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
+                                    continue;
+
+                                var isAbsent = leaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
+                                    (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+
+                                if (isAbsent)
+                                {
+                                    leaveDeductionDays++;
+                                }
                             }
 
-                            // Variance = Actual - Projected
-                            // Example: Paid 18 (Projected). Worked 0. Variance = -18.
-                            // Example: Paid 18. Worked 20 (OT). Variance = +2.
-                            
-                            // NOTE: We generally only project Normal hours. If they worked OT in that window, we pay it now?
-                            // Yes, Variance captures the difference.
-                            
-                            line.VarianceHours = actualHoursInProjectedWindow - lastLine.ProjectedHours;
-                            if (Math.Abs(line.VarianceHours) > 0.01)
+                            if (leaveDeductionDays > 0)
                             {
-                                line.VarianceNotes = $"Adj from {lastRun.EndDate:MMM dd}: Paid {lastLine.ProjectedHours:F1}, Wrked {actualHoursInProjectedWindow:F1}";
-                            }
-
-                            if (line.VarianceHours < 0 && dailyHours > 0)
-                            {
-                                line.DaysWorkedWeek1 = Math.Round(line.VarianceHours / dailyHours, 1);
+                                line.VarianceHours = -leaveDeductionDays * dailyHours;
+                                line.VarianceNotes = $"Adj from {lastRun.EndDate:MMM dd}: Absent {leaveDeductionDays:F1} day(s)";
+                                line.DaysWorkedWeek1 = -leaveDeductionDays;
                             }
                         }
                     }

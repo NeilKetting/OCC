@@ -48,24 +48,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public decimal? RatePDayDisplay => Model.HourlyRate * 8.75m;
 
         // Day counts
-        public double DaysWeek1Display
-        {
-            get => Model.DaysWorkedWeek1;
-            set
-            {
-                if (Math.Abs(Model.DaysWorkedWeek1 - value) > 0.001)
-                {
-                    Model.DaysWorkedWeek1 = value;
-                    Model.VarianceHours = value * 8.75;
-                    Model.TotalDaysWorked = Model.DaysWorkedWeek1 + Model.DaysWorkedWeek2 + Model.DaysWorkedWeek3;
-                    
-                    RecalculateAndNotify();
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(TotalDaysDisplay));
-                    OnPropertyChanged(nameof(StdHoursDisplay));
-                }
-            }
-        }
+        public double DaysWeek1Display => Model.DaysWorkedWeek1;
         public int DaysWeek2Display  => (int)Model.DaysWorkedWeek2;
         public int DaysWeek3Display  => (int)Model.DaysWorkedWeek3;
         public int TotalDaysDisplay  => (int)Model.TotalDaysWorked;
