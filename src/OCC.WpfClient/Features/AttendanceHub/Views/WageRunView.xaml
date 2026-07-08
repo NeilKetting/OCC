@@ -6,6 +6,7 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
              xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
              xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
+             xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance vm:WageRunViewModel}">
@@ -121,7 +122,15 @@
                     <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
                         <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ModernInput}" Width="180"/>
+                                  Style="{StaticResource ModernInput}" Width="180"/>
+                    </StackPanel>
+
+                    <!-- Search Name/No. -->
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom" Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
+                        <TextBlock Text="SEARCH NAME/NO." Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 ap:WatermarkProperties.Watermark="Search staff..."
+                                 Style="{StaticResource ModernInput}" Width="150"/>
                     </StackPanel>
 
                     <!-- Deductions Panel Toggle -->
@@ -158,6 +167,7 @@
                                     <CheckBox Content="Rate/Hr" IsChecked="{Binding IsRateHrVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                    <CheckBox Content="OT Hours" IsChecked="{Binding IsOtHoursVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                     <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
@@ -212,7 +222,7 @@
             <!-- If no lines generated yet, show history -->
             <Grid Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
                 <!-- Wage Run Spreadsheet DataGrid -->
-                <DataGrid ItemsSource="{Binding Lines}"
+                <DataGrid ItemsSource="{Binding LinesView}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           Style="{StaticResource ModernDataGrid}"
@@ -232,8 +242,11 @@
                         <DataGridTextColumn Header="NAME" Binding="{Binding EmployeeName}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsNameVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- RATE P/HR -->
-                        <DataGridTextColumn Header="RATE P/HR" Binding="{Binding RatePHrDisplay, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsRateHrVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding RatePHrDisplay, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsRateHrVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="RATE&#x0a;P/HR" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
@@ -253,50 +266,71 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
                         <!-- STD O/T RATE -->
-                        <DataGridTextColumn Header="STD O/T RATE" Binding="{Binding StdOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding StdOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="STD O/T&#x0a;RATE" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- SAT O/T RATE -->
-                        <DataGridTextColumn Header="SAT O/T RATE" Binding="{Binding SatOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding SatOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="SAT O/T&#x0a;RATE" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- SUN RATE -->
-                        <DataGridTextColumn Header="SUN-P'HOL RATE" Binding="{Binding SunPHolRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding SunPHolRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="SUN/HOL&#x0a;RATE" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- DEC O/T RATE -->
-                        <DataGridTextColumn Header="DEC O/T RATE" Binding="{Binding DecOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding DecOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="DEC O/T&#x0a;RATE" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- DEC O/T HRS -->
-                        <DataGridTextColumn Header="DEC O/T HRS" Binding="{Binding DecOtHrs, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding DecOtHrs, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="DEC O/T&#x0a;HRS" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- DEC TOTAL -->
-                        <DataGridTextColumn Header="DEC TOTAL" Binding="{Binding DecTotal, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding DecTotal, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="DEC&#x0a;TOTAL" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- STD O/T HRS — editable -->
-                        <DataGridTemplateColumn Header="STD O/T" Width="Auto"
-                                                Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTemplateColumn Width="Auto"
+                                                Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.Header>
+                                <TextBlock Text="STD&#x0a;O/T" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Overtime15Hours, StringFormat='F2'}" HorizontalAlignment="Center"/>
@@ -309,15 +343,21 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
                         <!-- SAT O/T HRS — read-only -->
-                        <DataGridTextColumn Header="SAT O/T" Binding="{Binding SatOt, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Binding="{Binding SatOt, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="SAT&#x0a;O/T" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTextColumn.Header>
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <!-- SUN O/T HRS — editable -->
-                        <DataGridTemplateColumn Header="SUN O/T" Width="Auto"
-                                                Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTemplateColumn Width="Auto"
+                                                Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.Header>
+                                <TextBlock Text="SUN&#x0a;O/T" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Overtime20Hours, StringFormat='F2'}" HorizontalAlignment="Center"/>

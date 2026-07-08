@@ -99,6 +99,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isRateHrVisible = true;
         [ObservableProperty] private bool _isHrsVisible = true;
         [ObservableProperty] private bool _isOtRatesVisible = true;
+        [ObservableProperty] private bool _isOtHoursVisible = true;
         [ObservableProperty] private bool _isDeductionsVisible = true;
         [ObservableProperty] private bool _isSupFeeVisible = true;
         [ObservableProperty] private bool _isTotalNettVisible = true;
@@ -108,6 +109,30 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isBankVisible = true;
         [ObservableProperty] private bool _isBankAccountVisible = true;
         [ObservableProperty] private bool _isCommentsVisible = true;
+
+        [ObservableProperty] private string _searchQuery = string.Empty;
+
+        public System.ComponentModel.ICollectionView LinesView
+        {
+            get
+            {
+                var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Lines);
+                view.Filter = FilterLines;
+                return view;
+            }
+        }
+
+        private bool FilterLines(object obj)
+        {
+            if (obj is not WageRunLineViewModel line) return false;
+            if (string.IsNullOrWhiteSpace(SearchQuery)) return true;
+
+            var q = SearchQuery.Trim();
+            return (line.EmployeeName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (line.EmployeeNumber?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false);
+        }
+
+        partial void OnSearchQueryChanged(string value) => LinesView.Refresh();
 
         // ─── Past runs list ───────────────────────────────────────────────────
 

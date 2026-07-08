@@ -132,7 +132,7 @@ namespace OCC.API.Controllers
             // 4. Fetch Previous Finalized Run (for Variance) - MUST BE BRANCH SPECIFIC
             var lastRun = await _context.WageRuns
                 .Include(w => w.Lines)
-                .Where(w => w.Status == WageRunStatus.Finalized && 
+                .Where(w => (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) && 
                             w.Branch == request.Branch && 
                             w.PayType == request.PayType &&
                             w.EndDate < request.StartDate)

@@ -172,26 +172,34 @@ namespace OCC.Client.Services
         {
             container.Column(col =>
             {
-                var allLines = wageRun.Lines.OrderBy(l => l.EmployeeName).ToList();
+                var permLines = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").OrderBy(l => l.EmployeeName).ToList();
+                var casualLines = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").OrderBy(l => l.EmployeeName).ToList();
 
-                if (allLines.Any())
+                if (permLines.Any())
                 {
-                    col.Item().PaddingTop(5).Text("OCC STAFF WAGES").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, allLines, hideAfterComments));
+                    col.Item().PaddingTop(5).Text("PERMANENT STAFF").FontSize(6).ExtraBold();
+                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments));
                 }
 
-                // Add Summary Tables at the bottom (Loans, Totals)
+                if (casualLines.Any())
+                {
+                    col.Item().PaddingTop(10).Text("CONTRACT / CASUAL STAFF").FontSize(6).ExtraBold();
+                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments));
+                }
+
+                // Add Summary Tables at the bottom (Totals only, Loans description removed)
                 col.Item().PaddingTop(20).Row(row =>
                 {
-                    row.ConstantItem(150).Element(c => ComposeLoanSummary(c, wageRun));
                     row.RelativeItem();
-                    row.ConstantItem(300).Element(c => ComposeWageTotalsTable(c, wageRun));
+                    row.ConstantItem(380).Element(c => ComposeWageTotalsTable(c, wageRun));
                 });
             });
         }
 
         private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments)
         {
+            bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
+
             container.Table(table =>
             {
                 table.ColumnsDefinition(columns =>
@@ -217,7 +225,12 @@ namespace OCC.Client.Services
                     columns.ConstantColumn(35);  // TOTAL NETT
                     columns.ConstantColumn(35);  // BANK
                     columns.ConstantColumn(60);  // BANK ACC
-                    columns.RelativeColumn(1.8f); // COMMENTS
+
+                    if (hasComments)
+                        columns.RelativeColumn(1.2f); // COMMENTS
+                    else
+                        columns.ConstantColumn(20);   // COMMENTS (narrow when empty)
+
                     columns.RelativeColumn(1.5f); // NOTES
                     
                     if (!hideAfterComments)
@@ -320,19 +333,15 @@ namespace OCC.Client.Services
 
                     if (line.IncentiveSupervisor > 0)
                     {
-                        for (int i = 0; i < 17; i++)
-                        {
-                            table.Cell().Element(SubRowStyle);
-                        }
+                        // Span first 18 columns up to OTHER
+                        table.Cell().ColumnSpan(18).Element(SubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
 
-                        table.Cell().Element(SubRowStyle).AlignRight().Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
+                        // Column 19 (Total Nett) - Value
                         table.Cell().Element(SubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
 
-                        int remCount = hideAfterComments ? 4 : 10;
-                        for (int i = 0; i < remCount; i++)
-                        {
-                            table.Cell().Element(SubRowStyle);
-                        }
+                        // Spanned remaining columns
+                        uint remCount = hideAfterComments ? 4u : 10u;
+                        table.Cell().ColumnSpan(remCount).Element(SubRowStyle);
                     }
                     
                     static IContainer CellStyle(IContainer container) => 
@@ -350,28 +359,6 @@ namespace OCC.Client.Services
                     
                     uint footSpan = hideAfterComments ? 4u : 10u;
                     footer.Cell().ColumnSpan(footSpan).Element(c => c.Border(0.5f));
-                });
-            });
-        }
-
-        private void ComposeLoanSummary(IContainer container, WageRun wageRun)
-        {
-            container.Column(col =>
-            {
-                col.Item().PaddingBottom(2).Text("LOANS DESCRIPTION").FontSize(7).Bold();
-                col.Item().Table(table =>
-                {
-                    table.ColumnsDefinition(columns =>
-                    {
-                        columns.RelativeColumn();
-                        columns.ConstantColumn(40);
-                    });
-                    
-                    for (int i = 1; i <= 5; i++)
-                    {
-                        table.Cell().Border(0.5f).Height(10);
-                        table.Cell().Border(0.5f).Height(10);
-                    }
                 });
             });
         }

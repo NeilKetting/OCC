@@ -208,5 +208,139 @@ namespace OCC.Tests
             // Assert
             Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
         }
+
+        [Fact]
+        public async Task GenerateEmployeeProfilePdfAsync_ShouldCreatePdfFile()
+        {
+            // Arrange
+            var pdfService = new PdfService();
+            var employee = new Employee
+            {
+                FirstName = "Stuart",
+                LastName = "Khoza",
+                EmployeeNumber = "EMP469",
+                IdType = IdType.Passport,
+                IdNumber = "MA586749",
+                PermitNumber = null, // Matches the placeholder/empty in screenshot
+                DoB = new DateTime(1994, 11, 29),
+                TaxNumber = "0588983288",
+                LivesInCompanyHousing = false,
+                Email = "name@example.com",
+                Phone = "053-237-0331",
+                PhysicalAddress = "2016 Legwalagwala Street, Mayibuye",
+                Role = EmployeeRole.GeneralWorker,
+                Status = EmployeeStatus.Active,
+                EmploymentType = EmploymentType.Contract,
+                ContractDuration = "12 Months",
+                Branch = "Johannesburg",
+                EmploymentDate = new DateTime(2022, 3, 1),
+                AnnualLeaveBalance = 15.0,
+                SickLeaveBalance = 30.0,
+                RateType = RateType.Hourly,
+                HourlyRate = 85.50,
+                BankName = "Capitec",
+                AccountNumber = "1234567890",
+                BranchCode = "470010",
+                AccountType = "Savings"
+            };
+
+            // Act
+            var path = await pdfService.GenerateEmployeeProfilePdfAsync(employee);
+
+            // Copy to workspace root for easy user visual inspection
+            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleEmployeeProfileReport.pdf";
+            try
+            {
+                if (File.Exists(targetPath))
+                {
+                    File.Delete(targetPath);
+                }
+                File.Copy(path, targetPath);
+            }
+            catch { }
+
+            // Assert
+            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+        }
+
+        [Fact]
+        public async Task GenerateWageRunPdfAsync_ShouldCreatePdfFile()
+        {
+            // Arrange
+            var pdfService = new PdfService();
+            var wageRun = new WageRun
+            {
+                StartDate = new DateTime(2026, 6, 20),
+                EndDate = new DateTime(2026, 6, 26),
+                Branch = "Johannesburg",
+                Lines = new List<WageRunLine>
+                {
+                    new WageRunLine
+                    {
+                        EmployeeNumber = "444",
+                        EmployeeName = "AARON MOSELANE",
+                        EmploymentType = "Permanent",
+                        HourlyRate = 33.00m,
+                        NormalHours = 78.75,
+                        DeductionLoan = 322.50m,
+                        TotalWage = 3597.75m,
+                        BankName = "Nedbank",
+                        BankAccountNumber = "1307940420"
+                    },
+                    new WageRunLine
+                    {
+                        EmployeeNumber = "458",
+                        EmployeeName = "ALLEN MSIMANGA",
+                        EmploymentType = "Permanent",
+                        HourlyRate = 33.92m,
+                        NormalHours = 70.00,
+                        TotalWage = 2374.40m,
+                        BankName = "Capitec Bank",
+                        BankAccountNumber = "1788824397"
+                    },
+                    new WageRunLine
+                    {
+                        EmployeeNumber = "331",
+                        EmployeeName = "BLONDY MALEPE",
+                        EmploymentType = "Casual",
+                        HourlyRate = 38.18m,
+                        NormalHours = 78.75,
+                        IncentiveSupervisor = 500.00m,
+                        TotalWage = 3520.26m,
+                        BankName = "Nedbank Limited",
+                        BankAccountNumber = "1213185792"
+                    },
+                    new WageRunLine
+                    {
+                        EmployeeNumber = "122",
+                        EmployeeName = "COSTER MALEPE",
+                        EmploymentType = "Casual",
+                        HourlyRate = 38.18m,
+                        NormalHours = 17.50,
+                        TotalWage = 667.80m,
+                        Comments = "Absent on Mon, Tue, Wed",
+                        VarianceNotes = "Variance corrected"
+                    }
+                }
+            };
+
+            // Act
+            var path = await pdfService.GenerateWageRunPdfAsync(wageRun, hideAfterComments: false);
+
+            // Copy to workspace root for easy user visual inspection
+            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleWageRunReport.pdf";
+            try
+            {
+                if (File.Exists(targetPath))
+                {
+                    File.Delete(targetPath);
+                }
+                File.Copy(path, targetPath);
+            }
+            catch { }
+
+            // Assert
+            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+        }
     }
 }

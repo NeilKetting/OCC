@@ -649,8 +649,16 @@ namespace OCC.WpfClient.Services
                         innerCol.Item().Element(sc => InfoRow(sc, "First Name", employee.FirstName));
                         innerCol.Item().Element(sc => InfoRow(sc, "Last Name", employee.LastName));
                         innerCol.Item().Element(sc => InfoRow(sc, "Employee Number", employee.EmployeeNumber));
-                        innerCol.Item().Element(sc => InfoRow(sc, "ID Type", employee.IdType.ToString()));
-                        innerCol.Item().Element(sc => InfoRow(sc, "ID / Permit No.", employee.IdType == IdType.RSAId ? employee.IdNumber : (employee.PermitNumber ?? "-")));
+                        innerCol.Item().Element(sc => InfoRow(sc, "ID Type", employee.IdType == IdType.RSAId ? "RSA ID" : "Passport"));
+                        if (employee.IdType == IdType.RSAId)
+                        {
+                            innerCol.Item().Element(sc => InfoRow(sc, "ID Number", employee.IdNumber));
+                        }
+                        else
+                        {
+                            innerCol.Item().Element(sc => InfoRow(sc, "Passport Number", employee.IdNumber));
+                            innerCol.Item().Element(sc => InfoRow(sc, "Permit Number", string.IsNullOrWhiteSpace(employee.PermitNumber) ? "-" : employee.PermitNumber));
+                        }
                         innerCol.Item().Element(sc => InfoRow(sc, "Date of Birth", employee.DoB.ToString("yyyy-MM-dd")));
                         innerCol.Item().Element(sc => InfoRow(sc, "Tax Number", employee.TaxNumber ?? "-"));
                         innerCol.Item().Element(sc => InfoRow(sc, "Company Housing", employee.LivesInCompanyHousing ? "Yes" : "No"));
@@ -1737,26 +1745,34 @@ namespace OCC.WpfClient.Services
         {
             container.Column(col =>
             {
-                var allLines = wageRun.Lines.OrderBy(l => l.EmployeeName).ToList();
+                var permLines = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").OrderBy(l => l.EmployeeName).ToList();
+                var casualLines = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").OrderBy(l => l.EmployeeName).ToList();
 
-                if (allLines.Any())
+                if (permLines.Any())
                 {
-                    col.Item().PaddingTop(5).Text("OCC STAFF WAGES").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, allLines, hideAfterComments));
+                    col.Item().PaddingTop(5).Text("PERMANENT STAFF").FontSize(6).ExtraBold();
+                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments));
+                }
+
+                if (casualLines.Any())
+                {
+                    col.Item().PaddingTop(10).Text("CONTRACT / CASUAL STAFF").FontSize(6).ExtraBold();
+                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments));
                 }
 
                 // Summary tables at the bottom
                 col.Item().PaddingTop(20).Row(row =>
                 {
-                    row.ConstantItem(150).Element(c => ComposeLoanSummary(c));
                     row.RelativeItem();
-                    row.ConstantItem(300).Element(c => ComposeWageTotalsTable(c, wageRun));
+                    row.ConstantItem(380).Element(c => ComposeWageTotalsTable(c, wageRun));
                 });
             });
         }
 
         private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments)
         {
+            bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
+
             container.Table(table =>
             {
                 table.ColumnsDefinition(columns =>
@@ -1782,7 +1798,12 @@ namespace OCC.WpfClient.Services
                     columns.ConstantColumn(35);   // TOTAL NETT
                     columns.ConstantColumn(35);   // BANK
                     columns.ConstantColumn(60);   // BANK ACC
-                    columns.RelativeColumn(1.8f); // COMMENTS
+
+                    if (hasComments)
+                        columns.RelativeColumn(1.2f); // COMMENTS
+                    else
+                        columns.ConstantColumn(20);   // COMMENTS (narrow when empty)
+
                     columns.RelativeColumn(1.5f); // NOTES
                     
                     if (!hideAfterComments)
@@ -1887,19 +1908,15 @@ namespace OCC.WpfClient.Services
 
                     if (line.IncentiveSupervisor > 0)
                     {
-                        for (int i = 0; i < 17; i++)
-                        {
-                            table.Cell().Element(WageSubRowStyle);
-                        }
+                        // Span first 18 columns up to OTHER
+                        table.Cell().ColumnSpan(18).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
 
-                        table.Cell().Element(WageSubRowStyle).AlignRight().Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
+                        // Column 19 (Total Nett) - Value
                         table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
 
-                        int remCount = hideAfterComments ? 4 : 10;
-                        for (int i = 0; i < remCount; i++)
-                        {
-                            table.Cell().Element(WageSubRowStyle);
-                        }
+                        // Spanned remaining columns
+                        uint remCount = hideAfterComments ? 4u : 10u;
+                        table.Cell().ColumnSpan(remCount).Element(WageSubRowStyle);
                     }
 
                     static IContainer WageCellStyle(IContainer c) =>
@@ -1921,26 +1938,7 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeLoanSummary(IContainer container)
-        {
-            container.Column(col =>
-            {
-                col.Item().PaddingBottom(2).Text("LOANS DESCRIPTION").FontSize(7).Bold();
-                col.Item().Table(table =>
-                {
-                    table.ColumnsDefinition(columns =>
-                    {
-                        columns.RelativeColumn();
-                        columns.ConstantColumn(40);
-                    });
-                    for (int i = 1; i <= 5; i++)
-                    {
-                        table.Cell().Border(0.5f).Height(10);
-                        table.Cell().Border(0.5f).Height(10);
-                    }
-                });
-            });
-        }
+
 
         private void ComposeWageTotalsTable(IContainer container, WageRun wageRun)
         {
