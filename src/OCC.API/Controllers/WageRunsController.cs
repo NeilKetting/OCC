@@ -118,8 +118,9 @@ namespace OCC.API.Controllers
                 companyDetails = JsonSerializer.Deserialize<CompanyDetails>(profileSetting.Value);
             }
 
-            // 4. Fetch Attendance for the Period (exactly between StartDate and EndDate)
-            var attendanceEnd = request.EndDate > runDate ? runDate : request.EndDate;
+            // 4. Fetch Attendance for the Period (up to Wednesday of Week 2)
+            var cutoffDate = request.StartDate.AddDays(9).Date;
+            var attendanceEnd = cutoffDate > runDate ? runDate : cutoffDate;
             var attendance = await _context.AttendanceRecords
                 .Where(a => a.Date >= request.StartDate && a.Date <= attendanceEnd)
                 .ToListAsync();
@@ -273,9 +274,9 @@ namespace OCC.API.Controllers
                 line.DaysWorkedWeek3 = distinctDaysW2.Count; // W3 (Week 2 actual worked)
                 line.TotalDaysWorked = distinctDaysW1.Count + distinctDaysW2.Count;
 
-                // B. Calculate Projected Hours (RunDate+1 -> EndDate)
-                var projectedStart = runDate.AddDays(1);
-                var projectedEnd = request.EndDate;
+                // B. Calculate Projected Hours (Thursday Week 2 to Friday Week 2)
+                var projectedStart = request.StartDate.AddDays(10).Date;
+                var projectedEnd = request.StartDate.AddDays(11).Date;
 
                 if (projectedStart <= projectedEnd)
                 {
@@ -296,9 +297,9 @@ namespace OCC.API.Controllers
                     if (lastLine != null && lastLine.ProjectedHours > 0)
                     {
                         // Check what ACTUALLY happened in that window by looking at Leave Management (LeaveRequests)
-                        // Last Run Projected Window = (LastRun.RunDate + 1) -> LastRun.EndDate
-                        var lastRunProjectedStart = lastRun.RunDate.AddDays(1).Date;
-                        var lastRunProjectedEnd = lastRun.EndDate.Date;
+                        // Last Run Projected Window is always Thursday and Friday of Week 2 of that run
+                        var lastRunProjectedStart = lastRun.StartDate.AddDays(10).Date;
+                        var lastRunProjectedEnd = lastRun.StartDate.AddDays(11).Date;
 
                         if (lastRunProjectedStart <= lastRunProjectedEnd)
                         {

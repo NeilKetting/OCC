@@ -457,11 +457,11 @@
                         <DataGridTextColumn Header="ACCOUNT NUMBER" Binding="{Binding BankAccountNumber}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsBankAccountVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <!-- USER COMMENTS -->
-                        <DataGridTemplateColumn Header="COMMENTS" Width="Auto"
+                        <DataGridTemplateColumn Header="COMMENTS" Width="180"
                                                 Visibility="{Binding Data.IsCommentsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Comments}"/>
+                                    <TextBlock Text="{Binding Comments}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Comments}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
@@ -471,8 +471,15 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
                         <!-- VARIANCE NOTES -->
-                        <DataGridTextColumn Header="NOTES" Binding="{Binding VarianceNotes}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsNotesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="NOTES" Binding="{Binding VarianceNotes}" Width="150" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsNotesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="ToolTip" Value="{Binding VarianceNotes}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                         <!-- TOTAL REM -->
                         <DataGridTextColumn Header="TOTAL REM" Binding="{Binding TotalRem, StringFormat='R #,##0.00'}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsTotalRemVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
