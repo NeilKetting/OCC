@@ -23,6 +23,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly IPdfService _pdfService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<WageRunViewModel> _logger;
+        private readonly OCC.WpfClient.Services.Infrastructure.LocalSettingsService _localSettings;
+        private bool _isInitializingColumns;
 
         private WageRun? _currentDraft;
         private Guid? _currentDraftId;
@@ -181,18 +183,22 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             IWageService wageService,
             IPdfService pdfService,
             IDialogService dialogService,
-            ILogger<WageRunViewModel> logger)
+            ILogger<WageRunViewModel> logger,
+            OCC.WpfClient.Services.Infrastructure.LocalSettingsService localSettings)
         {
             _wageService = wageService;
             _pdfService = pdfService;
             _dialogService = dialogService;
             _logger = logger;
+            _localSettings = localSettings;
             Title = "Wage Run";
 
             // Default: Monday of previous fortnight (runs are typically generated on Wednesday of Week 2)
             var today = DateTime.Today;
             int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Monday)) % 7;
             StartDate = today.AddDays(-diff).AddDays(-7).Date;
+
+            LoadColumnVisibilities();
         }
 
         // ─── Commands ────────────────────────────────────────────────────────
@@ -458,5 +464,69 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private void UpdateGrandTotal()
             => GrandTotalWage = Lines.Sum(x => x.NetPay);
+
+        // ─── Column Selections Persistence ───────────────────────────────────
+
+        private void LoadColumnVisibilities()
+        {
+            _isInitializingColumns = true;
+            try
+            {
+                var cols = _localSettings.Settings.WageRunVisibleColumns;
+                if (cols != null)
+                {
+                    if (cols.TryGetValue("Index", out bool index)) IsIndexVisible = index;
+                    if (cols.TryGetValue("Bas", out bool bas)) IsBasVisible = bas;
+                    if (cols.TryGetValue("Name", out bool name)) IsNameVisible = name;
+                    if (cols.TryGetValue("RateHr", out bool rateHr)) IsRateHrVisible = rateHr;
+                    if (cols.TryGetValue("Hrs", out bool hrs)) IsHrsVisible = hrs;
+                    if (cols.TryGetValue("OtRates", out bool otRates)) IsOtRatesVisible = otRates;
+                    if (cols.TryGetValue("OtHours", out bool otHours)) IsOtHoursVisible = otHours;
+                    if (cols.TryGetValue("Deductions", out bool deductions)) IsDeductionsVisible = deductions;
+                    if (cols.TryGetValue("SupFee", out bool supFee)) IsSupFeeVisible = supFee;
+                    if (cols.TryGetValue("TotalNett", out bool totalNett)) IsTotalNettVisible = totalNett;
+                    if (cols.TryGetValue("TotalRem", out bool totalRem)) IsTotalRemVisible = totalRem;
+                    if (cols.TryGetValue("Days", out bool days)) IsDaysVisible = days;
+                    if (cols.TryGetValue("Notes", out bool notes)) IsNotesVisible = notes;
+                    if (cols.TryGetValue("Bank", out bool bank)) IsBankVisible = bank;
+                    if (cols.TryGetValue("BankAccount", out bool bankAccount)) IsBankAccountVisible = bankAccount;
+                    if (cols.TryGetValue("Comments", out bool comments)) IsCommentsVisible = comments;
+                }
+            }
+            finally
+            {
+                _isInitializingColumns = false;
+            }
+        }
+
+        private void SaveColumnVisibility(string columnName, bool isVisible)
+        {
+            if (_isInitializingColumns) return;
+
+            if (_localSettings.Settings.WageRunVisibleColumns == null)
+            {
+                _localSettings.Settings.WageRunVisibleColumns = new Dictionary<string, bool>();
+            }
+
+            _localSettings.Settings.WageRunVisibleColumns[columnName] = isVisible;
+            _localSettings.Save();
+        }
+
+        partial void OnIsIndexVisibleChanged(bool value) => SaveColumnVisibility("Index", value);
+        partial void OnIsBasVisibleChanged(bool value) => SaveColumnVisibility("Bas", value);
+        partial void OnIsNameVisibleChanged(bool value) => SaveColumnVisibility("Name", value);
+        partial void OnIsRateHrVisibleChanged(bool value) => SaveColumnVisibility("RateHr", value);
+        partial void OnIsHrsVisibleChanged(bool value) => SaveColumnVisibility("Hrs", value);
+        partial void OnIsOtRatesVisibleChanged(bool value) => SaveColumnVisibility("OtRates", value);
+        partial void OnIsOtHoursVisibleChanged(bool value) => SaveColumnVisibility("OtHours", value);
+        partial void OnIsDeductionsVisibleChanged(bool value) => SaveColumnVisibility("Deductions", value);
+        partial void OnIsSupFeeVisibleChanged(bool value) => SaveColumnVisibility("SupFee", value);
+        partial void OnIsTotalNettVisibleChanged(bool value) => SaveColumnVisibility("TotalNett", value);
+        partial void OnIsTotalRemVisibleChanged(bool value) => SaveColumnVisibility("TotalRem", value);
+        partial void OnIsDaysVisibleChanged(bool value) => SaveColumnVisibility("Days", value);
+        partial void OnIsNotesVisibleChanged(bool value) => SaveColumnVisibility("Notes", value);
+        partial void OnIsBankVisibleChanged(bool value) => SaveColumnVisibility("Bank", value);
+        partial void OnIsBankAccountVisibleChanged(bool value) => SaveColumnVisibility("BankAccount", value);
+        partial void OnIsCommentsVisibleChanged(bool value) => SaveColumnVisibility("Comments", value);
     }
 }
