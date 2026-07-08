@@ -25,6 +25,22 @@ namespace OCC.API.Data
                 logger.LogWarning("Manual schema patch skipped or failed: {Message}", ex.Message);
             }
 
+            // Manual Schema Patch: Ensure new WageRunLines columns exist (since EF migrations tool failed)
+            try
+            {
+                logger.LogInformation("Applying manual schema patches for WageRunLines missing columns...");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'BankName') ALTER TABLE WageRunLines ADD BankName NVARCHAR(MAX) NULL;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek1') ALTER TABLE WageRunLines ADD DaysWorkedWeek1 FLOAT NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek2') ALTER TABLE WageRunLines ADD DaysWorkedWeek2 FLOAT NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DeductionPPE') ALTER TABLE WageRunLines ADD DeductionPPE DECIMAL(18,2) NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'EmploymentType') ALTER TABLE WageRunLines ADD EmploymentType NVARCHAR(MAX) NOT NULL DEFAULT '';");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'TotalDaysWorked') ALTER TABLE WageRunLines ADD TotalDaysWorked FLOAT NOT NULL DEFAULT 0;");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Manual schema patch for WageRunLines columns skipped or failed: {Message}", ex.Message);
+            }
+
             // Standardize task IsGroup data integrity for existing/legacy database records
             try
             {

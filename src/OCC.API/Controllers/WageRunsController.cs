@@ -310,6 +310,12 @@ namespace OCC.API.Controllers
                                              lr.EndDate >= lastRunProjectedStart)
                                 .ToListAsync();
 
+                            var attendanceRecords = await _context.AttendanceRecords
+                                .Where(ar => ar.EmployeeId == emp.Id &&
+                                             ar.Date >= lastRunProjectedStart &&
+                                             ar.Date <= lastRunProjectedEnd)
+                                .ToListAsync();
+
                             double leaveDeductionDays = 0;
                             for (var d = lastRunProjectedStart; d <= lastRunProjectedEnd; d = d.AddDays(1))
                             {
@@ -319,6 +325,15 @@ namespace OCC.API.Controllers
 
                                 var isAbsent = leaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
                                     (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+
+                                if (!isAbsent)
+                                {
+                                    var attendanceRecord = attendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
+                                    if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick))
+                                    {
+                                        isAbsent = true;
+                                    }
+                                }
 
                                 if (isAbsent)
                                 {
