@@ -119,7 +119,16 @@ namespace OCC.API.Controllers
             }
 
             // 4. Fetch Attendance for the Period (up to Wednesday of Week 2)
-            var cutoffDate = request.StartDate.AddDays(9).Date;
+            var cutoffDate = DateTime.MinValue;
+            for (int i = 7; i <= 13; i++)
+            {
+                var date = request.StartDate.AddDays(i).Date;
+                if (date.DayOfWeek == DayOfWeek.Wednesday)
+                {
+                    cutoffDate = date;
+                    break;
+                }
+            }
             var attendanceEnd = cutoffDate > runDate ? runDate : cutoffDate;
             var attendance = await _context.AttendanceRecords
                 .Where(a => a.Date >= request.StartDate && a.Date <= attendanceEnd)
@@ -165,14 +174,28 @@ namespace OCC.API.Controllers
                                     emp.Role == EmployeeRole.LabourSupervisor)
                 };
 
-                // Default Supervisor Incentive
-                if (emp.Role == EmployeeRole.Supervisor || emp.Role == EmployeeRole.SiteManager ||
-                    emp.Role == EmployeeRole.BuildingSupervisor || emp.Role == EmployeeRole.PlasterSupervisor ||
-                    emp.Role == EmployeeRole.ShopfittingSupervisor || emp.Role == EmployeeRole.PaintingSupervisor ||
-                    emp.Role == EmployeeRole.LabourSupervisor)
+                // Supervisor Incentive: try to reuse the fee from the previous finalized run first
+                decimal supervisorFee = 0;
+                if (lastRun != null)
                 {
-                    line.IncentiveSupervisor = request.InputDefaultSupervisorFee;
+                    var lastLine = lastRun.Lines.FirstOrDefault(l => l.EmployeeId == emp.Id);
+                    if (lastLine != null && lastLine.IncentiveSupervisor > 0)
+                    {
+                        supervisorFee = lastLine.IncentiveSupervisor;
+                    }
                 }
+
+                // If not found in the previous run, fall back to default fee if they are in a supervisor role
+                if (supervisorFee == 0 &&
+                    (emp.Role == EmployeeRole.Supervisor || emp.Role == EmployeeRole.SiteManager ||
+                     emp.Role == EmployeeRole.BuildingSupervisor || emp.Role == EmployeeRole.PlasterSupervisor ||
+                     emp.Role == EmployeeRole.ShopfittingSupervisor || emp.Role == EmployeeRole.PaintingSupervisor ||
+                     emp.Role == EmployeeRole.LabourSupervisor))
+                {
+                    supervisorFee = request.InputDefaultSupervisorFee;
+                }
+
+                line.IncentiveSupervisor = supervisorFee;
 
                 // Gas and specific washing deduction for Company Housing
                 if (emp.LivesInCompanyHousing)
@@ -275,8 +298,16 @@ namespace OCC.API.Controllers
                 line.TotalDaysWorked = distinctDaysW1.Count + distinctDaysW2.Count;
 
                 // B. Calculate Projected Hours (Thursday Week 2 to Friday Week 2)
-                var projectedStart = request.StartDate.AddDays(10).Date;
-                var projectedEnd = request.StartDate.AddDays(11).Date;
+                var projectedStart = DateTime.MinValue;
+                var projectedEnd = DateTime.MinValue;
+                for (int i = 7; i <= 13; i++)
+                {
+                    var date = request.StartDate.AddDays(i).Date;
+                    if (date.DayOfWeek == DayOfWeek.Thursday)
+                        projectedStart = date;
+                    else if (date.DayOfWeek == DayOfWeek.Friday)
+                        projectedEnd = date;
+                }
 
                 if (projectedStart <= projectedEnd)
                 {
@@ -298,8 +329,16 @@ namespace OCC.API.Controllers
                     {
                         // Check what ACTUALLY happened in that window by looking at Leave Management (LeaveRequests)
                         // Last Run Projected Window is always Thursday and Friday of Week 2 of that run
-                        var lastRunProjectedStart = lastRun.StartDate.AddDays(10).Date;
-                        var lastRunProjectedEnd = lastRun.StartDate.AddDays(11).Date;
+                        var lastRunProjectedStart = DateTime.MinValue;
+                        var lastRunProjectedEnd = DateTime.MinValue;
+                        for (int i = 7; i <= 13; i++)
+                        {
+                            var date = lastRun.StartDate.AddDays(i).Date;
+                            if (date.DayOfWeek == DayOfWeek.Thursday)
+                                lastRunProjectedStart = date;
+                            else if (date.DayOfWeek == DayOfWeek.Friday)
+                                lastRunProjectedEnd = date;
+                        }
 
                         if (lastRunProjectedStart <= lastRunProjectedEnd)
                         {

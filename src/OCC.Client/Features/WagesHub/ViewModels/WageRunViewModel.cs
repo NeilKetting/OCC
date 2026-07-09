@@ -22,14 +22,10 @@ namespace OCC.Client.Features.WagesHub.ViewModels
             _dialogService = dialogService;
             _pdfService = pdfService;
             
-            // Default period: Current Week's Monday
-            // If today is Monday, use today. If today is Sunday, go back to previous Monday?
-            // "Wage run will be run on a Wednesday... The run will be fortnight so it will start on a monday."
-            // If we run on Wednesday of Week 2, the cycle started on Monday of Week 1.
-            // So we take the current Monday, and subtract 7 days.
+            // Default period: Saturday of previous fortnight
             var today = DateTime.Today;
-            int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-            StartDate = today.AddDays(-1 * diff).AddDays(-7).Date;
+            int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
+            StartDate = today.AddDays(-diff).AddDays(-7).Date;
             
             // EndDate is calculated in OnStartDateChanged (StartDate + 13 days)
             

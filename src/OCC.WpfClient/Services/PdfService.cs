@@ -2008,8 +2008,8 @@ namespace OCC.WpfClient.Services
 
                     var permNet = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").Sum(x => x.NetPay);
                     var casualNet = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").Sum(x => x.NetPay);
-                    var loansTotal = wageRun.Lines.Sum(x => x.DeductionLoan);
-                    var grandTotal = permNet + casualNet - loansTotal;
+                    var loansTotal = 0m; // Loans are already deducted from individual NetPay
+                    var grandTotal = permNet + casualNet;
 
                     table.Cell().Element(RowStyle).Text("Permanent Staff").Bold();
                     table.Cell().Element(RowStyle).AlignRight().Text(permNet.ToString("R #,##0.00"));

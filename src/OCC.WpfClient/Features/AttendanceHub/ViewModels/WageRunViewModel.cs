@@ -127,6 +127,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private bool FilterLines(object obj)
         {
             if (obj is not WageRunLineViewModel line) return false;
+
+            // Client-side branch filter matching UI selection
+            if (SelectedBranch != "All" && !string.Equals(line.Branch, SelectedBranch, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // Client-side search filter
             if (string.IsNullOrWhiteSpace(SearchQuery)) return true;
 
             var q = SearchQuery.Trim();
@@ -134,7 +140,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                    (line.EmployeeNumber?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
-        partial void OnSearchQueryChanged(string value) => LinesView.Refresh();
+        partial void OnSearchQueryChanged(string value)
+        {
+            LinesView.Refresh();
+            UpdateGrandTotal();
+        }
+        partial void OnSelectedBranchChanged(string value)
+        {
+            LinesView?.Refresh();
+            UpdateGrandTotal();
+        }
 
         // ─── Past runs list ───────────────────────────────────────────────────
 
@@ -193,9 +208,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _localSettings = localSettings;
             Title = "Wage Run";
 
-            // Default: Monday of previous fortnight (runs are typically generated on Wednesday of Week 2)
+            // Default: Saturday of previous fortnight (runs are typically generated on Wednesday of Week 2)
             var today = DateTime.Today;
-            int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
             StartDate = today.AddDays(-diff).AddDays(-7).Date;
 
             LoadColumnVisibilities();
@@ -354,14 +369,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 IsBusy = true;
                 BusyText = "Generating PDF...";
 
-                var runToPrint = _currentDraft ?? new WageRun
+                var runToPrint = new WageRun
                 {
                     StartDate = StartDate,
                     EndDate   = EndDate,
                     Branch    = SelectedBranch,
                     PayType   = SelectedPayType,
+                    Notes     = Notes,
+                    Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
-                runToPrint.Lines = Lines.Select(l => l.Model).ToList();
 
                 var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
@@ -385,14 +401,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 IsBusy = true;
                 BusyText = "Generating Salary Version PDF...";
 
-                var runToPrint = _currentDraft ?? new WageRun
+                var runToPrint = new WageRun
                 {
                     StartDate = StartDate,
                     EndDate   = EndDate,
                     Branch    = SelectedBranch,
                     PayType   = SelectedPayType,
+                    Notes     = Notes,
+                    Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
-                runToPrint.Lines = Lines.Select(l => l.Model).ToList();
 
                 var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
@@ -416,14 +433,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 IsBusy = true;
                 BusyText = "Generating Supervisor Payments PDF...";
 
-                var runToPrint = _currentDraft ?? new WageRun
+                var runToPrint = new WageRun
                 {
                     StartDate = StartDate,
                     EndDate   = EndDate,
                     Branch    = SelectedBranch,
                     PayType   = SelectedPayType,
+                    Notes     = Notes,
+                    Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
-                runToPrint.Lines = Lines.Select(l => l.Model).ToList();
 
                 var path = await _pdfService.GenerateSupervisorChecklistPdfAsync(runToPrint);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
@@ -462,8 +480,71 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
         }
 
+        [RelayCommand]
+        public async Task PrintPastRunPdfAsync(WageRun? run)
+        {
+            if (run == null) return;
+            await PrintPastRunInternalAsync(run, hideAfterComments: false);
+        }
+
+        [RelayCommand]
+        public async Task PrintPastRunSalaryAsync(WageRun? run)
+        {
+            if (run == null) return;
+            await PrintPastRunInternalAsync(run, hideAfterComments: true);
+        }
+
+        [RelayCommand]
+        public async Task PrintPastRunSupervisorPaymentsAsync(WageRun? run)
+        {
+            if (run == null) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Supervisor Payments PDF...";
+
+                var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
+                if (fullRun != null)
+                {
+                    var path = await _pdfService.GenerateSupervisorChecklistPdfAsync(fullRun);
+                    Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating past supervisor payments PDF");
+                System.Windows.MessageBox.Show($"Failed to generate supervisor payments PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        private async Task PrintPastRunInternalAsync(WageRun run, bool hideAfterComments)
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating PDF...";
+
+                var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
+                if (fullRun != null)
+                {
+                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments);
+                    Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating past wage run PDF");
+                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
         private void UpdateGrandTotal()
-            => GrandTotalWage = Lines.Sum(x => x.NetPay);
+            => GrandTotalWage = LinesView.Cast<WageRunLineViewModel>().Sum(x => x.NetPay);
 
         // ─── Column Selections Persistence ───────────────────────────────────
 

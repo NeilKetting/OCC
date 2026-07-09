@@ -1,0 +1,13 @@
+Aaron Moselane:
+- LivesInCompanyHousing: False
+- HourlyRate: 33
+- NormalHours: 70
+- ot15: 14
+- ot20: 10
+- projectedHrs: 17,5
+- varianceHrs: 0
+- supervisorFee: 0
+- grossPay: 4240,5
+- DeductionGas: 0
+- DeductionWashing: 0
+- TotalWage (Calculated Net): 4240,5

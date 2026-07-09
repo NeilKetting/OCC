@@ -65,7 +65,36 @@ namespace OCC.API.Services
 
             // Guard: no check-out → can't compute duration
             if (record.CheckOutTime == null)
+            {
+                if (record.Date.Date == DateTime.Today && 
+                    record.CheckInTime != null && 
+                    (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly))
+                {
+                    var recordDow = record.Date.DayOfWeek;
+                    bool isRecordSunday = recordDow == DayOfWeek.Sunday;
+                    bool isRecordSaturday = recordDow == DayOfWeek.Saturday;
+                    bool isRecordHoliday = HolidayUtils.IsPublicHoliday(record.Date);
+
+                    if (isRecordSunday || isRecordSaturday || isRecordHoliday)
+                    {
+                        return new HoursBreakdown(0, 0, 0, 0);
+                    }
+
+                    TimeSpan standardShiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
+                    TimeSpan standardShiftEnd   = employee.ShiftEndTime   ?? _options.DefaultShiftEnd;
+
+                    double standardNormal = (standardShiftEnd - standardShiftStart).TotalHours;
+                    if (_options.UseLunchEndThreshold && standardShiftEnd.Hours >= 13)
+                    {
+                        standardNormal -= 1.0;
+                    }
+
+                    if (standardNormal < 0) standardNormal = 0;
+                    return new HoursBreakdown(standardNormal, 0, 0, 0);
+                }
+
                 return new HoursBreakdown(0, 0, 0, 0);
+            }
 
             DateTime start = record.CheckInTime.Value;
             DateTime end   = record.CheckOutTime.Value;

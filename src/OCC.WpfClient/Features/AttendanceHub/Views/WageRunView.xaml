@@ -375,19 +375,14 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
-                        <!-- LOANS — editable -->
-                        <DataGridTemplateColumn Header="LOANS" Width="Auto"
+                        <!-- LOANS — read-only -->
+                        <DataGridTemplateColumn Header="LOANS" Width="Auto" IsReadOnly="True"
                                                 Visibility="{Binding Data.IsDeductionsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DeductionLoanDisplay}" HorizontalAlignment="Right"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
-                            <DataGridTemplateColumn.CellEditingTemplate>
-                                <DataTemplate>
-                                    <TextBox Text="{Binding DeductionLoan, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
                         <!-- WASHING — editable -->
                         <DataGridTemplateColumn Header="WASHING" Width="Auto"
@@ -584,15 +579,42 @@
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTemplateColumn Header="Actions" Width="80">
+                        <DataGridTemplateColumn Header="Actions" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button Style="{StaticResource ToolbarIconButton}"
-                                             Command="{Binding DataContext.DeletePastRunCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                             CommandParameter="{Binding}"
-                                             ToolTip="Delete Run">
-                                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolButtonIcon}" Foreground="#EF4444"/>
-                                    </Button>
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- Print Standard PDF -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                 Command="{Binding DataContext.PrintPastRunPdfCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}"
+                                                 ToolTip="Print PDF"
+                                                 Margin="0,0,6,0">
+                                            <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
+                                        </Button>
+                                        <!-- Print Salary PDF -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                 Command="{Binding DataContext.PrintPastRunSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}"
+                                                 ToolTip="Print Salary Version"
+                                                 Margin="0,0,6,0">
+                                            <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Foreground="#10B981"/>
+                                        </Button>
+                                        <!-- Print Supervisor Payments -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                 Command="{Binding DataContext.PrintPastRunSupervisorPaymentsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}"
+                                                 ToolTip="Supervisor Checklist"
+                                                 Margin="0,0,6,0">
+                                            <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolButtonIcon}" Foreground="#F59E0B"/>
+                                        </Button>
+                                        <!-- Delete Run -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                 Command="{Binding DataContext.DeletePastRunCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}"
+                                                 ToolTip="Delete Run">
+                                            <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolButtonIcon}" Foreground="#EF4444"/>
+                                        </Button>
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
