@@ -76,6 +76,9 @@ namespace OCC.Shared.Models
 
         /// <summary> The number of unpaid leave hours allocated to this day. </summary>
         public double? UnpaidLeaveHours { get; set; }
+
+        /// <summary> The wage run in which this attendance record was paid/processed. </summary>
+        public Guid? PaidWageRunId { get; set; }
     }
 
     /// <summary>

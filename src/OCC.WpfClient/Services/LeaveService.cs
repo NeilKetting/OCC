@@ -113,6 +113,14 @@ namespace OCC.WpfClient.Services
                         request.PaidDays = Math.Max(0, Math.Min(cappedPaid, employeeAnnualBalance));
                         request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);
                     }
+                    else if (request.LeaveType == LeaveType.Sick)
+                    {
+                        double totalDays = request.NumberOfDays;
+                        double availableSick = employee.SickLeaveBalance;
+                        request.PaidDays = Math.Max(0, Math.Min(totalDays, availableSick));
+                        request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);
+                        request.IsUnpaid = (request.PaidDays == 0);
+                    }
                     else if (request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave)
                     {
                         request.PaidDays = 0;

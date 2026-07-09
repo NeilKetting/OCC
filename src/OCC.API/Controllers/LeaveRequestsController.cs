@@ -268,6 +268,7 @@ namespace OCC.API.Controllers
                         existing.UnpaidLeaveHours = allocatedUnpaidHours;
                         existing.Notes = $"Approved Leave: {request.LeaveType} ({request.DurationType}). {notesToken}";
                         existing.IsAutoClockIn = true;
+                        existing.DoctorsNoteImagePath = request.DoctorsNoteImagePath;
                     }
                     else
                     {
@@ -275,6 +276,10 @@ namespace OCC.API.Controllers
                         existing.PaidLeaveHours = allocatedPaidHours;
                         existing.UnpaidLeaveHours = allocatedUnpaidHours;
                         existing.Notes = (existing.Notes ?? "") + $" [Partial Leave: {request.LeaveType} ({request.DurationType}). {notesToken}]";
+                        if (!string.IsNullOrEmpty(request.DoctorsNoteImagePath))
+                        {
+                            existing.DoctorsNoteImagePath = request.DoctorsNoteImagePath;
+                        }
                     }
                 }
                 else
@@ -289,7 +294,8 @@ namespace OCC.API.Controllers
                         Notes = $"Approved Leave: {request.LeaveType} ({request.DurationType}). {notesToken}",
                         IsAutoClockIn = true,
                         PaidLeaveHours = allocatedPaidHours,
-                        UnpaidLeaveHours = allocatedUnpaidHours
+                        UnpaidLeaveHours = allocatedUnpaidHours,
+                        DoctorsNoteImagePath = request.DoctorsNoteImagePath
                     };
                     _context.AttendanceRecords.Add(record);
                 }

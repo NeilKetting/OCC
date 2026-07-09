@@ -75,6 +75,9 @@ namespace OCC.Shared.Models
         /// </summary>
         public bool IsUnpaid { get; set; }
 
+        /// <summary> Remote path or identifier for an uploaded medical certificate/doctor's note. </summary>
+        public string? DoctorsNoteImagePath { get; set; }
+
         /// <summary> Helper property returning the combined employee display name for report printing. </summary>
         public string EmployeeName => Employee != null ? $"{Employee.FirstName} {Employee.LastName}".Trim() : string.Empty;
     }

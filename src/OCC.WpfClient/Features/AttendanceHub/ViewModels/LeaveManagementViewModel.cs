@@ -74,6 +74,34 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         [ObservableProperty] private double? _hoursRequested;
 
+        // ── Doctor's Note Panel ──
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsDrawerOpen))]
+        private bool _isDoctorsNotePanelOpen;
+
+        [ObservableProperty] private string? _doctorsNoteFilePath;
+        [ObservableProperty] private DateTime _noteStartDate = DateTime.Today;
+        [ObservableProperty] private DateTime _noteEndDate = DateTime.Today;
+        [ObservableProperty] private string _noteReason = string.Empty;
+        [ObservableProperty] private OCC.Shared.DTOs.EmployeeSummaryDto? _selectedNoteEmployee;
+        [ObservableProperty] private ObservableCollection<DoctorsNoteDayViewModel> _noteDays = new();
+        [ObservableProperty] private string _noteStatusSummary = string.Empty;
+        private double _selectedNoteEmployeeSickBalance;
+
+        public bool IsDrawerOpen
+        {
+            get => IsApplyPanelOpen || IsDoctorsNotePanelOpen;
+            set
+            {
+                if (!value)
+                {
+                    IsApplyPanelOpen = false;
+                    IsDoctorsNotePanelOpen = false;
+                }
+                OnPropertyChanged(nameof(IsDrawerOpen));
+            }
+        }
+
         public IEnumerable<LeaveType> LeaveTypes { get; } = Enum.GetValues<LeaveType>();
         public IEnumerable<LeaveDurationType> DurationTypes { get; } = Enum.GetValues<LeaveDurationType>();
 
@@ -624,6 +652,334 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             base.CloseOverlay();
             IsApplyPanelOpen = false;
+            IsDoctorsNotePanelOpen = false;
+        }
+
+        [RelayCommand]
+        private void OpenDoctorsNotePanel()
+        {
+            DoctorsNoteFilePath = null;
+            NoteStartDate = DateTime.Today;
+            NoteEndDate = DateTime.Today;
+            NoteReason = string.Empty;
+            SelectedNoteEmployee = Employees.FirstOrDefault();
+            NoteDays.Clear();
+            NoteStatusSummary = "Select dates and click 'LOAD DAYS IN RANGE'.";
+            IsDoctorsNotePanelOpen = true;
+        }
+
+        [RelayCommand]
+        private void CloseDoctorsNotePanel()
+        {
+            IsDoctorsNotePanelOpen = false;
+        }
+
+        [RelayCommand]
+        private void SelectNoteFile()
+        {
+            var path = _dialogService.ShowOpenFileDialog("Documents|*.pdf;*.jpg;*.jpeg;*.png;*.bmp|PDF Files|*.pdf|Images|*.jpg;*.jpeg;*.png;*.bmp", "Select Doctor's Certificate");
+            if (!string.IsNullOrEmpty(path))
+            {
+                DoctorsNoteFilePath = path;
+            }
+        }
+
+        async partial void OnSelectedNoteEmployeeChanged(OCC.Shared.DTOs.EmployeeSummaryDto? value)
+        {
+            if (value == null)
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    _selectedNoteEmployeeSickBalance = 0;
+                    RecalculateNoteSummary();
+                });
+                return;
+            }
+
+            try
+            {
+                var emp = await _employeeService.GetEmployeeAsync(value.Id);
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    _selectedNoteEmployeeSickBalance = emp?.SickLeaveBalance ?? 0;
+                    RecalculateNoteSummary();
+                });
+            }
+            catch
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    _selectedNoteEmployeeSickBalance = 0;
+                    RecalculateNoteSummary();
+                });
+            }
+        }
+
+        private void RecalculateNoteSummary()
+        {
+            if (SelectedNoteEmployee == null)
+            {
+                NoteStatusSummary = "Please select an employee.";
+                return;
+            }
+
+            double balance = _selectedNoteEmployeeSickBalance;
+            int selectedCount = NoteDays.Count(d => d.IsCovered);
+
+            double paid = Math.Min(selectedCount, balance);
+            double unpaid = Math.Max(0, selectedCount - paid);
+
+            NoteStatusSummary = $"Employee Sick Leave Balance: {balance:F1} days\n" +
+                                $"Days Selected to Cover: {selectedCount}\n" +
+                                $"─ Paid Sick Days: {paid:F1}\n" +
+                                $"─ Unpaid Sick Days: {unpaid:F1} (balance exhausted)";
+        }
+
+        [RelayCommand]
+        private async Task LoadNoteDays()
+        {
+            if (SelectedNoteEmployee == null)
+            {
+                NotifyError("Validation", "Please select an employee.");
+                return;
+            }
+
+            if (NoteEndDate < NoteStartDate)
+            {
+                NotifyError("Validation", "End date must be on or after start date.");
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Loading attendance history...";
+
+                // Fetch attendance for this employee in the range
+                var allRecords = await _attendanceService.GetAttendanceRecordsAsync(NoteStartDate.Date, NoteEndDate.Date);
+                var empRecords = allRecords.Where(r => r.EmployeeId == SelectedNoteEmployee.Id).ToList();
+
+                var dayVms = new List<DoctorsNoteDayViewModel>();
+                for (var d = NoteStartDate.Date; d <= NoteEndDate.Date; d = d.AddDays(1))
+                {
+                    if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday) continue;
+                    if (OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
+
+                    var existing = empRecords.FirstOrDefault(r => r.Date.Date == d);
+                    string status = existing?.Status.ToString() ?? "No Record";
+
+                    var dayVm = new DoctorsNoteDayViewModel
+                    {
+                        Date = d,
+                        CurrentStatus = status,
+                        IsCovered = status == "Absent" || status == "UnpaidSick" || status == "No Record"
+                    };
+
+                    dayVm.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(DoctorsNoteDayViewModel.IsCovered))
+                        {
+                            App.Current.Dispatcher.Invoke(() => RecalculateNoteSummary());
+                        }
+                    };
+
+                    dayVms.Add(dayVm);
+                }
+
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    NoteDays.Clear();
+                    foreach (var vm in dayVms)
+                    {
+                        NoteDays.Add(vm);
+                    }
+                    RecalculateNoteSummary();
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading note days");
+                NotifyError("Error", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ProcessDoctorsNote()
+        {
+            if (SelectedNoteEmployee == null)
+            {
+                NotifyError("Validation", "Please select an employee.");
+                return;
+            }
+
+            var checkedDays = NoteDays.Where(d => d.IsCovered).OrderBy(d => d.Date).ToList();
+            if (!checkedDays.Any())
+            {
+                NotifyError("Validation", "Please check at least one day covered by the note.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(NoteReason))
+            {
+                NotifyError("Validation", "Please enter a reason or diagnosis.");
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Uploading doctor's note and processing sick leave...";
+
+                // 1. Upload the certificate if path is local
+                string? serverPath = null;
+                if (!string.IsNullOrEmpty(DoctorsNoteFilePath) && System.IO.File.Exists(DoctorsNoteFilePath))
+                {
+                    serverPath = await _attendanceService.UploadSickNoteAsync(DoctorsNoteFilePath);
+                }
+
+                // 2. Group checked days into contiguous ranges to create LeaveRequests
+                var groups = new List<List<DateTime>>();
+                List<DateTime>? currentGroup = null;
+                foreach (var day in checkedDays)
+                {
+                    if (currentGroup == null || (day.Date - currentGroup.Last()).Days > 1)
+                    {
+                        currentGroup = new List<DateTime>();
+                        groups.Add(currentGroup);
+                    }
+                    currentGroup.Add(day.Date);
+                }
+
+                double remainingSickBalance = _selectedNoteEmployeeSickBalance;
+
+                foreach (var group in groups)
+                {
+                    var start = group.First();
+                    var end = group.Last();
+                    int totalDays = group.Count;
+
+                    // Calculate paid/unpaid split
+                    double paidDays = Math.Min(totalDays, remainingSickBalance);
+                    double unpaidDays = totalDays - paidDays;
+                    remainingSickBalance = Math.Max(0, remainingSickBalance - paidDays);
+
+                    // Create Leave Request (Pending)
+                    var lr = new LeaveRequest
+                    {
+                        EmployeeId = SelectedNoteEmployee.Id,
+                        StartDate = start,
+                        EndDate = end,
+                        NumberOfDays = totalDays,
+                        PaidDays = paidDays,
+                        UnpaidDays = unpaidDays,
+                        LeaveType = LeaveType.Sick,
+                        DurationType = LeaveDurationType.FullDay,
+                        Reason = NoteReason,
+                        DoctorsNoteImagePath = serverPath,
+                        Status = LeaveStatus.Pending,
+                        IsUnpaid = paidDays == 0
+                    };
+
+                    var submitted = await _leaveService.SubmitLeaveRequestAsync(lr);
+                    if (submitted != null)
+                    {
+                        // Approve it to trigger attendance generation and balance deduction
+                        await _leaveService.ApproveLeaveAsync(submitted.Id, $"Processed via doctor's note upload. Note: {NoteReason}");
+                    }
+                }
+
+                NotifySuccess("Processed Note", $"Doctor's note processed. Sick leave applied and balances updated.");
+                IsDoctorsNotePanelOpen = false;
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing doctor's note");
+                NotifyError("Error", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task PrintSickLeaveReport()
+        {
+            Guid? employeeId = null;
+            if (SelectedItem != null)
+            {
+                employeeId = SelectedItem.EmployeeId;
+            }
+            else if (SelectedEmployee != null)
+            {
+                employeeId = SelectedEmployee.Id;
+            }
+
+            if (!employeeId.HasValue)
+            {
+                await _dialogService.ShowAlertAsync("Select Employee", "Please select a leave request or an employee in the details panel to print their sick leave report.");
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating sick leave report PDF...";
+
+                var employee = await _employeeService.GetEmployeeAsync(employeeId.Value);
+                if (employee == null)
+                {
+                    NotifyError("Error", "Employee not found.");
+                    return;
+                }
+
+                var allLeaves = await _leaveService.GetLeaveRequestsAsync();
+                var sickLeaves = allLeaves
+                    .Where(l => l.EmployeeId == employee.Id && l.LeaveType == LeaveType.Sick && l.Status == LeaveStatus.Approved)
+                    .OrderByDescending(l => l.StartDate)
+                    .ToList();
+
+                var startDate = employee.LeaveCycleStartDate ?? DateTime.Today.AddYears(-1);
+                var allAttendance = await _attendanceService.GetAttendanceRecordsAsync(startDate, DateTime.Today);
+                var sickDays = allAttendance
+                    .Where(a => a.EmployeeId == employee.Id && (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.UnpaidSick))
+                    .ToList();
+
+                var path = await _pdfService.GenerateSickLeaveReportPdfAsync(employee, sickLeaves, sickDays);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+                    NotifySuccess("Success", "Sick leave report generated.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing sick leave report");
+                NotifyError("Error", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+    }
+
+    public class DoctorsNoteDayViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+    {
+        private bool _isCovered;
+        public DateTime Date { get; set; }
+        public string DayOfWeek => Date.DayOfWeek.ToString();
+        public string CurrentStatus { get; set; } = "Absent";
+
+        public bool IsCovered
+        {
+            get => _isCovered;
+            set => SetProperty(ref _isCovered, value);
         }
     }
 }

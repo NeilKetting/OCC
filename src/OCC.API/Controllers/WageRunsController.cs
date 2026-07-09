@@ -118,7 +118,7 @@ namespace OCC.API.Controllers
                 companyDetails = JsonSerializer.Deserialize<CompanyDetails>(profileSetting.Value);
             }
 
-            // 4. Fetch Attendance for the Period (up to Wednesday of Week 2)
+            // 4. Fetch Attendance for the Period (up to Wednesday of Week 2) and any historical unpaid paid/leave records
             var cutoffDate = DateTime.MinValue;
             for (int i = 7; i <= 13; i++)
             {
@@ -131,7 +131,10 @@ namespace OCC.API.Controllers
             }
             var attendanceEnd = cutoffDate > runDate ? runDate : cutoffDate;
             var attendance = await _context.AttendanceRecords
-                .Where(a => a.Date >= request.StartDate && a.Date <= attendanceEnd)
+                .Where(a => a.PaidWageRunId == null && 
+                            ((a.Date >= request.StartDate && a.Date <= attendanceEnd) ||
+                             (a.Date < request.StartDate && 
+                              (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late || a.Status == AttendanceStatus.LeaveEarly || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
                 .ToListAsync();
 
             // 4. Fetch Active Loans
@@ -264,32 +267,45 @@ namespace OCC.API.Controllers
                 foreach (var record in empAttendance)
                 {
                     var hours = _wageCalc.CalculateHours(record, empForCalc);
-                    line.NormalHours         += hours.Normal;
-                    line.Overtime15Hours     += hours.Overtime15;
-                    line.Overtime20Hours     += hours.Overtime20;
-                    line.LunchDeductionHours += hours.Lunch;
-                    
-                    if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
+                    if (record.Date >= request.StartDate)
                     {
-                        if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
-                        else distinctDaysW2.Add(record.Date.Date);
-                    }
+                        line.NormalHours         += hours.Normal;
+                        line.Overtime15Hours     += hours.Overtime15;
+                        line.Overtime20Hours     += hours.Overtime20;
+                        line.LunchDeductionHours += hours.Lunch;
+                        
+                        if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
+                        {
+                            if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
+                            else distinctDaysW2.Add(record.Date.Date);
+                        }
 
-                    if (record.Status == AttendanceStatus.Absent)
-                    {
-                        line.VarianceNotes += $"{record.Date:dd/MM}: Absent; ";
+                        if (record.Status == AttendanceStatus.Absent)
+                        {
+                            line.VarianceNotes += $"{record.Date:dd/MM}: Absent; ";
+                        }
+                        else if (record.Status == AttendanceStatus.Sick)
+                        {
+                            line.VarianceNotes += $"{record.Date:dd/MM}: Sick; ";
+                        }
+                        else if (record.Status == AttendanceStatus.LeaveAuthorized)
+                        {
+                            line.VarianceNotes += $"{record.Date:dd/MM}: Leave; ";
+                        }
+                        else if (record.Status == AttendanceStatus.UnpaidSick)
+                        {
+                            line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
+                        }
                     }
-                    else if (record.Status == AttendanceStatus.Sick)
+                    else
                     {
-                        line.VarianceNotes += $"{record.Date:dd/MM}: Sick; ";
-                    }
-                    else if (record.Status == AttendanceStatus.LeaveAuthorized)
-                    {
-                        line.VarianceNotes += $"{record.Date:dd/MM}: Leave; ";
-                    }
-                    else if (record.Status == AttendanceStatus.UnpaidSick)
-                    {
-                        line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
+                        double backPayHours = hours.Normal + hours.Overtime15 + hours.Overtime20;
+                        if (backPayHours > 0)
+                        {
+                            line.VarianceHours += backPayHours;
+                            string statusDesc = record.Status == AttendanceStatus.Sick ? "Sick" : (record.Status == AttendanceStatus.LeaveAuthorized ? "Leave" : "Worked");
+                            line.VarianceNotes += $"Back-pay {record.Date:dd/MM} ({statusDesc} +{backPayHours:F1}h); ";
+                        }
                     }
                 }
                 line.DaysWorkedWeek1 = 0; // W1 (deducted days offset)
@@ -587,6 +603,32 @@ namespace OCC.API.Controllers
                         }
                     }
                 }
+            }
+
+            // Mark all processed attendance records as paid by this wage run
+            var runDateFinal = run.RunDate != default ? run.RunDate : DateTime.Now.Date;
+            var cutoffDateFinal = DateTime.MinValue;
+            for (int i = 7; i <= 13; i++)
+            {
+                var date = run.StartDate.AddDays(i).Date;
+                if (date.DayOfWeek == DayOfWeek.Wednesday)
+                {
+                    cutoffDateFinal = date;
+                    break;
+                }
+            }
+            var attendanceEndFinal = cutoffDateFinal > runDateFinal ? runDateFinal : cutoffDateFinal;
+
+            var attendanceRecordsToFinalize = await _context.AttendanceRecords
+                .Where(a => a.PaidWageRunId == null && 
+                            ((a.Date >= run.StartDate && a.Date <= attendanceEndFinal) ||
+                             (a.Date < run.StartDate && 
+                              (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late || a.Status == AttendanceStatus.LeaveEarly || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
+                .ToListAsync();
+
+            foreach (var record in attendanceRecordsToFinalize)
+            {
+                record.PaidWageRunId = run.Id;
             }
 
             await _context.SaveChangesAsync();

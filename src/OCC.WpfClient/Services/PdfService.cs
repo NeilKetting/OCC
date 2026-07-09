@@ -2586,6 +2586,161 @@ namespace OCC.WpfClient.Services
             });
         }
 
+        public async Task<string> GenerateSickLeaveReportPdfAsync(OCC.Shared.DTOs.EmployeeDto employee, IEnumerable<LeaveRequest> sickLeaves, IEnumerable<AttendanceRecord> sickDays)
+        {
+            var company = new CompanyDetails();
+            var empName = $"{employee.FirstName} {employee.LastName}";
+            
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(40);
+                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeGenericHeader(c, $"SICK LEAVE SUMMARY REPORT", company));
+
+                        page.Content().PaddingVertical(16).Column(col =>
+                        {
+                            // 1. Employee Info Card
+                            col.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Column(box =>
+                            {
+                                box.Item().Background(ColorPrimary).Padding(8)
+                                   .Text("EMPLOYEE INFORMATION").SemiBold().FontColor(Colors.White).FontSize(10);
+                                box.Item().Padding(12).Row(row =>
+                                {
+                                    row.RelativeItem().Column(c2 =>
+                                    {
+                                        c2.Item().Text(t => { t.Span("Full Name:  ").SemiBold(); t.Span(empName); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Employee No: ").SemiBold(); t.Span(employee.EmployeeNumber ?? "—"); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Role / Trade:  ").SemiBold(); t.Span(employee.Role.ToString()); });
+                                    });
+                                    row.RelativeItem().Column(c2 =>
+                                    {
+                                        c2.Item().Text(t => { t.Span("Branch:  ").SemiBold(); t.Span(employee.Branch ?? "—"); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Cycle Start: ").SemiBold(); t.Span(employee.LeaveCycleStartDate?.ToString("dd MMM yyyy") ?? "—"); });
+                                        c2.Item().PaddingTop(4).Text(t => { t.Span("Sick Balance: ").SemiBold(); t.Span($"{employee.SickLeaveBalance:F1} days").Bold().FontColor(ColorPrimary); });
+                                    });
+                                });
+                            });
+
+                            col.Item().Height(14);
+
+                            // 2. Sick Leave Applications Table
+                            col.Item().Text("APPROVED SICK LEAVE APPLICATIONS").Bold().FontSize(11).FontColor(ColorSecondary);
+                            col.Item().PaddingTop(6).Border(1).BorderColor(Colors.Grey.Lighten2).Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn(1.2f); // From
+                                    cols.RelativeColumn(1.2f); // To
+                                    cols.RelativeColumn(1.8f); // Reason
+                                    cols.RelativeColumn(0.8f); // Days
+                                    cols.RelativeColumn(0.8f); // Paid
+                                    cols.RelativeColumn(0.8f); // Unpaid
+                                    cols.RelativeColumn(1.5f); // Note?
+                                });
+                                
+                                table.Header(h =>
+                                {
+                                    foreach (var hdr in new[] { "FROM", "TO", "REASON", "DAYS", "PAID", "UNPAID", "DOCTOR'S NOTE" })
+                                        h.Cell().Background(ColorLightOrange).BorderBottom(1)
+                                         .BorderColor(Colors.Grey.Lighten2).Padding(6)
+                                         .Text(hdr).SemiBold().FontSize(8).FontColor(ColorSecondary);
+                                });
+
+                                foreach (var lr in sickLeaves)
+                                {
+                                    table.Cell().Padding(6).Text(lr.StartDate.ToString("dd MMM yyyy"));
+                                    table.Cell().Padding(6).Text(lr.EndDate.ToString("dd MMM yyyy"));
+                                    table.Cell().Padding(6).Text(lr.Reason ?? "Sick Leave");
+                                    table.Cell().Padding(6).Text(lr.NumberOfDays.ToString("F1"));
+                                    table.Cell().Padding(6).Text(lr.PaidDays.ToString("F1"));
+                                    table.Cell().Padding(6).Text(lr.UnpaidDays.ToString("F1"));
+                                    table.Cell().Padding(6).Text(!string.IsNullOrEmpty(lr.DoctorsNoteImagePath) ? "Yes (Attached)" : "No");
+                                }
+                                
+                                if (!sickLeaves.Any())
+                                {
+                                    table.Cell().ColumnSpan(7).Padding(12).AlignCenter().Text("No sick leave records found.").Italic().FontColor(Colors.Grey.Medium);
+                                }
+                            });
+
+                            col.Item().Height(14);
+
+                            // 3. Daily Attendance Breakdown Table
+                            col.Item().Text("DAILY SICK ATTENDANCE BREAKDOWN").Bold().FontSize(11).FontColor(ColorSecondary);
+                            col.Item().PaddingTop(6).Border(1).BorderColor(Colors.Grey.Lighten2).Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn(1.5f); // Date
+                                    cols.RelativeColumn(1.5f); // Status
+                                    cols.RelativeColumn(1.0f); // Paid Hours
+                                    cols.RelativeColumn(2.5f); // Notes
+                                    cols.RelativeColumn(1.5f); // Paid in Wage Run
+                                });
+                                
+                                table.Header(h =>
+                                {
+                                    foreach (var hdr in new[] { "DATE", "STATUS", "PAID HOURS", "NOTES", "WAGE RUN" })
+                                        h.Cell().Background(ColorLightOrange).BorderBottom(1)
+                                         .BorderColor(Colors.Grey.Lighten2).Padding(6)
+                                         .Text(hdr).SemiBold().FontSize(8).FontColor(ColorSecondary);
+                                });
+
+                                foreach (var day in sickDays.OrderByDescending(d => d.Date))
+                                {
+                                    table.Cell().Padding(6).Text(day.Date.ToString("dd MMM yyyy (ddd)"));
+                                    table.Cell().Padding(6).Text(day.Status.ToString());
+                                    table.Cell().Padding(6).Text((day.PaidLeaveHours ?? 0.0).ToString("F1"));
+                                    table.Cell().Padding(6).Text(day.Notes ?? "—");
+                                    table.Cell().Padding(6).Text(day.PaidWageRunId.HasValue ? $"Paid ({day.PaidWageRunId.Value.ToString().Substring(0, 8)})" : "Unpaid / Pending");
+                                }
+                                
+                                if (!sickDays.Any())
+                                {
+                                    table.Cell().ColumnSpan(5).Padding(12).AlignCenter().Text("No daily sick days recorded in attendance.").Italic().FontColor(Colors.Grey.Medium);
+                                }
+                            });
+
+                            col.Item().Height(30);
+
+                            // 4. Signatures
+                            col.Item().Row(row =>
+                            {
+                                row.RelativeItem().Column(c2 =>
+                                {
+                                    c2.Item().BorderBottom(1).BorderColor(Colors.Grey.Medium).Height(40).Text("");
+                                    c2.Item().PaddingTop(6).Text("Employee Signature").Bold().FontSize(9);
+                                    c2.Item().Text("Date: ________________________").FontSize(8);
+                                });
+                                row.ConstantItem(50);
+                                row.RelativeItem().Column(c2 =>
+                                {
+                                    c2.Item().BorderBottom(1).BorderColor(Colors.Grey.Medium).Height(40).Text("");
+                                    c2.Item().PaddingTop(6).Text("Manager / Supervisor Signature").Bold().FontSize(9);
+                                    c2.Item().Text("Date: ________________________").FontSize(8);
+                                });
+                            });
+                        });
+
+                        page.Footer().Element(c => ComposeGenericFooter(c, company));
+                    });
+                });
+
+                string docsPath = Path.GetTempPath();
+                string filename = $"SickLeaveReport_{employee.LastName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                string fullPath = Path.Combine(docsPath, filename);
+
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
         private static string GetDayWithSuffix(DateTime date)
         {
             int day = date.Day;

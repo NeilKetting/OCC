@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="980"
              d:DataContext="{d:DesignInstance vm:LeaveManagementViewModel}"
-             IsDrawerOpen="{Binding IsApplyPanelOpen, Mode=TwoWay}"
+             IsDrawerOpen="{Binding IsDrawerOpen, Mode=TwoWay}"
              DrawerWidth="420">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -117,11 +117,31 @@
 
                         <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
+                        <!-- Doctor's Note Button -->
+                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding OpenDoctorsNotePanelCommand}" ToolTip="Upload Doctor's Note">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE8A5;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Doctor's Note" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
                         <!-- Print Button -->
-                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Report">
+                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Register">
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Print Register" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                        <!-- Sick Leave Report Button -->
+                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintSickLeaveReportCommand}" ToolTip="Print Sick Leave Report">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="#E040FB" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Sick Report" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -287,113 +307,202 @@
 
     <utils:ListViewBase.OverlayContent>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
-            <StackPanel>
-                <TextBlock Text="{Binding PanelHeaderTitle}" Foreground="{StaticResource AccentBlue}"
-                           FontSize="12" FontWeight="Bold" Margin="0,0,0,20"/>
+            <Grid>
+                <!-- ══════════════════ APPLY LEAVE PANEL ══════════════════ -->
+                <StackPanel Visibility="{Binding IsApplyPanelOpen, Converter={StaticResource VisibilityConverter}}">
+                    <TextBlock Text="{Binding PanelHeaderTitle}" Foreground="{StaticResource AccentBlue}"
+                               FontSize="12" FontWeight="Bold" Margin="0,0,0,20"/>
 
-                <!-- Employee -->
-                <TextBlock Text="Employee" Style="{StaticResource LabelText}"/>
-                <ComboBox ItemsSource="{Binding Employees}"
-                          SelectedItem="{Binding SelectedEmployee}"
-                          DisplayMemberPath="DisplayName"
-                          IsEnabled="{Binding IsEmployeeSelectionEnabled}"
-                          Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
+                    <!-- Employee -->
+                    <TextBlock Text="Employee" Style="{StaticResource LabelText}"/>
+                    <ComboBox ItemsSource="{Binding Employees}"
+                              SelectedItem="{Binding SelectedEmployee}"
+                              DisplayMemberPath="DisplayName"
+                              IsEnabled="{Binding IsEmployeeSelectionEnabled}"
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
 
-                <!-- Leave Type -->
-                <TextBlock Text="Leave Type" Style="{StaticResource LabelText}"/>
-                <ComboBox ItemsSource="{Binding LeaveTypes}"
-                          SelectedItem="{Binding SelectedLeaveType}"
-                          Style="{StaticResource ModernComboBox}" Margin="0,4,0,16">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-
-                <!-- Half-Day Period (HalfDay type only) -->
-                <StackPanel Visibility="{Binding IsHalfDayType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
-                    <TextBlock Text="Half-Day Period" Style="{StaticResource LabelText}"/>
-                    <ComboBox ItemsSource="{Binding HalfDayPeriods}"
-                              SelectedItem="{Binding SelectedDurationType}"
-                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,0">
+                    <!-- Leave Type -->
+                    <TextBlock Text="Leave Type" Style="{StaticResource LabelText}"/>
+                    <ComboBox ItemsSource="{Binding LeaveTypes}"
+                              SelectedItem="{Binding SelectedLeaveType}"
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,16">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                </StackPanel>
 
-                <!-- Other Duration Option (Other type only) -->
-                <StackPanel Visibility="{Binding IsOtherType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
-                    <TextBlock Text="Duration Option" Style="{StaticResource LabelText}"/>
-                    <ComboBox ItemsSource="{Binding OtherDurations}"
-                              SelectedItem="{Binding SelectedDurationType}"
-                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,0">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
-
-                <!-- Leave Hours (Hourly other only) -->
-                <StackPanel Visibility="{Binding IsHourly, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
-                    <TextBlock Text="Hours Requested" Style="{StaticResource LabelText}"/>
-                    <TextBox Text="{Binding HoursRequested, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernInput}" Margin="0,4,0,0"/>
-                </StackPanel>
-
-                <!-- Reason -->
-                <TextBlock Text="Reason for Leave" Style="{StaticResource LabelText}"/>
-                <TextBox Text="{Binding Reason, UpdateSourceTrigger=PropertyChanged}"
-                          Style="{StaticResource ModernInput}" Height="80" TextWrapping="Wrap"
-                          AcceptsReturn="True" Margin="0,4,0,24"/>
-
-                <!-- Date Range -->
-                <Grid Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Start Date" Style="{StaticResource LabelText}"/>
-                        <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+                    <!-- Half-Day Period (HalfDay type only) -->
+                    <StackPanel Visibility="{Binding IsHalfDayType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
+                        <TextBlock Text="Half-Day Period" Style="{StaticResource LabelText}"/>
+                        <ComboBox ItemsSource="{Binding HalfDayPeriods}"
+                                  SelectedItem="{Binding SelectedDurationType}"
+                                  Style="{StaticResource ModernComboBox}" Margin="0,4,0,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
-                    <StackPanel Grid.Column="2" IsEnabled="{Binding IsFullDay}">
-                        <TextBlock Text="End Date" Style="{StaticResource LabelText}"/>
-                        <DatePicker SelectedDate="{Binding EndDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+
+                    <!-- Other Duration Option (Other type only) -->
+                    <StackPanel Visibility="{Binding IsOtherType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
+                        <TextBlock Text="Duration Option" Style="{StaticResource LabelText}"/>
+                        <ComboBox ItemsSource="{Binding OtherDurations}"
+                                  SelectedItem="{Binding SelectedDurationType}"
+                                  Style="{StaticResource ModernComboBox}" Margin="0,4,0,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
-                </Grid>
 
-                <!-- Calculated Days -->
-                <Border Padding="12,10" CornerRadius="6" Background="#0A2E9DFF" BorderBrush="#302E9DFF" BorderThickness="1" Margin="0,0,0,16">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE916;" Style="{StaticResource SymbolIcon}" FontSize="16" Foreground="{StaticResource AccentBlue}" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock VerticalAlignment="Center">
-                            <Run Text="{Binding CalculatedDays}" FontSize="22" FontWeight="Black" Foreground="{StaticResource AccentBlue}"/>
-                            <Run Text=" working day(s)" Foreground="{StaticResource TextSub}"/>
-                        </TextBlock>
+                    <!-- Leave Hours (Hourly other only) -->
+                    <StackPanel Visibility="{Binding IsHourly, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
+                        <TextBlock Text="Hours Requested" Style="{StaticResource LabelText}"/>
+                        <TextBox Text="{Binding HoursRequested, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernInput}" Margin="0,4,0,0"/>
                     </StackPanel>
-                </Border>
 
-                <!-- Balance Warning -->
-                <Border Padding="12,10" CornerRadius="6" Background="#0AFF9800" BorderBrush="#30FF9800" BorderThickness="1" Margin="0,0,0,16"
-                        Visibility="{Binding HasBalanceWarning, Converter={StaticResource VisibilityConverter}}">
-                    <TextBlock Text="{Binding BalanceWarning}" Foreground="{StaticResource OrangeBrush}" FontSize="11" TextWrapping="Wrap"/>
-                </Border>
+                    <!-- Reason -->
+                    <TextBlock Text="Reason for Leave" Style="{StaticResource LabelText}"/>
+                    <TextBox Text="{Binding Reason, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource ModernInput}" Height="80" TextWrapping="Wrap"
+                              AcceptsReturn="True" Margin="0,4,0,24"/>
 
-                <!-- Action Buttons -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource SecondaryButton}" Content="CANCEL"
-                            Command="{Binding CloseApplyPanelCommand}" Margin="0,0,12,0" Padding="14,8"/>
-                    <Button Style="{StaticResource PrimaryButton}" Content="{Binding SubmitButtonText}"
-                            Command="{Binding SubmitLeaveCommand}" Padding="14,8"/>
+                    <!-- Date Range -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Start Date" Style="{StaticResource LabelText}"/>
+                            <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" IsEnabled="{Binding IsFullDay}">
+                            <TextBlock Text="End Date" Style="{StaticResource LabelText}"/>
+                            <DatePicker SelectedDate="{Binding EndDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Calculated Days -->
+                    <Border Padding="12,10" CornerRadius="6" Background="#0A2E9DFF" BorderBrush="#302E9DFF" BorderThickness="1" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE916;" Style="{StaticResource SymbolIcon}" FontSize="16" Foreground="{StaticResource AccentBlue}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock VerticalAlignment="Center">
+                                <Run Text="{Binding CalculatedDays}" FontSize="22" FontWeight="Black" Foreground="{StaticResource AccentBlue}"/>
+                                <Run Text=" working day(s)" Foreground="{StaticResource TextSub}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Balance Warning -->
+                    <Border Padding="12,10" CornerRadius="6" Background="#0AFF9800" BorderBrush="#30FF9800" BorderThickness="1" Margin="0,0,0,16"
+                            Visibility="{Binding HasBalanceWarning, Converter={StaticResource VisibilityConverter}}">
+                        <TextBlock Text="{Binding BalanceWarning}" Foreground="{StaticResource OrangeBrush}" FontSize="11" TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource SecondaryButton}" Content="CANCEL"
+                                Command="{Binding CloseApplyPanelCommand}" Margin="0,0,12,0" Padding="14,8"/>
+                        <Button Style="{StaticResource PrimaryButton}" Content="{Binding SubmitButtonText}"
+                                Command="{Binding SubmitLeaveCommand}" Padding="14,8"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+
+                <!-- ══════════════════ DOCTOR'S NOTE PANEL ══════════════════ -->
+                <StackPanel Visibility="{Binding IsDoctorsNotePanelOpen, Converter={StaticResource VisibilityConverter}}">
+                    <TextBlock Text="UPLOAD DOCTOR'S NOTE" Foreground="{StaticResource AccentBlue}"
+                               FontSize="12" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                    <!-- Employee -->
+                    <TextBlock Text="Employee" Style="{StaticResource LabelText}"/>
+                    <ComboBox ItemsSource="{Binding Employees}"
+                              SelectedItem="{Binding SelectedNoteEmployee}"
+                              DisplayMemberPath="DisplayName"
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
+
+                    <!-- Date Range -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Start Date" Style="{StaticResource LabelText}"/>
+                            <DatePicker SelectedDate="{Binding NoteStartDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="End Date" Style="{StaticResource LabelText}"/>
+                            <DatePicker SelectedDate="{Binding NoteEndDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Load Days Button -->
+                    <Button Style="{StaticResource SecondaryButton}" Content="LOAD DAYS IN RANGE"
+                            Command="{Binding LoadNoteDaysCommand}" Margin="0,0,0,16" Padding="14,8"/>
+
+                    <!-- Checked days of range -->
+                    <TextBlock Text="Select Days Covered by Note" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                    <Border BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="6" Height="150" Background="#06FFFFFF" Margin="0,0,0,16">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding NoteDays}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsCovered}" Style="{StaticResource ModernCheckBox}" Margin="10,6">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Date, StringFormat=dd MMM}" Width="60" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding DayOfWeek}" Width="90" Foreground="{StaticResource TextSub}"/>
+                                                <TextBlock Text="{Binding CurrentStatus}" Foreground="{StaticResource SecondaryGold}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Document Path -->
+                    <TextBlock Text="Medical Certificate (PDF/Image)" Style="{StaticResource LabelText}"/>
+                    <Grid Margin="0,4,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding DoctorsNoteFilePath}" IsReadOnly="True" Style="{StaticResource ModernInput}" Grid.Column="0"/>
+                        <Button Style="{StaticResource PrimaryButton}" Content="Browse..." Command="{Binding SelectNoteFileCommand}" Grid.Column="1" Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <!-- Reason / Diagnosis -->
+                    <TextBlock Text="Reason / Medical Diagnosis" Style="{StaticResource LabelText}"/>
+                    <TextBox Text="{Binding NoteReason, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource ModernInput}" Height="60" TextWrapping="Wrap"
+                              AcceptsReturn="True" Margin="0,4,0,24"/>
+
+                    <!-- Live Status Calculation Box -->
+                    <Border Padding="12,10" CornerRadius="6" Background="#0A2E9DFF" BorderBrush="#302E9DFF" BorderThickness="1" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="{Binding NoteStatusSummary}" Foreground="{StaticResource AccentBlue}" FontSize="11" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource SecondaryButton}" Content="CANCEL"
+                                Command="{Binding CloseDoctorsNotePanelCommand}" Margin="0,0,12,0" Padding="14,8"/>
+                        <Button Style="{StaticResource PrimaryButton}" Content="PROCESS NOTE"
+                                Command="{Binding ProcessDoctorsNoteCommand}" Padding="14,8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
         </ScrollViewer>
     </utils:ListViewBase.OverlayContent>
 </utils:ListViewBase>

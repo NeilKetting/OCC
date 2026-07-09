@@ -54,6 +54,11 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a landscape A4 employee profile report including all fields from detail view.
         /// </summary>
         Task<string> GenerateEmployeeProfilePdfAsync(Employee employee);
+
+        /// <summary>
+        /// Generates an A4 portrait employee sick leave report showing history and available balances.
+        /// </summary>
+        Task<string> GenerateSickLeaveReportPdfAsync(OCC.Shared.DTOs.EmployeeDto employee, IEnumerable<LeaveRequest> sickLeaves, IEnumerable<AttendanceRecord> sickDays);
     }
 
     public class WeeklyAttendanceReportWeekModel
