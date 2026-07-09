@@ -14,12 +14,16 @@ using System.Threading.Tasks;
 using OCC.WpfClient.Infrastructure;
 using OCC.Shared.DTOs;
 using OCC.Shared.Enums;
+using CommunityToolkit.Mvvm.Messaging;
+using OCC.WpfClient.Infrastructure.Messages;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
     public partial class ProjectSpecificDashboardViewModel : ViewModelBase
     {
         private readonly Services.Interfaces.ISnagService _snagService;
+        private readonly Services.Interfaces.IAttendanceService _attendanceService;
+        private readonly Services.Interfaces.IProjectVariationOrderService _voService;
         private List<ProjectTask> _allTasks = new();
         private Project? _project;
 
@@ -38,6 +42,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _cityStatePostal = string.Empty;
         [ObservableProperty] private string _varianceText = string.Empty;
         [ObservableProperty] private bool _isLate;
+        [ObservableProperty] private double _safeWorkingHours;
+        [ObservableProperty] private int _activeVoCount;
         
         [ObservableProperty] private ObservableCollection<ProjectTask> _upcomingMilestones = new();
         [ObservableProperty] private int _upcomingMilestonesCount;
@@ -61,9 +67,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _allTasks.Clear();
         }
 
-        public ProjectSpecificDashboardViewModel(Services.Interfaces.ISnagService snagService)
+        public ProjectSpecificDashboardViewModel(
+            Services.Interfaces.ISnagService snagService,
+            Services.Interfaces.IAttendanceService attendanceService,
+            Services.Interfaces.IProjectVariationOrderService voService)
         {
             _snagService = snagService;
+            _attendanceService = attendanceService;
+            _voService = voService;
             Title = "Stats";
         }
 
@@ -97,8 +108,40 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     UpcomingMilestonesCount = milestones.Count;
                     
                     _ = FetchSnagData();
+                    _ = FetchProjectSpecificHseqData();
                 }
             });
+        }
+
+        private async Task FetchProjectSpecificHseqData()
+        {
+            if (_project == null) return;
+            var projectId = _project.Id;
+
+            try
+            {
+                var records = await _attendanceService.GetAttendanceRecordsAsync();
+                if (records != null)
+                {
+                    SafeWorkingHours = records
+                        .Where(r => r.ProjectId == projectId && r.Status == AttendanceStatus.Present)
+                        .Sum(r => r.HoursWorked);
+                }
+            }
+            catch
+            {
+                SafeWorkingHours = 0;
+            }
+
+            try
+            {
+                var vos = await _voService.GetVariationOrdersAsync(projectId);
+                ActiveVoCount = vos.Count(v => v.Status == "Approved");
+            }
+            catch
+            {
+                ActiveVoCount = 0;
+            }
         }
 
         private async Task FetchSnagData()
@@ -334,6 +377,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 VarianceText = string.Empty;
                 EtaStatus = "On schedule";
             }
+        }
+
+        [RelayCommand]
+        private void NavigateToTasks(string filter)
+        {
+            WeakReferenceMessenger.Default.Send(new ProjectDashboardNavigationMessage("Tasks", filter));
+        }
+
+        [RelayCommand]
+        private void NavigateToSafety()
+        {
+            WeakReferenceMessenger.Default.Send(new ProjectDashboardNavigationMessage("Safety"));
+        }
+
+        [RelayCommand]
+        private void NavigateToVariationOrders()
+        {
+            WeakReferenceMessenger.Default.Send(new ProjectDashboardNavigationMessage("VariationOrders"));
         }
     }
 }

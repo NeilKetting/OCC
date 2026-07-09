@@ -38,7 +38,7 @@
         </Border>
 
         <!-- Stats Grid -->
-        <UniformGrid Grid.Row="1" Columns="5" Margin="10">
+        <UniformGrid Grid.Row="1" Columns="7" Margin="10">
             <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Padding="15">
                 <StackPanel>
                     <TextBlock Text="Active Projects" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
@@ -67,10 +67,24 @@
                 </StackPanel>
             </Border>
 
-            <Border Style="{StaticResource GlassCard}" Padding="15">
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Padding="15">
                 <StackPanel>
                     <TextBlock Text="Active Snags" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
                     <TextBlock Text="{Binding ActiveSnagsCount}" Foreground="#EC4899" FontSize="32" FontWeight="Bold" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="Safe Working Hours" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding SafeWorkingHours, StringFormat='{}{0:N0}'}" Foreground="#27E397" FontSize="32" FontWeight="Bold" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GlassCard}" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="Active VOs" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding ActiveVoCount}" Foreground="{StaticResource AccentBlue}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0"/>
                 </StackPanel>
             </Border>
         </UniformGrid>

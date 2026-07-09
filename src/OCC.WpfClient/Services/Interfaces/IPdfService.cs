@@ -32,7 +32,7 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a landscape A4 wage run sheet, 
         /// optionally hiding columns after the comments section for salary/payment purposes.
         /// </summary>
-        Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false);
+        Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false, bool hideDecColumns = false);
 
         /// <summary>
         /// Generates a checklist PDF for supervisor cash payments.

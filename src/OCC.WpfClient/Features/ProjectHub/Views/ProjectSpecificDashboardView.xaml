@@ -16,9 +16,9 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="30">
+        <StackPanel Margin="30,15,30,15">
             <!-- 1. Top Section: Cards Row -->
-            <UniformGrid Columns="4" Margin="0,0,0,30">
+            <UniformGrid Columns="4" Margin="0,0,0,20">
                 <!-- Health Card -->
                 <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Padding="10">
                     <StackPanel>
@@ -74,35 +74,89 @@
             </UniformGrid>
 
             <!-- 2. Task Breakdown Row -->
-            <UniformGrid Columns="4" Margin="0,0,0,30">
-                <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Height="100">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="TOTAL" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalTasks}" Foreground="White" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    </StackPanel>
+            <UniformGrid Columns="6" Margin="0,0,0,20">
+                <Border Style="{StaticResource GlassCard}" Margin="0,0,10,0" Height="85">
+                    <Button Command="{Binding NavigateToTasksCommand}" CommandParameter="All" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="TOTAL TASKS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding TotalTasks}" Foreground="White" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </Border>
-                <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="100">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="COMPLETED" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding CompletedTasks}" Foreground="{StaticResource SuccessGreen}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    </StackPanel>
+                <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="85">
+                    <Button Command="{Binding NavigateToTasksCommand}" CommandParameter="Completed" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="COMPLETED TASKS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding CompletedTasks}" Foreground="{StaticResource SuccessGreen}" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </Border>
-                <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="100">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="IN PROGRESS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding InProgressTasks}" Foreground="{StaticResource AccentBlue}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    </StackPanel>
+                <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="85">
+                    <Button Command="{Binding NavigateToTasksCommand}" CommandParameter="InProgress" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="TASKS IN PROGRESS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding InProgressTasks}" Foreground="{StaticResource AccentBlue}" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </Border>
-                <Border Style="{StaticResource GlassCard}" Margin="10,0,0,0" Height="100" BorderBrush="{StaticResource ErrorRed}" BorderThickness="1" Background="#0DFF3B30">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="OVERDUE" Foreground="{StaticResource ErrorRed}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding OverdueTasks}" Foreground="{StaticResource ErrorRed}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    </StackPanel>
+                <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="85" BorderBrush="{StaticResource ErrorRed}" BorderThickness="1" Background="#0DFF3B30">
+                    <Button Command="{Binding NavigateToTasksCommand}" CommandParameter="Overdue" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="OVERDUE TASKS" Foreground="{StaticResource ErrorRed}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding OverdueTasks}" Foreground="{StaticResource ErrorRed}" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Style="{StaticResource GlassCard}" Margin="5,0" Height="85">
+                    <Button Command="{Binding NavigateToSafetyCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="SAFE HOURS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding SafeWorkingHours, StringFormat='{}{0:N0}'}" Foreground="#27E397" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Style="{StaticResource GlassCard}" Margin="10,0,0,0" Height="85">
+                    <Button Command="{Binding NavigateToVariationOrdersCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="APPROVED VOs" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding ActiveVoCount}" Foreground="{StaticResource OrangeBrush}" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </Border>
             </UniformGrid>
 
             <!-- Active Sub-Contractors Section -->
-            <Border Style="{StaticResource GlassCard}" Margin="0,0,0,30" Padding="20">
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

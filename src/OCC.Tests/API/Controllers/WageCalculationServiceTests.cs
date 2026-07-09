@@ -567,6 +567,67 @@ namespace OCC.Tests.API.Controllers
 
             Assert.Equal(0.0, result.Normal, precision: 2);
         }
+
+        [Fact]
+        public void CalculateHours_FullDayPaidLeaveHours_ReturnsPaidHours()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee();
+
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.LeaveAuthorized,
+                PaidLeaveHours = 9.0,
+                CheckInTime = null,
+                CheckOutTime = null
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(9.0, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime15, precision: 2);
+        }
+
+        [Fact]
+        public void CalculateHours_PartialDayPaidLeaveHours_CombinesWorkedAndLeave()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee(); // Shift: 07:00 - 16:00 (9 hours, normally 8 normal + 1 lunch)
+
+            var record = Record(KnownMonday, new(7, 0, 0), new(12, 0, 0)); // Worked 5 hours (07:00-12:00) - checkOut is before 13:00 so no lunch deducted
+            record.PaidLeaveHours = 4.5; // Half-day leave hours
+
+            var result = svc.CalculateHours(record, emp);
+
+            // Worked hours = 5.0 normal. Leave hours = 4.5. Total = 9.5 normal
+            Assert.Equal(9.5, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime15, precision: 2);
+        }
+
+        [Fact]
+        public void CalculateHours_PartialLeaveNoCheckOut_ReturnsPaidLeaveHoursOnly()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee();
+
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.Present,
+                PaidLeaveHours = 3.0,
+                CheckInTime = KnownMonday.AddHours(7),
+                CheckOutTime = null // Missing checkout
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            // Since it's not today (KnownMonday is in past) and checkout is missing, worked hours = 0. Paid leave hours = 3.0
+            Assert.Equal(3.0, result.Normal, precision: 2);
+        }
     }
 }
-

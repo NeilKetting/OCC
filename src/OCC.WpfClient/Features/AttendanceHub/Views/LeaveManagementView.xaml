@@ -222,6 +222,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="DURATION" Binding="{Binding DurationType}" Width="Auto"/>
                         <DataGridTextColumn Header="FROM" Binding="{Binding StartDate, StringFormat=dd MMM yyyy}" Width="Auto"/>
                         <DataGridTextColumn Header="TO" Binding="{Binding EndDate, StringFormat=dd MMM yyyy}" Width="Auto"/>
                         <DataGridTextColumn Header="DAYS" Binding="{Binding NumberOfDays}" Width="Auto"/>
@@ -304,6 +305,19 @@
                           SelectedItem="{Binding SelectedLeaveType}"
                           Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
 
+                <!-- Duration Type -->
+                <TextBlock Text="Duration" Style="{StaticResource LabelText}"/>
+                <ComboBox ItemsSource="{Binding DurationTypes}"
+                          SelectedItem="{Binding SelectedDurationType}"
+                          Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
+
+                <!-- Leave Hours (Hourly only) -->
+                <StackPanel Visibility="{Binding IsHourly, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
+                    <TextBlock Text="Hours Requested" Style="{StaticResource LabelText}"/>
+                    <TextBox Text="{Binding HoursRequested, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernInput}" Margin="0,4,0,0"/>
+                </StackPanel>
+
                 <!-- Date Range -->
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
@@ -315,7 +329,7 @@
                         <TextBlock Text="Start Date" Style="{StaticResource LabelText}"/>
                         <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="2">
+                    <StackPanel Grid.Column="2" IsEnabled="{Binding IsFullDay}">
                         <TextBlock Text="End Date" Style="{StaticResource LabelText}"/>
                         <DatePicker SelectedDate="{Binding EndDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
                     </StackPanel>

@@ -136,14 +136,22 @@ namespace OCC.WpfClient.Features.ChatHub.Models
                 "#d946ef"  // Fuchsia 500
             };
             
-            var bytes = id.ToByteArray();
-            int hash = 17;
-            foreach (var b in bytes)
-            {
-                hash = hash * 31 + b;
-            }
-
+            int hash = GetDeterministicHashCode(id.ToString());
             return colors[Math.Abs(hash) % colors.Length];
+        }
+
+        private int GetDeterministicHashCode(string str)
+        {
+            if (str == null) return 0;
+            unchecked
+            {
+                int hash = 23;
+                foreach (char c in str)
+                {
+                    hash = hash * 31 + c;
+                }
+                return hash;
+            }
         }
     }
 }

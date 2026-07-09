@@ -70,6 +70,12 @@ namespace OCC.Shared.Models
 
         /// <summary> The custom site location name if "Other" is selected. </summary>
         public string? CustomSite { get; set; }
+
+        /// <summary> The number of paid leave hours allocated to this day. </summary>
+        public double? PaidLeaveHours { get; set; }
+
+        /// <summary> The number of unpaid leave hours allocated to this day. </summary>
+        public double? UnpaidLeaveHours { get; set; }
     }
 
     /// <summary>

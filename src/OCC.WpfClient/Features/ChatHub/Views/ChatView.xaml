@@ -239,7 +239,7 @@
                                             </Grid.ColumnDefinitions>
                                             
                                             <Grid Grid.Column="0" Width="40" Height="40" HorizontalAlignment="Left">
-                                                <Ellipse Fill="{Binding ParticipantId, Converter={StaticResource UserColorConverter}}" />
+                                                <Ellipse Fill="{Binding BadgeColor, Converter={StaticResource UserColorConverter}}" />
                                                 <TextBlock Text="{Binding Initials}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
                                                 
                                                 <!-- Profile Picture Support -->
@@ -886,7 +886,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Grid.Column="0" Width="40" Height="40">
-                        <Ellipse Fill="{Binding SelectedSession.ParticipantId, Converter={StaticResource UserColorConverter}}" />
+                        <Ellipse Fill="{Binding SelectedSession.BadgeColor, Converter={StaticResource UserColorConverter}}" />
                         <TextBlock Text="{Binding SelectedSession.Initials}" Foreground="White" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         
                         <Ellipse Visibility="{Binding SelectedSession.ProfilePictureUrl, Converter={StaticResource VisibilityConverter}}">
@@ -1000,7 +1000,6 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Grid.Style>
-                                
                                 <Border CornerRadius="8" Padding="12,8" MaxWidth="500">
                                     <Border.Style>
                                         <Style TargetType="Border">
@@ -1012,7 +1011,36 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Reply" Command="{Binding Data.ReplyMessageCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="14"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Forward" Command="{Binding Data.ForwardMessageCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#8696a0" FontSize="14"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
                                     <StackPanel>
+                                        <!-- Reply Bubble inside message -->
+                                        <Border Background="#1c2b39" CornerRadius="6" BorderBrush="#00a884" BorderThickness="3,0,0,0" Padding="8,6" Margin="0,0,0,8"
+                                                Visibility="{Binding IsReply, Converter={StaticResource VisibilityConverter}}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding ReplySender}" Foreground="#00a884" FontSize="12" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding ReplySnippet}" Foreground="#94a3b8" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Forwarded Indicator -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4" Visibility="{Binding IsForwarded, Converter={StaticResource VisibilityConverter}}">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#94a3b8" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <TextBlock Text="Forwarded" Foreground="#94a3b8" FontSize="11" FontStyle="Italic" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
                                         <TextBlock Text="{Binding SenderName}" Foreground="#10b981" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"
                                                    Visibility="{Binding IsMine, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
                                         
@@ -1029,7 +1057,7 @@
                                             </Grid>
                                         </Border>
 
-                                        <TextBlock Text="{Binding Content}" Foreground="White" FontSize="14" TextWrapping="Wrap" LineHeight="20"/>
+                                        <TextBlock Text="{Binding DisplayContent}" Foreground="White" FontSize="14" TextWrapping="Wrap" LineHeight="20"/>
                                         <TextBlock Text="{Binding DisplayTime}" Foreground="#cbd5e1" FontSize="10" HorizontalAlignment="Right" Margin="0,5,0,0" Opacity="0.8"/>
                                     </StackPanel>
                                 </Border>
@@ -1039,46 +1067,174 @@
                 </ItemsControl>
             </ScrollViewer>
 
-            <!-- Input Area -->
-            <Border Grid.Row="2" Background="#1e293b" Padding="15"
+            <!-- Input Area & Reply Preview -->
+            <Border Grid.Row="2" Background="#1e293b" BorderBrush="#334155" BorderThickness="0,1,0,0"
                     Visibility="{Binding SelectedSession, Converter={StaticResource VisibilityConverter}}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Attachment -->
-                    <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Padding="10">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#64748b" FontSize="20" VerticalAlignment="Center"/>
-                    </Button>
-                    
-                    <Border Grid.Column="2" Background="#334155" CornerRadius="20" Margin="10,0">
+                <StackPanel>
+                    <!-- Reply Preview Bar -->
+                    <Border Background="#16202c" BorderBrush="#00a884" BorderThickness="4,0,0,0" Padding="15,10"
+                            Visibility="{Binding ReplyingToMessage, Converter={StaticResource VisibilityConverter}}">
                         <Grid>
-                            <TextBlock Text="Type a message" Foreground="#94a3b8" Margin="15,0,0,0" VerticalAlignment="Center"
-                                       Visibility="{Binding ElementName=MessageTextBox, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBox x:Name="MessageTextBox" Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="White" Padding="15,10" CaretBrush="White" VerticalContentAlignment="Center">
-                                <TextBox.InputBindings>
-                                    <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
-                                </TextBox.InputBindings>
-                            </TextBox>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Reply Icon -->
+                            <TextBlock Grid.Column="0" Text="" Style="{StaticResource SymbolIcon}" Foreground="#00a884" FontSize="16" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            
+                            <!-- Sender & Snippet -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ReplyingToMessage.SenderName, StringFormat='Replying to {0}'}" Foreground="#00a884" FontSize="13" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding ReplyingToMessage.DisplayContent}" Foreground="#94a3b8" FontSize="13" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            
+                            <!-- Close/Cancel Button -->
+                            <Button Grid.Column="2" Command="{Binding CancelReplyCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center" Padding="5">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="12" Width="24" Height="24">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#64748b" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="CloseBorder" Property="Background" Value="#2a3942"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
                         </Grid>
                     </Border>
 
-                    <!-- Send Button -->
-                    <Button Grid.Column="3" Background="#10b981" BorderThickness="0" Width="40" Height="40" x:Name="SendButton"
-                            Command="{Binding SendMessageCommand}">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}" CornerRadius="20">
-                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
-                </Grid>
+                    <!-- Message Input Control Area -->
+                    <Grid Margin="15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Attachment -->
+                        <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Padding="10">
+                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#64748b" FontSize="20" VerticalAlignment="Center"/>
+                        </Button>
+                        
+                        <Border Grid.Column="2" Background="#334155" CornerRadius="20" Margin="10,0">
+                            <Grid>
+                                <TextBlock Text="Type a message" Foreground="#94a3b8" Margin="15,0,0,0" VerticalAlignment="Center"
+                                           Visibility="{Binding ElementName=MessageTextBox, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <TextBox x:Name="MessageTextBox" Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Foreground="White" Padding="15,10" CaretBrush="White" VerticalContentAlignment="Center">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Send Button -->
+                        <Button Grid.Column="3" Background="#10b981" BorderThickness="0" Width="40" Height="40" x:Name="SendButton"
+                                Command="{Binding SendMessageCommand}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="20">
+                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Forward Message Overlay -->
+            <Border Grid.RowSpan="3" Background="#cc090d16" Panel.ZIndex="100"
+                    Visibility="{Binding IsForwardingPopupOpen, Converter={StaticResource VisibilityConverter}}">
+                <Border Background="#1e293b" BorderBrush="#334155" BorderThickness="1" CornerRadius="16"
+                        Width="400" Height="450" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header -->
+                        <Grid Grid.Row="0" Margin="0,0,0,15">
+                            <TextBlock Text="Forward Message" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Button Command="{Binding CancelForwardCommand}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" Cursor="Hand" Padding="5">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="12" Width="24" Height="24">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#94a3b8" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="CloseBorder" Property="Background" Value="#334155"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                        
+                        <!-- Chat List to Forward to -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding SessionsView}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="10,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <Grid Grid.Column="0" Width="32" Height="32">
+                                                    <Ellipse Fill="{Binding BadgeColor, Converter={StaticResource UserColorConverter}}" />
+                                                    <TextBlock Text="{Binding Initials}" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Grid>
+                                                
+                                                <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0" TextTrimming="CharacterEllipsis"/>
+                                                
+                                                <!-- Send / Select button -->
+                                                <Button Grid.Column="2" Content="Send" 
+                                                        Command="{Binding DataContext.ConfirmForwardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#00a884" Foreground="White" FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Border" Property="Background" Value="#06cf9c"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
             </Border>
         </Grid>
     </Grid>

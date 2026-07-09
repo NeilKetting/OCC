@@ -100,7 +100,33 @@ namespace OCC.WpfClient.Services
                 var request = await _httpClient.GetFromJsonAsync<LeaveRequest>(getUrl, _options);
                 if (request == null) return false;
 
-                // 2. Update status
+                // 2. Fetch employee to calculate paid/unpaid days split based on balance
+                var employee = await _employeeService.GetEmployeeAsync(request.EmployeeId);
+                if (employee != null)
+                {
+                    if (request.LeaveType == LeaveType.CulturalObligations)
+                    {
+                        double totalDays = request.NumberOfDays;
+                        double cappedPaid = Math.Min(3.0, totalDays);
+                        double employeeAnnualBalance = employee.AnnualLeaveBalance;
+
+                        request.PaidDays = Math.Max(0, Math.Min(cappedPaid, employeeAnnualBalance));
+                        request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);
+                    }
+                    else if (request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave)
+                    {
+                        request.PaidDays = 0;
+                        request.UnpaidDays = request.NumberOfDays;
+                        request.IsUnpaid = true;
+                    }
+                    else
+                    {
+                        request.PaidDays = request.NumberOfDays;
+                        request.UnpaidDays = 0;
+                    }
+                }
+
+                // 3. Update status
                 request.Status = LeaveStatus.Approved;
                 request.ActionedDate = DateTime.UtcNow;
                 request.AdminComment = comment;
@@ -198,7 +224,7 @@ namespace OCC.WpfClient.Services
                 var emp = await _employeeService.GetEmployeeAsync(request.EmployeeId);
                 if (emp == null) return;
 
-                int days = request.NumberOfDays > 0
+                double days = request.NumberOfDays > 0
                     ? request.NumberOfDays
                     : CalculateBusinessDays(request.StartDate, request.EndDate);
 
@@ -227,10 +253,11 @@ namespace OCC.WpfClient.Services
                 switch (request.LeaveType)
                 {
                     case LeaveType.Annual:
-                        updateEmp.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - days);
+                    case LeaveType.CulturalObligations:
+                        updateEmp.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - request.PaidDays);
                         break;
                     case LeaveType.Sick:
-                        updateEmp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - days);
+                        updateEmp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - request.PaidDays);
                         break;
                     // Maternity, Study, FamilyResponsibility, Unpaid — no balance to deduct
                 }

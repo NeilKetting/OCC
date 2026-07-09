@@ -42,8 +42,14 @@ namespace OCC.API.Services
         /// <inheritdoc/>
         public HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee)
         {
-            // Paid leave check: Sick or LeaveAuthorized
-            if (record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
+            // If they didn't work at all and have explicit leave hours, return early
+            if (record.CheckInTime == null && record.PaidLeaveHours.HasValue)
+            {
+                return new HoursBreakdown(record.PaidLeaveHours.Value, 0, 0, 0);
+            }
+
+            // Paid leave check (only if they do not have the explicit PaidLeaveHours field): Sick or LeaveAuthorized
+            if (!record.PaidLeaveHours.HasValue && (record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized))
             {
                 // Shift bounds for this employee
                 TimeSpan leaveShiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
@@ -59,13 +65,16 @@ namespace OCC.API.Services
                 return new HoursBreakdown(leaveNormal, 0, 0, 0);
             }
 
-            // Guard: no check-in or absent/unpaid sick → nothing to pay
+            // Guard: no check-in or absent/unpaid sick → nothing to pay (unless they have explicit PaidLeaveHours)
             if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick)
-                return new HoursBreakdown(0, 0, 0, 0);
+            {
+                return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
+            }
 
             // Guard: no check-out → can't compute duration
             if (record.CheckOutTime == null)
             {
+                double paidHours = record.PaidLeaveHours ?? 0;
                 if (record.Date.Date == DateTime.Today && 
                     record.CheckInTime != null && 
                     (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly))
@@ -77,7 +86,7 @@ namespace OCC.API.Services
 
                     if (isRecordSunday || isRecordSaturday || isRecordHoliday)
                     {
-                        return new HoursBreakdown(0, 0, 0, 0);
+                        return new HoursBreakdown(paidHours, 0, 0, 0);
                     }
 
                     TimeSpan standardShiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
@@ -90,10 +99,10 @@ namespace OCC.API.Services
                     }
 
                     if (standardNormal < 0) standardNormal = 0;
-                    return new HoursBreakdown(standardNormal, 0, 0, 0);
+                    return new HoursBreakdown(standardNormal + paidHours, 0, 0, 0);
                 }
 
-                return new HoursBreakdown(0, 0, 0, 0);
+                return new HoursBreakdown(paidHours, 0, 0, 0);
             }
 
             DateTime start = record.CheckInTime.Value;
@@ -101,7 +110,7 @@ namespace OCC.API.Services
 
             double totalDuration = (end - start).TotalHours;
             if (totalDuration <= 0)
-                return new HoursBreakdown(0, 0, 0, 0);
+                return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
 
             // ── Classify the day ──────────────────────────────────────────────
             var  dow       = record.Date.DayOfWeek;
@@ -116,7 +125,8 @@ namespace OCC.API.Services
                     ? ComputeWeekdayLunch(end, record.Date)
                     : 0.0;
 
-                return new HoursBreakdown(0, 0, totalDuration - lunch, lunch);
+                double extraPaid = record.PaidLeaveHours ?? 0;
+                return new HoursBreakdown(extraPaid, 0, totalDuration - lunch, lunch);
             }
 
             // ── Saturday → 1.5×, NO lunch ────────────────────────────────────
@@ -126,7 +136,8 @@ namespace OCC.API.Services
                     ? ComputeWeekdayLunch(end, record.Date)
                     : 0.0;
 
-                return new HoursBreakdown(0, totalDuration - lunch, 0, lunch);
+                double extraPaid = record.PaidLeaveHours ?? 0;
+                return new HoursBreakdown(extraPaid, totalDuration - lunch, 0, lunch);
             }
 
             // ── Weekday ───────────────────────────────────────────────────────
@@ -157,7 +168,8 @@ namespace OCC.API.Services
             double overtime15 = totalDuration - lunchDeduction - normal;
             if (overtime15 < 0) overtime15 = 0;
 
-            return new HoursBreakdown(normal, overtime15, 0, lunchDeduction);
+            double extraLeave = record.PaidLeaveHours ?? 0;
+            return new HoursBreakdown(normal + extraLeave, overtime15, 0, lunchDeduction);
         }
 
         // ── Private Helpers ───────────────────────────────────────────────────

@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
-    public partial class ProjectDetailViewModel : DetailViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IRecipient<CreateTaskFromVariationOrderMessage>, IOverlayProvider
+    public partial class ProjectDetailViewModel : DetailViewModelBase, IRecipient<TaskUpdatedMessage>, IRecipient<ProjectUpdatedMessage>, IRecipient<CreateTaskFromVariationOrderMessage>, IRecipient<ProjectDashboardNavigationMessage>, IOverlayProvider
     {
         private readonly IProjectService _projectService;
         private readonly ProjectSpecificDashboardViewModel _dashboardVM;
@@ -72,6 +72,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
             WeakReferenceMessenger.Default.Register<ProjectUpdatedMessage>(this);
             WeakReferenceMessenger.Default.Register<CreateTaskFromVariationOrderMessage>(this);
+            WeakReferenceMessenger.Default.Register<ProjectDashboardNavigationMessage>(this);
         }
     
         private void UpdateHeaderInfo()
@@ -185,6 +186,38 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public void Receive(CreateTaskFromVariationOrderMessage message)
         {
             ShowTasks();
+        }
+
+        public void Receive(ProjectDashboardNavigationMessage message)
+        {
+            if (message.TargetView == "Tasks")
+            {
+                CurrentView = _tasksVM;
+                if (message.Filter == "Completed")
+                {
+                    _tasksVM.ApplyFilters("Completed", "All Tasks");
+                }
+                else if (message.Filter == "InProgress")
+                {
+                    _tasksVM.ApplyFilters("Started", "All Tasks");
+                }
+                else if (message.Filter == "Overdue")
+                {
+                    _tasksVM.ApplyFilters("All Stages", "Overdue");
+                }
+                else
+                {
+                    _tasksVM.ApplyFilters("All Stages", "All Tasks");
+                }
+            }
+            else if (message.TargetView == "Safety")
+            {
+                ShowProjectHseq();
+            }
+            else if (message.TargetView == "VariationOrders")
+            {
+                ShowVariationOrders();
+            }
         }
 
         [RelayCommand]

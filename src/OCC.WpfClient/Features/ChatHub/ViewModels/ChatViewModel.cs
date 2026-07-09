@@ -140,6 +140,15 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
 
         public ICollectionView ContactsView { get; }
 
+        [ObservableProperty]
+        private ChatMessageModel? _replyingToMessage;
+
+        [ObservableProperty]
+        private ChatMessageModel? _forwardingMessage;
+
+        [ObservableProperty]
+        private bool _isForwardingPopupOpen;
+
         public ChatViewModel(IAuthService authService,
                              ConnectionSettings connectionSettings,
                              IHttpClientFactory httpClientFactory,
@@ -629,6 +638,16 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
             }
 
             var plainContent = MessageInput;
+            if (ReplyingToMessage != null)
+            {
+                var snippet = ReplyingToMessage.DisplayContent;
+                if (snippet.Length > 60)
+                {
+                    snippet = snippet.Substring(0, 57) + "...";
+                }
+                snippet = snippet.Replace("\n", " ");
+                plainContent = $"[Reply to {ReplyingToMessage.SenderName}: {snippet}]:\n{plainContent}";
+            }
             bool success = false;
 
             try
@@ -654,6 +673,7 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
                 {
                     App.Current.Dispatcher.Invoke(() => {
                         MessageInput = string.Empty;
+                        ReplyingToMessage = null;
                         RequestClearInput?.Invoke(this, EventArgs.Empty);
                     });
                 }
@@ -814,6 +834,63 @@ namespace OCC.WpfClient.Features.ChatHub.ViewModels
 
         [RelayCommand]
         private void RemoveContact(ChatUserDto contact) => SelectedContacts.Remove(contact);
+
+        [RelayCommand]
+        private void ReplyMessage(ChatMessageModel message)
+        {
+            if (message == null) return;
+            ReplyingToMessage = message;
+        }
+
+        [RelayCommand]
+        private void CancelReply()
+        {
+            ReplyingToMessage = null;
+        }
+
+        [RelayCommand]
+        private void ForwardMessage(ChatMessageModel message)
+        {
+            if (message == null) return;
+            ForwardingMessage = message;
+            IsForwardingPopupOpen = true;
+        }
+
+        [RelayCommand]
+        private void CancelForward()
+        {
+            ForwardingMessage = null;
+            IsForwardingPopupOpen = false;
+        }
+
+        [RelayCommand]
+        private async Task ConfirmForwardAsync(ChatSessionModel targetSession)
+        {
+            if (targetSession == null || ForwardingMessage == null) return;
+
+            var plainContent = $"[Forwarded]:\n{ForwardingMessage.DisplayContent}";
+
+            try
+            {
+                var contentToSend = plainContent;
+                if (!string.IsNullOrEmpty(targetSession.DecryptedAesKey))
+                {
+                    contentToSend = _encryptionService.EncryptMessage(plainContent, targetSession.DecryptedAesKey);
+                }
+
+                await _signalRService.SendChatMessageAsync(targetSession.Id, contentToSend);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to forward message.");
+                await _dialogService.ShowAlertAsync("Error", "Failed to forward message. Please check connection.");
+            }
+            finally
+            {
+                ForwardingMessage = null;
+                IsForwardingPopupOpen = false;
+            }
+        }
 
         public async ValueTask DisposeAsync()
         {

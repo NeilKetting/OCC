@@ -26,6 +26,7 @@ namespace OCC.Client.Features.WagesHub.ViewModels
             var today = DateTime.Today;
             int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
             StartDate = today.AddDays(-diff).AddDays(-7).Date;
+            IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
             
             // EndDate is calculated in OnStartDateChanged (StartDate + 13 days)
             
@@ -39,11 +40,15 @@ namespace OCC.Client.Features.WagesHub.ViewModels
         {
             // Fortnight run: StartDate + 13 days (Total 14 days)
             EndDate = value.AddDays(13);
+            IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
         }
         
         [ObservableProperty]
         private DateTime _endDate;
-        
+
+        [ObservableProperty]
+        private bool _isDecColumnsVisible;
+
         [ObservableProperty]
         private string _notes = string.Empty;
 
@@ -281,7 +286,7 @@ namespace OCC.Client.Features.WagesHub.ViewModels
                     runToPrint.Lines = Lines.Select(l => l.Model).ToList();
                 }
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible);
                 
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
@@ -324,7 +329,7 @@ namespace OCC.Client.Features.WagesHub.ViewModels
                     runToPrint.Lines = Lines.Select(l => l.Model).ToList();
                 }
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible);
                 
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {

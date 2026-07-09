@@ -77,6 +77,10 @@
 					<TextBlock Text="Notes" Classes="label"/>
 					<TextBox Watermark="Run Notes (Optional)" Text="{Binding Notes}" Width="165" FontSize="11"/>
 				</StackPanel>
+				<StackPanel Grid.Row="4" Grid.Column="4" Spacing="5" Margin="10,0,0,0" VerticalAlignment="Bottom">
+					<TextBlock Text="Dec Columns" Classes="label"/>
+					<CheckBox Content="Show" IsChecked="{Binding IsDecColumnsVisible, Mode=TwoWay}" Height="32" VerticalContentAlignment="Center"/>
+				</StackPanel>
 			</Grid>
 		</Border>
 
@@ -172,21 +176,21 @@
 						</DataGridTextColumn>
 
 						<!-- 9. DEC O/T RATE -->
-						<DataGridTextColumn Binding="{Binding DecOtRate, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+						<DataGridTextColumn Binding="{Binding DecOtRate, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True" IsVisible="{Binding $parent[DataGrid].DataContext.IsDecColumnsVisible, x:CompileBindings=False}">
 							<DataGridTextColumn.Header>
 								<TextBlock Text="DEC O/T&#x0a;RATE" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
 							</DataGridTextColumn.Header>
 						</DataGridTextColumn>
 
 						<!-- 10. DEC O/T HRS -->
-						<DataGridTextColumn Binding="{Binding DecOtHrs, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+						<DataGridTextColumn Binding="{Binding DecOtHrs, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True" IsVisible="{Binding $parent[DataGrid].DataContext.IsDecColumnsVisible, x:CompileBindings=False}">
 							<DataGridTextColumn.Header>
 								<TextBlock Text="DEC O/T&#x0a;HRS" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
 							</DataGridTextColumn.Header>
 						</DataGridTextColumn>
 
 						<!-- 11. DEC TOTAL -->
-						<DataGridTextColumn Binding="{Binding DecTotal, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True">
+						<DataGridTextColumn Binding="{Binding DecTotal, StringFormat={}{0:F2}}" Width="Auto" IsReadOnly="True" IsVisible="{Binding $parent[DataGrid].DataContext.IsDecColumnsVisible, x:CompileBindings=False}">
 							<DataGridTextColumn.Header>
 								<TextBlock Text="DEC&#x0a;TOTAL" FontWeight="Bold" FontSize="9" TextAlignment="Center" Margin="0,4"/>
 							</DataGridTextColumn.Header>

@@ -12,6 +12,47 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="SegmentedTabButton" TargetType="RadioButton">
+                <Setter Property="Foreground" Value="#88FFFFFF"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="Padding" Value="16,0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="border" 
+                                    Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6" 
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <ContentPresenter.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="FontSize" Value="11"/>
+                                        </Style>
+                                    </ContentPresenter.Resources>
+                                </ContentPresenter>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
+                                    <Setter TargetName="border" Property="BorderBrush" Value="#15FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -22,13 +63,38 @@
         </Grid.RowDefinitions>
 
         <!-- Tab Header Bar -->
-        <Border Grid.Row="0" Background="#0AFFFFFF" BorderBrush="#15FFFFFF" BorderThickness="0,0,0,1" Padding="20,0">
-            <StackPanel Orientation="Horizontal">
-                <RadioButton Style="{StaticResource MenuTabButton}" Content="Documents" IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Documents}"
-                             Command="{Binding ShowDocumentsCommand}" Padding="16,12" Margin="0,0,4,0"/>
-                <RadioButton Style="{StaticResource MenuTabButton}" Content="Incidents" IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Incidents}"
-                             Command="{Binding ShowIncidentsCommand}" Padding="16,12" Margin="0,0,4,0"/>
-            </StackPanel>
+        <Border Grid.Row="0" Background="#0AFFFFFF" BorderBrush="#15FFFFFF" BorderThickness="0,0,0,1" Padding="20,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Modern Segmented Tab Buttons -->
+                <Border Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                        Background="#10FFFFFF" CornerRadius="8" Padding="3" BorderThickness="1" BorderBrush="#15FFFFFF">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource SegmentedTabButton}" Content="Documents" GroupName="ProjectHseqTabs"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Documents, Mode=TwoWay}"
+                                     Command="{Binding ShowDocumentsCommand}"/>
+                        <RadioButton Style="{StaticResource SegmentedTabButton}" Content="Incidents" GroupName="ProjectHseqTabs"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Incidents, Mode=TwoWay}"
+                                     Command="{Binding ShowIncidentsCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Right: Safe Working Hours Stats Badge -->
+                <Border Grid.Column="1" VerticalAlignment="Center" Background="#1227E397" BorderBrush="#4027E397" BorderThickness="1" CornerRadius="8" Padding="12,6">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- Shield/Safety check symbol -->
+                        <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolIcon}" Foreground="#27E397" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="PROJECT SAFE HOURS" Foreground="#80FFFFFF" FontSize="8" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding SafeWorkingHours, StringFormat='{}{0:N0} Hours'}" Foreground="White" FontSize="13" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- Sub View -->

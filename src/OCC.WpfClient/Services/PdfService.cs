@@ -1589,7 +1589,7 @@ namespace OCC.WpfClient.Services
         //  WAGE RUN PDF — ported from OCC.Client PdfService_WageRun.cs
         // ═══════════════════════════════════════════════════════════════════
 
-        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false)
+        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false, bool hideDecColumns = false)
         {
             return await Task.Run(() =>
             {
@@ -1602,7 +1602,7 @@ namespace OCC.WpfClient.Services
                         page.DefaultTextStyle(x => x.FontSize(4.8f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
 
                         page.Header().Element(c => ComposeWageHeader(c, wageRun));
-                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments));
+                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments, hideDecColumns));
                         page.Footer().PaddingTop(5).Element(c => ComposeWageRunFooter(c));
                     });
                 });
@@ -1741,7 +1741,7 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeWageContent(IContainer container, WageRun wageRun, bool hideAfterComments)
+        private void ComposeWageContent(IContainer container, WageRun wageRun, bool hideAfterComments, bool hideDecColumns)
         {
             container.Column(col =>
             {
@@ -1751,13 +1751,13 @@ namespace OCC.WpfClient.Services
                 if (permLines.Any())
                 {
                     col.Item().PaddingTop(5).Text("PERMANENT STAFF").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments));
+                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments, hideDecColumns));
                 }
 
                 if (casualLines.Any())
                 {
                     col.Item().PaddingTop(10).Text("CONTRACT / CASUAL STAFF").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments));
+                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments, hideDecColumns));
                 }
 
                 // Summary tables at the bottom
@@ -1769,7 +1769,7 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments)
+        private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments, bool hideDecColumns)
         {
             bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
 
@@ -1785,9 +1785,12 @@ namespace OCC.WpfClient.Services
                     columns.ConstantColumn(28);   // STD O/T RATE
                     columns.ConstantColumn(28);   // SAT O/T RATE
                     columns.ConstantColumn(28);   // SUN P/H RATE
-                    columns.ConstantColumn(28);   // DEC O/T RATE
-                    columns.ConstantColumn(20);   // DEC O/T HRS
-                    columns.ConstantColumn(28);   // DEC TOTAL
+                    if (!hideDecColumns)
+                    {
+                        columns.ConstantColumn(28);   // DEC O/T RATE
+                        columns.ConstantColumn(20);   // DEC O/T HRS
+                        columns.ConstantColumn(28);   // DEC TOTAL
+                    }
                     columns.ConstantColumn(20);   // STD O/T HRS
                     columns.ConstantColumn(20);   // SAT O/T HRS
                     columns.ConstantColumn(20);   // SUN O/T HRS
@@ -1827,9 +1830,12 @@ namespace OCC.WpfClient.Services
                     header.Cell().Element(WageHeaderStyle).Text("STD O/T\nRATE");
                     header.Cell().Element(WageHeaderStyle).Text("SAT O/T\nRATE");
                     header.Cell().Element(WageHeaderStyle).Text("SUN-P'HOL\nRATE");
-                    header.Cell().Element(WageHeaderStyle).Text("DEC O/T\nRATE");
-                    header.Cell().Element(WageHeaderStyle).Text("DEC O/T\nHRS");
-                    header.Cell().Element(WageHeaderStyle).Text("DEC\nTOTAL");
+                    if (!hideDecColumns)
+                    {
+                        header.Cell().Element(WageHeaderStyle).Text("DEC O/T\nRATE");
+                        header.Cell().Element(WageHeaderStyle).Text("DEC O/T\nHRS");
+                        header.Cell().Element(WageHeaderStyle).Text("DEC\nTOTAL");
+                    }
                     header.Cell().Element(WageHeaderStyle).Text("STD\nO/T");
                     header.Cell().Element(WageHeaderStyle).Text("SAT\nO/T");
                     header.Cell().Element(WageHeaderStyle).Text("SUN\nO/T");
@@ -1874,9 +1880,12 @@ namespace OCC.WpfClient.Services
                     table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
                     table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 2.0m).ToString("F2"));
 
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2")); // DEC O/T RATE
-                    table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00");                       // DEC O/T HRS
-                    table.Cell().Element(WageCellStyle).AlignRight().Text("0.00");                        // DEC TOTAL
+                    if (!hideDecColumns)
+                    {
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2")); // DEC O/T RATE
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00");                       // DEC O/T HRS
+                        table.Cell().Element(WageCellStyle).AlignRight().Text("0.00");                        // DEC TOTAL
+                    }
 
                     table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime15Hours.ToString("F2"));
                     table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00");
@@ -1908,8 +1917,9 @@ namespace OCC.WpfClient.Services
 
                     if (line.IncentiveSupervisor > 0)
                     {
-                        // Span first 18 columns up to OTHER
-                        table.Cell().ColumnSpan(18).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
+                        uint firstSpan = hideDecColumns ? 15u : 18u;
+                        // Span first columns up to OTHER
+                        table.Cell().ColumnSpan(firstSpan).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
 
                         // Column 19 (Total Nett) - Value
                         table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
@@ -1928,7 +1938,8 @@ namespace OCC.WpfClient.Services
 
                 table.Footer(footer =>
                 {
-                    footer.Cell().ColumnSpan(18).Element(c => c.AlignRight().PaddingRight(5).Text("TOTAL:").Bold());
+                    uint totalSpan = hideDecColumns ? 15u : 18u;
+                    footer.Cell().ColumnSpan(totalSpan).Element(c => c.AlignRight().PaddingRight(5).Text("TOTAL:").Bold());
                     footer.Cell().Element(c => c.Border(0.5f).Padding(1).AlignRight()
                          .Text(lines.Sum(x => x.NetPay).ToString("F2")).Bold());
                     

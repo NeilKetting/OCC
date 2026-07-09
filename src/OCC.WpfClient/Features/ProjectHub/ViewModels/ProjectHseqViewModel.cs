@@ -7,6 +7,7 @@ using OCC.WpfClient.Features.HseqHub.ViewModels;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
@@ -19,20 +20,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
     {
         private readonly DocumentsListViewModel _documentsVm;
         private readonly IncidentListViewModel _incidentsVm;
+        private readonly IAttendanceService _attendanceService;
 
         [ObservableProperty] private ViewModelBase _currentView;
         [ObservableProperty] private string _activeTab = "Documents";
         [ObservableProperty] private Guid _projectId;
+        [ObservableProperty] private double _safeWorkingHours;
 
         public DocumentsListViewModel DocumentsVm => _documentsVm;
         public IncidentListViewModel IncidentsVm => _incidentsVm;
 
         public ProjectHseqViewModel(
             DocumentsListViewModel documentsVm,
-            IncidentListViewModel incidentsVm)
+            IncidentListViewModel incidentsVm,
+            IAttendanceService attendanceService)
         {
             _documentsVm = documentsVm;
             _incidentsVm = incidentsVm;
+            _attendanceService = attendanceService;
             _currentView = _documentsVm;
             Title = "Project Safety";
         }
@@ -46,6 +51,25 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ProjectId = projectId;
             // Reload documents filtered to this project
             _ = _documentsVm.LoadDocuments(projectId);
+            _ = LoadSafeWorkingHoursAsync();
+        }
+
+        private async Task LoadSafeWorkingHoursAsync()
+        {
+            try
+            {
+                var records = await _attendanceService.GetAttendanceRecordsAsync();
+                if (records != null)
+                {
+                    SafeWorkingHours = records
+                        .Where(r => r.ProjectId == ProjectId && r.Status == AttendanceStatus.Present)
+                        .Sum(r => r.HoursWorked);
+                }
+            }
+            catch
+            {
+                SafeWorkingHours = 0;
+            }
         }
 
         [RelayCommand]

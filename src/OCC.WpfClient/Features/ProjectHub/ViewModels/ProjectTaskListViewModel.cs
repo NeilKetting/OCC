@@ -361,6 +361,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             RefreshDisplayList();
         }
 
+        public void ApplyFilters(string stageFilter, string smartFilter)
+        {
+            SelectedStageFilter = stageFilter;
+            ActiveSmartFilter = smartFilter;
+            RefreshDisplayList();
+        }
+
         [RelayCommand]
         private void ToggleFilterPopup() => IsFilterPopupOpen = !IsFilterPopupOpen;
 

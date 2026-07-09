@@ -453,15 +453,64 @@ namespace OCC.API.Controllers
         {
             if (run == null) return BadRequest("Invalid Wage Run data.");
 
-            // Set IDs forLines if missing
-            foreach (var line in run.Lines)
+            var existing = await _context.WageRuns.Include(w => w.Lines).FirstOrDefaultAsync(w => w.Id == run.Id);
+            if (existing != null)
             {
-                if (line.Id == Guid.Empty) line.Id = Guid.NewGuid();
-                line.WageRunId = run.Id;
-            }
+                // Reverse old loan updates for existing run
+                foreach (var line in existing.Lines)
+                {
+                    if (line.DeductionLoan > 0)
+                    {
+                        var empLoans = await _context.EmployeeLoans
+                            .Where(l => l.EmployeeId == line.EmployeeId)
+                            .OrderByDescending(l => l.StartDate)
+                            .ToListAsync();
+                            
+                        decimal remainingToRestore = line.DeductionLoan;
+                        foreach (var loan in empLoans)
+                        {
+                            if (remainingToRestore <= 0) break;
+                            
+                            decimal maxRestore = loan.PrincipalAmount - loan.OutstandingBalance;
+                            if (maxRestore > 0)
+                            {
+                                decimal restoreAmount = Math.Min(maxRestore, remainingToRestore);
+                                loan.OutstandingBalance += restoreAmount;
+                                remainingToRestore -= restoreAmount;
+                                
+                                loan.IsActive = true;
+                                loan.EndDate = null;
+                            }
+                        }
+                    }
+                }
 
-            run.Status = WageRunStatus.Finalized;
-            _context.WageRuns.Add(run);
+                existing.Notes = run.Notes;
+                existing.Status = WageRunStatus.Finalized;
+                existing.RunDate = run.RunDate != default ? run.RunDate : DateTime.Now.Date;
+                existing.InputTotalGasCharge = run.InputTotalGasCharge;
+                existing.InputDefaultSupervisorFee = run.InputDefaultSupervisorFee;
+                existing.InputCompanyHousingWashingFee = run.InputCompanyHousingWashingFee;
+
+                _context.WageRunLines.RemoveRange(existing.Lines);
+                existing.Lines = run.Lines;
+                foreach (var line in existing.Lines)
+                {
+                    if (line.Id == Guid.Empty) line.Id = Guid.NewGuid();
+                    line.WageRunId = existing.Id;
+                }
+                run = existing;
+            }
+            else
+            {
+                foreach (var line in run.Lines)
+                {
+                    if (line.Id == Guid.Empty) line.Id = Guid.NewGuid();
+                    line.WageRunId = run.Id;
+                }
+                run.Status = WageRunStatus.Finalized;
+                _context.WageRuns.Add(run);
+            }
 
             // Update employee loan outstanding balances
             foreach (var line in run.Lines)

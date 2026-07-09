@@ -21,6 +21,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
                     LeaveType.Maternity => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E91E63")), // Pink
                     LeaveType.Unpaid => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9E9E9E")), // Gray
                     LeaveType.AbsentWithoutLeave => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F44336")), // Red
+                    LeaveType.CulturalObligations => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F51B5")), // Indigo
                     _ => Brushes.Transparent
                 };
             }

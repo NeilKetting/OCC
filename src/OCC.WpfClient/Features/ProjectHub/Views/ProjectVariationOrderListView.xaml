@@ -145,7 +145,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=\{0:dd MMM yyyy\}}" Width="Auto" Foreground="{StaticResource TextSub}"/>
                             
-                            <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="*" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="Auto" FontWeight="SemiBold"/>
                             
                             <DataGridTextColumn Header="APPROVED BY" Binding="{Binding ApprovedBy}" Width="Auto" Foreground="{StaticResource TextSub}"/>
 

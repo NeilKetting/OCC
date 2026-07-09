@@ -25,6 +25,11 @@ namespace OCC.WpfClient.Infrastructure.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value is string hex && hex.StartsWith("#") && (hex.Length == 7 || hex.Length == 9))
+            {
+                return new BrushConverter().ConvertFrom(hex) as SolidColorBrush ?? Brushes.SkyBlue;
+            }
+
             Guid? id = null;
 
             if (value is Guid guid)
@@ -38,13 +43,7 @@ namespace OCC.WpfClient.Infrastructure.Converters
 
             if (id.HasValue)
             {
-                var bytes = id.Value.ToByteArray();
-                int hash = 17;
-                foreach (var b in bytes)
-                {
-                    hash = hash * 31 + b;
-                }
-                
+                int hash = GetDeterministicHashCode(id.Value.ToString());
                 var colorString = Colors[Math.Abs(hash) % Colors.Length];
                 return new BrushConverter().ConvertFrom(colorString) as SolidColorBrush ?? Brushes.SkyBlue;
             }
@@ -52,12 +51,26 @@ namespace OCC.WpfClient.Infrastructure.Converters
             // Fallback for names or nulls
             if (value != null)
             {
-                int hash = (value.ToString() ?? string.Empty).GetHashCode();
+                int hash = GetDeterministicHashCode(value.ToString() ?? string.Empty);
                 var colorString = Colors[Math.Abs(hash) % Colors.Length];
                 return new BrushConverter().ConvertFrom(colorString) as SolidColorBrush ?? Brushes.SkyBlue;
             }
 
             return Brushes.Gray;
+        }
+
+        private static int GetDeterministicHashCode(string str)
+        {
+            if (str == null) return 0;
+            unchecked
+            {
+                int hash = 23;
+                foreach (char c in str)
+                {
+                    hash = hash * 31 + c;
+                }
+                return hash;
+            }
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

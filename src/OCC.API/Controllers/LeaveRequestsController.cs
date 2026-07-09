@@ -148,32 +148,133 @@ namespace OCC.API.Controllers
             var holidayDates = new HashSet<DateTime>(holidays);
 
             var notesToken = $"[LeaveRequest:{request.Id}]";
-            var statusMap = request.LeaveType switch
+
+            // Safety split check in case client didn't calculate or save PaidDays/UnpaidDays
+            if (request.PaidDays == 0 && request.UnpaidDays == 0)
             {
-                LeaveType.Annual => AttendanceStatus.LeaveAuthorized,
-                LeaveType.Sick => AttendanceStatus.Sick,
-                LeaveType.Unpaid => AttendanceStatus.UnpaidSick,
-                LeaveType.AbsentWithoutLeave => AttendanceStatus.Absent,
-                _ => AttendanceStatus.LeaveAuthorized
-            };
+                if (request.LeaveType == LeaveType.CulturalObligations)
+                {
+                    double totalDays = request.NumberOfDays;
+                    double cappedPaid = Math.Min(3.0, totalDays);
+                    double employeeAnnualBalance = employee.AnnualLeaveBalance;
+                    
+                    request.PaidDays = Math.Max(0, Math.Min(cappedPaid, employeeAnnualBalance));
+                    request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);
+                }
+                else if (request.LeaveType == LeaveType.Unpaid || request.LeaveType == LeaveType.AbsentWithoutLeave)
+                {
+                    request.PaidDays = 0;
+                    request.UnpaidDays = request.NumberOfDays;
+                    request.IsUnpaid = true;
+                }
+                else
+                {
+                    request.PaidDays = request.NumberOfDays;
+                    request.UnpaidDays = 0;
+                }
+            }
+            
+            // Standard shift hours calculation (as confirmed by client/wage runs)
+            double dailyHours = 9.0;
+            if (employee.ShiftStartTime.HasValue && employee.ShiftEndTime.HasValue)
+            {
+                dailyHours = (employee.ShiftEndTime.Value - employee.ShiftStartTime.Value).TotalHours;
+                if (employee.ShiftEndTime.Value.Hours >= 13)
+                {
+                    dailyHours -= 1.0;
+                }
+                if (dailyHours < 0) dailyHours = 0;
+            }
+
+            // Fractions for allocation
+            double totalRequestedDays = request.NumberOfDays > 0 ? request.NumberOfDays : 1.0;
+            double paidFraction = request.PaidDays / totalRequestedDays;
+            double unpaidFraction = request.UnpaidDays / totalRequestedDays;
+
+            double remainingPaidDays = request.PaidDays;
+            double remainingUnpaidDays = request.UnpaidDays;
 
             for (var day = request.StartDate.Date; day <= request.EndDate.Date; day = day.AddDays(1))
             {
                 if (day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday) continue;
                 if (holidayDates.Contains(day)) continue;
 
+                double allocatedPaidHours = 0;
+                double allocatedUnpaidHours = 0;
+                AttendanceStatus statusMap = AttendanceStatus.LeaveAuthorized;
+
+                if (request.DurationType == LeaveDurationType.FullDay)
+                {
+                    if (remainingPaidDays > 0)
+                    {
+                        if (remainingPaidDays >= 1.0)
+                        {
+                            allocatedPaidHours = dailyHours;
+                            remainingPaidDays -= 1.0;
+                        }
+                        else
+                        {
+                            allocatedPaidHours = remainingPaidDays * dailyHours;
+                            allocatedUnpaidHours = (1.0 - remainingPaidDays) * dailyHours;
+                            remainingPaidDays = 0;
+                        }
+                        statusMap = request.LeaveType == LeaveType.Sick ? AttendanceStatus.Sick : AttendanceStatus.LeaveAuthorized;
+                    }
+                    else if (remainingUnpaidDays > 0)
+                    {
+                        if (remainingUnpaidDays >= 1.0)
+                        {
+                            allocatedUnpaidHours = dailyHours;
+                            remainingUnpaidDays -= 1.0;
+                        }
+                        else
+                        {
+                            allocatedUnpaidHours = remainingUnpaidDays * dailyHours;
+                            remainingUnpaidDays = 0;
+                        }
+                        statusMap = AttendanceStatus.UnpaidSick;
+                    }
+                }
+                else if (request.DurationType == LeaveDurationType.MorningHalfDay || request.DurationType == LeaveDurationType.AfternoonHalfDay)
+                {
+                    allocatedPaidHours = paidFraction * 0.5 * dailyHours;
+                    allocatedUnpaidHours = unpaidFraction * 0.5 * dailyHours;
+                    statusMap = allocatedPaidHours > 0 
+                        ? (request.LeaveType == LeaveType.Sick ? AttendanceStatus.Sick : AttendanceStatus.LeaveAuthorized) 
+                        : AttendanceStatus.UnpaidSick;
+                }
+                else if (request.DurationType == LeaveDurationType.Hourly)
+                {
+                    double hrs = request.HoursRequested ?? 0.0;
+                    allocatedPaidHours = paidFraction * hrs;
+                    allocatedUnpaidHours = unpaidFraction * hrs;
+                    statusMap = allocatedPaidHours > 0 
+                        ? (request.LeaveType == LeaveType.Sick ? AttendanceStatus.Sick : AttendanceStatus.LeaveAuthorized) 
+                        : AttendanceStatus.UnpaidSick;
+                }
+
                 var existing = await _context.AttendanceRecords
                     .FirstOrDefaultAsync(a => a.EmployeeId == request.EmployeeId && a.Date.Date == day);
 
                 if (existing != null)
                 {
-                    if (existing.IsAutoClockIn || existing.Status == AttendanceStatus.Absent)
+                    if (request.DurationType == LeaveDurationType.FullDay)
                     {
                         existing.Status = statusMap;
                         existing.CheckInTime = null;
                         existing.CheckOutTime = null;
                         existing.HoursWorked = 0;
-                        existing.Notes = $"Approved Leave: {request.LeaveType}. {notesToken}";
+                        existing.PaidLeaveHours = allocatedPaidHours;
+                        existing.UnpaidLeaveHours = allocatedUnpaidHours;
+                        existing.Notes = $"Approved Leave: {request.LeaveType} ({request.DurationType}). {notesToken}";
+                        existing.IsAutoClockIn = true;
+                    }
+                    else
+                    {
+                        // Partial day leave should NOT clear clock-in/out times!
+                        existing.PaidLeaveHours = allocatedPaidHours;
+                        existing.UnpaidLeaveHours = allocatedUnpaidHours;
+                        existing.Notes = (existing.Notes ?? "") + $" [Partial Leave: {request.LeaveType} ({request.DurationType}). {notesToken}]";
                     }
                 }
                 else
@@ -185,8 +286,10 @@ namespace OCC.API.Controllers
                         Date = day,
                         Status = statusMap,
                         Branch = employee.Branch,
-                        Notes = $"Approved Leave: {request.LeaveType}. {notesToken}",
-                        IsAutoClockIn = true
+                        Notes = $"Approved Leave: {request.LeaveType} ({request.DurationType}). {notesToken}",
+                        IsAutoClockIn = true,
+                        PaidLeaveHours = allocatedPaidHours,
+                        UnpaidLeaveHours = allocatedUnpaidHours
                     };
                     _context.AttendanceRecords.Add(record);
                 }

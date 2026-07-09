@@ -29,8 +29,21 @@ namespace OCC.Shared.Models
         
         /// <summary>
         /// Total number of business days for this leave request (excluding weekends/holidays).
+        /// Can be fractional (e.g., 0.5 for half day).
         /// </summary>
-        public int NumberOfDays { get; set; }
+        public double NumberOfDays { get; set; }
+
+        /// <summary> The duration category of the leave request (Full Day, Half Day, Hourly). </summary>
+        public LeaveDurationType DurationType { get; set; } = LeaveDurationType.FullDay;
+
+        /// <summary> The exact number of hours requested, if DurationType is Hourly. </summary>
+        public double? HoursRequested { get; set; }
+
+        /// <summary> The number of paid days allocated for this leave request. </summary>
+        public double PaidDays { get; set; }
+
+        /// <summary> The number of unpaid days allocated for this leave request. </summary>
+        public double UnpaidDays { get; set; }
 
         /// <summary> The category of leave being requested (Annual, Sick, Maternity, etc.). </summary>
         public LeaveType LeaveType { get; set; } = LeaveType.Annual;
@@ -84,7 +97,24 @@ namespace OCC.Shared.Models
         /// <summary> Time off without pay. </summary>
         Unpaid,
         /// <summary> Absent without authorized leave. </summary>
-        AbsentWithoutLeave
+        AbsentWithoutLeave,
+        /// <summary> Paid special leave up to 3 days, capped by annual leave balance, thereafter unpaid. </summary>
+        CulturalObligations
+    }
+
+    /// <summary>
+    /// Specifies the duration portion of a leave request.
+    /// </summary>
+    public enum LeaveDurationType
+    {
+        /// <summary> Takes the full working day off. </summary>
+        FullDay,
+        /// <summary> Takes the morning portion off (07:00 to 12:00). </summary>
+        MorningHalfDay,
+        /// <summary> Takes the afternoon portion off (13:00 to 16:45). </summary>
+        AfternoonHalfDay,
+        /// <summary> Takes specific hours off (e.g., to visit the bank). </summary>
+        Hourly
     }
 
     /// <summary>

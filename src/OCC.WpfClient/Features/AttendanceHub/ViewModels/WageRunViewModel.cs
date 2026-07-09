@@ -38,6 +38,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             // Fortnight cycle: StartDate + 13 days = 14-day run
             EndDate = value.AddDays(13);
+            IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
         }
 
         // ─── Run Config ───────────────────────────────────────────────────────
@@ -102,6 +103,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isHrsVisible = true;
         [ObservableProperty] private bool _isOtRatesVisible = true;
         [ObservableProperty] private bool _isOtHoursVisible = true;
+        [ObservableProperty] private bool _isDecColumnsVisible;
         [ObservableProperty] private bool _isDeductionsVisible = true;
         [ObservableProperty] private bool _isSupFeeVisible = true;
         [ObservableProperty] private bool _isTotalNettVisible = true;
@@ -181,7 +183,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var filtered = PastRuns.AsEnumerable();
                 if (SelectedPastBranch != "All")
                 {
-                    filtered = filtered.Where(r => r.Branch == SelectedPastBranch);
+                    filtered = filtered.Where(r => r.Branch == SelectedPastBranch || r.Branch == "All");
                 }
                 if (SelectedPastSalaryType != "All")
                 {
@@ -212,6 +214,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             var today = DateTime.Today;
             int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
             StartDate = today.AddDays(-diff).AddDays(-7).Date;
+            IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
 
             LoadColumnVisibilities();
         }
@@ -379,7 +382,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -411,7 +414,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -456,28 +459,56 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         [RelayCommand]
-        public async Task DeletePastRunAsync(WageRun? run)
+        public async Task EditPastRunAsync(WageRun? run)
         {
             if (run == null) return;
 
-            var result = System.Windows.MessageBox.Show(
-                $"Delete wage run for {run.Branch} ({run.StartDate:dd MMM} – {run.EndDate:dd MMM yyyy})?",
-                "Delete Run", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
-
-            if (result != System.Windows.MessageBoxResult.Yes) return;
-
             try
             {
-                await _wageService.DeleteRunAsync(run.Id);
-                PastRuns.Remove(run);
-                OnPropertyChanged(nameof(FilteredPastRuns));
+                IsBusy = true;
+                BusyText = "Loading run for editing...";
+
+                var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
+                if (fullRun != null)
+                {
+                    _currentDraft = fullRun;
+                    _currentDraftId = fullRun.Id;
+
+                    StartDate = fullRun.StartDate;
+                    EndDate = fullRun.EndDate;
+                    SelectedBranch = fullRun.Branch ?? "All";
+                    SelectedPayType = fullRun.PayType ?? "Hourly";
+                    Notes = fullRun.Notes ?? string.Empty;
+                    TotalGasCharge = fullRun.InputTotalGasCharge;
+                    DefaultSupervisorFee = fullRun.InputDefaultSupervisorFee;
+                    CompanyHousingWashingFee = fullRun.InputCompanyHousingWashingFee;
+                    IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+
+                    Lines.Clear();
+                    int index = 1;
+                    foreach (var line in fullRun.Lines.OrderBy(l => l.EmployeeName))
+                    {
+                        var vm = new WageRunLineViewModel(line, _dialogService) { IndexNum = index++ };
+                        vm.PropertyChanged += (s, e) =>
+                        {
+                            if (e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||
+                                e.PropertyName == nameof(WageRunLineViewModel.IncentiveSupervisor))
+                                UpdateGrandTotal();
+                        };
+                        Lines.Add(vm);
+                    }
+
+                    UpdateGrandTotal();
+                    IsGenerated = true;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting wage run {Id}", run.Id);
-                System.Windows.MessageBox.Show($"Failed to delete run:\n\n{ex.Message}", "Error",
+                _logger.LogError(ex, "Error loading wage run for edit");
+                System.Windows.MessageBox.Show($"Failed to load run:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
+            finally { IsBusy = false; }
         }
 
         [RelayCommand]
@@ -530,7 +561,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
                 if (fullRun != null)
                 {
-                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments);
+                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible);
                     Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
                 }
             }

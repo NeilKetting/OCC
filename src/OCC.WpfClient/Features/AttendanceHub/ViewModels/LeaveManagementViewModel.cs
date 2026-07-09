@@ -57,11 +57,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private DateTime _endDate = DateTime.Today;
         [ObservableProperty] private LeaveType _selectedLeaveType = LeaveType.Annual;
         [ObservableProperty] private string _reason = string.Empty;
-        [ObservableProperty] private int _calculatedDays;
+        [ObservableProperty] private double _calculatedDays;
         [ObservableProperty] private bool _hasBalanceWarning;
         [ObservableProperty] private string _balanceWarning = string.Empty;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsHourly))]
+        [NotifyPropertyChangedFor(nameof(IsFullDay))]
+        private LeaveDurationType _selectedDurationType = LeaveDurationType.FullDay;
+
+        [ObservableProperty] private double? _hoursRequested;
+
         public IEnumerable<LeaveType> LeaveTypes { get; } = Enum.GetValues<LeaveType>();
+        public IEnumerable<LeaveDurationType> DurationTypes { get; } = Enum.GetValues<LeaveDurationType>();
+        public bool IsHourly => SelectedDurationType == LeaveDurationType.Hourly;
+        public bool IsFullDay => SelectedDurationType == LeaveDurationType.FullDay;
 
         // ── Stats ────────────────────────────────────────────────────────────
         [ObservableProperty] private int _pendingCount;
@@ -160,6 +170,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnEndDateChanged(DateTime value) => RecalculateDays();
         partial void OnSelectedEmployeeChanged(OCC.Shared.DTOs.EmployeeSummaryDto? value) => RecalculateDays();
         partial void OnSelectedLeaveTypeChanged(LeaveType value) => RecalculateDays();
+        partial void OnSelectedDurationTypeChanged(LeaveDurationType value) => RecalculateDays();
+        partial void OnHoursRequestedChanged(double? value) => RecalculateDays();
 
         public LeaveManagementViewModel(
             ILeaveService leaveService,
@@ -244,6 +256,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             StartDate = DateTime.Today;
             EndDate = DateTime.Today;
             SelectedLeaveType = LeaveType.Annual;
+            SelectedDurationType = LeaveDurationType.FullDay;
+            HoursRequested = null;
             SelectedEmployee = Employees.FirstOrDefault();
             HasBalanceWarning = false;
             BalanceWarning = string.Empty;
@@ -260,6 +274,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
             SelectedEmployee = Employees.FirstOrDefault(e => e.Id == request.EmployeeId);
             SelectedLeaveType = request.LeaveType;
+            SelectedDurationType = request.DurationType;
+            HoursRequested = request.HoursRequested;
             StartDate = request.StartDate;
             EndDate = request.EndDate;
             Reason = request.Reason;
@@ -272,8 +288,35 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private void RecalculateDays()
         {
-            if (EndDate < StartDate) { CalculatedDays = 0; return; }
-            CalculatedDays = _leaveService.CalculateBusinessDays(StartDate, EndDate);
+            if (SelectedDurationType == LeaveDurationType.FullDay)
+            {
+                if (EndDate < StartDate) { CalculatedDays = 0; return; }
+                CalculatedDays = _leaveService.CalculateBusinessDays(StartDate, EndDate);
+            }
+            else if (SelectedDurationType == LeaveDurationType.MorningHalfDay || SelectedDurationType == LeaveDurationType.AfternoonHalfDay)
+            {
+                EndDate = StartDate;
+                CalculatedDays = 0.5;
+            }
+            else if (SelectedDurationType == LeaveDurationType.Hourly)
+            {
+                EndDate = StartDate;
+                
+                double dailyHours = 9.0;
+                if (SelectedEmployee != null && SelectedEmployee.ShiftStartTime.HasValue && SelectedEmployee.ShiftEndTime.HasValue)
+                {
+                    dailyHours = (SelectedEmployee.ShiftEndTime.Value - SelectedEmployee.ShiftStartTime.Value).TotalHours;
+                    if (SelectedEmployee.ShiftEndTime.Value.Hours >= 13)
+                    {
+                        dailyHours -= 1.0;
+                    }
+                    if (dailyHours < 0) dailyHours = 0;
+                }
+                
+                if (dailyHours <= 0) dailyHours = 9.0;
+
+                CalculatedDays = Math.Round((HoursRequested ?? 0.0) / dailyHours, 2);
+            }
             CheckBalance();
         }
 
@@ -312,6 +355,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             try
             {
                 IsBusy = true;
+                double draftPaid = CalculatedDays;
+                double draftUnpaid = 0;
+                if (SelectedLeaveType == LeaveType.CulturalObligations)
+                {
+                    double capped = Math.Min(3.0, CalculatedDays);
+                    double availableAnnual = SelectedEmployee.LeaveBalance;
+                    draftPaid = Math.Min(capped, availableAnnual);
+                    draftUnpaid = CalculatedDays - draftPaid;
+                }
+                else if (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave)
+                {
+                    draftPaid = 0;
+                    draftUnpaid = CalculatedDays;
+                }
+
                 if (IsEditing)
                 {
                     if (SelectedItem == null) return;
@@ -321,6 +379,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     request.EndDate = EndDate.Date;
                     request.NumberOfDays = CalculatedDays;
                     request.LeaveType = SelectedLeaveType;
+                    request.DurationType = SelectedDurationType;
+                    request.HoursRequested = HoursRequested;
+                    request.PaidDays = draftPaid;
+                    request.UnpaidDays = draftUnpaid;
                     request.Reason = Reason;
                     request.IsUnpaid = (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave);
 
@@ -345,6 +407,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         EndDate = EndDate.Date,
                         NumberOfDays = CalculatedDays,
                         LeaveType = SelectedLeaveType,
+                        DurationType = SelectedDurationType,
+                        HoursRequested = HoursRequested,
+                        PaidDays = draftPaid,
+                        UnpaidDays = draftUnpaid,
                         Reason = Reason,
                         Status = LeaveStatus.Pending,
                         IsUnpaid = (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave)

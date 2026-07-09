@@ -30,9 +30,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private int _openIncidentsCount;
         [ObservableProperty] private int _activeSnagsCount;
         [ObservableProperty] private int _upcomingMilestonesCount;
+        [ObservableProperty] private double _safeWorkingHours;
+        [ObservableProperty] private int _activeVoCount;
 
         private readonly IHealthSafetyService _hseqService;
         private readonly ISnagService _snagService;
+        private readonly IProjectVariationOrderService _voService;
 
         public ObservableCollection<DashboardUpdateDto> RecentUpdates { get; } = new();
         public ObservableCollection<ProjectTask> UpcomingMilestones { get; } = new();
@@ -45,7 +48,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ILogger<ProjectDashboardViewModel> logger,
             INavigationService navigationService,
             IHealthSafetyService hseqService,
-            ISnagService snagService)
+            ISnagService snagService,
+            IProjectVariationOrderService voService)
         {
             _projectService = projectService;
             _projectTaskService = projectTaskService;
@@ -55,6 +59,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _navigationService = navigationService;
             _hseqService = hseqService;
             _snagService = snagService;
+            _voService = voService;
 
             Title = "Project Dashboard";
             _signalRService.DashboardUpdateReceived += OnDashboardUpdateReceived;
@@ -122,6 +127,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 // HSEQ Stats
                 var hseqStats = await _hseqService.GetDashboardStatsAsync();
                 OpenIncidentsCount = hseqStats?.IncidentsTotal ?? 0;
+                SafeWorkingHours = hseqStats?.TotalSafeHours ?? 0;
+
+                // Active VOs count
+                try
+                {
+                    var vos = await _voService.GetVariationOrdersAsync();
+                    ActiveVoCount = vos.Count(v => v.Status == "Approved");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch Variation Orders count for dashboard");
+                    ActiveVoCount = 0;
+                }
 
                 // Snag Stats
                 var snagJobs = await _snagService.GetSnagJobsAsync();

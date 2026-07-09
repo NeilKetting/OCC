@@ -165,6 +165,7 @@
                                         <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                         <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                         <CheckBox Content="OT Hours" IsChecked="{Binding IsOtHoursVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                        <CheckBox Content="Dec Columns" IsChecked="{Binding IsDecColumnsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                         <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                         <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
                                         <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
@@ -303,7 +304,7 @@
                         </DataGridTextColumn>
                         <!-- DEC O/T RATE -->
                         <DataGridTextColumn Binding="{Binding DecOtRate, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                             Visibility="{Binding Data.IsDecColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.Header>
                                 <TextBlock Text="DEC O/T&#x0a;RATE" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </DataGridTextColumn.Header>
@@ -313,7 +314,7 @@
                         </DataGridTextColumn>
                         <!-- DEC O/T HRS -->
                         <DataGridTextColumn Binding="{Binding DecOtHrs, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                             Visibility="{Binding Data.IsDecColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.Header>
                                 <TextBlock Text="DEC O/T&#x0a;HRS" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </DataGridTextColumn.Header>
@@ -323,7 +324,7 @@
                         </DataGridTextColumn>
                         <!-- DEC TOTAL -->
                         <DataGridTextColumn Binding="{Binding DecTotal, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                             Visibility="{Binding Data.IsOtRatesVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                             Visibility="{Binding Data.IsDecColumnsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.Header>
                                 <TextBlock Text="DEC&#x0a;TOTAL" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </DataGridTextColumn.Header>
@@ -607,12 +608,12 @@
                                                  Margin="0,0,6,0">
                                             <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolButtonIcon}" Foreground="#F59E0B"/>
                                         </Button>
-                                        <!-- Delete Run -->
+                                        <!-- Edit Run -->
                                         <Button Style="{StaticResource ToolbarIconButton}"
-                                                 Command="{Binding DataContext.DeletePastRunCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 Command="{Binding DataContext.EditPastRunCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                  CommandParameter="{Binding}"
-                                                 ToolTip="Delete Run">
-                                            <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolButtonIcon}" Foreground="#EF4444"/>
+                                                 ToolTip="Edit Run">
+                                            <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>
