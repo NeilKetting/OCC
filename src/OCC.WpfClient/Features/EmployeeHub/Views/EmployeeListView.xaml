@@ -164,10 +164,17 @@
                             </ComboBox>
 
                             <ComboBox SelectedIndex="{Binding SelectedStatusFilterIndex}" 
-                                      Height="30" Style="{StaticResource ModernComboBox}">
+                                      Height="30" Style="{StaticResource ModernComboBox}" Margin="0,0,10,0">
                                 <ComboBoxItem Content="Active Only" />
                                 <ComboBoxItem Content="Inactive Only" />
                                 <ComboBoxItem Content="All Statuses" />
+                            </ComboBox>
+
+                            <ComboBox SelectedIndex="{Binding SelectedSalaryTypeFilterIndex}" 
+                                      Height="30" Style="{StaticResource ModernComboBox}">
+                                <ComboBoxItem Content="All Salary Types" />
+                                <ComboBoxItem Content="Hourly" />
+                                <ComboBoxItem Content="Monthly Salary" />
                             </ComboBox>
                         </StackPanel>
 

@@ -134,7 +134,7 @@ namespace OCC.API.Controllers
                 .Where(a => a.PaidWageRunId == null && 
                             ((a.Date >= request.StartDate && a.Date <= attendanceEnd) ||
                              (a.Date < request.StartDate && 
-                              (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late || a.Status == AttendanceStatus.LeaveEarly || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
+                              (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
                 .ToListAsync();
 
             // 4. Fetch Active Loans
@@ -623,7 +623,7 @@ namespace OCC.API.Controllers
                 .Where(a => a.PaidWageRunId == null && 
                             ((a.Date >= run.StartDate && a.Date <= attendanceEndFinal) ||
                              (a.Date < run.StartDate && 
-                              (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late || a.Status == AttendanceStatus.LeaveEarly || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
+                              (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
                 .ToListAsync();
 
             foreach (var record in attendanceRecordsToFinalize)

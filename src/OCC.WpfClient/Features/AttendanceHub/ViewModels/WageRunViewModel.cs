@@ -130,6 +130,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (obj is not WageRunLineViewModel line) return false;
 
+            // Client-side PayType filter matching UI selection
+            if (_currentDraft != null && !string.IsNullOrEmpty(_currentDraft.PayType) &&
+                !string.Equals(_currentDraft.PayType, SelectedPayType, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             // Client-side branch filter matching UI selection
             if (SelectedBranch != "All" && !string.Equals(line.Branch, SelectedBranch, StringComparison.OrdinalIgnoreCase))
                 return false;
@@ -148,6 +155,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             UpdateGrandTotal();
         }
         partial void OnSelectedBranchChanged(string value)
+        {
+            LinesView?.Refresh();
+            UpdateGrandTotal();
+        }
+        partial void OnSelectedPayTypeChanged(string value)
         {
             LinesView?.Refresh();
             UpdateGrandTotal();
