@@ -55,7 +55,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private OCC.Shared.DTOs.EmployeeSummaryDto? _selectedEmployee;
         [ObservableProperty] private DateTime _startDate = DateTime.Today;
         [ObservableProperty] private DateTime _endDate = DateTime.Today;
-        [ObservableProperty] private LeaveType _selectedLeaveType = LeaveType.Annual;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsHalfDayType))]
+        [NotifyPropertyChangedFor(nameof(IsOtherType))]
+        [NotifyPropertyChangedFor(nameof(IsHourly))]
+        [NotifyPropertyChangedFor(nameof(IsFullDay))]
+        private LeaveType _selectedLeaveType = LeaveType.Annual;
+
         [ObservableProperty] private string _reason = string.Empty;
         [ObservableProperty] private double _calculatedDays;
         [ObservableProperty] private bool _hasBalanceWarning;
@@ -70,8 +76,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         public IEnumerable<LeaveType> LeaveTypes { get; } = Enum.GetValues<LeaveType>();
         public IEnumerable<LeaveDurationType> DurationTypes { get; } = Enum.GetValues<LeaveDurationType>();
-        public bool IsHourly => SelectedDurationType == LeaveDurationType.Hourly;
-        public bool IsFullDay => SelectedDurationType == LeaveDurationType.FullDay;
+
+        public IEnumerable<LeaveDurationType> HalfDayPeriods { get; } = new[] { LeaveDurationType.MorningHalfDay, LeaveDurationType.AfternoonHalfDay };
+        public IEnumerable<LeaveDurationType> OtherDurations { get; } = new[] { LeaveDurationType.FullDay, LeaveDurationType.Hourly };
+
+        public bool IsHalfDayType => SelectedLeaveType == LeaveType.HalfDay;
+        public bool IsOtherType => SelectedLeaveType == LeaveType.Other;
+
+        public bool IsHourly => SelectedLeaveType == LeaveType.Other && SelectedDurationType == LeaveDurationType.Hourly;
+        public bool IsFullDay => SelectedLeaveType != LeaveType.HalfDay && (SelectedLeaveType != LeaveType.Other || SelectedDurationType == LeaveDurationType.FullDay);
 
         // ── Stats ────────────────────────────────────────────────────────────
         [ObservableProperty] private int _pendingCount;
@@ -288,36 +301,59 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private void RecalculateDays()
         {
-            if (SelectedDurationType == LeaveDurationType.FullDay)
+            if (SelectedLeaveType == LeaveType.HalfDay)
             {
-                if (EndDate < StartDate) { CalculatedDays = 0; return; }
-                CalculatedDays = _leaveService.CalculateBusinessDays(StartDate, EndDate);
-            }
-            else if (SelectedDurationType == LeaveDurationType.MorningHalfDay || SelectedDurationType == LeaveDurationType.AfternoonHalfDay)
-            {
+                if (SelectedDurationType != LeaveDurationType.MorningHalfDay && SelectedDurationType != LeaveDurationType.AfternoonHalfDay)
+                {
+                    SelectedDurationType = LeaveDurationType.MorningHalfDay;
+                }
                 EndDate = StartDate;
                 CalculatedDays = 0.5;
             }
-            else if (SelectedDurationType == LeaveDurationType.Hourly)
+            else if (SelectedLeaveType == LeaveType.Other)
             {
-                EndDate = StartDate;
-                
-                double dailyHours = 9.0;
-                if (SelectedEmployee != null && SelectedEmployee.ShiftStartTime.HasValue && SelectedEmployee.ShiftEndTime.HasValue)
+                if (SelectedDurationType != LeaveDurationType.FullDay && SelectedDurationType != LeaveDurationType.Hourly)
                 {
-                    dailyHours = (SelectedEmployee.ShiftEndTime.Value - SelectedEmployee.ShiftStartTime.Value).TotalHours;
-                    if (SelectedEmployee.ShiftEndTime.Value.Hours >= 13)
-                    {
-                        dailyHours -= 1.0;
-                    }
-                    if (dailyHours < 0) dailyHours = 0;
+                    SelectedDurationType = LeaveDurationType.FullDay;
                 }
-                
-                if (dailyHours <= 0) dailyHours = 9.0;
 
-                CalculatedDays = Math.Round((HoursRequested ?? 0.0) / dailyHours, 2);
+                if (SelectedDurationType == LeaveDurationType.FullDay)
+                {
+                    if (EndDate < StartDate) { CalculatedDays = 0; return; }
+                    CalculatedDays = _leaveService.CalculateBusinessDays(StartDate, EndDate);
+                }
+                else
+                {
+                    EndDate = StartDate;
+                    double dailyHours = GetEmployeeDailyShiftHours();
+                    CalculatedDays = Math.Round((HoursRequested ?? 0.0) / dailyHours, 2);
+                }
+            }
+            else
+            {
+                if (SelectedDurationType != LeaveDurationType.FullDay)
+                {
+                    SelectedDurationType = LeaveDurationType.FullDay;
+                }
+                if (EndDate < StartDate) { CalculatedDays = 0; return; }
+                CalculatedDays = _leaveService.CalculateBusinessDays(StartDate, EndDate);
             }
             CheckBalance();
+        }
+
+        private double GetEmployeeDailyShiftHours()
+        {
+            double dailyHours = 9.0;
+            if (SelectedEmployee != null && SelectedEmployee.ShiftStartTime.HasValue && SelectedEmployee.ShiftEndTime.HasValue)
+            {
+                dailyHours = (SelectedEmployee.ShiftEndTime.Value - SelectedEmployee.ShiftStartTime.Value).TotalHours;
+                if (SelectedEmployee.ShiftEndTime.Value.Hours >= 13)
+                {
+                    dailyHours -= 1.0;
+                }
+                if (dailyHours < 0) dailyHours = 0;
+            }
+            return dailyHours <= 0 ? 9.0 : dailyHours;
         }
 
         private void CheckBalance()
@@ -350,6 +386,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 NotifyError("Validation", "The selected date range contains no working days.");
                 return;
+            }
+
+            if (SelectedLeaveType == LeaveType.Other && SelectedDurationType == LeaveDurationType.Hourly)
+            {
+                if (HoursRequested == null || HoursRequested <= 0)
+                {
+                    NotifyError("Validation", "Please enter a valid number of leave hours.");
+                    return;
+                }
+                double shiftHrs = GetEmployeeDailyShiftHours();
+                if (HoursRequested > shiftHrs)
+                {
+                    NotifyError("Validation", $"Requested hours cannot exceed the employee's standard shift of {shiftHrs} hours.");
+                    return;
+                }
             }
 
             try

@@ -99,7 +99,11 @@ namespace OCC.Shared.Models
         /// <summary> Absent without authorized leave. </summary>
         AbsentWithoutLeave,
         /// <summary> Paid special leave up to 3 days, capped by annual leave balance, thereafter unpaid. </summary>
-        CulturalObligations
+        CulturalObligations,
+        /// <summary> Takes half the day off (Morning or Afternoon). </summary>
+        HalfDay,
+        /// <summary> Other custom leave (Full day or Selected hours). </summary>
+        Other
     }
 
     /// <summary>

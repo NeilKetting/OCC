@@ -217,12 +217,12 @@
                                 <DataTemplate>
                                     <Border CornerRadius="10" HorizontalAlignment="Left" Padding="8,3"
                                             Background="{Binding LeaveType, Converter={StaticResource LeaveTypeColorConverter}}" Margin="2">
-                                        <TextBlock Text="{Binding LeaveType}" FontSize="10" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="{Binding LeaveType, Converter={StaticResource FriendlyEnumConverter}}" FontSize="10" FontWeight="SemiBold" Foreground="White"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="DURATION" Binding="{Binding DurationType}" Width="Auto"/>
+                        <DataGridTextColumn Header="DURATION" Binding="{Binding DurationType, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto"/>
                         <DataGridTextColumn Header="FROM" Binding="{Binding StartDate, StringFormat=dd MMM yyyy}" Width="Auto"/>
                         <DataGridTextColumn Header="TO" Binding="{Binding EndDate, StringFormat=dd MMM yyyy}" Width="Auto"/>
                         <DataGridTextColumn Header="DAYS" Binding="{Binding NumberOfDays}" Width="Auto"/>
@@ -303,20 +303,54 @@
                 <TextBlock Text="Leave Type" Style="{StaticResource LabelText}"/>
                 <ComboBox ItemsSource="{Binding LeaveTypes}"
                           SelectedItem="{Binding SelectedLeaveType}"
-                          Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
+                          Style="{StaticResource ModernComboBox}" Margin="0,4,0,16">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
-                <!-- Duration Type -->
-                <TextBlock Text="Duration" Style="{StaticResource LabelText}"/>
-                <ComboBox ItemsSource="{Binding DurationTypes}"
-                          SelectedItem="{Binding SelectedDurationType}"
-                          Style="{StaticResource ModernComboBox}" Margin="0,4,0,16"/>
+                <!-- Half-Day Period (HalfDay type only) -->
+                <StackPanel Visibility="{Binding IsHalfDayType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
+                    <TextBlock Text="Half-Day Period" Style="{StaticResource LabelText}"/>
+                    <ComboBox ItemsSource="{Binding HalfDayPeriods}"
+                              SelectedItem="{Binding SelectedDurationType}"
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
 
-                <!-- Leave Hours (Hourly only) -->
+                <!-- Other Duration Option (Other type only) -->
+                <StackPanel Visibility="{Binding IsOtherType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
+                    <TextBlock Text="Duration Option" Style="{StaticResource LabelText}"/>
+                    <ComboBox ItemsSource="{Binding OtherDurations}"
+                              SelectedItem="{Binding SelectedDurationType}"
+                              Style="{StaticResource ModernComboBox}" Margin="0,4,0,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Leave Hours (Hourly other only) -->
                 <StackPanel Visibility="{Binding IsHourly, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
                     <TextBlock Text="Hours Requested" Style="{StaticResource LabelText}"/>
                     <TextBox Text="{Binding HoursRequested, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ModernInput}" Margin="0,4,0,0"/>
                 </StackPanel>
+
+                <!-- Reason -->
+                <TextBlock Text="Reason for Leave" Style="{StaticResource LabelText}"/>
+                <TextBox Text="{Binding Reason, UpdateSourceTrigger=PropertyChanged}"
+                          Style="{StaticResource ModernInput}" Height="80" TextWrapping="Wrap"
+                          AcceptsReturn="True" Margin="0,4,0,24"/>
 
                 <!-- Date Range -->
                 <Grid Margin="0,0,0,16">
@@ -351,12 +385,6 @@
                         Visibility="{Binding HasBalanceWarning, Converter={StaticResource VisibilityConverter}}">
                     <TextBlock Text="{Binding BalanceWarning}" Foreground="{StaticResource OrangeBrush}" FontSize="11" TextWrapping="Wrap"/>
                 </Border>
-
-                <!-- Reason -->
-                <TextBlock Text="Reason for Leave" Style="{StaticResource LabelText}"/>
-                <TextBox Text="{Binding Reason, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource ModernInput}" Height="80" TextWrapping="Wrap"
-                         AcceptsReturn="True" Margin="0,4,0,24"/>
 
                 <!-- Action Buttons -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

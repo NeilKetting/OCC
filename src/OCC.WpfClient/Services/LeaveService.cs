@@ -254,6 +254,8 @@ namespace OCC.WpfClient.Services
                 {
                     case LeaveType.Annual:
                     case LeaveType.CulturalObligations:
+                    case LeaveType.HalfDay:
+                    case LeaveType.Other:
                         updateEmp.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - request.PaidDays);
                         break;
                     case LeaveType.Sick:

@@ -22,6 +22,8 @@ namespace OCC.WpfClient.Infrastructure.Converters
                     LeaveType.Unpaid => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9E9E9E")), // Gray
                     LeaveType.AbsentWithoutLeave => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F44336")), // Red
                     LeaveType.CulturalObligations => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F51B5")), // Indigo
+                    LeaveType.HalfDay => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4CAF50")), // Green
+                    LeaveType.Other => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#607D8B")), // Blue-gray
                     _ => Brushes.Transparent
                 };
             }
