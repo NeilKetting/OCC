@@ -2697,8 +2697,14 @@ namespace OCC.WpfClient.Services
                                     table.Cell().Padding(6).Text(day.Date.ToString("dd MMM yyyy (ddd)"));
                                     table.Cell().Padding(6).Text(day.Status.ToString());
                                     table.Cell().Padding(6).Text((day.PaidLeaveHours ?? 0.0).ToString("F1"));
-                                    table.Cell().Padding(6).Text(day.Notes ?? "—");
-                                    table.Cell().Padding(6).Text(day.PaidWageRunId.HasValue ? $"Paid ({day.PaidWageRunId.Value.ToString().Substring(0, 8)})" : "Unpaid / Pending");
+                                    string notes = day.Notes ?? "—";
+                                    if (!string.IsNullOrEmpty(notes))
+                                    {
+                                        notes = System.Text.RegularExpressions.Regex.Replace(notes, @"\s*\[[Ll]eave[Rr]equest:[0-9a-fA-F\-]{36}\]\s*", "").Trim();
+                                        if (string.IsNullOrEmpty(notes)) notes = "—";
+                                    }
+                                    table.Cell().Padding(6).Text(notes);
+                                    table.Cell().Padding(6).Text(day.PaidWageRunId.HasValue ? "Paid" : "Unpaid / Pending");
                                 }
                                 
                                 if (!sickDays.Any())
