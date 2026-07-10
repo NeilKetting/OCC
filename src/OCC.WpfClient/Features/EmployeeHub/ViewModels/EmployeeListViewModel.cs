@@ -207,6 +207,19 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         }
 
         [RelayCommand]
+        private void BulkRaise()
+        {
+            var bulkRaiseVm = new BulkRaiseViewModel(_employeeService, _dialogService, _logger, _pdfService);
+            OpenOverlay(bulkRaiseVm, async (res) =>
+            {
+                if (res is bool saved && saved)
+                {
+                    await LoadDataAsync();
+                }
+            });
+        }
+
+        [RelayCommand]
         private async Task OpenEmployee(object? parameter)
         {
             await EditEmployee(parameter);

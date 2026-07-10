@@ -21,6 +21,10 @@
         <DataTemplate DataType="{x:Type vm:EmployeeDetailViewModel}">
             <views:EmployeeDetailView />
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:BulkRaiseViewModel}">
+            <views:BulkRaiseView />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Margin="0" Background="{StaticResource AppBackground}">
@@ -75,6 +79,16 @@
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                     <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="Add Employee" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
+
+                            <!-- Bulk Raise Button -->
+                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding BulkRaiseCommand}" ToolTip="Bulk Wage Increase">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="&#xE706;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="#FB923C" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Bulk Raise" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 

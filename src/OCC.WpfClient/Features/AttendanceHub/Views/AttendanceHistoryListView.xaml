@@ -167,6 +167,7 @@
                               Style="{StaticResource ModernComboBox}" Margin="0,4,15,4" VerticalAlignment="Center">
                         <ComboBoxItem Content="All Time"/>
                         <ComboBoxItem Content="Today"/>
+                        <ComboBoxItem Content="Yesterday"/>
                         <ComboBoxItem Content="This Week"/>
                         <ComboBoxItem Content="Last Week"/>
                         <ComboBoxItem Content="This Month"/>

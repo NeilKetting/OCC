@@ -244,6 +244,114 @@ namespace OCC.Tests
         }
 
         [Fact]
+        public async Task CheckCasualRates()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var casuals = await context.Employees
+                .Where(e => e.EmployeeNumber.StartsWith("CAS") || e.EmployeeNumber == "489")
+                .ToListAsync();
+
+            var sb = new StringBuilder();
+            foreach (var c in casuals)
+            {
+                sb.AppendLine($"BAS: {c.EmployeeNumber}, Name: {c.FirstName} {c.LastName}, Rate: R {c.HourlyRate:F2}");
+            }
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\casual_rates_check.md", sb.ToString());
+        }
+
+        [Fact]
+        public async Task UpdateEmployeeRatesFromExcel()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            var excelList = new List<ExcelEmployeeDetails>();
+
+            using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                var result = reader.AsDataSet();
+                var table = result.Tables["OCC"] ?? result.Tables[0];
+
+                for (int r = 0; r < table.Rows.Count; r++)
+                {
+                    var row = table.Rows[r];
+                    string col1 = row[1]?.ToString()?.Trim() ?? ""; // BAS
+                    string col2 = row[2]?.ToString()?.Trim() ?? ""; // NAME
+
+                    if ((int.TryParse(col1, out int basNum) || col1 == "0" || col1.StartsWith("CAS")) && !string.IsNullOrEmpty(col2) && col2 != "NAME")
+                    {
+                        var emp = new ExcelEmployeeDetails
+                        {
+                            Bas = col1.Trim(),
+                            Name = col2.Trim(),
+                            Rate = ParseDouble(row[4]),
+                        };
+                        excelList.Add(emp);
+                    }
+                }
+            }
+
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var dbEmployees = await context.Employees.ToListAsync();
+
+            int updatedCount = 0;
+            var sb = new StringBuilder();
+            sb.AppendLine("# Employee Hourly Rates Update Report");
+            sb.AppendLine();
+            sb.AppendLine("| BAS | Employee Name | Old Rate | New Rate | Status |");
+            sb.AppendLine("|---|---|---|---|---|");
+
+            foreach (var excelEmp in excelList)
+            {
+                var dbEmp = dbEmployees.FirstOrDefault(e => e.EmployeeNumber?.Trim() == excelEmp.Bas);
+                if (dbEmp != null)
+                {
+                    double oldRate = dbEmp.HourlyRate;
+                    double newRate = excelEmp.Rate;
+
+                    if (Math.Abs(oldRate - newRate) > 0.001)
+                    {
+                        dbEmp.HourlyRate = newRate;
+                        sb.AppendLine($"| {excelEmp.Bas} | {dbEmp.FirstName} {dbEmp.LastName} | R {oldRate:F2} | R {newRate:F2} | Updated |");
+                        updatedCount++;
+                    }
+                    else
+                    {
+                        sb.AppendLine($"| {excelEmp.Bas} | {dbEmp.FirstName} {dbEmp.LastName} | R {oldRate:F2} | R {newRate:F2} | Match (No Change) |");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine($"| {excelEmp.Bas} | {excelEmp.Name} | N/A | R {excelEmp.Rate:F2} | WARNING: Not in DB |");
+                }
+            }
+
+            if (updatedCount > 0)
+            {
+                await context.SaveChangesAsync();
+                sb.AppendLine();
+                sb.AppendLine($"**Successfully updated {updatedCount} employee rates in the database.**");
+            }
+            else
+            {
+                sb.AppendLine();
+                sb.AppendLine("**No rates were updated (all database rates already match the Excel file).**");
+            }
+
+            string reportPath = @"c:\Users\Neil\source\repos\OCC\rates_update_report.md";
+            File.WriteAllText(reportPath, sb.ToString());
+            _output.WriteLine(sb.ToString());
+        }
+
+        [Fact]
         public void DumpPdfText()
         {
             string pdfPath = @"C:\Users\Neil\Documents\OCC\WageRuns\WageRun_Johannesburg_20260710_082216.pdf";
