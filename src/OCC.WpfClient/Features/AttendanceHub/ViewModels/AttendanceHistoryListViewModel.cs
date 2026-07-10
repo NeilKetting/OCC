@@ -229,6 +229,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 3 => filtered.Where(r => r.Status == AttendanceStatus.Absent),
                 4 => filtered.Where(r => r.Status == AttendanceStatus.Sick),
                 5 => filtered.Where(r => r.Status == AttendanceStatus.LeaveAuthorized),
+                6 => filtered.Where(r => r.Status == AttendanceStatus.UnpaidSick),
+                7 => filtered.Where(r => r.Status == AttendanceStatus.UnpaidLeave),
                 _ => filtered
             };
 
@@ -262,7 +264,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             if (r.Status == AttendanceStatus.Absent || 
                 r.Status == AttendanceStatus.Sick || 
                 r.Status == AttendanceStatus.LeaveAuthorized || 
-                r.Status == AttendanceStatus.UnpaidSick)
+                r.Status == AttendanceStatus.UnpaidSick ||
+                r.Status == AttendanceStatus.UnpaidLeave)
             {
                 return string.Empty;
             }
@@ -731,6 +734,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                                         dayPrint.TimeOut = "XXXX";
                                         dayPrint.Overtime = "UNP";
                                     }
+                                    else if (dayRow.Status == AttendanceStatus.UnpaidLeave)
+                                    {
+                                        dayPrint.Site = "UNPAID LEAVE";
+                                        dayPrint.TimeIn = "XXXX";
+                                        dayPrint.TimeOut = "XXXX";
+                                        dayPrint.Overtime = "UNP";
+                                    }
                                     else if (dayRow.Status == AttendanceStatus.LeaveAuthorized)
                                     {
                                         dayPrint.Site = "LEAVE";
@@ -909,7 +919,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             get
             {
-                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick)
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
                     return string.Empty;
 
                 if (Date.DayOfWeek == DayOfWeek.Saturday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
@@ -925,7 +935,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             get
             {
-                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick)
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
                     return string.Empty;
 
                 if (Date.DayOfWeek == DayOfWeek.Sunday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
@@ -941,7 +951,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             get
             {
-                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick)
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
                     return string.Empty;
 
                 if (OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))

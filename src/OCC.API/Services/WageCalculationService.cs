@@ -65,8 +65,8 @@ namespace OCC.API.Services
                 return new HoursBreakdown(leaveNormal, 0, 0, 0);
             }
 
-            // Guard: no check-in or absent/unpaid sick → nothing to pay (unless they have explicit PaidLeaveHours)
-            if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick)
+            // Guard: no check-in or absent/unpaid sick/unpaid leave → nothing to pay (unless they have explicit PaidLeaveHours)
+            if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
             {
                 return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
             }

@@ -52,6 +52,7 @@ namespace OCC.Shared.Models
         LeaveEarly,
         LeaveAuthorized,
         UnpaidSick,
+        UnpaidLeave,
         AutoPaid
     }
 }

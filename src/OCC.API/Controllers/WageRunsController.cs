@@ -297,6 +297,10 @@ namespace OCC.API.Controllers
                         {
                             line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
                         }
+                        else if (record.Status == AttendanceStatus.UnpaidLeave)
+                        {
+                            line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Leave; ";
+                        }
                     }
                     else
                     {
@@ -385,7 +389,7 @@ namespace OCC.API.Controllers
                                 if (!isAbsent)
                                 {
                                     var attendanceRecord = attendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
-                                    if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick))
+                                    if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
                                     {
                                         isAbsent = true;
                                     }

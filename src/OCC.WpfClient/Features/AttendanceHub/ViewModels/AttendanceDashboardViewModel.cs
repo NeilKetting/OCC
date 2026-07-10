@@ -349,7 +349,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         public string StatusLabel => (CheckInTime.HasValue && CheckOutTime.HasValue && Status != AttendanceStatus.Absent)
             ? "Clocked Out"
-            : Status switch
+             : Status switch
             {
                 AttendanceStatus.Present => "Present",
                 AttendanceStatus.Late => "Late",
@@ -358,6 +358,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 AttendanceStatus.LeaveAuthorized => "Leave",
                 AttendanceStatus.LeaveEarly => "Left Early",
                 AttendanceStatus.UnpaidSick => "Unpaid Sick",
+                AttendanceStatus.UnpaidLeave => "Unpaid Leave",
                 _ => "Unknown"
             };
 
@@ -371,6 +372,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 AttendanceStatus.Sick => "#0288D1",
                 AttendanceStatus.LeaveAuthorized => "#6A1B9A",
                 AttendanceStatus.LeaveEarly => "#E65100",
+                AttendanceStatus.UnpaidSick => "#8E24AA",
+                AttendanceStatus.UnpaidLeave => "#5E35B1",
                 _ => "#607D8B"
             };
 

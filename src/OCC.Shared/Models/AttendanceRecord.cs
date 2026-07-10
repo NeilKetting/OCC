@@ -99,7 +99,9 @@ namespace OCC.Shared.Models
         /// <summary> Employee is off duty with prior management approval. </summary>
         LeaveAuthorized,
         /// <summary> Employee is off duty due to illness, but has exhausted paid sick leave. </summary>
-        UnpaidSick
+        UnpaidSick,
+        /// <summary> Employee is off duty without pay. </summary>
+        UnpaidLeave
     }
 }
 

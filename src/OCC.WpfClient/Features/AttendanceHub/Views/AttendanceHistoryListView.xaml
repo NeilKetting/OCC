@@ -23,6 +23,7 @@
 
             <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
             <conv:VisibilityConverter x:Key="VisibilityConverter" />
+            <conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter" />
 
             <DataTemplate DataType="{x:Type vm:AttendanceDetailViewModel}">
                 <local:AttendanceDetailView />
@@ -198,6 +199,8 @@
                         <ComboBoxItem Content="Absent"/>
                         <ComboBoxItem Content="Sick"/>
                         <ComboBoxItem Content="Leave"/>
+                        <ComboBoxItem Content="Unpaid Sick"/>
+                        <ComboBoxItem Content="Unpaid Leave"/>
                     </ComboBox>
 
                     <!-- Branch Filter -->
@@ -273,7 +276,7 @@
                     <DataGridTextColumn Header="DATE" Binding="{Binding Date, StringFormat=yyyy/MM/dd}" Width="Auto" Visibility="{Binding Data.IsDateColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="EMPLOYEE" Binding="{Binding EmployeeName}" Width="180" Visibility="{Binding Data.IsEmployeeColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="160" Visibility="{Binding Data.IsProjectColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
-                    <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="100" Visibility="{Binding Data.IsStatusColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                    <DataGridTextColumn Header="STATUS" Binding="{Binding Status, Converter={StaticResource FriendlyEnumConverter}}" Width="100" Visibility="{Binding Data.IsStatusColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="CLOCK IN" Binding="{Binding CheckInTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockInColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="CLOCK OUT" Binding="{Binding CheckOutTime, StringFormat=HH:mm}" Width="Auto" Visibility="{Binding Data.IsClockOutColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     <DataGridTextColumn Header="HOURS" Binding="{Binding HoursWorked, StringFormat={}{0:F2}}" Width="Auto" Visibility="{Binding Data.IsHoursColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
