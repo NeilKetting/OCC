@@ -133,5 +133,31 @@ namespace OCC.WpfClient.Services
                 throw new Exception(error);
             }
         }
+
+        public async Task<IEnumerable<OCC.Shared.DTOs.BankPaymentDto>> GetBankExportDataAsync(Guid id)
+        {
+            EnsureAuthorization();
+            var response = await _httpClient.GetAsync(GetFullUrl($"api/WageRuns/{id}/bank-export"));
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception(error);
+            }
+            return await response.Content.ReadFromJsonAsync<IEnumerable<OCC.Shared.DTOs.BankPaymentDto>>(_options)
+                ?? [];
+        }
+
+        public async Task<IEnumerable<OCC.Shared.DTOs.BankPaymentDto>> GetBankExportPreviewAsync(WageRun run)
+        {
+            EnsureAuthorization();
+            var response = await _httpClient.PostAsJsonAsync(GetFullUrl("api/WageRuns/bank-export-preview"), run, _options);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception(error);
+            }
+            return await response.Content.ReadFromJsonAsync<IEnumerable<OCC.Shared.DTOs.BankPaymentDto>>(_options)
+                ?? [];
+        }
     }
 }

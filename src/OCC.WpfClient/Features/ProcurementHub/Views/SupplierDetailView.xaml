@@ -67,7 +67,16 @@
 
                         <StackPanel Margin="0,12,0,12">
                             <TextBlock Text="Physical Address" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="123 Street..."/>
+                            <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernInput}" 
+                                     Height="Auto" 
+                                     MinHeight="60" 
+                                     AcceptsReturn="True" 
+                                     VerticalScrollBarVisibility="Auto" 
+                                     TextWrapping="Wrap" 
+                                     Padding="8,6" 
+                                     VerticalContentAlignment="Top"
+                                     ap:WatermarkProperties.Watermark="123 Street..."/>
                         </StackPanel>
                         
                         <Grid>

@@ -97,13 +97,23 @@
 
                             <!-- Column Picker Popup -->
                             <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-60" VerticalOffset="5">
-                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
-                                    <StackPanel>
-                                        <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-                                        <CheckBox Content="Branch" IsChecked="{Binding IsBranchVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Contact" IsChecked="{Binding IsContactVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Phone" IsChecked="{Binding IsPhoneVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                    </StackPanel>
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="220">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                                        <StackPanel>
+                                            <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                                            <CheckBox Content="Branch" IsChecked="{Binding IsBranchVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Contact" IsChecked="{Binding IsContactVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Phone" IsChecked="{Binding IsPhoneVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Email" IsChecked="{Binding IsEmailVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Address" IsChecked="{Binding IsAddressVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="City" IsChecked="{Binding IsCityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="VAT #" IsChecked="{Binding IsVatNumberVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Bank Name" IsChecked="{Binding IsBankNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Bank Acc #" IsChecked="{Binding IsBankAccountNumberVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Branch Code" IsChecked="{Binding IsBranchCodeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Supplier Acc #" IsChecked="{Binding IsSupplierAccountNumberVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </Border>
                             </Popup>
                         </StackPanel>
@@ -151,6 +161,14 @@
                         <DataGridTextColumn Header="BRANCH" Binding="{Binding Branch}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsBranchVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <DataGridTextColumn Header="CONTACT" Binding="{Binding ContactPerson}" Width="Auto" Foreground="{StaticResource TextSub}" Visibility="{Binding Data.IsContactVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <DataGridTextColumn Header="PHONE" Binding="{Binding Phone}" Width="Auto" Visibility="{Binding Data.IsPhoneVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="Auto" Visibility="{Binding Data.IsEmailVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="ADDRESS" Binding="{Binding Address}" Width="Auto" Visibility="{Binding Data.IsAddressVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="CITY" Binding="{Binding City}" Width="Auto" Visibility="{Binding Data.IsCityVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="VAT #" Binding="{Binding VatNumber}" Width="Auto" Visibility="{Binding Data.IsVatNumberVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="BANK NAME" Binding="{Binding BankName}" Width="Auto" Visibility="{Binding Data.IsBankNameVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="BANK ACC #" Binding="{Binding BankAccountNumber}" Width="Auto" Visibility="{Binding Data.IsBankAccountNumberVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="BRANCH CODE" Binding="{Binding BranchCode}" Width="Auto" Visibility="{Binding Data.IsBranchCodeVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="SUPPLIER ACC #" Binding="{Binding SupplierAccountNumber}" Width="Auto" Visibility="{Binding Data.IsSupplierAccountNumberVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
 
                         <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>

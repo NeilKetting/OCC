@@ -44,7 +44,15 @@ namespace OCC.API.Controllers
                         Email = s.Email,
                         Phone = s.Phone,
                         Branch = s.Branch.ToString(),
-                        VatNumber = s.VatNumber
+                        VatNumber = s.VatNumber,
+                        ContactPerson = s.ContactPerson,
+                        Address = s.Address != null ? s.Address.Replace("\r\n", ", ").Replace("\n", ", ").Replace("\r", ", ") : string.Empty,
+                        City = s.City,
+                        PostalCode = s.PostalCode,
+                        BankName = s.BankName,
+                        BankAccountNumber = s.BankAccountNumber,
+                        BranchCode = s.BranchCode,
+                        SupplierAccountNumber = s.SupplierAccountNumber
                     })
                     .AsNoTracking()
                     .ToListAsync();

@@ -86,13 +86,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Project Report";
         }
 
-        public async Task LoadReportDataAsync(Guid projectId, bool autoGenerate = false)
+        public async Task LoadReportDataAsync(Guid projectId, bool autoGenerate = false, bool silent = false)
         {
             ProjectId = projectId;
             try
             {
-                IsBusy = true;
-                BusyText = "Loading report data...";
+                if (!silent)
+                {
+                    IsBusy = true;
+                    BusyText = "Loading report data...";
+                }
 
                 Project = await _projectService.GetProjectAsync(projectId);
                 if (Project == null) return;
@@ -368,11 +371,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading project report data for project {ProjectId}", projectId);
-                NotifyError("Error", "Could not load report data: " + ex.Message);
+                if (!silent)
+                {
+                    NotifyError("Error", "Could not load report data: " + ex.Message);
+                }
             }
             finally
             {
-                IsBusy = false;
+                if (!silent)
+                {
+                    IsBusy = false;
+                }
             }
         }
 

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
 using OCC.API.Services;
 using OCC.Shared.Models;
+using OCC.Shared.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -656,6 +657,78 @@ namespace OCC.API.Controllers
 
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // GET: api/WageRuns/{id}/bank-export
+        [HttpGet("{id}/bank-export")]
+        public async Task<ActionResult<IEnumerable<BankPaymentDto>>> GetBankExportData(Guid id)
+        {
+            var run = await _context.WageRuns
+                .Include(w => w.Lines)
+                .FirstOrDefaultAsync(w => w.Id == id);
+
+            if (run == null)
+            {
+                return NotFound("Wage run not found.");
+            }
+
+            var payments = new List<BankPaymentDto>();
+
+            foreach (var line in run.Lines)
+            {
+                if (line.NetPay <= 0) continue; // Skip zero/negative payments
+
+                // Fetch the employee to get current BranchCode and AccountType
+                var employee = await _context.Employees.FindAsync(line.EmployeeId);
+
+                payments.Add(new BankPaymentDto
+                {
+                    EmployeeName = line.EmployeeName,
+                    EmployeeNumber = line.EmployeeNumber,
+                    BankName = line.BankName ?? employee?.BankName ?? string.Empty,
+                    AccountNumber = line.BankAccountNumber ?? employee?.AccountNumber ?? string.Empty,
+                    BranchCode = employee?.BranchCode ?? string.Empty,
+                    AccountType = employee?.AccountType ?? string.Empty,
+                    Amount = line.NetPay,
+                    Reference = $"Wage {run.EndDate:yyyyMMdd}"
+                });
+            }
+
+            return payments;
+        }
+
+        // POST: api/WageRuns/bank-export-preview
+        [HttpPost("bank-export-preview")]
+        public async Task<ActionResult<IEnumerable<BankPaymentDto>>> GetBankExportPreview([FromBody] WageRun run)
+        {
+            if (run == null)
+            {
+                return BadRequest("Invalid Wage Run data.");
+            }
+
+            var payments = new List<BankPaymentDto>();
+
+            foreach (var line in run.Lines)
+            {
+                if (line.NetPay <= 0) continue; // Skip zero/negative payments
+
+                // Fetch the employee to get current BranchCode and AccountType
+                var employee = await _context.Employees.FindAsync(line.EmployeeId);
+
+                payments.Add(new BankPaymentDto
+                {
+                    EmployeeName = line.EmployeeName,
+                    EmployeeNumber = line.EmployeeNumber,
+                    BankName = line.BankName ?? employee?.BankName ?? string.Empty,
+                    AccountNumber = line.BankAccountNumber ?? employee?.AccountNumber ?? string.Empty,
+                    BranchCode = employee?.BranchCode ?? string.Empty,
+                    AccountType = employee?.AccountType ?? string.Empty,
+                    Amount = line.NetPay,
+                    Reference = $"Wage {run.EndDate:yyyyMMdd}"
+                });
+            }
+
+            return payments;
         }
 
         // POST: api/WageRuns/delete/5

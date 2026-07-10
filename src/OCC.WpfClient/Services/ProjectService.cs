@@ -299,5 +299,22 @@ namespace OCC.WpfClient.Services
             if (task == null) return;
             task.IsExpanded = !task.IsExpanded;
         }
+
+        public async Task ImportProjectTasksAsync(Guid projectId, List<ProjectTask> tasks)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/Projects/{projectId}/import-tasks");
+            try
+            {
+                var response = await client.PostAsJsonAsync(url, tasks);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing tasks for project {Id} to {Url}", projectId, url);
+                throw;
+            }
+        }
     }
 }

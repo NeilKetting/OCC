@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
              mc:Ignorable="d"
-             d:DesignHeight="800" d:DesignWidth="220">
+             d:DesignHeight="800" d:DesignWidth="200">
 
     <Border Style="{StaticResource ModernSidebar}">
         <Grid>
@@ -16,10 +16,10 @@
             </Grid.RowDefinitions>
 
             <!-- Header Section -->
-            <StackPanel Grid.Row="0" Margin="15,20,15,25">
+            <StackPanel Grid.Row="0" Margin="0,5,0,10" HorizontalAlignment="Center">
                 <TextBlock Text="TIME &amp;" Foreground="{StaticResource OrangeBrush}" FontSize="22" FontWeight="Black"/>
                 <TextBlock Text="ATTENDANCE" Foreground="White" FontSize="13" FontWeight="Black"/>
-                <TextBlock Text="MANAGEMENT HUB" Foreground="White" FontSize="10" FontWeight="SemiBold" Opacity="0.5" Margin="2,-2,0,0"/>
+                <TextBlock Text="MANAGEMENT HUB" Foreground="White" FontSize="10" FontWeight="SemiBold" Opacity="0.5" Margin="2,5,0,0"/>
             </StackPanel>
 
             <!-- Navigation Items -->

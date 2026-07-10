@@ -46,11 +46,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         /// Called by ProjectDetailViewModel when a project is loaded.
         /// Filters all HSEQ data to this project.
         /// </summary>
-        public void Initialize(Guid projectId)
+        public void Initialize(Guid projectId, bool silent = false)
         {
             ProjectId = projectId;
             // Reload documents filtered to this project
-            _ = _documentsVm.LoadDocuments(projectId);
+            _ = _documentsVm.LoadDocumentsInternal(projectId, silent);
             _ = LoadSafeWorkingHoursAsync();
         }
 

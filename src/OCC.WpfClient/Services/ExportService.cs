@@ -299,6 +299,75 @@ namespace OCC.WpfClient.Services
             return tempFile;
         }
 
+        public async Task<string> GenerateBankExportFileAsync(IEnumerable<OCC.Shared.DTOs.BankPaymentDto> payments, BankFormat format, DateTime actionDate, string outputPath)
+        {
+            var sb = new StringBuilder();
+
+            if (format == BankFormat.StandardCsv)
+            {
+                // Standard Bulk Payment CSV Format
+                sb.AppendLine("Beneficiary Name,Employee Number,Bank Name,Account Number,Branch Code,Account Type,Amount,Payment Reference,Action Date");
+                foreach (var payment in payments)
+                {
+                    // Escape quotes and commas in strings
+                    var name = payment.EmployeeName.Replace("\"", "\"\"");
+                    if (name.Contains(",") || name.Contains("\""))
+                    {
+                        name = $"\"{name}\"";
+                    }
+                    var bank = payment.BankName.Replace("\"", "\"\"");
+                    if (bank.Contains(",") || bank.Contains("\""))
+                    {
+                        bank = $"\"{bank}\"";
+                    }
+                    var refStr = payment.Reference.Replace("\"", "\"\"");
+                    if (refStr.Contains(",") || refStr.Contains("\""))
+                    {
+                        refStr = $"\"{refStr}\"";
+                    }
+
+                    // Format amount culture-invariantly (with 2 decimal places)
+                    var amountStr = payment.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+                    sb.AppendLine($"{name},{payment.EmployeeNumber},{bank},{payment.AccountNumber},{payment.BranchCode},{payment.AccountType},{amountStr},{refStr},{actionDate:yyyy-MM-dd}");
+                }
+            }
+            else if (format == BankFormat.NedbankNetBankCsv)
+            {
+                // Nedbank NetBank CSV Format
+                // NOTE: This will be updated with the exact Nedbank file layout (fixed-width or custom CSV headers) once Nedbank sends the spec.
+                // For now, we generate a standard NetBank compatible import template structure.
+                sb.AppendLine("Record Type,Beneficiary Name,Beneficiary Account Number,Branch Code,Account Type,Amount,Your Reference,Their Reference,Action Date");
+                foreach (var payment in payments)
+                {
+                    var name = payment.EmployeeName.Replace("\"", "\"\"");
+                    if (name.Contains(",") || name.Contains("\""))
+                    {
+                        name = $"\"{name}\"";
+                    }
+                    var amountStr = payment.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+                    // Account types in South African EFT files: 1 = Cheque/Current, 2 = Savings, 3 = Transmission
+                    var typeCode = "1"; // Default current
+                    if (!string.IsNullOrEmpty(payment.AccountType) && payment.AccountType.Contains("Savings", StringComparison.OrdinalIgnoreCase))
+                    {
+                        typeCode = "2";
+                    }
+
+                    sb.AppendLine($"PAY,{name},{payment.AccountNumber},{payment.BranchCode},{typeCode},{amountStr},OCC WAGES,WAGES {actionDate:yyyyMMdd},{actionDate:yyyy-MM-dd}");
+                }
+            }
+
+            var dir = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            await File.WriteAllTextAsync(outputPath, sb.ToString(), Encoding.UTF8);
+            return outputPath;
+        }
+
         public Task OpenFileAsync(string filePath)
         {
             try

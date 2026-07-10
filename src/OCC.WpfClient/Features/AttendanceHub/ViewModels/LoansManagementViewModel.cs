@@ -90,6 +90,37 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 IsBusy = true;
                 BusyText = "Loading loans...";
                 var loans = await _loanService.GetAllAsync();
+                
+                // Set EndDate for legacy loans if null
+                foreach (var loan in loans)
+                {
+                    if (loan.EndDate == null)
+                    {
+                        string notes = loan.Notes ?? string.Empty;
+                        string freq = "Monthly";
+                        int inst = 10;
+                        if (notes.Contains("[Term:") && notes.Contains("Installments:"))
+                        {
+                            int termIndex = notes.IndexOf("[Term: ") + 7;
+                            int termEndIndex = notes.IndexOf(",", termIndex);
+                            if (termEndIndex > termIndex)
+                            {
+                                freq = notes.Substring(termIndex, termEndIndex - termIndex).Trim();
+                            }
+                            int instIndex = notes.IndexOf("Installments: ") + 14;
+                            int instEndIndex = notes.IndexOf("]", instIndex);
+                            if (instEndIndex > instIndex)
+                            {
+                                if (int.TryParse(notes.Substring(instIndex, instEndIndex - instIndex), out int instCount))
+                                {
+                                    inst = instCount;
+                                }
+                            }
+                        }
+                        loan.EndDate = CalculateEndDate(loan.StartDate, freq, inst);
+                    }
+                }
+
                 Loans = new ObservableCollection<EmployeeLoan>(loans.OrderBy(l => l.Employee?.LastName));
 
                 var employees = await _employeeService.GetEmployeesAsync();
@@ -142,6 +173,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     MonthlyInstallment = MonthlyInstallment,
                     InterestRate       = InterestRate,
                     StartDate          = LoanStartDate,
+                    EndDate            = CalculateEndDate(LoanStartDate, SelectedPaymentFrequency, NumberOfInstallments),
                     IsActive           = true,
                     Notes              = $"[Term: {SelectedPaymentFrequency}, Installments: {NumberOfInstallments}] {LoanNotes}".Trim()
                 };
@@ -176,6 +208,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     MonthlyInstallment = MonthlyInstallment,
                     InterestRate       = InterestRate,
                     StartDate          = LoanStartDate,
+                    EndDate            = CalculateEndDate(LoanStartDate, SelectedPaymentFrequency, NumberOfInstallments),
                     IsActive           = true,
                     Notes              = $"[Term: {SelectedPaymentFrequency}, Installments: {NumberOfInstallments}] {LoanNotes}".Trim()
                 };
@@ -317,6 +350,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     loan.OutstandingBalance = 0;
                     loan.IsActive = false;
                     loan.EndDate = DateTime.Today;
+                }
+                else
+                {
+                    loan.EndDate = CalculateEndDate(LoanStartDate, SelectedPaymentFrequency, NumberOfInstallments);
                 }
 
                 // Build notes
@@ -686,23 +723,55 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     new() { Header = "Installment (R)", PropertyName = "Installment", Width = 1.0 },
                     new() { Header = "Balance (R)", PropertyName = "Balance", Width = 1.0 },
                     new() { Header = "Admin Fee (%)", PropertyName = "InterestPercent", Width = 0.8 },
+                    new() { Header = "Duration", PropertyName = "Duration", Width = 1.2 },
                     new() { Header = "Start Date", PropertyName = "StartDate", Width = 1.2 },
+                    new() { Header = "Finish Date", PropertyName = "FinishDate", Width = 1.2 },
                     new() { Header = "Status", PropertyName = "Status", Width = 0.8 }
                 };
 
-                var printItems = filteredItems.Select(l => new LoanPrintModel
-                {
-                    Employee = l.Employee?.DisplayName ?? "Unknown",
-                    Branch = l.Employee?.Branch.ToString() ?? "Unknown",
-                    Principal = l.PrincipalAmount,
-                    Installment = l.MonthlyInstallment,
-                    Balance = l.OutstandingBalance,
-                    InterestPercent = (double)(l.InterestRate < 1m && l.InterestRate > 0m ? l.InterestRate * 100m : l.InterestRate),
-                    StartDate = l.StartDate,
-                    Status = l.IsActive ? "ACTIVE" : "PAID"
+                var printItems = filteredItems.Select(l => {
+                    string notes = l.Notes ?? string.Empty;
+                    string duration = "10 Monthly";
+                    if (notes.Contains("[Term:") && notes.Contains("Installments:"))
+                    {
+                        int termIndex = notes.IndexOf("[Term: ") + 7;
+                        int termEndIndex = notes.IndexOf(",", termIndex);
+                        string freq = "Monthly";
+                        if (termEndIndex > termIndex)
+                        {
+                            freq = notes.Substring(termIndex, termEndIndex - termIndex).Trim();
+                        }
+                        int instIndex = notes.IndexOf("Installments: ") + 14;
+                        int instEndIndex = notes.IndexOf("]", instIndex);
+                        int inst = 10;
+                        if (instEndIndex > instIndex)
+                        {
+                            if (int.TryParse(notes.Substring(instIndex, instEndIndex - instIndex), out int instCount))
+                            {
+                                inst = instCount;
+                            }
+                        }
+                        duration = $"{inst} {freq}";
+                    }
+
+                    var finishDate = l.EndDate ?? CalculateEndDate(l.StartDate, notes.Contains("Fortnightly") ? "Fortnightly" : "Monthly", 10);
+
+                    return new LoanPrintModel
+                    {
+                        Employee = l.Employee?.DisplayName ?? "Unknown",
+                        Branch = l.Employee?.Branch.ToString() ?? "Unknown",
+                        Principal = l.PrincipalAmount,
+                        Installment = l.MonthlyInstallment,
+                        Balance = l.OutstandingBalance,
+                        InterestPercent = (double)(l.InterestRate < 1m && l.InterestRate > 0m ? l.InterestRate * 100m : l.InterestRate),
+                        StartDate = l.StartDate,
+                        Duration = duration,
+                        FinishDate = finishDate,
+                        Status = l.IsActive ? "ACTIVE" : "PAID"
+                    };
                 }).ToList();
 
-                var path = await _pdfService.GenerateListReportPdfAsync("Staff Loans Report", printItems, cols);
+                var path = await _pdfService.GenerateListReportPdfAsync("Staff Loans Report", printItems, cols, isLandscape: true);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -712,6 +781,19 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
+        }
+
+        private DateTime CalculateEndDate(DateTime startDate, string frequency, int installments)
+        {
+            if (installments <= 0) return startDate;
+            if (frequency == "Fortnightly")
+            {
+                return startDate.AddDays(installments * 14);
+            }
+            else // Monthly
+            {
+                return startDate.AddMonths(installments);
+            }
         }
     }
 
@@ -724,6 +806,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public decimal Balance { get; set; }
         public double InterestPercent { get; set; }
         public DateTime StartDate { get; set; }
+        public string Duration { get; set; } = string.Empty;
+        public DateTime FinishDate { get; set; }
         public string Status { get; set; } = string.Empty;
     }
 }

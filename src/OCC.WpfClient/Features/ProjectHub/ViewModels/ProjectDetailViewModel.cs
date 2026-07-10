@@ -117,10 +117,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     _dashboardVM.UpdateProjectData(Project, tasks);
                     await _tasksVM.UpdateTasksAsync(ProjectId, tasks, silent);
                     await _ganttVM.UpdateTasksAsync(ProjectId, tasks.ToList(), silent);
-                    _ = _historyVM.LoadHistoryAsync(ProjectId);
-                    await _reportVM.LoadReportDataAsync(ProjectId, autoGenerate: true);
-                    await _variationOrdersVM.LoadProjectAsync(ProjectId);
-                    _projectHseqVM.Initialize(ProjectId);
+                    _ = _historyVM.LoadHistoryAsync(ProjectId, silent);
+                    await _reportVM.LoadReportDataAsync(ProjectId, autoGenerate: true, silent: silent);
+                    await _variationOrdersVM.LoadProjectAsync(ProjectId, silent);
+                    _projectHseqVM.Initialize(ProjectId, silent);
                     _crewDeploymentVM.Initialize(ProjectId, Project.Name);
                     if (!silent) UpdateStatus("Ready");
                 }

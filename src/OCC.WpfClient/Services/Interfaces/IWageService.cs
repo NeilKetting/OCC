@@ -26,5 +26,9 @@ namespace OCC.WpfClient.Services.Interfaces
 
         /// <summary>Deletes a Draft wage run (Finalized runs are rejected by the API).</summary>
         Task DeleteRunAsync(Guid id);
+
+        Task<IEnumerable<OCC.Shared.DTOs.BankPaymentDto>> GetBankExportDataAsync(Guid id);
+
+        Task<IEnumerable<OCC.Shared.DTOs.BankPaymentDto>> GetBankExportPreviewAsync(WageRun run);
     }
 }

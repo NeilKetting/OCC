@@ -5,6 +5,7 @@ using OCC.Shared.Models;
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -21,6 +22,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     {
         private readonly IWageService _wageService;
         private readonly IPdfService _pdfService;
+        private readonly IExportService _exportService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<WageRunViewModel> _logger;
         private readonly OCC.WpfClient.Services.Infrastructure.LocalSettingsService _localSettings;
@@ -211,12 +213,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public WageRunViewModel(
             IWageService wageService,
             IPdfService pdfService,
+            IExportService exportService,
             IDialogService dialogService,
             ILogger<WageRunViewModel> logger,
             OCC.WpfClient.Services.Infrastructure.LocalSettingsService localSettings)
         {
             _wageService = wageService;
             _pdfService = pdfService;
+            _exportService = exportService;
             _dialogService = dialogService;
             _logger = logger;
             _localSettings = localSettings;
@@ -581,6 +585,173 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 _logger.LogError(ex, "Error generating past wage run PDF");
                 System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task ExportPastRunBankFileAsync(WageRun? run)
+        {
+            if (run == null) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Fetching payment details...";
+
+                var payments = await _wageService.GetBankExportDataAsync(run.Id);
+                var paymentList = payments.ToList();
+
+                if (!paymentList.Any())
+                {
+                    System.Windows.MessageBox.Show("There are no valid employee payments (Net Pay > R0) in this wage run.", "No Payments",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                var totalCount = paymentList.Count;
+                var totalAmount = paymentList.Sum(p => p.Amount);
+
+                IsBusy = false;
+
+                var dialog = new Dialogs.BankExportDialogView(totalCount, totalAmount, DateTime.Today);
+                if (dialog.ShowDialog() == true)
+                {
+                    var format = dialog.SelectedFormat;
+                    var actionDate = dialog.ActionDate;
+
+                    var defaultDocsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OCC", "BankExports");
+                    if (!Directory.Exists(defaultDocsPath))
+                    {
+                        Directory.CreateDirectory(defaultDocsPath);
+                    }
+
+                    var cleanBranch = (run.Branch ?? "All").Replace(" ", "");
+                    var defaultFilename = format == BankFormat.NedbankNetBankCsv
+                        ? $"NedbankExport_{cleanBranch}_{run.EndDate:yyyyMMdd}.csv"
+                        : $"BankExport_{cleanBranch}_{run.EndDate:yyyyMMdd}.csv";
+
+                    var sfd = new Microsoft.Win32.SaveFileDialog
+                    {
+                        InitialDirectory = defaultDocsPath,
+                        FileName = defaultFilename,
+                        DefaultExt = ".csv",
+                        Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
+                        Title = "Save Bank Export File"
+                    };
+
+                    if (sfd.ShowDialog() == true)
+                    {
+                        IsBusy = true;
+                        BusyText = "Generating bank export file...";
+
+                        await _exportService.GenerateBankExportFileAsync(paymentList, format, actionDate, sfd.FileName);
+
+                        System.Windows.MessageBox.Show($"Bank export file generated successfully:\n\n{Path.GetFileName(sfd.FileName)}", "Success",
+                            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+
+                        var saveDir = Path.GetDirectoryName(sfd.FileName);
+                        if (!string.IsNullOrEmpty(saveDir))
+                        {
+                            Process.Start(new ProcessStartInfo { FileName = saveDir, UseShellExecute = true });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting past bank file");
+                System.Windows.MessageBox.Show($"Failed to export bank file:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task ExportDraftRunBankFileAsync()
+        {
+            if (_currentDraft == null && !Lines.Any()) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Preparing draft payments...";
+
+                var runToPreview = new WageRun
+                {
+                    Id = _currentDraftId ?? Guid.NewGuid(),
+                    StartDate = StartDate,
+                    EndDate = EndDate,
+                    Branch = SelectedBranch,
+                    PayType = SelectedPayType,
+                    Notes = Notes,
+                    Lines = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
+                };
+
+                var payments = await _wageService.GetBankExportPreviewAsync(runToPreview);
+                var paymentList = payments.ToList();
+
+                if (!paymentList.Any())
+                {
+                    System.Windows.MessageBox.Show("There are no valid employee payments (Net Pay > R0) in the current draft.", "No Payments",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                var totalCount = paymentList.Count;
+                var totalAmount = paymentList.Sum(p => p.Amount);
+
+                IsBusy = false;
+
+                var dialog = new Dialogs.BankExportDialogView(totalCount, totalAmount, DateTime.Today);
+                if (dialog.ShowDialog() == true)
+                {
+                    var format = dialog.SelectedFormat;
+                    var actionDate = dialog.ActionDate;
+
+                    var defaultDocsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OCC", "BankExports");
+                    if (!Directory.Exists(defaultDocsPath))
+                    {
+                        Directory.CreateDirectory(defaultDocsPath);
+                    }
+
+                    var cleanBranch = (SelectedBranch ?? "All").Replace(" ", "");
+                    var defaultFilename = format == BankFormat.NedbankNetBankCsv
+                        ? $"DraftNedbankExport_{cleanBranch}_{EndDate:yyyyMMdd}.csv"
+                        : $"DraftBankExport_{cleanBranch}_{EndDate:yyyyMMdd}.csv";
+
+                    var sfd = new Microsoft.Win32.SaveFileDialog
+                    {
+                        InitialDirectory = defaultDocsPath,
+                        FileName = defaultFilename,
+                        DefaultExt = ".csv",
+                        Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
+                        Title = "Save Draft Bank Export File"
+                    };
+
+                    if (sfd.ShowDialog() == true)
+                    {
+                        IsBusy = true;
+                        BusyText = "Generating draft bank export file...";
+
+                        await _exportService.GenerateBankExportFileAsync(paymentList, format, actionDate, sfd.FileName);
+
+                        System.Windows.MessageBox.Show($"Draft bank export file generated successfully:\n\n{Path.GetFileName(sfd.FileName)}", "Success",
+                            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+
+                        var saveDir = Path.GetDirectoryName(sfd.FileName);
+                        if (!string.IsNullOrEmpty(saveDir))
+                        {
+                            Process.Start(new ProcessStartInfo { FileName = saveDir, UseShellExecute = true });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting draft bank file");
+                System.Windows.MessageBox.Show($"Failed to export bank file:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }

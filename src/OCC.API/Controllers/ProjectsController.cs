@@ -839,5 +839,79 @@ namespace OCC.API.Controllers
                 return Ok(new { Success = false, Count = 0, Message = $"DB Error: {ex.Message}" });
             }
         }
+
+        [HttpPost("{id}/import-tasks")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
+        public async Task<IActionResult> ImportTasks(Guid id, [FromBody] List<ProjectTask> tasks)
+        {
+            if (tasks == null) return BadRequest("Tasks collection cannot be null.");
+
+            var projectExists = await _context.Projects.AnyAsync(p => p.Id == id);
+            if (!projectExists) return NotFound($"Project with ID {id} not found.");
+
+            try
+            {
+                var strategy = _context.Database.CreateExecutionStrategy();
+                await strategy.ExecuteAsync(async () =>
+                {
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        // Retrieve all existing task IDs for this project
+                        var existingTaskIds = await _context.ProjectTasks
+                            .Where(t => t.ProjectId == id)
+                            .Select(t => t.Id)
+                            .ToListAsync();
+
+                        // Delete related records
+                        if (existingTaskIds.Any())
+                        {
+                            var assignments = _context.TaskAssignments.Where(a => existingTaskIds.Contains(a.TaskId));
+                            _context.TaskAssignments.RemoveRange(assignments);
+
+                            var comments = _context.TaskComments.Where(c => existingTaskIds.Contains(c.TaskId));
+                            _context.TaskComments.RemoveRange(comments);
+
+                            var attachments = _context.TaskAttachments.Where(a => existingTaskIds.Contains(a.TaskId));
+                            _context.TaskAttachments.RemoveRange(attachments);
+
+                            var existingTasks = _context.ProjectTasks.Where(t => t.ProjectId == id);
+                            _context.ProjectTasks.RemoveRange(existingTasks);
+                        }
+
+                        // Add the new tasks
+                        foreach (var task in tasks)
+                        {
+                            task.ProjectId = id;
+                            
+                            // Break object cycles/ EF tracking issues
+                            task.Project = null;
+                            task.Children = new List<ProjectTask>();
+                            
+                            _context.ProjectTasks.Add(task);
+                        }
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
+
+                // Trigger SignalR update
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "BatchUpdate", id);
+
+                return Ok(new { Success = true, Count = tasks.Count });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing tasks for project {Id}", id);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

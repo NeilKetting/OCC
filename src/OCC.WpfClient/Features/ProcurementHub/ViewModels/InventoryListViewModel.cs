@@ -33,6 +33,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private bool _isCptQuantityVisible = true;
         [ObservableProperty] private bool _isLocationVisible = true;
         [ObservableProperty] private bool _isStatusVisible = true;
+        [ObservableProperty] private bool _isSupplierVisible = true;
+        [ObservableProperty] private bool _isJhbReorderPointVisible = false;
+        [ObservableProperty] private bool _isCptReorderPointVisible = false;
+        [ObservableProperty] private bool _isUnitOfMeasureVisible = false;
+        [ObservableProperty] private bool _isAverageCostVisible = false;
+        [ObservableProperty] private bool _isPriceVisible = false;
+        [ObservableProperty] private bool _isTrackLowStockVisible = false;
+        [ObservableProperty] private bool _isTypeVisible = false;
 
         [ObservableProperty] private string _selectedCategoryFilter = "All Categories";
         [ObservableProperty] private string _selectedStatusFilter = "All Statuses";
@@ -279,6 +287,33 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsCptQuantityVisible = layout.Columns.FirstOrDefault(c => c.Header == "CPT Qty")?.IsVisible ?? true;
                 IsLocationVisible = layout.Columns.FirstOrDefault(c => c.Header == "Location")?.IsVisible ?? true;
                 IsStatusVisible = layout.Columns.FirstOrDefault(c => c.Header == "Status")?.IsVisible ?? true;
+                IsSupplierVisible = layout.Columns.FirstOrDefault(c => c.Header == "Supplier")?.IsVisible ?? true;
+                IsJhbReorderPointVisible = layout.Columns.FirstOrDefault(c => c.Header == "JHB Reorder")?.IsVisible ?? false;
+                IsCptReorderPointVisible = layout.Columns.FirstOrDefault(c => c.Header == "CPT Reorder")?.IsVisible ?? false;
+                IsUnitOfMeasureVisible = layout.Columns.FirstOrDefault(c => c.Header == "UOM")?.IsVisible ?? false;
+                IsAverageCostVisible = layout.Columns.FirstOrDefault(c => c.Header == "Avg Cost")?.IsVisible ?? false;
+                IsPriceVisible = layout.Columns.FirstOrDefault(c => c.Header == "Price")?.IsVisible ?? false;
+                IsTrackLowStockVisible = layout.Columns.FirstOrDefault(c => c.Header == "Track Low")?.IsVisible ?? false;
+                IsTypeVisible = layout.Columns.FirstOrDefault(c => c.Header == "Type")?.IsVisible ?? false;
+            }
+            else
+            {
+                IsSkuVisible = true;
+                IsDescriptionVisible = true;
+                IsCategoryVisible = true;
+                IsQuantityVisible = true;
+                IsJhbQuantityVisible = true;
+                IsCptQuantityVisible = true;
+                IsLocationVisible = true;
+                IsStatusVisible = true;
+                IsSupplierVisible = true;
+                IsJhbReorderPointVisible = false;
+                IsCptReorderPointVisible = false;
+                IsUnitOfMeasureVisible = false;
+                IsAverageCostVisible = false;
+                IsPriceVisible = false;
+                IsTrackLowStockVisible = false;
+                IsTypeVisible = false;
             }
         }
 
@@ -295,7 +330,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     new() { Header = "JHB Qty", IsVisible = IsJhbQuantityVisible },
                     new() { Header = "CPT Qty", IsVisible = IsCptQuantityVisible },
                     new() { Header = "Location", IsVisible = IsLocationVisible },
-                    new() { Header = "Status", IsVisible = IsStatusVisible }
+                    new() { Header = "Status", IsVisible = IsStatusVisible },
+                    new() { Header = "Supplier", IsVisible = IsSupplierVisible },
+                    new() { Header = "JHB Reorder", IsVisible = IsJhbReorderPointVisible },
+                    new() { Header = "CPT Reorder", IsVisible = IsCptReorderPointVisible },
+                    new() { Header = "UOM", IsVisible = IsUnitOfMeasureVisible },
+                    new() { Header = "Avg Cost", IsVisible = IsAverageCostVisible },
+                    new() { Header = "Price", IsVisible = IsPriceVisible },
+                    new() { Header = "Track Low", IsVisible = IsTrackLowStockVisible },
+                    new() { Header = "Type", IsVisible = IsTypeVisible }
                 }
             };
             _settingsService.Settings.InventoryListLayout = layout;
@@ -310,6 +353,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         partial void OnIsCptQuantityVisibleChanged(bool value) => SaveLayout();
         partial void OnIsLocationVisibleChanged(bool value) => SaveLayout();
         partial void OnIsStatusVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsSupplierVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsJhbReorderPointVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsCptReorderPointVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsUnitOfMeasureVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsAverageCostVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsPriceVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsTrackLowStockVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsTypeVisibleChanged(bool value) => SaveLayout();
 
         partial void OnSelectedCategoryFilterChanged(string value) => FilterItems();
         partial void OnSelectedStatusFilterChanged(string value) => FilterItems();

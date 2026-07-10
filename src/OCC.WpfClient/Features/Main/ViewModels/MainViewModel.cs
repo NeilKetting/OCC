@@ -418,6 +418,12 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             {
                 _logger.LogError(ex, "Failed to load DashboardViewModel as the default landing view.");
             }
+
+            // Maximize the window for main shell view
+            WeakReferenceMessenger.Default.Send(new ResizeWindowMessage(new WindowSizeInfo
+            {
+                State = System.Windows.WindowState.Maximized
+            }));
         }
 
         #endregion

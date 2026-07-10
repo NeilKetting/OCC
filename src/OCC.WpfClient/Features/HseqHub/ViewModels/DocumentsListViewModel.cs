@@ -53,9 +53,17 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         [RelayCommand]
         public async Task LoadDocuments(Guid? projectId = null)
         {
+            await LoadDocumentsInternal(projectId, false);
+        }
+
+        public async Task LoadDocumentsInternal(Guid? projectId = null, bool silent = false)
+        {
             ProjectId = projectId;
             if (_hseqService == null) return;
-            IsBusy = true;
+            if (!silent)
+            {
+                IsBusy = true;
+            }
             try
             {
                 var docs = await _hseqService.GetDocumentsAsync(projectId);
@@ -66,11 +74,17 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             }
             catch (Exception)
             {
-                NotifyError("Error", "Failed to load documents.");
+                if (!silent)
+                {
+                    NotifyError("Error", "Failed to load documents.");
+                }
             }
             finally
             {
-                IsBusy = false;
+                if (!silent)
+                {
+                    IsBusy = false;
+                }
             }
         }
 

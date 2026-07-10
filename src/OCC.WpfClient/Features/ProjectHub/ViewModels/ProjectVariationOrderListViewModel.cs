@@ -53,18 +53,26 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Variation Orders";
         }
 
-        public async Task LoadProjectAsync(Guid projectId)
+        public async Task LoadProjectAsync(Guid projectId, bool silent = false)
         {
             _projectId = projectId;
-            await LoadDataAsync();
+            await LoadDataInternalAsync(silent);
         }
 
         public override async Task LoadDataAsync()
         {
+            await LoadDataInternalAsync(false);
+        }
+
+        private async Task LoadDataInternalAsync(bool silent)
+        {
             if (_projectId == Guid.Empty) return;
 
-            IsBusy = true;
-            BusyText = "Loading variation orders...";
+            if (!silent)
+            {
+                IsBusy = true;
+                BusyText = "Loading variation orders...";
+            }
             try
             {
                 var orders = await _variationOrderService.GetVariationOrdersAsync(_projectId);
@@ -75,11 +83,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load variation orders");
-                NotifyError("Failed to load variation orders", ex.Message);
+                if (!silent)
+                {
+                    NotifyError("Failed to load variation orders", ex.Message);
+                }
             }
             finally
             {
-                IsBusy = false;
+                if (!silent)
+                {
+                    IsBusy = false;
+                }
             }
         }
 

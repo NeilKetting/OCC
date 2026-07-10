@@ -66,6 +66,15 @@
                             Style="{StaticResource PrintButton}"
                             Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Content="Supervisor Payment Check List"/>
+                    <!-- Export Draft Bank File -->
+                    <Button Command="{Binding ExportDraftRunBankFileCommand}" ToolTip="Export Draft Bank File"
+                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource SecondaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE15C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource SecondaryGold}" Margin="0,0,6,0"/>
+                            <TextBlock Text="EXPORT BANK FILE" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
                     <!-- Finalize -->
                     <Button Command="{Binding FinalizeRunCommand}" Margin="8,0,0,0"
                             Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
@@ -607,6 +616,14 @@
                                                  ToolTip="Supervisor Checklist"
                                                  Margin="0,0,6,0">
                                             <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolButtonIcon}" Foreground="#F59E0B"/>
+                                        </Button>
+                                        <!-- Export Bank File -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                 Command="{Binding DataContext.ExportPastRunBankFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}"
+                                                 ToolTip="Export Bank File"
+                                                 Margin="0,0,6,0">
+                                            <TextBlock Text="&#xE15C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource SecondaryGold}"/>
                                         </Button>
                                         <!-- Edit Run -->
                                         <Button Style="{StaticResource ToolbarIconButton}"

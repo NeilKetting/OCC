@@ -35,6 +35,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private bool _isBranchVisible = true;
         [ObservableProperty] private bool _isContactVisible = true;
         [ObservableProperty] private bool _isPhoneVisible = true;
+        [ObservableProperty] private bool _isEmailVisible = true;
+        [ObservableProperty] private bool _isAddressVisible = false;
+        [ObservableProperty] private bool _isCityVisible = false;
+        [ObservableProperty] private bool _isVatNumberVisible = false;
+        [ObservableProperty] private bool _isBankNameVisible = false;
+        [ObservableProperty] private bool _isBankAccountNumberVisible = false;
+        [ObservableProperty] private bool _isBranchCodeVisible = false;
+        [ObservableProperty] private bool _isSupplierAccountNumberVisible = false;
         
         
 
@@ -72,6 +80,28 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsBranchVisible = layout.Columns.FirstOrDefault(c => c.Header == "Branch")?.IsVisible ?? true;
                 IsContactVisible = layout.Columns.FirstOrDefault(c => c.Header == "Contact")?.IsVisible ?? true;
                 IsPhoneVisible = layout.Columns.FirstOrDefault(c => c.Header == "Phone")?.IsVisible ?? true;
+                IsEmailVisible = layout.Columns.FirstOrDefault(c => c.Header == "Email")?.IsVisible ?? true;
+                IsAddressVisible = layout.Columns.FirstOrDefault(c => c.Header == "Address")?.IsVisible ?? false;
+                IsCityVisible = layout.Columns.FirstOrDefault(c => c.Header == "City")?.IsVisible ?? false;
+                IsVatNumberVisible = layout.Columns.FirstOrDefault(c => c.Header == "VAT #")?.IsVisible ?? false;
+                IsBankNameVisible = layout.Columns.FirstOrDefault(c => c.Header == "Bank Name")?.IsVisible ?? false;
+                IsBankAccountNumberVisible = layout.Columns.FirstOrDefault(c => c.Header == "Bank Acc #")?.IsVisible ?? false;
+                IsBranchCodeVisible = layout.Columns.FirstOrDefault(c => c.Header == "Branch Code")?.IsVisible ?? false;
+                IsSupplierAccountNumberVisible = layout.Columns.FirstOrDefault(c => c.Header == "Supplier Acc #")?.IsVisible ?? false;
+            }
+            else
+            {
+                IsBranchVisible = true;
+                IsContactVisible = true;
+                IsPhoneVisible = true;
+                IsEmailVisible = true;
+                IsAddressVisible = false;
+                IsCityVisible = false;
+                IsVatNumberVisible = false;
+                IsBankNameVisible = false;
+                IsBankAccountNumberVisible = false;
+                IsBranchCodeVisible = false;
+                IsSupplierAccountNumberVisible = false;
             }
         }
 
@@ -83,7 +113,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     new() { Header = "Branch", IsVisible = IsBranchVisible },
                     new() { Header = "Contact", IsVisible = IsContactVisible },
-                    new() { Header = "Phone", IsVisible = IsPhoneVisible }
+                    new() { Header = "Phone", IsVisible = IsPhoneVisible },
+                    new() { Header = "Email", IsVisible = IsEmailVisible },
+                    new() { Header = "Address", IsVisible = IsAddressVisible },
+                    new() { Header = "City", IsVisible = IsCityVisible },
+                    new() { Header = "VAT #", IsVisible = IsVatNumberVisible },
+                    new() { Header = "Bank Name", IsVisible = IsBankNameVisible },
+                    new() { Header = "Bank Acc #", IsVisible = IsBankAccountNumberVisible },
+                    new() { Header = "Branch Code", IsVisible = IsBranchCodeVisible },
+                    new() { Header = "Supplier Acc #", IsVisible = IsSupplierAccountNumberVisible }
                 }
             };
             _settingsService.Settings.SupplierListLayout = layout;
@@ -93,6 +131,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         partial void OnIsBranchVisibleChanged(bool value) => SaveLayout();
         partial void OnIsContactVisibleChanged(bool value) => SaveLayout();
         partial void OnIsPhoneVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsEmailVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsAddressVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsCityVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsVatNumberVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsBankNameVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsBankAccountNumberVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsBranchCodeVisibleChanged(bool value) => SaveLayout();
+        partial void OnIsSupplierAccountNumberVisibleChanged(bool value) => SaveLayout();
 
         
 

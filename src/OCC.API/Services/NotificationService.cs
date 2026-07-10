@@ -82,7 +82,15 @@ namespace OCC.API.Services
                         }
                     };
 
-                    string response = await FirebaseAdmin.Messaging.FirebaseMessaging.DefaultInstance.SendAsync(message);
+                    var messaging = FirebaseAdmin.Messaging.FirebaseMessaging.DefaultInstance;
+                    if (messaging == null)
+                    {
+                        Console.WriteLine($"[PUSH SKIPPED] Firebase Admin SDK is not initialized. Cannot send notification to User {userId}.");
+                        Controllers.NotificationsController.LogPush($"SKIPPED: Firebase not initialized for User {userId}");
+                        continue;
+                    }
+
+                    string response = await messaging.SendAsync(message);
                     Console.WriteLine($"[PUSH SENT] ID: {response} To User {userId} on {device.Platform}");
                     Controllers.NotificationsController.LogPush($"SUCCESS: Sent to User {userId} ({device.Platform}) ID: {response}");
                 }

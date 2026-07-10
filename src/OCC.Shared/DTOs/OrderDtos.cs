@@ -44,6 +44,16 @@ namespace OCC.Shared.DTOs
         public string Phone { get; set; } = string.Empty;
         public string? Branch { get; set; }
         public string VatNumber { get; set; } = string.Empty;
+
+        // Missing fields mapped from Supplier table
+        public string ContactPerson { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string PostalCode { get; set; } = string.Empty;
+        public string BankName { get; set; } = string.Empty;
+        public string BankAccountNumber { get; set; } = string.Empty;
+        public string BranchCode { get; set; } = string.Empty;
+        public string SupplierAccountNumber { get; set; } = string.Empty;
     }
 
     public class OrderDto

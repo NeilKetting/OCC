@@ -92,18 +92,28 @@
 
                             <!-- Column Picker Popup -->
                             <Popup IsOpen="{Binding IsColumnPickerOpen}" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=ColumnsButton}" HorizontalOffset="-60" VerticalOffset="5">
-                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="200">
-                                    <StackPanel>
-                                        <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-                                        <CheckBox Content="SKU" IsChecked="{Binding IsSkuVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Description" IsChecked="{Binding IsDescriptionVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Category" IsChecked="{Binding IsCategoryVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Total Qty" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="JHB Qty" IsChecked="{Binding IsJhbQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="CPT Qty" IsChecked="{Binding IsCptQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Location" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                        <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
-                                    </StackPanel>
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="8" Padding="15" Width="220">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                                        <StackPanel>
+                                            <TextBlock Text="Toggle Columns" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                                            <CheckBox Content="SKU" IsChecked="{Binding IsSkuVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Description" IsChecked="{Binding IsDescriptionVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Category" IsChecked="{Binding IsCategoryVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Total Qty" IsChecked="{Binding IsQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="JHB Qty" IsChecked="{Binding IsJhbQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="CPT Qty" IsChecked="{Binding IsCptQuantityVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Location" IsChecked="{Binding IsLocationVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Status" IsChecked="{Binding IsStatusVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Supplier" IsChecked="{Binding IsSupplierVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="JHB Reorder" IsChecked="{Binding IsJhbReorderPointVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="CPT Reorder" IsChecked="{Binding IsCptReorderPointVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="UOM" IsChecked="{Binding IsUnitOfMeasureVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Avg Cost" IsChecked="{Binding IsAverageCostVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Price" IsChecked="{Binding IsPriceVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Track Low" IsChecked="{Binding IsTrackLowStockVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                            <CheckBox Content="Type" IsChecked="{Binding IsTypeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,5"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </Border>
                             </Popup>
                         </StackPanel>
@@ -199,6 +209,14 @@
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="LOCATION" Binding="{Binding Location}" Width="Auto" Visibility="{Binding Data.IsLocationVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                         <DataGridTextColumn Header="STATUS" Binding="{Binding Status, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsStatusVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="SUPPLIER" Binding="{Binding Supplier}" Width="Auto" Visibility="{Binding Data.IsSupplierVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="JHB REORDER" Binding="{Binding JhbReorderPoint}" Width="Auto" Visibility="{Binding Data.IsJhbReorderPointVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="CPT REORDER" Binding="{Binding CptReorderPoint}" Width="Auto" Visibility="{Binding Data.IsCptReorderPointVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="UOM" Binding="{Binding UnitOfMeasure}" Width="Auto" Visibility="{Binding Data.IsUnitOfMeasureVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="AVG COST" Binding="{Binding AverageCost, StringFormat='R {0:N2}'}" Width="Auto" Visibility="{Binding Data.IsAverageCostVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="PRICE" Binding="{Binding Price, StringFormat='R {0:N2}'}" Width="Auto" Visibility="{Binding Data.IsPriceVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="TRACK LOW" Binding="{Binding TrackLowStock}" Width="Auto" Visibility="{Binding Data.IsTrackLowStockVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
+                        <DataGridTextColumn Header="TYPE" Binding="{Binding Type, Converter={StaticResource FriendlyEnumConverter}}" Width="Auto" Visibility="{Binding Data.IsTypeVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}"/>
                     </DataGrid.Columns>
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">

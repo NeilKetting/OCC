@@ -19,6 +19,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task DeleteProjectAsync(Guid id, bool permanent = false);
         Task RestoreProjectAsync(Guid id);
         Task<IEnumerable<ProjectTask>> GetProjectTasksAsync(Guid projectId);
+        Task ImportProjectTasksAsync(Guid projectId, List<ProjectTask> tasks);
         List<ProjectTask> BuildTaskHierarchy(IEnumerable<ProjectTask> allTasks);
         List<ProjectTask> FlattenHierarchy(IEnumerable<ProjectTask> rootTasks);
         void ToggleExpand(ProjectTask task);

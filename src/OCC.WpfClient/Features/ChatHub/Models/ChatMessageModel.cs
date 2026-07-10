@@ -13,6 +13,18 @@ namespace OCC.WpfClient.Features.ChatHub.Models
         public DateTime SentDate => Dto.SentDate.ToLocalTime();
         public string SenderName => Dto.SenderName;
         public bool HasAttachment => Dto.HasAttachment;
+        
+        public string FirstAttachmentFileName
+        {
+            get
+            {
+                if (Dto.Attachments != null && Dto.Attachments.Count > 0)
+                {
+                    return Dto.Attachments[0].FileName;
+                }
+                return "Attachment";
+            }
+        }
 
         // UI Specific Properties
         [ObservableProperty]

@@ -360,6 +360,17 @@
                                      </MenuItem.Icon>
                                  </MenuItem>
                                  <Separator/>
+                                 <MenuItem Header="Print Loan Schedule" Command="{Binding PlacementTarget.Tag.PrintLoanScheduleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                     <MenuItem.Icon>
+                                         <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="14"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <MenuItem Header="Print Loan Statement" Command="{Binding PlacementTarget.Tag.PrintLoanStatementCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                     <MenuItem.Icon>
+                                         <TextBlock Text="&#xE8F2;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <Separator/>
                                  <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
                                      <MenuItem.Icon>
                                          <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource ErrorRed}" FontSize="14"/>
@@ -397,6 +408,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="Auto"/>
+                <DataGridTextColumn Header="Finish Date" Binding="{Binding EndDate, StringFormat='dd MMM yyyy'}" Width="Auto"/>
                 <!-- Status badge -->
                 <DataGridTemplateColumn Header="Status" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>

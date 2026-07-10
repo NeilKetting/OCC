@@ -25,6 +25,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly ITaskAssignmentService _assignmentService;
         private readonly IDialogService _dialogService;
         private readonly LocalSettingsService _settingsService;
+        private readonly IProjectService _projectService;
         
         /// <summary> Global map of subcontractor names to their assigned hex colors for UI badges. </summary>
         public static Dictionary<string, string> SubContractorColorMap { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -95,7 +96,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             ISubContractorService subContractorService,
             ITaskAssignmentService assignmentService,
             IDialogService dialogService,
-            LocalSettingsService settingsService)
+            LocalSettingsService settingsService,
+            IProjectService projectService)
         {
             _serviceProvider = serviceProvider;
             _taskService = taskService;
@@ -103,6 +105,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _assignmentService = assignmentService;
             _dialogService = dialogService;
             _settingsService = settingsService;
+            _projectService = projectService;
             Title = "Tasks";
             
             LoadLayout();
@@ -769,6 +772,79 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch (Exception ex)
             {
                 toastService.ShowError("Error", "Could not initialize new task: " + ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        public async Task ImportProgramOfWorksAsync()
+        {
+            var filePath = _dialogService.ShowOpenFileDialog(
+                "Microsoft Project XML Files (*.xml)|*.xml|All Files (*.*)|*.*",
+                "Import Program of Works XML");
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Reading Program of Works XML...";
+
+                    using var stream = System.IO.File.OpenRead(filePath);
+                    var parser = new OCC.Shared.Utils.MSProjectXmlParser();
+                    
+                    var progress = new Progress<(string msg, double pct)>(p => 
+                    {
+                        BusyText = $"{p.msg} ({(int)p.pct}%)";
+                    });
+
+                    var result = await parser.ParseAsync(stream, progress);
+
+                    if (result.FlatTasks == null || !result.FlatTasks.Any())
+                    {
+                        IsBusy = false;
+                        await _dialogService.ShowAlertAsync("Empty File", "The selected XML file contains no valid tasks.");
+                        return;
+                    }
+
+                    IsBusy = false;
+
+                    // If project already has tasks, warn user that they will be replaced
+                    if (Tasks.Any())
+                    {
+                        var confirm = await _dialogService.ShowConfirmationAsync(
+                            "Confirm Overwrite",
+                            "Importing this Program of Works will delete all existing tasks, assignments, comments, and attachments for this project and replace them with the new schedule.\n\nDo you want to proceed?");
+
+                        if (!confirm)
+                        {
+                            return;
+                        }
+                    }
+
+                    IsBusy = true;
+                    BusyText = "Importing tasks into project...";
+
+                    await _projectService.ImportProjectTasksAsync(ProjectId, result.FlatTasks);
+
+                    IsBusy = false;
+                    await _dialogService.ShowAlertAsync("Import Successful", $"Successfully imported {result.FlatTasks.Count} tasks from '{System.IO.Path.GetFileName(filePath)}'.");
+
+                    // Re-load project tasks to refresh UI
+                    var updatedTasks = await _projectService.GetProjectTasksAsync(ProjectId);
+                    await UpdateTasksAsync(ProjectId, updatedTasks);
+
+                    // Send a message to notify other view models (e.g. Gantt, Dashboard)
+                    WeakReferenceMessenger.Default.Send(new ProjectUpdatedMessage(ProjectId));
+                }
+                catch (Exception ex)
+                {
+                    IsBusy = false;
+                    await _dialogService.ShowAlertAsync("Import Error", $"Failed to import Program of Works XML:\n\n{ex.Message}");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
         }
     }

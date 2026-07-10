@@ -245,7 +245,7 @@
                                                 <!-- Profile Picture Support -->
                                                 <Ellipse Visibility="{Binding ProfilePictureUrl, Converter={StaticResource VisibilityConverter}}">
                                                     <Ellipse.Fill>
-                                                        <ImageBrush ImageSource="{Binding ProfilePictureUrl}" Stretch="UniformToFill"/>
+                                                        <ImageBrush ImageSource="{Binding ProfilePictureUrl, TargetNullValue={x:Null}}" Stretch="UniformToFill"/>
                                                     </Ellipse.Fill>
                                                 </Ellipse>
                                             </Grid>
@@ -891,7 +891,7 @@
                         
                         <Ellipse Visibility="{Binding SelectedSession.ProfilePictureUrl, Converter={StaticResource VisibilityConverter}}">
                             <Ellipse.Fill>
-                                <ImageBrush ImageSource="{Binding SelectedSession.ProfilePictureUrl}" Stretch="UniformToFill"/>
+                                <ImageBrush ImageSource="{Binding SelectedSession.ProfilePictureUrl, TargetNullValue={x:Null}}" Stretch="UniformToFill"/>
                             </Ellipse.Fill>
                         </Ellipse>
                     </Grid>
@@ -1053,7 +1053,7 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#94a3b8" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding Dto.Attachments[0].FileName, FallbackValue='Attachment'}" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding FirstAttachmentFileName, FallbackValue='Attachment'}" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                             </Grid>
                                         </Border>
 

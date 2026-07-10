@@ -22,13 +22,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Title = "Project History";
         }
 
-        public async Task LoadHistoryAsync(Guid projectId)
+        public async Task LoadHistoryAsync(Guid projectId, bool silent = false)
         {
             _projectId = projectId;
-            IsLoading = true;
-            IsBusy = true;
-            BusyText = "Loading project history...";
-            UpdateStatus("Loading project history...");
+            if (!silent)
+            {
+                IsLoading = true;
+                IsBusy = true;
+                BusyText = "Loading project history...";
+                UpdateStatus("Loading project history...");
+            }
 
             try
             {
@@ -41,16 +44,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         Entries.Add(entry);
                     }
                 }
-                UpdateStatus("Ready");
+                if (!silent) UpdateStatus("Ready");
             }
             catch (Exception)
             {
-                UpdateStatus("Error loading history");
+                if (!silent) UpdateStatus("Error loading history");
             }
             finally
             {
-                IsLoading = false;
-                IsBusy = false;
+                if (!silent)
+                {
+                    IsLoading = false;
+                    IsBusy = false;
+                }
             }
         }
     }

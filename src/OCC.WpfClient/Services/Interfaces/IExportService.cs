@@ -12,6 +12,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<string> GenerateIndividualStaffReportAsync<T>(Employee employee, DateTime start, DateTime end, IEnumerable<T> data, Dictionary<string, string> summary);
         Task<string> GenerateEmployeeProfileHtmlAsync(Employee employee);
         Task<string> GenerateAuditDeviationReportAsync(HseqAudit audit, IEnumerable<HseqAuditNonComplianceItem> items);
+        Task<string> GenerateBankExportFileAsync(IEnumerable<OCC.Shared.DTOs.BankPaymentDto> payments, BankFormat format, DateTime actionDate, string outputPath);
         Task OpenFileAsync(string filePath);
     }
 }

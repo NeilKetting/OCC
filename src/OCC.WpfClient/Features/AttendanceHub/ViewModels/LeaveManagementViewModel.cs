@@ -50,7 +50,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         // ── Apply Panel ──────────────────────────────────────────────────────
-        [ObservableProperty] private bool _isApplyPanelOpen;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsDrawerOpen))]
+        private bool _isApplyPanelOpen;
         [ObservableProperty] private ObservableCollection<OCC.Shared.DTOs.EmployeeSummaryDto> _employees = new();
         [ObservableProperty] private OCC.Shared.DTOs.EmployeeSummaryDto? _selectedEmployee;
         [ObservableProperty] private DateTime _startDate = DateTime.Today;
@@ -307,6 +309,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             SelectedEmployee = Employees.FirstOrDefault();
             HasBalanceWarning = false;
             BalanceWarning = string.Empty;
+            IsDoctorsNotePanelOpen = false;
             IsApplyPanelOpen = true;
         }
 
@@ -326,6 +329,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             EndDate = request.EndDate;
             Reason = request.Reason;
 
+            IsDoctorsNotePanelOpen = false;
             IsApplyPanelOpen = true;
         }
 
@@ -670,6 +674,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             SelectedNoteEmployee = Employees.FirstOrDefault();
             NoteDays.Clear();
             NoteStatusSummary = "Select dates and click 'LOAD DAYS IN RANGE'.";
+            IsApplyPanelOpen = false;
             IsDoctorsNotePanelOpen = true;
         }
 
