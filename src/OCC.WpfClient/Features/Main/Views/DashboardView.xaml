@@ -75,7 +75,7 @@
                     <Button Command="{Binding CustomizeLayoutCommand}" 
                             Margin="0,0,10,0" Height="32">
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                            <Style TargetType="Button" BasedOn="{StaticResource ModernBorderButton}">
                                 <Setter Property="Content" Value="Customize Dashboard"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsEditMode}" Value="True">
@@ -97,6 +97,7 @@
                         <ItemsPanelTemplate>
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />

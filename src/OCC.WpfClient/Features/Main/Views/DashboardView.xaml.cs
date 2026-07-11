@@ -10,7 +10,8 @@ namespace OCC.WpfClient.Features.Main.Views
 {
     public partial class DashboardView : UserControl
     {
-        private Point _dragStartPoint;
+        private Point _clickOffset;
+        private Point _mouseDragStartPoint;
         private WidgetViewModelBase? _draggedWidget;
         private Border? _draggedBorder;
         private double _accumulatedX;
@@ -46,7 +47,8 @@ namespace OCC.WpfClient.Features.Main.Views
             if (_draggedWidget == null) return;
 
             _draggedBorder = border;
-            _dragStartPoint = e.GetPosition(itemsControl);
+            _clickOffset = e.GetPosition(border);
+            _mouseDragStartPoint = e.GetPosition(itemsControl);
             _isDragging = true;
             border.CaptureMouse();
         }
@@ -56,8 +58,8 @@ namespace OCC.WpfClient.Features.Main.Views
             if (_isDragging && _draggedWidget != null && _draggedBorder != null)
             {
                 var currentPoint = e.GetPosition(itemsControl);
-                double deltaX = currentPoint.X - _dragStartPoint.X;
-                double deltaY = currentPoint.Y - _dragStartPoint.Y;
+                double deltaX = currentPoint.X - _mouseDragStartPoint.X;
+                double deltaY = currentPoint.Y - _mouseDragStartPoint.Y;
 
                 var transform = _draggedBorder.RenderTransform as TranslateTransform;
                 if (transform == null)
@@ -89,17 +91,20 @@ namespace OCC.WpfClient.Features.Main.Views
                     }
 
                     double totalWidth = itemsControl.ActualWidth;
-                    double columnWidth = totalWidth / 3;
+                    double columnWidth = totalWidth / 4;
                     double rowHeight = 110;
 
-                    int newCol = (int)(currentPoint.X / columnWidth);
-                    int newRow = (int)Math.Round(currentPoint.Y / rowHeight);
+                    double widgetLeft = currentPoint.X - _clickOffset.X;
+                    double widgetTop = currentPoint.Y - _clickOffset.Y;
 
-                    newCol = Math.Max(0, Math.Min(2, newCol));
-                    newRow = Math.Max(0, newRow);
+                    int newCol = (int)Math.Round(widgetLeft / columnWidth);
+                    int newRow = (int)Math.Round(widgetTop / rowHeight);
 
                     if (_draggedWidget != null)
                     {
+                        newCol = Math.Max(0, Math.Min(4 - _draggedWidget.ColumnSpan, newCol));
+                        newRow = Math.Max(0, newRow);
+
                         _draggedWidget.Column = newCol;
                         _draggedWidget.Row = newRow;
 
@@ -126,16 +131,15 @@ namespace OCC.WpfClient.Features.Main.Views
             _accumulatedY += e.VerticalChange;
 
             double totalWidth = itemsControl.ActualWidth;
-            double columnWidth = totalWidth / 3;
+            double columnWidth = totalWidth / 4;
             double rowHeight = 110;
 
             if (_accumulatedX > columnWidth * 0.5)
             {
-                if (widget.Column + widget.ColumnSpan < 3)
+                if (widget.Column + widget.ColumnSpan < 4)
                 {
                     widget.ColumnSpan++;
                     _accumulatedX -= columnWidth;
-                    NotifyLayoutChanged(widget);
                 }
             }
             else if (_accumulatedX < -columnWidth * 0.5)
@@ -144,7 +148,6 @@ namespace OCC.WpfClient.Features.Main.Views
                 {
                     widget.ColumnSpan--;
                     _accumulatedX += columnWidth;
-                    NotifyLayoutChanged(widget);
                 }
             }
 
@@ -152,7 +155,6 @@ namespace OCC.WpfClient.Features.Main.Views
             {
                 widget.RowSpan++;
                 _accumulatedY -= rowHeight;
-                NotifyLayoutChanged(widget);
             }
             else if (_accumulatedY < -rowHeight * 0.5)
             {
@@ -160,7 +162,6 @@ namespace OCC.WpfClient.Features.Main.Views
                 {
                     widget.RowSpan--;
                     _accumulatedY += rowHeight;
-                    NotifyLayoutChanged(widget);
                 }
             }
         }
@@ -169,6 +170,13 @@ namespace OCC.WpfClient.Features.Main.Views
         {
             _accumulatedX = 0;
             _accumulatedY = 0;
+
+            var thumb = sender as Thumb;
+            var widget = thumb?.DataContext as WidgetViewModelBase;
+            if (widget != null)
+            {
+                NotifyLayoutChanged(widget);
+            }
         }
 
         private void NotifyLayoutChanged(WidgetViewModelBase widget)

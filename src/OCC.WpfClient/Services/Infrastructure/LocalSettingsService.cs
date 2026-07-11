@@ -37,6 +37,8 @@ namespace OCC.WpfClient.Services.Infrastructure
         public System.Collections.Generic.List<string>? QuickActions { get; set; }
         public System.Collections.Generic.Dictionary<string, bool>? WageRunVisibleColumns { get; set; }
         public System.Collections.Generic.List<OCC.WpfClient.Features.Main.Models.WidgetConfig>? DashboardWidgets { get; set; }
+        public bool DisableOutlookSync { get; set; } = false;
+        public bool MuteOutlookReminders { get; set; } = false;
     }
 
     public class LocalSettingsService

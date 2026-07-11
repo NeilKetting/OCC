@@ -301,7 +301,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         }
                         return first;
                     })
-                    .OrderBy(l => l.EmployeeName);
+                    .OrderByDescending(l => l.EmploymentType == "Permanent")
+                    .ThenBy(l => l.EmployeeName);
 
                 foreach (var line in consolidated)
                 {
@@ -398,7 +399,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -430,7 +431,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -502,7 +503,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                     Lines.Clear();
                     int index = 1;
-                    foreach (var line in fullRun.Lines.OrderBy(l => l.EmployeeName))
+                    foreach (var line in fullRun.Lines.OrderByDescending(l => l.EmploymentType == "Permanent").ThenBy(l => l.EmployeeName))
                     {
                         var vm = new WageRunLineViewModel(line, _dialogService) { IndexNum = index++ };
                         vm.PropertyChanged += (s, e) =>
@@ -577,7 +578,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
                 if (fullRun != null)
                 {
-                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible);
+                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
                     Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
                 }
             }
@@ -823,5 +824,28 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnIsBankVisibleChanged(bool value) => SaveColumnVisibility("Bank", value);
         partial void OnIsBankAccountVisibleChanged(bool value) => SaveColumnVisibility("BankAccount", value);
         partial void OnIsCommentsVisibleChanged(bool value) => SaveColumnVisibility("Comments", value);
+        private Dictionary<string, bool> GetVisibleColumns()
+        {
+            return new Dictionary<string, bool>
+            {
+                { "Index", IsIndexVisible },
+                { "Bas", IsBasVisible },
+                { "Name", IsNameVisible },
+                { "RateHr", IsRateHrVisible },
+                { "Hrs", IsHrsVisible },
+                { "OtRates", IsOtRatesVisible },
+                { "OtHours", IsOtHoursVisible },
+                { "DecColumns", IsDecColumnsVisible },
+                { "Deductions", IsDeductionsVisible },
+                { "SupFee", IsSupFeeVisible },
+                { "TotalNett", IsTotalNettVisible },
+                { "Bank", IsBankVisible },
+                { "BankAccount", IsBankAccountVisible },
+                { "Comments", IsCommentsVisible },
+                { "Notes", IsNotesVisible },
+                { "TotalRem", IsTotalRemVisible },
+                { "Days", IsDaysVisible }
+            };
+        }
     }
 }

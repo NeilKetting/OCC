@@ -261,6 +261,11 @@
                                             <TextBlock Text="&#xE815;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource SecondaryGold}"/>
                                         </MenuItem.Icon>
                                     </MenuItem>
+                                    <MenuItem Header="Mark as Absent (Zero Hours)" Command="{Binding PlacementTarget.Tag.MarkAsAbsentCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                        <MenuItem.Icon>
+                                            <TextBlock Text="&#xE711;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource ErrorRed}"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
                                     <Separator/>
                                     <MenuItem Header="Delete" Command="{Binding PlacementTarget.Tag.DeleteRecordCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
                                         <MenuItem.Icon>

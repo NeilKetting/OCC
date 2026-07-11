@@ -245,7 +245,7 @@
                           VirtualizingPanel.IsVirtualizing="True"
                           VirtualizingPanel.VirtualizationMode="Recycling"
                           ScrollViewer.IsDeferredScrollingEnabled="False"
-                          FontSize="11">
+                          FontSize="11" Margin="0,0,15,0">
 
                     <DataGrid.Columns>
                         <!-- # -->
@@ -358,16 +358,23 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
-                        <!-- SAT O/T HRS — read-only -->
-                        <DataGridTextColumn Binding="{Binding SatOt, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
-                                             Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
-                            <DataGridTextColumn.Header>
+                        <!-- SAT O/T HRS — editable -->
+                        <DataGridTemplateColumn Width="Auto"
+                                                Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.Header>
                                 <TextBlock Text="SAT&#x0a;O/T" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </DataGridTextColumn.Header>
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding SaturdayOvertimeHours, StringFormat='F2'}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding SaturdayOvertimeHours, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
                         <!-- SUN O/T HRS — editable -->
                         <DataGridTemplateColumn Width="Auto"
                                                 Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">

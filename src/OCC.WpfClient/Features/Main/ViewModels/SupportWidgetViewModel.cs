@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.Shared.Models;
 using System.Collections.ObjectModel;
@@ -89,6 +90,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             {
                 IsLoadingSupportTickets = false;
             }
+        }
+
+        [RelayCommand]
+        private void NavigateToTicket(BugReport bug)
+        {
+            if (bug == null) return;
+            WeakReferenceMessenger.Default.Send(
+                new OCC.WpfClient.Infrastructure.Messages.OpenHubMessage("Support.SupportHub"));
+            WeakReferenceMessenger.Default.Send(
+                new OCC.WpfClient.Infrastructure.Messages.SelectSupportTicketMessage(bug.Id));
         }
     }
 }

@@ -181,6 +181,12 @@ namespace OCC.API.Controllers
 
         private void CalculateHoursWorked(AttendanceRecord record)
         {
+            if (record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
+            {
+                record.HoursWorked = 0;
+                return;
+            }
+
             if (record.CheckInTime != null && record.CheckOutTime != null)
             {
                 var duration = record.CheckOutTime.Value - record.CheckInTime.Value;

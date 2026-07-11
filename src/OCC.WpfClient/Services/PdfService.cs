@@ -1589,7 +1589,7 @@ namespace OCC.WpfClient.Services
         //  WAGE RUN PDF — ported from OCC.Client PdfService_WageRun.cs
         // ═══════════════════════════════════════════════════════════════════
 
-        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false, bool hideDecColumns = false)
+        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false, bool hideDecColumns = false, Dictionary<string, bool>? visibleColumns = null)
         {
             return await Task.Run(() =>
             {
@@ -1602,7 +1602,7 @@ namespace OCC.WpfClient.Services
                         page.DefaultTextStyle(x => x.FontSize(4.8f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
 
                         page.Header().Element(c => ComposeWageHeader(c, wageRun));
-                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments, hideDecColumns));
+                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments, hideDecColumns, visibleColumns));
                         page.Footer().PaddingTop(5).Element(c => ComposeWageRunFooter(c));
                     });
                 });
@@ -1741,7 +1741,7 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeWageContent(IContainer container, WageRun wageRun, bool hideAfterComments, bool hideDecColumns)
+        private void ComposeWageContent(IContainer container, WageRun wageRun, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns)
         {
             container.Column(col =>
             {
@@ -1751,13 +1751,13 @@ namespace OCC.WpfClient.Services
                 if (permLines.Any())
                 {
                     col.Item().PaddingTop(5).Text("PERMANENT STAFF").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments, hideDecColumns));
+                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments, hideDecColumns, visibleColumns));
                 }
 
                 if (casualLines.Any())
                 {
                     col.Item().PaddingTop(10).Text("CONTRACT / CASUAL STAFF").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments, hideDecColumns));
+                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments, hideDecColumns, visibleColumns));
                 }
 
                 // Summary tables at the bottom
@@ -1769,89 +1769,134 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments, bool hideDecColumns)
+        private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns)
         {
             bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
+
+            // Helper to check if a column is visible
+            bool IsColVisible(string key, bool defaultValue = true)
+            {
+                if (hideAfterComments && (key == "TotalRem" || key == "Days")) return false;
+                if (hideDecColumns && key == "DecColumns") return false;
+                if (visibleColumns == null) return defaultValue;
+                return visibleColumns.TryGetValue(key, out bool isVisible) ? isVisible : defaultValue;
+            }
+
+            int visibleColCountBeforeNett = 0;
+            if (IsColVisible("Index")) visibleColCountBeforeNett++;
+            if (IsColVisible("Bas")) visibleColCountBeforeNett++;
+            if (IsColVisible("Name")) visibleColCountBeforeNett++;
+            if (IsColVisible("RateHr")) visibleColCountBeforeNett++;
+            if (IsColVisible("Hrs")) visibleColCountBeforeNett++;
+            if (IsColVisible("OtRates")) visibleColCountBeforeNett += 3;
+            if (IsColVisible("DecColumns")) visibleColCountBeforeNett += 3;
+            if (IsColVisible("OtHours")) visibleColCountBeforeNett += 3;
+            if (IsColVisible("Deductions")) visibleColCountBeforeNett += 4;
+            
+            int visibleColCountAfterNett = 0;
+            if (IsColVisible("Bank")) visibleColCountAfterNett++;
+            if (IsColVisible("BankAccount")) visibleColCountAfterNett++;
+            if (IsColVisible("Comments")) visibleColCountAfterNett++;
+            if (IsColVisible("Notes")) visibleColCountAfterNett++;
+            if (IsColVisible("TotalRem")) visibleColCountAfterNett++;
+            if (IsColVisible("Days")) visibleColCountAfterNett += 5;
 
             container.Table(table =>
             {
                 table.ColumnsDefinition(columns =>
                 {
-                    columns.ConstantColumn(12);   // #
-                    columns.ConstantColumn(22);   // BAS
-                    columns.RelativeColumn(2.2f); // NAME
-                    columns.ConstantColumn(28);   // RATE P/HR
-                    columns.ConstantColumn(20);   // HRS
-                    columns.ConstantColumn(28);   // STD O/T RATE
-                    columns.ConstantColumn(28);   // SAT O/T RATE
-                    columns.ConstantColumn(28);   // SUN P/H RATE
-                    if (!hideDecColumns)
+                    if (IsColVisible("Index")) columns.ConstantColumn(12);
+                    if (IsColVisible("Bas")) columns.ConstantColumn(22);
+                    if (IsColVisible("Name")) columns.RelativeColumn(2.2f);
+                    if (IsColVisible("RateHr")) columns.ConstantColumn(28);
+                    if (IsColVisible("Hrs")) columns.ConstantColumn(20);
+                    if (IsColVisible("OtRates"))
                     {
-                        columns.ConstantColumn(28);   // DEC O/T RATE
-                        columns.ConstantColumn(20);   // DEC O/T HRS
-                        columns.ConstantColumn(28);   // DEC TOTAL
+                        columns.ConstantColumn(28); // STD O/T RATE
+                        columns.ConstantColumn(28); // SAT O/T RATE
+                        columns.ConstantColumn(28); // SUN P/H RATE
                     }
-                    columns.ConstantColumn(20);   // STD O/T HRS
-                    columns.ConstantColumn(20);   // SAT O/T HRS
-                    columns.ConstantColumn(20);   // SUN O/T HRS
-                    columns.ConstantColumn(28);   // LOANS
-                    columns.ConstantColumn(28);   // WASHING
-                    columns.ConstantColumn(28);   // GAS
-                    columns.ConstantColumn(28);   // OTHER
-                    columns.ConstantColumn(35);   // TOTAL NETT
-                    columns.ConstantColumn(35);   // BANK
-                    columns.ConstantColumn(60);   // BANK ACC
-
-                    if (hasComments)
-                        columns.RelativeColumn(1.2f); // COMMENTS
-                    else
-                        columns.ConstantColumn(20);   // COMMENTS (narrow when empty)
-
-                    columns.RelativeColumn(1.5f); // NOTES
-                    
-                    if (!hideAfterComments)
+                    if (IsColVisible("DecColumns"))
                     {
-                        columns.ConstantColumn(35);   // TOTAL REM
-                        columns.ConstantColumn(30);   // RATE P/DAY
-                        columns.ConstantColumn(16);   // W1
-                        columns.ConstantColumn(16);   // W2
-                        columns.ConstantColumn(16);   // W3
-                        columns.ConstantColumn(20);   // TOT D
+                        columns.ConstantColumn(28); // DEC O/T RATE
+                        columns.ConstantColumn(20); // DEC O/T HRS
+                        columns.ConstantColumn(28); // DEC TOTAL
+                    }
+                    if (IsColVisible("OtHours"))
+                    {
+                        columns.ConstantColumn(20); // STD O/T HRS
+                        columns.ConstantColumn(20); // SAT O/T HRS
+                        columns.ConstantColumn(20); // SUN O/T HRS
+                    }
+                    if (IsColVisible("Deductions"))
+                    {
+                        columns.ConstantColumn(28); // LOANS
+                        columns.ConstantColumn(28); // WASHING
+                        columns.ConstantColumn(28); // GAS
+                        columns.ConstantColumn(28); // OTHER
+                    }
+                    if (IsColVisible("TotalNett")) columns.ConstantColumn(35);
+                    if (IsColVisible("Bank")) columns.ConstantColumn(35);
+                    if (IsColVisible("BankAccount")) columns.ConstantColumn(60);
+                    if (IsColVisible("Comments"))
+                    {
+                        if (hasComments)
+                            columns.RelativeColumn(1.2f);
+                        else
+                            columns.ConstantColumn(20);
+                    }
+                    if (IsColVisible("Notes")) columns.RelativeColumn(1.5f);
+                    if (IsColVisible("TotalRem")) columns.ConstantColumn(35);
+                    if (IsColVisible("Days"))
+                    {
+                        columns.ConstantColumn(30); // RATE P/DAY
+                        columns.ConstantColumn(16); // W1
+                        columns.ConstantColumn(16); // W2
+                        columns.ConstantColumn(16); // W3
+                        columns.ConstantColumn(20); // TOT D
                     }
                 });
 
                 table.Header(header =>
                 {
-                    header.Cell().Element(WageHeaderStyle).Text("#");
-                    header.Cell().Element(WageHeaderStyle).Text("BAS");
-                    header.Cell().Element(WageHeaderStyle).Text("NAME");
-                    header.Cell().Element(WageHeaderStyle).Text("RATE\nP/HR");
-                    header.Cell().Element(WageHeaderStyle).Text("HRS");
-                    header.Cell().Element(WageHeaderStyle).Text("STD O/T\nRATE");
-                    header.Cell().Element(WageHeaderStyle).Text("SAT O/T\nRATE");
-                    header.Cell().Element(WageHeaderStyle).Text("SUN-P'HOL\nRATE");
-                    if (!hideDecColumns)
+                    if (IsColVisible("Index")) header.Cell().Element(WageHeaderStyle).Text("#");
+                    if (IsColVisible("Bas")) header.Cell().Element(WageHeaderStyle).Text("BAS");
+                    if (IsColVisible("Name")) header.Cell().Element(WageHeaderStyle).Text("NAME");
+                    if (IsColVisible("RateHr")) header.Cell().Element(WageHeaderStyle).Text("RATE\nP/HR");
+                    if (IsColVisible("Hrs")) header.Cell().Element(WageHeaderStyle).Text("HRS");
+                    if (IsColVisible("OtRates"))
+                    {
+                        header.Cell().Element(WageHeaderStyle).Text("STD O/T\nRATE");
+                        header.Cell().Element(WageHeaderStyle).Text("SAT O/T\nRATE");
+                        header.Cell().Element(WageHeaderStyle).Text("SUN-P'HOL\nRATE");
+                    }
+                    if (IsColVisible("DecColumns"))
                     {
                         header.Cell().Element(WageHeaderStyle).Text("DEC O/T\nRATE");
                         header.Cell().Element(WageHeaderStyle).Text("DEC O/T\nHRS");
                         header.Cell().Element(WageHeaderStyle).Text("DEC\nTOTAL");
                     }
-                    header.Cell().Element(WageHeaderStyle).Text("STD\nO/T");
-                    header.Cell().Element(WageHeaderStyle).Text("SAT\nO/T");
-                    header.Cell().Element(WageHeaderStyle).Text("SUN\nO/T");
-                    header.Cell().Element(WageHeaderStyle).Text("LOANS");
-                    header.Cell().Element(WageHeaderStyle).Text("WASH-\nING");
-                    header.Cell().Element(WageHeaderStyle).Text("GAS");
-                    header.Cell().Element(WageHeaderStyle).Text("OTHER");
-                    header.Cell().Element(WageHeaderStyle).Text("TOTAL\nNETT");
-                    header.Cell().Element(WageHeaderStyle).Text("BANK");
-                    header.Cell().Element(WageHeaderStyle).Text("ACCOUNT\nNUMBER");
-                    header.Cell().Element(WageHeaderStyle).Text("COMMENTS");
-                    header.Cell().Element(WageHeaderStyle).Text("NOTES");
-
-                    if (!hideAfterComments)
+                    if (IsColVisible("OtHours"))
                     {
-                        header.Cell().Element(WageHeaderStyle).Text("TOTAL\nREM");
+                        header.Cell().Element(WageHeaderStyle).Text("STD\nO/T");
+                        header.Cell().Element(WageHeaderStyle).Text("SAT\nO/T");
+                        header.Cell().Element(WageHeaderStyle).Text("SUN\nO/T");
+                    }
+                    if (IsColVisible("Deductions"))
+                    {
+                        header.Cell().Element(WageHeaderStyle).Text("LOANS");
+                        header.Cell().Element(WageHeaderStyle).Text("WASH-\nING");
+                        header.Cell().Element(WageHeaderStyle).Text("GAS");
+                        header.Cell().Element(WageHeaderStyle).Text("OTHER");
+                    }
+                    if (IsColVisible("TotalNett")) header.Cell().Element(WageHeaderStyle).Text("TOTAL\nNETT");
+                    if (IsColVisible("Bank")) header.Cell().Element(WageHeaderStyle).Text("BANK");
+                    if (IsColVisible("BankAccount")) header.Cell().Element(WageHeaderStyle).Text("ACCOUNT\nNUMBER");
+                    if (IsColVisible("Comments")) header.Cell().Element(WageHeaderStyle).Text("COMMENTS");
+                    if (IsColVisible("Notes")) header.Cell().Element(WageHeaderStyle).Text("NOTES");
+                    if (IsColVisible("TotalRem")) header.Cell().Element(WageHeaderStyle).Text("TOTAL\nREM");
+                    if (IsColVisible("Days"))
+                    {
                         header.Cell().Element(WageHeaderStyle).Text("RATE\nP/DAY");
                         header.Cell().Element(WageHeaderStyle).Text("WEEK 1");
                         header.Cell().Element(WageHeaderStyle).Text("WEEK 2");
@@ -1868,46 +1913,50 @@ namespace OCC.WpfClient.Services
                 int index = 1;
                 foreach (var line in lines)
                 {
-                    table.Cell().Element(WageCellStyle).Text(index++.ToString());
-                    table.Cell().Element(WageCellStyle).Text(line.EmployeeNumber ?? "");
-                    table.Cell().Element(WageCellStyle).Text(line.EmployeeName ?? "");
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2"));
-
-                    decimal stdHours = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours);
-                    table.Cell().Element(WageCellStyle).AlignCenter().Text(stdHours.ToString("F2"));
-
-                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
-                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
-                    table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 2.0m).ToString("F2"));
-
-                    if (!hideDecColumns)
+                    if (IsColVisible("Index")) table.Cell().Element(WageCellStyle).Text(index.ToString());
+                    index++;
+                    if (IsColVisible("Bas")) table.Cell().Element(WageCellStyle).Text(line.EmployeeNumber ?? "");
+                    if (IsColVisible("Name")) table.Cell().Element(WageCellStyle).Text(line.EmployeeName ?? "");
+                    if (IsColVisible("RateHr")) table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2"));
+                    if (IsColVisible("Hrs"))
                     {
-                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2")); // DEC O/T RATE
-                        table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00");                       // DEC O/T HRS
-                        table.Cell().Element(WageCellStyle).AlignRight().Text("0.00");                        // DEC TOTAL
+                        decimal stdHours = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours);
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(stdHours.ToString("F2"));
                     }
-
-                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime15Hours.ToString("F2"));
-                    table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00");
-                    table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime20Hours.ToString("F2"));
-
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionLoan.ToString("F2"));
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionWashing.ToString("F2"));
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionGas.ToString("F2"));
-
-                    decimal otherTotal = line.DeductionOther + line.DeductionPPE;
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(otherTotal.ToString("F2"));
-
-                    table.Cell().Element(WageCellStyle).AlignRight().Text(line.NetPay.ToString("F2")).SemiBold();
-                    table.Cell().Element(WageCellStyle).Text(line.BankName ?? "");
-                    table.Cell().Element(WageCellStyle).Text(line.BankAccountNumber ?? "");
-
-                    table.Cell().Element(WageCellStyle).Text(line.Comments ?? "");
-                    table.Cell().Element(WageCellStyle).Text(line.VarianceNotes ?? "");
-
-                    if (!hideAfterComments)
+                    if (IsColVisible("OtRates"))
                     {
-                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.TotalWage.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 1.5m).ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 2.0m).ToString("F2"));
+                    }
+                    if (IsColVisible("DecColumns"))
+                    {
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.HourlyRate.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text("0.00");
+                        table.Cell().Element(WageCellStyle).AlignRight().Text("0.00");
+                    }
+                    if (IsColVisible("OtHours"))
+                    {
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime15Hours.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.SaturdayOvertimeHours.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime20Hours.ToString("F2"));
+                    }
+                    if (IsColVisible("Deductions"))
+                    {
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionLoan.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionWashing.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionGas.ToString("F2"));
+                        decimal otherTotal = line.DeductionOther + line.DeductionPPE;
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(otherTotal.ToString("F2"));
+                    }
+                    if (IsColVisible("TotalNett")) table.Cell().Element(WageCellStyle).AlignRight().Text(line.NetPay.ToString("F2")).SemiBold();
+                    if (IsColVisible("Bank")) table.Cell().Element(WageCellStyle).Text(line.BankName ?? "");
+                    if (IsColVisible("BankAccount")) table.Cell().Element(WageCellStyle).Text(line.BankAccountNumber ?? "");
+                    if (IsColVisible("Comments")) table.Cell().Element(WageCellStyle).Text(line.Comments ?? "");
+                    if (IsColVisible("Notes")) table.Cell().Element(WageCellStyle).Text(line.VarianceNotes ?? "");
+                    if (IsColVisible("TotalRem")) table.Cell().Element(WageCellStyle).AlignRight().Text(line.TotalWage.ToString("F2"));
+                    if (IsColVisible("Days"))
+                    {
                         table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 8.75m).ToString("F2"));
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek1.ToString("0.#"));
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek2.ToString("0"));
@@ -1915,18 +1964,20 @@ namespace OCC.WpfClient.Services
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.TotalDaysWorked.ToString("0"));
                     }
 
-                    if (line.IncentiveSupervisor > 0)
+                    if (line.IncentiveSupervisor > 0 && IsColVisible("SupFee"))
                     {
-                        uint firstSpan = hideDecColumns ? 15u : 18u;
-                        // Span first columns up to OTHER
-                        table.Cell().ColumnSpan(firstSpan).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
-
-                        // Column 19 (Total Nett) - Value
-                        table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
-
-                        // Spanned remaining columns
-                        uint remCount = hideAfterComments ? 4u : 10u;
-                        table.Cell().ColumnSpan(remCount).Element(WageSubRowStyle);
+                        if (visibleColCountBeforeNett > 0)
+                        {
+                            table.Cell().ColumnSpan((uint)visibleColCountBeforeNett).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
+                        }
+                        if (IsColVisible("TotalNett"))
+                        {
+                            table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
+                        }
+                        if (visibleColCountAfterNett > 0)
+                        {
+                            table.Cell().ColumnSpan((uint)visibleColCountAfterNett).Element(WageSubRowStyle);
+                        }
                     }
 
                     static IContainer WageCellStyle(IContainer c) =>
@@ -1938,13 +1989,19 @@ namespace OCC.WpfClient.Services
 
                 table.Footer(footer =>
                 {
-                    uint totalSpan = hideDecColumns ? 15u : 18u;
-                    footer.Cell().ColumnSpan(totalSpan).Element(c => c.AlignRight().PaddingRight(5).Text("TOTAL:").Bold());
-                    footer.Cell().Element(c => c.Border(0.5f).Padding(1).AlignRight()
-                         .Text(lines.Sum(x => x.NetPay).ToString("F2")).Bold());
-                    
-                    uint footSpan = hideAfterComments ? 4u : 10u;
-                    footer.Cell().ColumnSpan(footSpan).Element(c => c.Border(0.5f));
+                    if (visibleColCountBeforeNett > 0)
+                    {
+                        footer.Cell().ColumnSpan((uint)visibleColCountBeforeNett).Element(c => c.AlignRight().PaddingRight(5).Text("TOTAL:").Bold());
+                    }
+                    if (IsColVisible("TotalNett"))
+                    {
+                        footer.Cell().Element(c => c.Border(0.5f).Padding(1).AlignRight()
+                             .Text(lines.Sum(x => x.NetPay).ToString("F2")).Bold());
+                    }
+                    if (visibleColCountAfterNett > 0)
+                    {
+                        footer.Cell().ColumnSpan((uint)visibleColCountAfterNett).Element(c => c.Border(0.5f));
+                    }
                 });
             });
         }

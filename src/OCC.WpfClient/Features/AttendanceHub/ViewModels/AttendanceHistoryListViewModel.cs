@@ -72,6 +72,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         // Rich employee name lookup for display
         private Dictionary<Guid, string> _employeeNameMap = new();
         private Dictionary<Guid, RateType> _employeeRateTypeMap = new();
+        private Dictionary<Guid, string> _employeeEmploymentTypeMap = new();
         private Dictionary<Guid, string> _projectNameMap = new();
 
         public AttendanceHistoryListViewModel(
@@ -101,6 +102,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var employees = await _employeeService.GetEmployeesAsync();
                 _employeeNameMap = employees.ToDictionary(e => e.Id, e => $"{e.FirstName} {e.LastName}");
                 _employeeRateTypeMap = employees.ToDictionary(e => e.Id, e => e.RateType);
+                _employeeEmploymentTypeMap = employees.ToDictionary(e => e.Id, e => e.EmploymentType.ToString());
 
                 // Build project name map for display
                 var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: true);
@@ -248,8 +250,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     EmployeeName = GetEmployeeName(r.EmployeeId),
                     ProjectName  = GetProjectName(r)
                 })
-                .OrderBy(r => r.EmployeeName)
-                .ThenByDescending(r => r.Date)
+                .OrderByDescending(r => r.Record.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.Record.EmployeeId.Value, out var type) && type == "Permanent")
+                .ThenBy(r => r.EmployeeName)
+                .ThenByDescending(r => r.Record.Date)
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
             TotalCount = result.Count;
@@ -561,6 +564,44 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     await LoadDataAsync();
                 }
             });
+        }
+
+        [RelayCommand]
+        private async Task MarkAsAbsent(object? parameter)
+        {
+            var row = parameter as AttendanceHistoryRow ?? SelectedItem;
+            var record = row?.Record;
+            if (row == null || record == null) return;
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Mark as Absent",
+                $"Are you sure you want to mark '{row.EmployeeName}' as Absent on {record.Date:yyyy/MM/dd} and zero their hours?");
+            if (!confirmed) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Updating record...";
+
+                record.Status = AttendanceStatus.Absent;
+                record.CheckInTime = null;
+                record.CheckOutTime = null;
+                record.HoursWorked = 0;
+
+                await _attendanceService.UpdateAttendanceRecordAsync(record);
+
+                NotifySuccess("Updated", "Employee marked as absent and hours zeroed.");
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking attendance record as absent");
+                NotifyError("Error", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]

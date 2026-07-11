@@ -271,7 +271,14 @@ namespace OCC.API.Controllers
                     if (record.Date >= request.StartDate)
                     {
                         line.NormalHours         += hours.Normal;
-                        line.Overtime15Hours     += hours.Overtime15;
+                        if (record.Date.DayOfWeek == DayOfWeek.Saturday)
+                        {
+                            line.SaturdayOvertimeHours += hours.Overtime15;
+                        }
+                        else
+                        {
+                            line.Overtime15Hours     += hours.Overtime15;
+                        }
                         line.Overtime20Hours     += hours.Overtime20;
                         line.LunchDeductionHours += hours.Lunch;
                         
@@ -341,6 +348,10 @@ namespace OCC.API.Controllers
                         line.ProjectedHours += dailyHours;
                     }
                 }
+
+                int projectedDays = dailyHours > 0 ? (int)Math.Round(line.ProjectedHours / dailyHours) : 0;
+                line.DaysWorkedWeek3 = distinctDaysW2.Count + projectedDays;
+                line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
                 // C. Variance Calculation (Previous Run)
                 if (lastRun != null)
@@ -418,7 +429,7 @@ namespace OCC.API.Controllers
                 // Formula: ((Normal + Projected + Variance) * Rate) + (OT15 * Rate * 1.5) + (OT20 * Rate * 2.0)
                 
                 line.TotalWage = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours) * line.HourlyRate +
-                                 (decimal)line.Overtime15Hours * line.HourlyRate * 1.5m +
+                                 (decimal)(line.Overtime15Hours + line.SaturdayOvertimeHours) * line.HourlyRate * 1.5m +
                                  (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
                     
                 // E. Loans (deducted according to frequency specified in loan agreement)

@@ -42,7 +42,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public decimal DecOtRate        => Model.HourlyRate;
         public double DecOtHrs          => 0.0;
         public decimal DecTotal         => 0.00m;
-        public double SatOt             => 0.0;
+        public double SatOt             => Model.SaturdayOvertimeHours;
 
         /// <summary>Rate per day = HourlyRate × 8.75 standard hours</summary>
         public decimal? RatePDayDisplay => Model.HourlyRate * 8.75m;
@@ -146,6 +146,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
         }
 
+        /// <summary>Saturday overtime hours (1.5×).</summary>
+        public double SaturdayOvertimeHours
+        {
+            get => Model.SaturdayOvertimeHours;
+            set
+            {
+                if (Math.Abs(Model.SaturdayOvertimeHours - value) > 0.001)
+                {
+                    double oldValue = Model.SaturdayOvertimeHours;
+                    Model.SaturdayOvertimeHours = value;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SatOt));
+                    PromptReason("OT Saturday Hours", oldValue, value);
+                }
+            }
+        }
+
         public decimal DeductionLoan
         {
             get => Model.DeductionLoan;
@@ -205,7 +223,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             // Recalculate TotalWage on the model (NetPay is derived from it)
             Model.TotalWage =
                 (decimal)(Model.NormalHours + Model.ProjectedHours + Model.VarianceHours) * Model.HourlyRate
-                + (decimal)Model.Overtime15Hours * Model.HourlyRate * 1.5m
+                + (decimal)(Model.Overtime15Hours + Model.SaturdayOvertimeHours) * Model.HourlyRate * 1.5m
                 + (decimal)Model.Overtime20Hours * Model.HourlyRate * 2.0m;
 
             // NetPay is a computed property on the model — re-notify all display properties

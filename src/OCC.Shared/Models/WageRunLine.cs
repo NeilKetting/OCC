@@ -51,6 +51,9 @@ namespace OCC.Shared.Models
         /// <summary> Total authorized overtime hours (Saturday or Weekday Late @ 1.5x). </summary>
         public double Overtime15Hours { get; set; }
         
+        /// <summary> Total Saturday overtime hours (@ 1.5x). </summary>
+        public double SaturdayOvertimeHours { get; set; }
+        
         /// <summary> Total authorized overtime hours (Sunday or Public Holiday @ 2.0x). </summary>
         public double Overtime20Hours { get; set; }
         

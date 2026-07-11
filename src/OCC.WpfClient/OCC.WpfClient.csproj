@@ -31,6 +31,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
 		<PackageReference Include="QuestPDF" />
 		<PackageReference Include="Velopack" />
+		<PackageReference Include="Microsoft.Office.Interop.Outlook" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -107,6 +107,11 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
             IsAdmin = _authService.CurrentUser?.UserRole == UserRole.Admin;
             IncludeArchived = IsDev;
 
+            WeakReferenceMessenger.Default.Register<SupportViewModel, SelectSupportTicketMessage>(this, (r, m) =>
+            {
+                r.SelectBugById(m.Value);
+            });
+
             LoadBugsCommand.Execute(null);
         }
 
@@ -490,6 +495,38 @@ namespace OCC.WpfClient.Features.SupportHub.ViewModels
         private void CloseHub()
         {
             WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
+        }
+
+        public void SelectBugById(Guid bugId)
+        {
+            var bug = _allBugsCache.FirstOrDefault(b => b.Id == bugId);
+            if (bug != null)
+            {
+                if (StatusFilter != "All" && (bug.Status == "Closed" || bug.Status == "Resolved"))
+                {
+                    StatusFilter = "All";
+                }
+                SelectedBug = bug;
+            }
+            else
+            {
+                _ = Task.Run(async () =>
+                {
+                    var loaded = await _bugService.GetBugReportAsync(bugId);
+                    if (loaded != null)
+                    {
+                        App.Current.Dispatcher.Invoke(() =>
+                        {
+                            if (!_allBugsCache.Any(b => b.Id == loaded.Id))
+                            {
+                                _allBugsCache.Add(loaded);
+                                ApplyFilters();
+                            }
+                            SelectedBug = _allBugsCache.FirstOrDefault(b => b.Id == loaded.Id);
+                        });
+                    }
+                });
+            }
         }
     }
 }

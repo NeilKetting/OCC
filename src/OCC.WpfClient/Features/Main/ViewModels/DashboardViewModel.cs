@@ -247,16 +247,16 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             {
                 saved = new List<WidgetConfig>
                 {
-                    new WidgetConfig { WidgetId = "Birthday", Row = 0, Column = 0, ColumnSpan = 3, IsVisible = false },
-                    new WidgetConfig { WidgetId = "Alerts", Row = 1, Column = 0, ColumnSpan = 3, IsVisible = true },
+                    new WidgetConfig { WidgetId = "Birthday", Row = 0, Column = 0, ColumnSpan = 4, IsVisible = false },
+                    new WidgetConfig { WidgetId = "Alerts", Row = 1, Column = 0, ColumnSpan = 4, IsVisible = true },
                     new WidgetConfig { WidgetId = "Tasks", Row = 2, Column = 0, ColumnSpan = 1, IsVisible = true },
                     new WidgetConfig { WidgetId = "Todos", Row = 2, Column = 1, ColumnSpan = 1, IsVisible = true },
                     new WidgetConfig { WidgetId = "Users", Row = 2, Column = 2, ColumnSpan = 1, IsVisible = true },
-                    new WidgetConfig { WidgetId = "Productivity", Row = 3, Column = 0, ColumnSpan = 1, IsVisible = true },
-                    new WidgetConfig { WidgetId = "Calendar", Row = 4, Column = 0, ColumnSpan = 2, IsVisible = true },
-                    new WidgetConfig { WidgetId = "Chats", Row = 4, Column = 2, ColumnSpan = 1, IsVisible = true },
-                    new WidgetConfig { WidgetId = "Support", Row = 5, Column = 0, ColumnSpan = 2, IsVisible = true },
-                    new WidgetConfig { WidgetId = "QuickActions", Row = 6, Column = 0, ColumnSpan = 3, IsVisible = true }
+                    new WidgetConfig { WidgetId = "Productivity", Row = 2, Column = 3, ColumnSpan = 1, IsVisible = true },
+                    new WidgetConfig { WidgetId = "Calendar", Row = 3, Column = 0, ColumnSpan = 2, IsVisible = true },
+                    new WidgetConfig { WidgetId = "Chats", Row = 3, Column = 2, ColumnSpan = 1, IsVisible = true },
+                    new WidgetConfig { WidgetId = "Support", Row = 4, Column = 0, ColumnSpan = 2, IsVisible = true },
+                    new WidgetConfig { WidgetId = "QuickActions", Row = 5, Column = 0, ColumnSpan = 4, IsVisible = true }
                 };
                 _localSettingsService.Settings.DashboardWidgets = saved;
                 _localSettingsService.Save();

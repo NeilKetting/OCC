@@ -16,7 +16,7 @@
             </Grid.RowDefinitions>
 
             <!-- Header Section -->
-            <StackPanel Grid.Row="0" Margin="0,5,0,10" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="0" Margin="20,5,0,10">
                 <TextBlock Text="TIME &amp;" Foreground="{StaticResource OrangeBrush}" FontSize="22" FontWeight="Black"/>
                 <TextBlock Text="ATTENDANCE" Foreground="White" FontSize="13" FontWeight="Black"/>
                 <TextBlock Text="MANAGEMENT HUB" Foreground="White" FontSize="10" FontWeight="SemiBold" Opacity="0.5" Margin="2,5,0,0"/>

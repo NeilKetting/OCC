@@ -82,7 +82,7 @@
                 <ItemsControl ItemsSource="{Binding OpenSupportTickets}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:BugReport}">
-                            <Button Command="{Binding DataContext.NavigateToRouteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Support.SupportHub" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,8" Cursor="Hand">
+                            <Button Command="{Binding DataContext.NavigateToTicketCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,8" Cursor="Hand">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="cardBorder" Background="#0DFFFFFF" CornerRadius="10" Padding="12,8" BorderThickness="1" BorderBrush="#08FFFFFF">

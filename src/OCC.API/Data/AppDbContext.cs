@@ -60,6 +60,7 @@ namespace OCC.API.Data
         public DbSet<InventoryItem> InventoryItems { get; set; }
         public DbSet<BugReport> BugReports { get; set; }
         public DbSet<BugComment> BugComments { get; set; }
+        public DbSet<PersonalTodo> PersonalTodos { get; set; }
 
         // HSEQ Modules
         public DbSet<Incident> Incidents { get; set; }
