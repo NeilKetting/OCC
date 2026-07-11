@@ -136,7 +136,7 @@ namespace OCC.API.Controllers
             var lastRun = await _context.WageRuns
                 .Include(w => w.Lines)
                 .Where(w => (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) && 
-                            w.Branch == request.Branch && 
+                            (w.Branch == request.Branch || w.Branch == "All") && 
                             w.PayType == request.PayType &&
                             w.EndDate < request.StartDate)
                 .OrderByDescending(w => w.EndDate)
@@ -146,9 +146,9 @@ namespace OCC.API.Controllers
             var prepaidStart = request.StartDate.AddDays(-2).Date;
             var prepaidEnd = request.StartDate.AddDays(-1).Date;
 
-            var prepaidLeaveRequests = await _context.LeaveRequests
+            var activeLeaveRequests = await _context.LeaveRequests
                 .Where(lr => lr.Status == LeaveStatus.Approved &&
-                             lr.StartDate <= prepaidEnd &&
+                             lr.StartDate <= request.EndDate &&
                              lr.EndDate >= prepaidStart)
                 .ToListAsync();
 
@@ -221,6 +221,10 @@ namespace OCC.API.Controllers
                     .OrderBy(a => a.Date)
                     .ToList();
 
+                var empLeaveRequests = activeLeaveRequests
+                    .Where(lr => lr.EmployeeId == emp.Id)
+                    .ToList();
+
                 var week1End = request.StartDate.AddDays(6);
                 
                 // Track distinct dates worked in each week
@@ -288,8 +292,14 @@ namespace OCC.API.Controllers
                         
                         if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
                         {
-                            if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
-                            else distinctDaysW2.Add(record.Date.Date);
+                            var hasUnpaidLeave = empLeaveRequests.Any(lr => record.Date.Date >= lr.StartDate.Date && record.Date.Date <= lr.EndDate.Date &&
+                                (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+
+                            if (!hasUnpaidLeave)
+                            {
+                                if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
+                                else distinctDaysW2.Add(record.Date.Date);
+                            }
                         }
 
                         if (record.Status == AttendanceStatus.Absent)
@@ -349,6 +359,12 @@ namespace OCC.API.Controllers
                         // Skip Weekend or Public Holiday
                         if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
 
+                        // Check if there is an approved unpaid/absent leave request for this projected day
+                        var hasUnpaidProjLeave = empLeaveRequests.Any(lr => d.Date >= lr.StartDate.Date && d.Date <= lr.EndDate.Date &&
+                            (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+
+                        if (hasUnpaidProjLeave) continue;
+
                         // Check if there is an attendance record for this day
                         var record = empAttendance.FirstOrDefault(r => r.Date.Date == d.Date);
                         if (record == null)
@@ -366,10 +382,7 @@ namespace OCC.API.Controllers
                 // C. Variance Calculation (Previous Run)
                 double leaveDeductionDays = 0;
                 double leaveDeductionHours = 0;
-
-                var empLeaveRequests = prepaidLeaveRequests
-                    .Where(lr => lr.EmployeeId == emp.Id)
-                    .ToList();
+                int prepaidWorkingDays = 0;
 
                 var empAttendanceRecords = prepaidAttendanceRecords
                     .Where(ar => ar.EmployeeId == emp.Id)
@@ -377,13 +390,15 @@ namespace OCC.API.Controllers
 
                 // Find the previous run line to determine what projected hours were actually paid in advance
                 var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
-                double maxProjectedHoursToDeduct = priorLine != null ? (double)priorLine.ProjectedHours : 0;
+                double maxProjectedHoursToDeduct = (priorLine != null) ? (double)priorLine.ProjectedHours : 0;
 
                 for (var d = prepaidStart; d <= prepaidEnd; d = d.AddDays(1))
                 {
                     // Skip weekends and public holidays
                     if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
                         continue;
+
+                    prepaidWorkingDays++;
 
                     var isAbsent = empLeaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
                         (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
@@ -440,6 +455,15 @@ namespace OCC.API.Controllers
                         }
                         leaveDeductionHours += dayHours;
                     }
+
+                }
+
+                // If they were absent on all working days in the prepaid window (e.g. 2 out of 2),
+                // it means they were not paid projected hours in the previous run.
+                if (leaveDeductionDays == prepaidWorkingDays)
+                {
+                    leaveDeductionDays = 0;
+                    leaveDeductionHours = 0;
                 }
 
                 if (leaveDeductionDays > 0 && maxProjectedHoursToDeduct > 0)
