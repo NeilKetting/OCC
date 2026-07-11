@@ -35,8 +35,8 @@
                 BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="WAGE RUN" Style="{StaticResource HeaderText}"/>
@@ -46,34 +46,34 @@
                         <Run Text="{Binding EndDate, StringFormat='dd MMM yyyy'}"/>
                     </TextBlock>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+                <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
                     <!-- Refresh / Load history -->
-                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh history">
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh history" Margin="0,2,0,2">
                         <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
                     </Button>
                     <!-- Print PDF -->
                     <Button Style="{StaticResource PrintButton}" Command="{Binding PrintPdfCommand}" ToolTip="Print Wage Run PDF"
-                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
                     </Button>
                     <!-- Print Filtered Columns -->
                     <Button Style="{StaticResource PrintButton}" Command="{Binding PrintFilteredPdfCommand}" ToolTip="Print Filtered Grid Columns PDF"
-                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Content="Print Filtered Columns">
                     </Button>
                     <!-- Salary PDF Button -->
                     <Button Command="{Binding PrintSalaryVersionCommand}" ToolTip="Print Salary Version PDF"
-                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource PrintButton}"
                             Content="Print Salary Version"/>
 
                     <!-- Print Supervisor Payments PDF -->
                     <Button Command="{Binding PrintSupervisorPaymentsCommand}" ToolTip="Print Supervisor Payments Checklist PDF"
                             Style="{StaticResource PrintButton}"
-                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Content="Supervisor Payment Check List"/>
                     <!-- Export Draft Bank File -->
                     <Button Command="{Binding ExportDraftRunBankFileCommand}" ToolTip="Export Draft Bank File"
-                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource SecondaryButton}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE15C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource SecondaryGold}" Margin="0,0,6,0"/>
@@ -81,7 +81,7 @@
                         </StackPanel>
                     </Button>
                     <!-- Finalize -->
-                    <Button Command="{Binding FinalizeRunCommand}" Margin="8,0,0,0"
+                    <Button Command="{Binding FinalizeRunCommand}" Margin="8,2,0,2"
                             Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource CreateIconButton}">
                         <StackPanel Orientation="Horizontal">
@@ -89,7 +89,7 @@
                             <TextBlock Text="FINALISE RUN"/>
                         </StackPanel>
                     </Button>
-                </StackPanel>
+                </WrapPanel>
             </Grid>
         </Border>
 

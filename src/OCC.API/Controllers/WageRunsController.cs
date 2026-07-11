@@ -119,21 +119,10 @@ namespace OCC.API.Controllers
                 companyDetails = JsonSerializer.Deserialize<CompanyDetails>(profileSetting.Value);
             }
 
-            // 4. Fetch Attendance for the Period (up to Wednesday of Week 2) and any historical unpaid paid/leave records
-            var cutoffDate = DateTime.MinValue;
-            for (int i = 7; i <= 13; i++)
-            {
-                var date = request.StartDate.AddDays(i).Date;
-                if (date.DayOfWeek == DayOfWeek.Wednesday)
-                {
-                    cutoffDate = date;
-                    break;
-                }
-            }
-            var attendanceEnd = cutoffDate > runDate ? runDate : cutoffDate;
+            // 4. Fetch Attendance for the Period (up to EndDate of Week 2) and any historical unpaid paid/leave records
             var attendance = await _context.AttendanceRecords
                 .Where(a => a.PaidWageRunId == null && 
-                            ((a.Date >= request.StartDate && a.Date <= attendanceEnd) ||
+                            ((a.Date >= request.StartDate && a.Date <= request.EndDate) ||
                              (a.Date < request.StartDate && 
                               (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
                 .ToListAsync();
@@ -352,13 +341,7 @@ namespace OCC.API.Controllers
                         projectedEnd = date;
                 }
 
-                bool isActiveInPeriod = empAttendance.Any(r => 
-                    r.Date >= request.StartDate &&
-                    r.Status != AttendanceStatus.Absent && 
-                    r.Status != AttendanceStatus.UnpaidSick && 
-                    r.Status != AttendanceStatus.UnpaidLeave);
-
-                if (isActiveInPeriod && projectedStart <= projectedEnd)
+                if (projectedStart <= projectedEnd)
                 {
                     for (var d = projectedStart; d <= projectedEnd; d = d.AddDays(1))
                     {
@@ -366,7 +349,13 @@ namespace OCC.API.Controllers
                         // Skip Weekend or Public Holiday
                         if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
 
-                        line.ProjectedHours += dailyHours;
+                        // Check if there is an attendance record for this day
+                        var record = empAttendance.FirstOrDefault(r => r.Date.Date == d.Date);
+                        if (record == null)
+                        {
+                            // If there isn't any record, we by default pay them
+                            line.ProjectedHours += dailyHours;
+                        }
                     }
                 }
 
@@ -385,6 +374,10 @@ namespace OCC.API.Controllers
                 var empAttendanceRecords = prepaidAttendanceRecords
                     .Where(ar => ar.EmployeeId == emp.Id)
                     .ToList();
+
+                // Find the previous run line to determine what projected hours were actually paid in advance
+                var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
+                double maxProjectedHoursToDeduct = priorLine != null ? (double)priorLine.ProjectedHours : 0;
 
                 for (var d = prepaidStart; d <= prepaidEnd; d = d.AddDays(1))
                 {
@@ -449,8 +442,12 @@ namespace OCC.API.Controllers
                     }
                 }
 
-                if (leaveDeductionDays > 0)
+                if (leaveDeductionDays > 0 && maxProjectedHoursToDeduct > 0)
                 {
+                    // Clamp deductions to the projected hours that were actually paid to the employee in the previous run
+                    leaveDeductionHours = Math.Min(leaveDeductionHours, maxProjectedHoursToDeduct);
+                    leaveDeductionDays = Math.Min(leaveDeductionDays, dailyHours > 0 ? maxProjectedHoursToDeduct / dailyHours : 0);
+
                     line.VarianceHours = -leaveDeductionHours;
                     if (lastRun != null)
                     {
