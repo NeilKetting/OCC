@@ -1327,5 +1327,54 @@ namespace OCC.Tests
             if (string.IsNullOrEmpty(val)) return "''";
             return "'" + val.Replace("'", "''") + "'";
         }
+
+        [Fact]
+        public async Task QueryPeaceMakhokhaData()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+
+            var emp = await context.Employees.FirstOrDefaultAsync(e => e.FirstName.Contains("PEACE") || e.LastName.Contains("MAKHOKHA"));
+            if (emp == null)
+            {
+                var dirError = @"C:\Users\Neil\.gemini\antigravity-ide\brain\66721ab9-ad08-4226-9843-5c5ea0c4d6e3\scratch";
+                if (!Directory.Exists(dirError)) Directory.CreateDirectory(dirError);
+                File.WriteAllText(Path.Combine(dirError, "peace_records.txt"), "Employee not found");
+                return;
+            }
+
+            var start = new DateTime(2026, 6, 27);
+            var end = new DateTime(2026, 7, 10);
+
+            var attendance = await context.AttendanceRecords
+                .Where(a => a.EmployeeId == emp.Id && a.Date >= start.AddDays(-7) && a.Date <= end.AddDays(7))
+                .OrderBy(a => a.Date)
+                .ToListAsync();
+
+            var leave = await context.LeaveRequests
+                .Where(l => l.EmployeeId == emp.Id)
+                .OrderBy(l => l.StartDate)
+                .ToListAsync();
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Employee: {emp.FirstName} {emp.LastName} (Id: {emp.Id}, BAS: {emp.EmployeeNumber})");
+            sb.AppendLine("=== ATTENDANCE RECORDS ===");
+            foreach (var a in attendance)
+            {
+                sb.AppendLine($"{a.Date:yyyy-MM-dd} ({a.Date.DayOfWeek}): Status={a.Status}, HoursWorked={a.HoursWorked}, PaidLeaveHours={a.PaidLeaveHours}, PaidWageRunId={a.PaidWageRunId}");
+            }
+            sb.AppendLine("=== LEAVE REQUESTS ===");
+            foreach (var l in leave)
+            {
+                sb.AppendLine($"Leave: {l.StartDate:yyyy-MM-dd} to {l.EndDate:yyyy-MM-dd}, Type={l.LeaveType}, Status={l.Status}, IsUnpaid={l.IsUnpaid}");
+            }
+
+            var dir = @"C:\Users\Neil\.gemini\antigravity-ide\brain\66721ab9-ad08-4226-9843-5c5ea0c4d6e3\scratch";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "peace_records.txt"), sb.ToString());
+        }
     }
 }
