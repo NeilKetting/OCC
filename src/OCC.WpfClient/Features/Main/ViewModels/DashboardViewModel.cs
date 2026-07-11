@@ -26,6 +26,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         #region Private Fields
 
         private static readonly System.Collections.Generic.HashSet<Guid> _shownBirthdayEmployeeIds = new();
+        private static readonly System.Collections.Generic.HashSet<Guid> _shownPassportEmployeeIds = new();
         private static DateTime _lastBirthdayCheckDate;
 
         // Manages user querying
@@ -282,6 +283,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     if (_lastBirthdayCheckDate != today)
                     {
                         _shownBirthdayEmployeeIds.Clear();
+                        _shownPassportEmployeeIds.Clear();
                         _lastBirthdayCheckDate = today;
                     }
 
@@ -298,6 +300,27 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                         {
                             _toastService.ShowInfo("Employee Birthday 🎉", $"Happy Birthday to {emp.DisplayName}! 🎂");
                             _shownBirthdayEmployeeIds.Add(emp.Id);
+                        }
+                    }
+
+                    var expiringPassports = employees
+                        .Where(e => e.Status == EmployeeStatus.Active && e.IsPassportStampExpired)
+                        .ToList();
+
+                    foreach (var emp in expiringPassports)
+                    {
+                        if (!_shownPassportEmployeeIds.Contains(emp.Id))
+                        {
+                            var remainingDays = emp.PassportStampDate.HasValue 
+                                ? (int)(90 - (today - emp.PassportStampDate.Value.Date).TotalDays)
+                                : 0;
+
+                            string message = emp.PassportStampDate.HasValue
+                                ? $"{emp.DisplayName}'s passport stamp expires in {remainingDays} days (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd})."
+                                : $"{emp.DisplayName} has no passport stamp date set!";
+
+                            _toastService.ShowWarning("Passport Stamp Expiry Warning", message);
+                            _shownPassportEmployeeIds.Add(emp.Id);
                         }
                     }
 

@@ -39,7 +39,9 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
         private User? _selectedUser;
 
         [ObservableProperty]
-        private AuditLogFilter _currentFilter = AuditLogFilter.All;
+        private int _selectedTimeSpanIndex = 0; // Default: All Time
+
+        public bool IsCustomTimeSpan => SelectedTimeSpanIndex == 7;
 
         [ObservableProperty]
         private DateTime? _startDate;
@@ -112,7 +114,15 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
                 var employeeMap = employees.ToDictionary(e => e.Id.ToString().ToLower(), e => $"{e.FirstName} {e.LastName}".Trim());
                 var teamMap = teams.ToDictionary(t => t.Id.ToString().ToLower(), t => t.Name);
 
-                Users = new ObservableCollection<User>(users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName));
+                var sortedUsers = users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
+                var list = new List<User>
+                {
+                    new User { Id = Guid.Empty, FirstName = "All", LastName = "" },
+                    new User { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), FirstName = "System", LastName = "" }
+                };
+                list.AddRange(sortedUsers);
+                Users = new ObservableCollection<User>(list);
+                SelectedUser = list[0]; // Set default to "All"
 
                 _allLogs = logs.Select(l =>
                 {
@@ -186,31 +196,105 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             OpenOverlay(detailVm);
         }
 
-        [RelayCommand]
-        private void SetPresetFilter(AuditLogFilter filter)
+        private bool _isUpdatingTimeSpan;
+
+        partial void OnSelectedTimeSpanIndexChanged(int value)
         {
-            CurrentFilter = filter;
-            // Clear custom dates if using a preset
-            StartDate = null;
-            EndDate = null;
-            OnPropertyChanged(nameof(StartDate));
-            OnPropertyChanged(nameof(EndDate));
+            if (value == 7)
+            {
+                OnPropertyChanged(nameof(IsCustomTimeSpan));
+                return;
+            }
+
+            _isUpdatingTimeSpan = true;
+            try
+            {
+                if (value == 0) // All Time
+                {
+                    StartDate = null;
+                    EndDate = null;
+                }
+                else if (value == 1) // Today
+                {
+                    StartDate = DateTime.Today;
+                    EndDate = DateTime.Today;
+                }
+                else if (value == 2) // Yesterday
+                {
+                    StartDate = DateTime.Today.AddDays(-1);
+                    EndDate = DateTime.Today.AddDays(-1);
+                }
+                else if (value == 3) // This Week
+                {
+                    DateTime start = DateTime.Today;
+                    while (start.DayOfWeek != DayOfWeek.Saturday) start = start.AddDays(-1);
+                    StartDate = start;
+                    EndDate = start.AddDays(6);
+                }
+                else if (value == 4) // Last Week
+                {
+                    DateTime start = DateTime.Today;
+                    while (start.DayOfWeek != DayOfWeek.Saturday) start = start.AddDays(-1);
+                    start = start.AddDays(-7);
+                    StartDate = start;
+                    EndDate = start.AddDays(6);
+                }
+                else if (value == 5) // This Month
+                {
+                    DateTime firstDay = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    StartDate = firstDay;
+                    EndDate = firstDay.AddMonths(1).AddDays(-1);
+                }
+                else if (value == 6) // Last Month
+                {
+                    DateTime firstDay = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1);
+                    StartDate = firstDay;
+                    EndDate = firstDay.AddMonths(1).AddDays(-1);
+                }
+            }
+            finally
+            {
+                _isUpdatingTimeSpan = false;
+            }
+
+            OnPropertyChanged(nameof(IsCustomTimeSpan));
             FilterItems();
         }
 
         partial void OnSelectedUserChanged(User? value) => FilterItems();
-        partial void OnStartDateChanged(DateTime? value) => FilterItems();
-        partial void OnEndDateChanged(DateTime? value) => FilterItems();
+
+        partial void OnStartDateChanged(DateTime? value)
+        {
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 7)
+            {
+                FilterItems();
+            }
+        }
+
+        partial void OnEndDateChanged(DateTime? value)
+        {
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 7)
+            {
+                FilterItems();
+            }
+        }
 
         protected override void FilterItems()
         {
             IEnumerable<AuditLogDisplayModel> filtered = _allLogs;
 
             // 1. User Filter
-            if (SelectedUser != null)
+            if (SelectedUser != null && SelectedUser.Id != Guid.Empty)
             {
-                var targetUserId = SelectedUser.Id.ToString().ToLower();
-                filtered = filtered.Where(l => l.Log.UserId.ToLower() == targetUserId);
+                if (SelectedUser.Id == Guid.Parse("00000000-0000-0000-0000-000000000001"))
+                {
+                    filtered = filtered.Where(l => l.Log.UserId.ToLower() == "system");
+                }
+                else
+                {
+                    var targetUserId = SelectedUser.Id.ToString().ToLower();
+                    filtered = filtered.Where(l => l.Log.UserId.ToLower() == targetUserId);
+                }
             }
 
             // 2. Date presets / range filtering
@@ -225,23 +309,6 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
                 {
                     var endVal = EndDate.Value.Date.AddDays(1).AddTicks(-1); // inclusive end of day
                     filtered = filtered.Where(l => l.Timestamp <= endVal);
-                }
-            }
-            else
-            {
-                var nowLocal = DateTime.Now;
-                switch (CurrentFilter)
-                {
-                    case AuditLogFilter.Daily:
-                        filtered = filtered.Where(l => l.Timestamp.Date == nowLocal.Date);
-                        break;
-                    case AuditLogFilter.Weekly:
-                        var weekStart = nowLocal.Date.AddDays(-(int)nowLocal.DayOfWeek);
-                        filtered = filtered.Where(l => l.Timestamp >= weekStart);
-                        break;
-                    case AuditLogFilter.Monthly:
-                        filtered = filtered.Where(l => l.Timestamp.Month == nowLocal.Month && l.Timestamp.Year == nowLocal.Year);
-                        break;
                 }
             }
 

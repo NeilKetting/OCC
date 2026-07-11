@@ -129,10 +129,25 @@
 								</Grid>
 							</StackPanel>
 							<!-- Permit Number -->
-							<StackPanel>
+							<StackPanel IsVisible="{Binding IsPassport}">
 								<TextBlock Text="Permit Number" Classes="FormLabel"/>
 								<TextBox Text="{Binding Wrapper.PermitNumber}" Classes="FormInput" Watermark="e.g. Work Permit No."
 										 ToolTip.Tip="Enter Work Permit or Visa Number"/>
+							</StackPanel>
+							<!-- Passport Stamp Date -->
+							<StackPanel IsVisible="{Binding IsPassport}" Margin="0,10,0,0">
+								<TextBlock Text="Passport Stamp Date" Classes="FormLabel"/>
+								<Grid ColumnDefinitions="*, Auto">
+									<TextBox Grid.Column="0" Text="{Binding Wrapper.PassportStampDate, StringFormat='dd MMM yyyy'}" IsReadOnly="True" Classes="FormInput" Watermark="Not Set"/>
+									<Button Grid.Column="1" Classes="IconButton" Margin="5,0,0,0" ToolTip.Tip="Select Stamp Date">
+										<PathIcon Data="{StaticResource IconCalendar}" Width="16" Height="16"/>
+										<Button.Flyout>
+											<Flyout Placement="Bottom">
+												<Calendar SelectedDate="{Binding Wrapper.PassportStampDate, Mode=TwoWay}" SelectionMode="SingleDate"/>
+											</Flyout>
+										</Button.Flyout>
+									</Button>
+								</Grid>
 							</StackPanel>
 							<!-- Tax Number -->
 							<StackPanel Grid.Column="0" Margin="0,10,0,0">

@@ -13,6 +13,8 @@
              d:DataContext="{d:DesignInstance Type=vm:EmployeeDetailViewModel}">
     
     <UserControl.Resources>
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
+        
         <Style x:Key="SectionHeaderToggleStyle" TargetType="ToggleButton">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -144,9 +146,14 @@
                                 <TextBox Text="{Binding Employee.IdNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="13 Digit ID or Passport"/>
                             </StackPanel>
 
-                            <StackPanel Margin="0,0,0,12">
+                            <StackPanel Margin="0,0,0,12" Visibility="{Binding IsPassportFieldsVisible, Converter={StaticResource VisibilityConverter}}">
                                 <TextBlock Text="Permit Number" Style="{StaticResource FormLabelText}"/>
                                 <TextBox Text="{Binding Employee.PermitNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Work Permit No. (if applicable)"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12" Visibility="{Binding IsPassportFieldsVisible, Converter={StaticResource VisibilityConverter}}">
+                                <TextBlock Text="Passport Stamp Date" Style="{StaticResource FormLabelText}"/>
+                                <DatePicker SelectedDate="{Binding Employee.PassportStampDate}" Style="{StaticResource ModernDatePicker}"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,0,12">

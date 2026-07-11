@@ -134,7 +134,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Row 2: Date Filters (Presets + DatePickers) -->
+                    <!-- Row 2: Date Filters (ComboBox + DatePickers) -->
                     <Grid Grid.Row="2" Margin="0,10,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -145,31 +145,37 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- Presets -->
-                        <StackPanel Orientation="Horizontal">
-                            <RadioButton Content="ALL TIME" Style="{StaticResource ModernRadioButton}" IsChecked="True"
-                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.All}" Height="28" Margin="0,0,4,0"/>
-                            <RadioButton Content="TODAY" Style="{StaticResource ModernRadioButton}" 
-                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Daily}" Height="28" Margin="0,0,4,0"/>
-                            <RadioButton Content="THIS WEEK" Style="{StaticResource ModernRadioButton}" 
-                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Weekly}" Height="28" Margin="0,0,4,0"/>
-                            <RadioButton Content="THIS MONTH" Style="{StaticResource ModernRadioButton}" 
-                                         Command="{Binding SetPresetFilterCommand}" CommandParameter="{x:Static vm:AuditLogFilter.Monthly}" Height="28"/>
-                        </StackPanel>
+                        <!-- TimeSpan ComboBox -->
+                        <ComboBox Grid.Column="0" SelectedIndex="{Binding SelectedTimeSpanIndex}" 
+                                  Style="{StaticResource ModernComboBox}" Width="150" Height="30" VerticalContentAlignment="Center">
+                            <ComboBoxItem Content="All Time"/>
+                            <ComboBoxItem Content="Today"/>
+                            <ComboBoxItem Content="Yesterday"/>
+                            <ComboBoxItem Content="This Week"/>
+                            <ComboBoxItem Content="Last Week"/>
+                            <ComboBoxItem Content="This Month"/>
+                            <ComboBoxItem Content="Last Month"/>
+                            <ComboBoxItem Content="Custom Range"/>
+                        </ComboBox>
 
-                        <!-- Divider -->
-                        <Border Grid.Column="1" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"/>
+                        <!-- Divider (Custom only) -->
+                        <Border Grid.Column="1" Width="1" Height="20" Background="{StaticResource GlassBorder}" Margin="15,0" VerticalAlignment="Center"
+                                Visibility="{Binding IsCustomTimeSpan, Converter={StaticResource VisibilityConverter}}"/>
 
-                        <!-- Custom Date Ranges -->
-                        <TextBlock Grid.Column="2" Text="Custom Range:" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <!-- Custom Date Ranges (Custom only) -->
+                        <TextBlock Grid.Column="2" Text="Custom Range:" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0"
+                                   Visibility="{Binding IsCustomTimeSpan, Converter={StaticResource VisibilityConverter}}"/>
 
                         <DatePicker Grid.Column="3" SelectedDate="{Binding StartDate, Mode=TwoWay}" Width="130" Height="28" 
-                                    BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White"/>
+                                    BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White"
+                                    Visibility="{Binding IsCustomTimeSpan, Converter={StaticResource VisibilityConverter}}"/>
                         
-                        <TextBlock Grid.Column="4" Text="to" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="8,0" />
+                        <TextBlock Grid.Column="4" Text="to" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="8,0"
+                                   Visibility="{Binding IsCustomTimeSpan, Converter={StaticResource VisibilityConverter}}"/>
 
                         <DatePicker Grid.Column="5" SelectedDate="{Binding EndDate, Mode=TwoWay}" Width="130" Height="28"
-                                    BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White" HorizontalAlignment="Left"/>
+                                    BorderThickness="1" BorderBrush="{StaticResource GlassBorder}" VerticalContentAlignment="Center" Background="#10FFFFFF" Foreground="White" HorizontalAlignment="Left"
+                                    Visibility="{Binding IsCustomTimeSpan, Converter={StaticResource VisibilityConverter}}"/>
                     </Grid>
                 </Grid>
             </Border>

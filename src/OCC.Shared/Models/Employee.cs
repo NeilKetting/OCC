@@ -82,6 +82,11 @@ namespace OCC.Shared.Models
         public string? PermitNumber { get; set; }
 
         /// <summary>
+        /// Optional date when the passport was last stamped.
+        /// </summary>
+        public DateTime? PassportStampDate { get; set; }
+
+        /// <summary>
         /// Contact email address.
         /// </summary>
         public string Email { get; set; } = string.Empty;

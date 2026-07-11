@@ -56,6 +56,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         }
 
         public bool IsPassportVisible => Employee.IdType == IdType.RSAId;
+        public bool IsPassportFieldsVisible => Employee.IdType == IdType.Passport;
         public bool IsContractVisible => Employee.EmploymentType == EmploymentType.Contract;
 
         private readonly IUserService _userService;
@@ -122,6 +123,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                     else if (e.PropertyName == nameof(EmployeeModel.IdType))
                     {
                         OnPropertyChanged(nameof(IsPassportVisible));
+                        OnPropertyChanged(nameof(IsPassportFieldsVisible));
                         if (Employee.IdType == IdType.RSAId)
                             CalculateDoBFromRsaId(Employee.IdNumber);
                     }

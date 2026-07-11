@@ -76,7 +76,15 @@ namespace OCC.Client.Features.SettingsHub.ViewModels
                 var employeeMap = employees.ToDictionary(e => e.Id.ToString(), e => $"{e.FirstName} {e.LastName}");
                 var teamMap = teams.ToDictionary(t => t.Id.ToString(), t => t.Name);
 
-                Users = new ObservableCollection<User>(users);
+                var sortedUsers = users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
+                var list = new List<User>
+                {
+                    new User { Id = Guid.Empty, FirstName = "All", LastName = "" },
+                    new User { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), FirstName = "System", LastName = "" }
+                };
+                list.AddRange(sortedUsers);
+                Users = new ObservableCollection<User>(list);
+                SelectedUser = list[0]; // Set default to "All"
 
                 _allLogs = logs.Select(l => 
                 {
@@ -171,10 +179,16 @@ namespace OCC.Client.Features.SettingsHub.ViewModels
             }
 
             // 2. User Filter
-            if (SelectedUser != null)
+            if (SelectedUser != null && SelectedUser.Id != Guid.Empty)
             {
-                // Compare IDs or Email/Name if ID mapping is inconsistent
-                filtered = filtered.Where(l => l.Log.UserId == SelectedUser.Id.ToString());
+                if (SelectedUser.Id == Guid.Parse("00000000-0000-0000-0000-000000000001"))
+                {
+                    filtered = filtered.Where(l => l.Log.UserId.ToLower() == "system");
+                }
+                else
+                {
+                    filtered = filtered.Where(l => l.Log.UserId == SelectedUser.Id.ToString());
+                }
             }
             
             Logs = new ObservableCollection<AuditLogDisplayModel>(filtered);

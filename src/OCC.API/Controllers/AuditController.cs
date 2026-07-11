@@ -22,7 +22,7 @@ namespace OCC.API.Controllers
         {
             return await _context.AuditLogs
                 .OrderByDescending(a => a.Timestamp)
-                .Take(100) // Limit to last 100 for now
+                .Take(5000) // Increased limit to last 5000 to ensure filtering works correctly
                 .ToListAsync();
         }
     }

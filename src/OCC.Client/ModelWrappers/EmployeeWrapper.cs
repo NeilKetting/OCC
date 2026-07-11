@@ -43,6 +43,9 @@ namespace OCC.Client.ModelWrappers
         private string? _permitNumber;
 
         [ObservableProperty]
+        private DateTime? _passportStampDate;
+
+        [ObservableProperty]
         private string? _taxNumber;
 
         [ObservableProperty]
@@ -137,6 +140,7 @@ namespace OCC.Client.ModelWrappers
             LastName = _model.LastName;
             IdNumber = _model.IdNumber;
             PermitNumber = _model.PermitNumber;
+            PassportStampDate = _model.PassportStampDate;
             TaxNumber = _model.TaxNumber;
             IdType = _model.IdType;
             Email = _model.Email;
@@ -180,6 +184,7 @@ namespace OCC.Client.ModelWrappers
             _model.LastName = LastName;
             _model.IdNumber = IdNumber;
             _model.PermitNumber = PermitNumber;
+            _model.PassportStampDate = PassportStampDate;
             _model.TaxNumber = TaxNumber ?? string.Empty;
             _model.IdType = IdType;
             _model.Email = Email;

@@ -56,7 +56,9 @@ namespace OCC.API.Controllers
                         BankName = e.BankName,
                         LeaveBalance = e.LeaveBalance,
                         EmploymentDate = e.EmploymentDate,
-                        DoB = e.DoB
+                        DoB = e.DoB,
+                        IdType = e.IdType,
+                        PassportStampDate = e.PassportStampDate
                     })
                     .ToListAsync();
 
@@ -314,7 +316,9 @@ namespace OCC.API.Controllers
                 BankName = employee.BankName,
                 LeaveBalance = employee.LeaveBalance,
                 EmploymentDate = employee.EmploymentDate,
-                DoB = employee.DoB
+                DoB = employee.DoB,
+                IdType = employee.IdType,
+                PassportStampDate = employee.PassportStampDate
             };
         }
 
@@ -329,6 +333,7 @@ namespace OCC.API.Controllers
                 IdNumber = employee.IdNumber,
                 IdType = employee.IdType,
                 PermitNumber = employee.PermitNumber,
+                PassportStampDate = employee.PassportStampDate,
                 Email = employee.Email,
                 Phone = employee.Phone,
                 PhysicalAddress = employee.PhysicalAddress,

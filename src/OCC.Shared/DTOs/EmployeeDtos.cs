@@ -28,6 +28,9 @@ namespace OCC.Shared.DTOs
         public double LeaveBalance { get; set; }
         public DateTime EmploymentDate { get; set; }
         public DateTime DoB { get; set; }
+        public IdType IdType { get; set; }
+        public DateTime? PassportStampDate { get; set; }
+        public bool IsPassportStampExpired => IdType == IdType.Passport && (!PassportStampDate.HasValue || (DateTime.Today - PassportStampDate.Value.Date).TotalDays >= 75);
     }
 
     public class EmployeeDto
@@ -39,6 +42,7 @@ namespace OCC.Shared.DTOs
         public string IdNumber { get; set; } = string.Empty;
         public IdType IdType { get; set; }
         public string? PermitNumber { get; set; }
+        public DateTime? PassportStampDate { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string PhysicalAddress { get; set; } = string.Empty;

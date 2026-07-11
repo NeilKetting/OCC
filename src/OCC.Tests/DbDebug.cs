@@ -668,7 +668,7 @@ namespace OCC.Tests
                 }
 
                 // Add to SQL script list
-                string sqlBranch = branchVal == DBNull.Value ? "NULL" : branchVal.ToString();
+                string sqlBranch = branchVal == DBNull.Value ? "NULL" : (branchVal.ToString() ?? "NULL");
                 string sqlInsert = $"INSERT INTO Suppliers (Id, Name, Address, City, PostalCode, Phone, ContactPerson, Email, VatNumber, BankName, BankAccountNumber, BranchCode, SupplierAccountNumber, Branch, CreatedAtUtc, CreatedBy, IsActive) " +
                                    $"VALUES ('{id}', {EscapeSql(name)}, {EscapeSql(address)}, {EscapeSql(city)}, {EscapeSql(postalCode)}, {EscapeSql(phone)}, {EscapeSql(contactPerson)}, {EscapeSql(email)}, {EscapeSql(vatNumber)}, {EscapeSql(bankName)}, {EscapeSql(bankAccountNumber)}, {EscapeSql(branchCode)}, {EscapeSql(supplierAccountNumber)}, {sqlBranch}, GETUTCDATE(), 'System_Migration', 1);";
                 sqlStatements.Add(sqlInsert);

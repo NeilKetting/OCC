@@ -32,6 +32,9 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         private string? _permitNumber;
 
         [ObservableProperty]
+        private DateTime? _passportStampDate;
+
+        [ObservableProperty]
         private string _email = string.Empty;
 
         [ObservableProperty]
@@ -120,6 +123,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
             IdNumber = dto.IdNumber;
             IdType = dto.IdType;
             PermitNumber = dto.PermitNumber;
+            PassportStampDate = dto.PassportStampDate;
             Email = dto.Email;
             Phone = dto.Phone;
             PhysicalAddress = dto.PhysicalAddress;
@@ -176,6 +180,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
                 IdNumber = IdNumber,
                 IdType = IdType,
                 PermitNumber = PermitNumber,
+                PassportStampDate = PassportStampDate,
                 Email = Email,
                 Phone = Phone,
                 PhysicalAddress = PhysicalAddress,
