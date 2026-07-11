@@ -153,7 +153,7 @@ namespace OCC.Tests
         public async Task CompareExcelWithDatabase()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            string excelPath = @"c:\Users\Neil\source\repos\OCC\G. JHB 10 JUL 26 (003).xlsx";
+            string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
             var excelList = new List<ExcelEmployeeDetails>();
 
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -165,11 +165,10 @@ namespace OCC.Tests
                 for (int r = 0; r < table.Rows.Count; r++)
                 {
                     var row = table.Rows[r];
-                    string col0 = row[0]?.ToString()?.Trim() ?? "";
                     string col1 = row[1]?.ToString()?.Trim() ?? ""; // BAS
                     string col2 = row[2]?.ToString()?.Trim() ?? ""; // NAME
 
-                    if ((int.TryParse(col1, out int basNum) || col1 == "0" || col1.StartsWith("CAS")) && !string.IsNullOrEmpty(col2) && col2 != "NAME")
+                    if ((int.TryParse(col1, out int basNum) || col1.StartsWith("CAS") || col1 == "0" || col1.StartsWith("4")) && !string.IsNullOrEmpty(col2) && col2 != "NAME")
                     {
                         var emp = new ExcelEmployeeDetails
                         {
@@ -187,7 +186,6 @@ namespace OCC.Tests
                             NetPay = ParseDouble(row[19]),
                         };
 
-                        // Check if the next row is a supervisor fee or similar notes row
                         if (r + 1 < table.Rows.Count)
                         {
                             var nextRow = table.Rows[r + 1];
@@ -197,11 +195,88 @@ namespace OCC.Tests
                                 emp.Comments = "Supervisor Fee: " + ParseDouble(nextRow[19]).ToString("F2");
                             }
                         }
-
                         excelList.Add(emp);
                     }
                 }
             }
+
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+             using var context = new AppDbContext(dbOptions);
+            
+            // Retrieve housed employees count
+            var housedCount = await context.Employees.CountAsync(e => e.LivesInCompanyHousing && e.Branch == "Johannesburg" && e.Status == EmployeeStatus.Active && e.RateType == RateType.Hourly);
+
+            // Build the WageCalculationService
+            var wageCalc = new WageCalculationService(new WageCalculationOptions());
+            var controller = new WageRunsController(context, wageCalc);
+
+            // Generate the draft request
+            var draftReq = new WageRun
+            {
+                StartDate = new DateTime(2026, 6, 27),
+                EndDate = new DateTime(2026, 7, 10),
+                Branch = "Johannesburg",
+                PayType = "Hourly",
+                Status = WageRunStatus.Draft,
+                InputCompanyHousingWashingFee = 20.00m,
+                InputTotalGasCharge = 17.09m * housedCount
+            };
+
+            var actionResult = await controller.GenerateDraft(draftReq);
+            var okResult = actionResult.Result as OkObjectResult;
+            var generatedRun = okResult?.Value as WageRun ?? (actionResult.Value);
+
+            if (generatedRun == null)
+            {
+                File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\excel_comparison_audit.md", "Error: Failed to generate draft wage run.");
+                return;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# Wage Run Comparison: Excel vs Database (JHB Hourly 10 Jul 2026)");
+            sb.AppendLine();
+            sb.AppendLine("| BAS | Employee Name | Source | Hours | Std OT | Sat OT | Sun OT | Loans | Net Pay | Match Status |");
+            sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
+
+            foreach (var excelEmp in excelList.OrderBy(e => e.Name))
+            {
+                var dbLine = generatedRun.Lines.FirstOrDefault(l => 
+                    l.EmployeeNumber?.Trim() == excelEmp.Bas ||
+                    (excelEmp.Bas == "0" && (
+                        (excelEmp.Name == "TIMOTHY MASETE" && l.EmployeeName.Contains("MASETE") && l.EmployeeName.Contains("TIMOTHY")) ||
+                        (excelEmp.Name != "TIMOTHY MASETE" && (
+                            l.EmployeeName.Contains(excelEmp.Name, StringComparison.OrdinalIgnoreCase) ||
+                            excelEmp.Name.Contains(l.EmployeeName.Split(' ')[0], StringComparison.OrdinalIgnoreCase) ||
+                            (excelEmp.Name == "DAVID RAPHETYE" && l.EmployeeName.Contains("RATHEPYE")) ||
+                            (excelEmp.Name == "SIPHO KHUMALO" && l.EmployeeName.Contains("KHUMALO"))
+                        ))
+                    ))
+                );
+                
+                if (dbLine == null)
+                {
+                    sb.AppendLine($"| {excelEmp.Bas} | {excelEmp.Name} | **Excel** | {excelEmp.Hours:F2} | {excelEmp.StdOt:F2} | {excelEmp.SatOt:F2} | {excelEmp.SunOt:F2} | {excelEmp.Loans:F2} | R {excelEmp.NetPay:F2} | **MISSING IN DB** |");
+                    continue;
+                }
+
+                // Check differences
+                bool hoursMatch = Math.Abs(excelEmp.Hours - (dbLine.NormalHours + dbLine.ProjectedHours + dbLine.VarianceHours)) < 0.05;
+                bool stdOtMatch = Math.Abs(excelEmp.StdOt - dbLine.Overtime15Hours) < 0.05;
+                bool satOtMatch = Math.Abs(excelEmp.SatOt - dbLine.SaturdayOvertimeHours) < 0.05;
+                bool sunOtMatch = Math.Abs(excelEmp.SunOt - dbLine.Overtime20Hours) < 0.05;
+                bool loansMatch = Math.Abs(excelEmp.Loans - (double)dbLine.DeductionLoan) < 0.05;
+                bool netMatch = Math.Abs(excelEmp.NetPay - (double)dbLine.NetPay) < 0.50; // allow small rounding diffs
+
+                string matchStatus = (hoursMatch && stdOtMatch && satOtMatch && sunOtMatch && loansMatch && netMatch) ? "✅ Match" : "❌ MISMATCH";
+
+                sb.AppendLine($"| {excelEmp.Bas} | {excelEmp.Name} | **Excel** | {excelEmp.Hours:F2} | {excelEmp.StdOt:F2} | {excelEmp.SatOt:F2} | {excelEmp.SunOt:F2} | {excelEmp.Loans:F2} | R {excelEmp.NetPay:F2} | {matchStatus} |");
+                sb.AppendLine($"| | | **DB** | {(dbLine.NormalHours + dbLine.ProjectedHours + dbLine.VarianceHours):F2} | {dbLine.Overtime15Hours:F2} | {dbLine.SaturdayOvertimeHours:F2} | {dbLine.Overtime20Hours:F2} | {dbLine.DeductionLoan:F2} | R {dbLine.NetPay:F2} | |");
+            }
+
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\excel_comparison_audit.md", sb.ToString());
         }
 
         [Fact]
@@ -919,6 +994,332 @@ namespace OCC.Tests
 
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\migrate_inventory.sql", sqlScript.ToString());
             _output.WriteLine(sb.ToString());
+        }
+
+        [Fact]
+        public async Task DumpEmployeeAttendance()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var heris = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == "460");
+            var herman = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == "399");
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# Daily Attendance Dump for Heris (460) and Herman (399)");
+            sb.AppendLine();
+
+            if (heris != null)
+            {
+                sb.AppendLine("## Heris Mthombeni (460)");
+                sb.AppendLine("| Date | Status | Check In | Check Out | Hours |");
+                sb.AppendLine("|---|---|---|---|---|");
+                var records = await context.AttendanceRecords
+                    .Where(r => r.EmployeeId == heris.Id && r.Date >= new DateTime(2026, 6, 27) && r.Date <= new DateTime(2026, 7, 10))
+                    .OrderBy(r => r.Date)
+                    .ToListAsync();
+                foreach (var r in records)
+                {
+                    sb.AppendLine($"| {r.Date:yyyy/MM/dd} | {r.Status} | {r.CheckInTime:HH:mm} | {r.CheckOutTime:HH:mm} | {r.HoursWorked:F2} |");
+                }
+                sb.AppendLine();
+            }
+
+            if (herman != null)
+            {
+                sb.AppendLine("## Herman Ngidi (399)");
+                sb.AppendLine("| Date | Status | Check In | Check Out | Hours |");
+                sb.AppendLine("|---|---|---|---|---|");
+                var records = await context.AttendanceRecords
+                    .Where(r => r.EmployeeId == herman.Id && r.Date >= new DateTime(2026, 6, 27) && r.Date <= new DateTime(2026, 7, 10))
+                    .OrderBy(r => r.Date)
+                    .ToListAsync();
+                foreach (var r in records)
+                {
+                    sb.AppendLine($"| {r.Date:yyyy/MM/dd} | {r.Status} | {r.CheckInTime:HH:mm} | {r.CheckOutTime:HH:mm} | {r.HoursWorked:F2} |");
+                }
+                sb.AppendLine();
+            }
+
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\employee_attendance_dump.md", sb.ToString());
+        }
+
+        [Fact]
+        public async Task PrintEmployeeShiftDetails()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var heris = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == "460");
+            var herman = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == "399");
+
+            var sb = new StringBuilder();
+            if (heris != null)
+            {
+                sb.AppendLine($"Heris (460): Start={heris.ShiftStartTime}, End={heris.ShiftEndTime}, LivesInHousing={heris.LivesInCompanyHousing}");
+            }
+            if (herman != null)
+            {
+                sb.AppendLine($"Herman (399): Start={herman.ShiftStartTime}, End={herman.ShiftEndTime}, LivesInHousing={herman.LivesInCompanyHousing}");
+            }
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\employee_shifts.txt", sb.ToString());
+        }
+
+        [Fact]
+        public async Task DumpCompanyProfile()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var profile = await context.AppSettings.FirstOrDefaultAsync(s => s.Key == "CompanyProfile");
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\company_profile.json", profile?.Value ?? "{}");
+        }
+
+        [Fact]
+        public async Task DumpMismatchedSaturdays()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var empNumbers = new[] { "331", "462", "453", "116", "341" };
+            
+            var sb = new StringBuilder();
+            sb.AppendLine("# Saturday Mismatch Daily Dump");
+            sb.AppendLine();
+
+            foreach (var num in empNumbers)
+            {
+                var emp = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == num);
+                if (emp != null)
+                {
+                    sb.AppendLine($"## {emp.FirstName} {emp.LastName} ({num})");
+                    sb.AppendLine("| Date | Status | Check In | Check Out | Hours |");
+                    sb.AppendLine("|---|---|---|---|---|");
+                    var dbRecords = await context.AttendanceRecords
+                        .Where(r => r.EmployeeId == emp.Id && r.Date >= new DateTime(2026, 6, 27) && r.Date <= new DateTime(2026, 7, 10))
+                        .OrderBy(r => r.Date)
+                        .ToListAsync();
+                    var records = dbRecords.Where(r => r.Date.DayOfWeek == DayOfWeek.Saturday).ToList();
+                    foreach (var r in records)
+                    {
+                        sb.AppendLine($"| {r.Date:yyyy/MM/dd} | {r.Status} | {r.CheckInTime:HH:mm} | {r.CheckOutTime:HH:mm} | {r.HoursWorked:F2} |");
+                    }
+                    sb.AppendLine();
+                }
+            }
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\saturday_mismatches_dump.md", sb.ToString());
+        }
+
+        [Fact]
+        public async Task DumpMismatchDetails()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var empNumbers = new[] { "471", "423", "340", "464" };
+            
+            var sb = new StringBuilder();
+            sb.AppendLine("# Mismatch Details Daily Dump");
+            sb.AppendLine();
+
+            foreach (var num in empNumbers)
+            {
+                var emp = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == num);
+                if (emp != null)
+                {
+                    sb.AppendLine($"## {emp.FirstName} {emp.LastName} ({num})");
+                    sb.AppendLine("| Date | Status | Check In | Check Out | Hours |");
+                    sb.AppendLine("|---|---|---|---|---|");
+                    var records = await context.AttendanceRecords
+                        .Where(r => r.EmployeeId == emp.Id && r.Date >= new DateTime(2026, 6, 27) && r.Date <= new DateTime(2026, 7, 10))
+                        .OrderBy(r => r.Date)
+                        .ToListAsync();
+                    foreach (var r in records)
+                    {
+                        sb.AppendLine($"| {r.Date:yyyy/MM/dd} | {r.Status} | {r.CheckInTime:HH:mm} | {r.CheckOutTime:HH:mm} | {r.HoursWorked:F2} |");
+                    }
+                    sb.AppendLine();
+                }
+            }
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\mismatch_details_dump.md", sb.ToString());
+        }
+
+        [Fact]
+        public async Task DumpAllEmployeesDailyHours()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            var excelList = new List<ExcelEmployeeDetails>();
+
+            using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                var result = reader.AsDataSet();
+                var table = result.Tables["OCC"] ?? result.Tables[0];
+                for (int r = 0; r < table.Rows.Count; r++)
+                {
+                    var row = table.Rows[r];
+                    string col1 = row[1]?.ToString()?.Trim() ?? ""; // BAS
+                    string col2 = row[2]?.ToString()?.Trim() ?? ""; // NAME
+                    if ((int.TryParse(col1, out int basNum) || col1.StartsWith("CAS")) && !string.IsNullOrEmpty(col2) && col2 != "NAME")
+                    {
+                        excelList.Add(new ExcelEmployeeDetails { Bas = col1, Name = col2, Hours = ParseDouble(row[5]) });
+                    }
+                }
+            }
+
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var dbEmployees = await context.Employees.Where(e => e.Branch == "Johannesburg").ToListAsync();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# JHB Employees Daily Hours and Excel Hours Comparison");
+            sb.AppendLine();
+            sb.AppendLine("| BAS | Name | Excel Hours | DB Actual Hours (Sum) | DB Days Worked |");
+            sb.AppendLine("|---|---|---|---|---|");
+
+            foreach (var excelEmp in excelList.OrderBy(e => e.Name))
+            {
+                var emp = dbEmployees.FirstOrDefault(e => e.EmployeeNumber?.Trim() == excelEmp.Bas);
+                if (emp != null)
+                {
+                    var records = await context.AttendanceRecords
+                        .Where(r => r.EmployeeId == emp.Id && r.Date >= new DateTime(2026, 6, 27) && r.Date <= new DateTime(2026, 7, 10))
+                        .ToListAsync();
+                    
+                    double dbSum = records.Sum(r => r.HoursWorked);
+                    int daysWorked = records.Count(r => r.HoursWorked > 0 && r.Status == AttendanceStatus.Present);
+
+                    sb.AppendLine($"| {excelEmp.Bas} | {emp.FirstName} {emp.LastName} | {excelEmp.Hours:F2} | {dbSum:F2} | {daysWorked} |");
+                }
+            }
+
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\all_employees_hours_compare.md", sb.ToString());
+        }
+
+        [Fact]
+        public async Task DumpTimothyDetails()
+        {
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=OCC_V2_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True")
+                .Options;
+
+            using var context = new AppDbContext(dbOptions);
+            var emp = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeNumber == "CAS.002");
+            
+            var sb = new StringBuilder();
+            sb.AppendLine("# Timothy details Daily Dump");
+            sb.AppendLine();
+
+            if (emp != null)
+            {
+                sb.AppendLine($"## {emp.FirstName} {emp.LastName} (CAS.002)");
+                sb.AppendLine("| Date | Status | Check In | Check Out | Hours |");
+                sb.AppendLine("|---|---|---|---|---|");
+                var records = await context.AttendanceRecords
+                    .Where(r => r.EmployeeId == emp.Id && r.Date >= new DateTime(2026, 6, 27) && r.Date <= new DateTime(2026, 7, 10))
+                    .OrderBy(r => r.Date)
+                    .ToListAsync();
+                foreach (var r in records)
+                {
+                    sb.AppendLine($"| {r.Date:yyyy/MM/dd} | {r.Status} | {r.CheckInTime:HH:mm} | {r.CheckOutTime:HH:mm} | {r.HoursWorked:F2} |");
+                }
+                sb.AppendLine();
+            }
+            File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\timothy_details_dump.md", sb.ToString());
+        }
+
+        [Fact]
+        public void DumpHerisExcelRow()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                var result = reader.AsDataSet();
+                var table = result.Tables["OCC"] ?? result.Tables[0];
+                var sb = new StringBuilder();
+
+                var headerRow = table.Rows[7];
+                sb.AppendLine("## Heris columns:");
+                for (int r = 0; r < table.Rows.Count; r++)
+                {
+                    var row = table.Rows[r];
+                    if (row[1]?.ToString()?.Trim() == "460")
+                    {
+                        for (int c = 0; c < table.Columns.Count; c++)
+                        {
+                            sb.AppendLine($"Col {c} ({headerRow[c]?.ToString()?.Trim()}): '{row[c]?.ToString()?.Trim()}'");
+                        }
+                    }
+                }
+                File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\heris_excel_row.txt", sb.ToString());
+            }
+        }
+
+        [Fact]
+        public void DumpExcelColumns()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                var result = reader.AsDataSet();
+                var table = result.Tables["OCC"] ?? result.Tables[0];
+                var sb = new StringBuilder();
+
+                // Dump header row 7 (which contains column titles)
+                var headerRow = table.Rows[7];
+                for (int c = 0; c < table.Columns.Count; c++)
+                {
+                    sb.AppendLine($"Col {c}: '{headerRow[c]?.ToString()?.Trim()}'");
+                }
+
+                // Dump row for Andrew Elias Maselela (BAS 459)
+                sb.AppendLine("\n--- BAS 459 ---");
+                for (int r = 0; r < table.Rows.Count; r++)
+                {
+                    var row = table.Rows[r];
+                    if (row[1]?.ToString()?.Trim() == "459")
+                    {
+                        for (int c = 0; c < table.Columns.Count; c++)
+                        {
+                            sb.AppendLine($"Col {c} ({headerRow[c]?.ToString()?.Trim()}): '{row[c]?.ToString()?.Trim()}'");
+                        }
+                    }
+                }
+
+                // Dump row for Petros Shitlangu (BAS 338)
+                sb.AppendLine("\n--- BAS 338 ---");
+                for (int r = 0; r < table.Rows.Count; r++)
+                {
+                    var row = table.Rows[r];
+                    if (row[1]?.ToString()?.Trim() == "338")
+                    {
+                        for (int c = 0; c < table.Columns.Count; c++)
+                        {
+                            sb.AppendLine($"Col {c} ({headerRow[c]?.ToString()?.Trim()}): '{row[c]?.ToString()?.Trim()}'");
+                        }
+                    }
+                }
+
+                File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\excel_columns_dump.txt", sb.ToString());
+            }
         }
 
         private string EscapeSql(string val)

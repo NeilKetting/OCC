@@ -55,6 +55,11 @@
                     <Button Style="{StaticResource PrintButton}" Command="{Binding PrintPdfCommand}" ToolTip="Print Wage Run PDF"
                             Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
                     </Button>
+                    <!-- Print Filtered Columns -->
+                    <Button Style="{StaticResource PrintButton}" Command="{Binding PrintFilteredPdfCommand}" ToolTip="Print Filtered Grid Columns PDF"
+                            Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Content="Print Filtered Columns">
+                    </Button>
                     <!-- Salary PDF Button -->
                     <Button Command="{Binding PrintSalaryVersionCommand}" ToolTip="Print Salary Version PDF"
                             Margin="8,0,0,0" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
@@ -552,29 +557,7 @@
                 </Grid.RowDefinitions>
 
                 <Border Grid.Row="0" Padding="16,10" Background="#04FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="PAST RUNS" Style="{StaticResource LabelText}" Opacity="0.7" VerticalAlignment="Center" FontWeight="Bold"/>
-                        
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Past Runs Branch Filter -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                                <TextBlock Text="BRANCH:" Style="{StaticResource LabelText}" Opacity="0.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedPastBranch}"
-                                           Style="{StaticResource ModernComboBox}" Width="140" Height="28" FontSize="11"/>
-                            </StackPanel>
-
-                            <!-- Past Runs Salary Type Filter -->
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="SALARY TYPE:" Style="{StaticResource LabelText}" Opacity="0.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox ItemsSource="{Binding PayTypeOptionsWithAll}" SelectedItem="{Binding SelectedPastSalaryType}"
-                                           Style="{StaticResource ModernComboBox}" Width="140" Height="28" FontSize="11"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Grid>
+                    <TextBlock Text="PAST RUNS" Style="{StaticResource LabelText}" Opacity="0.7" VerticalAlignment="Center" FontWeight="Bold"/>
                 </Border>
 
                 <DataGrid Grid.Row="1"

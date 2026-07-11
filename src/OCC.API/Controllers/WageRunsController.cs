@@ -337,7 +337,13 @@ namespace OCC.API.Controllers
                         projectedEnd = date;
                 }
 
-                if (projectedStart <= projectedEnd)
+                bool isActiveInPeriod = empAttendance.Any(r => 
+                    r.Date >= request.StartDate &&
+                    r.Status != AttendanceStatus.Absent && 
+                    r.Status != AttendanceStatus.UnpaidSick && 
+                    r.Status != AttendanceStatus.UnpaidLeave);
+
+                if (isActiveInPeriod && projectedStart <= projectedEnd)
                 {
                     for (var d = projectedStart; d <= projectedEnd; d = d.AddDays(1))
                     {

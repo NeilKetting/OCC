@@ -141,6 +141,10 @@ namespace OCC.WpfClient.Features.Main.Views
                     widget.ColumnSpan++;
                     _accumulatedX -= columnWidth;
                 }
+                else
+                {
+                    _accumulatedX = columnWidth * 0.5;
+                }
             }
             else if (_accumulatedX < -columnWidth * 0.5)
             {
@@ -148,6 +152,10 @@ namespace OCC.WpfClient.Features.Main.Views
                 {
                     widget.ColumnSpan--;
                     _accumulatedX += columnWidth;
+                }
+                else
+                {
+                    _accumulatedX = -columnWidth * 0.5;
                 }
             }
 
@@ -162,6 +170,10 @@ namespace OCC.WpfClient.Features.Main.Views
                 {
                     widget.RowSpan--;
                     _accumulatedY += rowHeight;
+                }
+                else
+                {
+                    _accumulatedY = -rowHeight * 0.5;
                 }
             }
         }

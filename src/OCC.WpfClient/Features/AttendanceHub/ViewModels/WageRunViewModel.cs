@@ -35,18 +35,49 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         [ObservableProperty] private DateTime _startDate;
         [ObservableProperty] private DateTime _endDate;
+        private bool _isUpdatingDates;
 
         partial void OnStartDateChanged(DateTime value)
         {
-            // Fortnight cycle: StartDate + 13 days = 14-day run
-            EndDate = value.AddDays(13);
-            IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
+            if (_isUpdatingDates) return;
+            _isUpdatingDates = true;
+            try
+            {
+                // Fortnight cycle: StartDate + 13 days = 14-day run
+                EndDate = value.AddDays(13);
+                IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
+            }
+            finally
+            {
+                _isUpdatingDates = false;
+            }
+        }
+
+        partial void OnEndDateChanged(DateTime value)
+        {
+            if (_isUpdatingDates) return;
+            _isUpdatingDates = true;
+            try
+            {
+                // Fortnight cycle: EndDate - 13 days = 14-day run
+                StartDate = value.AddDays(-13);
+                IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+            }
+            finally
+            {
+                _isUpdatingDates = false;
+            }
         }
 
         // ─── Run Config ───────────────────────────────────────────────────────
 
-        [ObservableProperty] private string _selectedPayType = "Hourly";
-        [ObservableProperty] private string _selectedBranch = "All";
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
+        private string _selectedPayType = "Hourly";
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
+        private string _selectedBranch = "All";
         [ObservableProperty] private decimal _totalGasCharge = 0m;
         [ObservableProperty] private decimal _defaultSupervisorFee = 500m;
         [ObservableProperty] private decimal _companyHousingWashingFee = 0m;
@@ -123,7 +154,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             get
             {
                 var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Lines);
-                view.Filter = FilterLines;
+                if (view.Filter != FilterLines)
+                {
+                    view.Filter = FilterLines;
+                }
                 return view;
             }
         }
@@ -171,38 +205,22 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
-        private string _selectedPastBranch = "All";
-
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
-        private string _selectedPastSalaryType = "All";
-
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
         private ObservableCollection<WageRun> _pastRuns = new();
 
         [ObservableProperty] private WageRun? _selectedPastRun;
-
-        public ObservableCollection<string> PayTypeOptionsWithAll { get; } = new()
-        {
-            "All",
-            "Hourly",
-            "MonthlySalary"
-        };
 
         public IEnumerable<WageRun> FilteredPastRuns
         {
             get
             {
                 var filtered = PastRuns.AsEnumerable();
-                if (SelectedPastBranch != "All")
+                if (SelectedBranch != "All")
                 {
-                    filtered = filtered.Where(r => r.Branch == SelectedPastBranch || r.Branch == "All");
+                    filtered = filtered.Where(r => r.Branch == SelectedBranch || r.Branch == "All");
                 }
-                if (SelectedPastSalaryType != "All")
+                if (!string.IsNullOrEmpty(SelectedPayType))
                 {
-                    filtered = filtered.Where(r => r.PayType == SelectedPastSalaryType ||
-                        (SelectedPastSalaryType == "MonthlySalary" && r.PayType == "MonthlySalary"));
+                    filtered = filtered.Where(r => r.PayType == SelectedPayType);
                 }
                 return filtered.ToList();
             }
@@ -399,7 +417,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -431,13 +449,45 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating salary version PDF");
                 System.Windows.MessageBox.Show($"Failed to generate Salary PDF:\n\n{ex.Message}", "Error",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public async Task PrintFilteredPdfAsync()
+        {
+            if (_currentDraft == null && !Lines.Any()) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Filtered PDF...";
+
+                var runToPrint = new WageRun
+                {
+                    StartDate = StartDate,
+                    EndDate   = EndDate,
+                    Branch    = SelectedBranch,
+                    PayType   = SelectedPayType,
+                    Notes     = Notes,
+                    Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
+                };
+
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
+                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating filtered wage run PDF");
+                System.Windows.MessageBox.Show($"Failed to generate Filtered PDF:\n\n{ex.Message}", "Error",
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
@@ -578,7 +628,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
                 if (fullRun != null)
                 {
-                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
+                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null);
                     Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
                 }
             }
@@ -759,7 +809,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         private void UpdateGrandTotal()
-            => GrandTotalWage = LinesView.Cast<WageRunLineViewModel>().Sum(x => x.NetPay);
+            => GrandTotalWage = Lines.Where(x => FilterLines(x)).Sum(x => x.NetPay);
 
         // ─── Column Selections Persistence ───────────────────────────────────
 

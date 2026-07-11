@@ -1599,7 +1599,7 @@ namespace OCC.WpfClient.Services
                     {
                         page.Margin(10);
                         page.Size(PageSizes.A4.Landscape());
-                        page.DefaultTextStyle(x => x.FontSize(4.8f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
+                        page.DefaultTextStyle(x => x.FontSize(6.5f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
 
                         page.Header().Element(c => ComposeWageHeader(c, wageRun));
                         page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments, hideDecColumns, visibleColumns));
@@ -1774,12 +1774,24 @@ namespace OCC.WpfClient.Services
             bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
 
             // Helper to check if a column is visible
-            bool IsColVisible(string key, bool defaultValue = true)
+            bool IsColVisible(string key)
             {
                 if (hideAfterComments && (key == "TotalRem" || key == "Days")) return false;
                 if (hideDecColumns && key == "DecColumns") return false;
-                if (visibleColumns == null) return defaultValue;
-                return visibleColumns.TryGetValue(key, out bool isVisible) ? isVisible : defaultValue;
+
+                bool standardDefault = key switch
+                {
+                    "OtRates" => false,
+                    "DecColumns" => false,
+                    "BankAccount" => false,
+                    "Notes" => false,
+                    "TotalRem" => false,
+                    "Days" => false,
+                    _ => true
+                };
+
+                if (visibleColumns == null) return standardDefault;
+                return visibleColumns.TryGetValue(key, out bool isVisible) ? isVisible : standardDefault;
             }
 
             int visibleColCountBeforeNett = 0;
@@ -1805,55 +1817,49 @@ namespace OCC.WpfClient.Services
             {
                 table.ColumnsDefinition(columns =>
                 {
-                    if (IsColVisible("Index")) columns.ConstantColumn(12);
-                    if (IsColVisible("Bas")) columns.ConstantColumn(22);
-                    if (IsColVisible("Name")) columns.RelativeColumn(2.2f);
-                    if (IsColVisible("RateHr")) columns.ConstantColumn(28);
-                    if (IsColVisible("Hrs")) columns.ConstantColumn(20);
+                    if (IsColVisible("Index")) columns.RelativeColumn(0.4f);
+                    if (IsColVisible("Bas")) columns.RelativeColumn(0.6f);
+                    if (IsColVisible("Name")) columns.RelativeColumn(2.5f);
+                    if (IsColVisible("RateHr")) columns.RelativeColumn(0.9f);
+                    if (IsColVisible("Hrs")) columns.RelativeColumn(0.7f);
                     if (IsColVisible("OtRates"))
                     {
-                        columns.ConstantColumn(28); // STD O/T RATE
-                        columns.ConstantColumn(28); // SAT O/T RATE
-                        columns.ConstantColumn(28); // SUN P/H RATE
+                        columns.RelativeColumn(0.9f); // STD O/T RATE
+                        columns.RelativeColumn(0.9f); // SAT O/T RATE
+                        columns.RelativeColumn(0.9f); // SUN P/H RATE
                     }
                     if (IsColVisible("DecColumns"))
                     {
-                        columns.ConstantColumn(28); // DEC O/T RATE
-                        columns.ConstantColumn(20); // DEC O/T HRS
-                        columns.ConstantColumn(28); // DEC TOTAL
+                        columns.RelativeColumn(0.9f); // DEC O/T RATE
+                        columns.RelativeColumn(0.7f); // DEC O/T HRS
+                        columns.RelativeColumn(0.9f); // DEC TOTAL
                     }
                     if (IsColVisible("OtHours"))
                     {
-                        columns.ConstantColumn(20); // STD O/T HRS
-                        columns.ConstantColumn(20); // SAT O/T HRS
-                        columns.ConstantColumn(20); // SUN O/T HRS
+                        columns.RelativeColumn(0.7f); // STD O/T HRS
+                        columns.RelativeColumn(0.7f); // SAT O/T HRS
+                        columns.RelativeColumn(0.7f); // SUN O/T HRS
                     }
                     if (IsColVisible("Deductions"))
                     {
-                        columns.ConstantColumn(28); // LOANS
-                        columns.ConstantColumn(28); // WASHING
-                        columns.ConstantColumn(28); // GAS
-                        columns.ConstantColumn(28); // OTHER
+                        columns.RelativeColumn(0.9f); // LOANS
+                        columns.RelativeColumn(0.9f); // WASHING
+                        columns.RelativeColumn(0.9f); // GAS
+                        columns.RelativeColumn(0.9f); // OTHER
                     }
-                    if (IsColVisible("TotalNett")) columns.ConstantColumn(35);
-                    if (IsColVisible("Bank")) columns.ConstantColumn(35);
-                    if (IsColVisible("BankAccount")) columns.ConstantColumn(60);
-                    if (IsColVisible("Comments"))
-                    {
-                        if (hasComments)
-                            columns.RelativeColumn(1.2f);
-                        else
-                            columns.ConstantColumn(20);
-                    }
-                    if (IsColVisible("Notes")) columns.RelativeColumn(1.5f);
-                    if (IsColVisible("TotalRem")) columns.ConstantColumn(35);
+                    if (IsColVisible("TotalNett")) columns.RelativeColumn(1.2f);
+                    if (IsColVisible("Bank")) columns.RelativeColumn(1.1f);
+                    if (IsColVisible("BankAccount")) columns.RelativeColumn(1.6f);
+                    if (IsColVisible("Comments")) columns.RelativeColumn(1.8f);
+                    if (IsColVisible("Notes")) columns.RelativeColumn(1.8f);
+                    if (IsColVisible("TotalRem")) columns.RelativeColumn(1.2f);
                     if (IsColVisible("Days"))
                     {
-                        columns.ConstantColumn(30); // RATE P/DAY
-                        columns.ConstantColumn(16); // W1
-                        columns.ConstantColumn(16); // W2
-                        columns.ConstantColumn(16); // W3
-                        columns.ConstantColumn(20); // TOT D
+                        columns.RelativeColumn(1.0f); // RATE P/DAY
+                        columns.RelativeColumn(0.5f); // W1
+                        columns.RelativeColumn(0.5f); // W2
+                        columns.RelativeColumn(0.5f); // W3
+                        columns.RelativeColumn(0.7f); // TOT D
                     }
                 });
 
@@ -1905,9 +1911,9 @@ namespace OCC.WpfClient.Services
                     }
 
                     static IContainer WageHeaderStyle(IContainer c) =>
-                        c.Border(0.5f).Background(Colors.Grey.Lighten4).Padding(1)
+                        c.Border(0.5f).Background(Colors.Grey.Lighten4).PaddingVertical(3).PaddingHorizontal(2)
                          .AlignCenter().AlignMiddle()
-                         .DefaultTextStyle(x => x.Bold().FontSize(4.0f));
+                         .DefaultTextStyle(x => x.Bold().FontSize(6.0f));
                 });
 
                 int index = 1;
@@ -1968,11 +1974,11 @@ namespace OCC.WpfClient.Services
                     {
                         if (visibleColCountBeforeNett > 0)
                         {
-                            table.Cell().ColumnSpan((uint)visibleColCountBeforeNett).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(4.0f);
+                            table.Cell().ColumnSpan((uint)visibleColCountBeforeNett).Element(WageSubRowStyle).AlignRight().PaddingRight(2).Text("SUPERVISOR FEE").Bold().FontSize(6.0f);
                         }
                         if (IsColVisible("TotalNett"))
                         {
-                            table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(4.0f);
+                            table.Cell().Element(WageSubRowStyle).AlignRight().Text($"R {line.IncentiveSupervisor:F2}").Bold().FontSize(6.0f);
                         }
                         if (visibleColCountAfterNett > 0)
                         {
@@ -1981,10 +1987,10 @@ namespace OCC.WpfClient.Services
                     }
 
                     static IContainer WageCellStyle(IContainer c) =>
-                        c.Border(0.5f).Padding(1).AlignMiddle();
+                        c.Border(0.5f).PaddingVertical(2.5f).PaddingHorizontal(2).AlignMiddle();
 
                     static IContainer WageSubRowStyle(IContainer c) =>
-                        c.BorderLeft(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Background(Colors.Grey.Lighten3).Padding(1).AlignMiddle();
+                        c.BorderLeft(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Background(Colors.Grey.Lighten3).PaddingVertical(2.5f).PaddingHorizontal(2).AlignMiddle();
                 }
 
                 table.Footer(footer =>
@@ -1995,7 +2001,7 @@ namespace OCC.WpfClient.Services
                     }
                     if (IsColVisible("TotalNett"))
                     {
-                        footer.Cell().Element(c => c.Border(0.5f).Padding(1).AlignRight()
+                        footer.Cell().Element(c => c.Border(0.5f).PaddingVertical(2.5f).PaddingHorizontal(2).AlignRight()
                              .Text(lines.Sum(x => x.NetPay).ToString("F2")).Bold());
                     }
                     if (visibleColCountAfterNett > 0)
