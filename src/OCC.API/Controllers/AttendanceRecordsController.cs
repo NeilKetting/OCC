@@ -85,6 +85,8 @@ namespace OCC.API.Controllers
                 _context.AttendanceRecords.Add(record);
                 await _context.SaveChangesAsync();
                 
+                await SyncLeaveRequestForAbsenceAsync(record);
+                
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "AttendanceRecord", "Create", record.Id);
                 
                 return CreatedAtAction("GetAttendanceRecord", new { id = record.Id }, record);
@@ -118,6 +120,9 @@ namespace OCC.API.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                
+                await SyncLeaveRequestForAbsenceAsync(existingRecord);
+                
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "AttendanceRecord", "Update", id);
             }
             catch (DbUpdateConcurrencyException)
@@ -141,8 +146,29 @@ namespace OCC.API.Controllers
             {
                 var record = await _context.AttendanceRecords.FindAsync(id);
                 if (record == null) return NotFound();
+                
+                var employeeId = record.EmployeeId;
+                var date = record.Date.Date;
+                var wasAbsent = record.Status == AttendanceStatus.Absent;
+
                 _context.AttendanceRecords.Remove(record);
                 await _context.SaveChangesAsync();
+                
+                if (wasAbsent)
+                {
+                    var autoLeave = await _context.LeaveRequests
+                        .FirstOrDefaultAsync(l => l.EmployeeId == employeeId && 
+                                                  l.StartDate == date && 
+                                                  l.EndDate == date && 
+                                                  l.LeaveType == LeaveType.AbsentWithoutLeave && 
+                                                  l.Reason == "UNPAID -Absent without leave");
+                    if (autoLeave != null)
+                    {
+                        _context.LeaveRequests.Remove(autoLeave);
+                        await _context.SaveChangesAsync();
+                        await _hubContext.Clients.All.SendAsync("EntityUpdate", "LeaveRequest", "Delete", autoLeave.Id);
+                    }
+                }
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "AttendanceRecord", "Delete", id);
 
@@ -156,6 +182,56 @@ namespace OCC.API.Controllers
         }
 
         private bool AttendanceRecordExists(Guid id) => _context.AttendanceRecords.Any(e => e.Id == id);
+
+        private async Task SyncLeaveRequestForAbsenceAsync(AttendanceRecord record)
+        {
+            if (record.EmployeeId == null) return;
+            var employeeId = record.EmployeeId.Value;
+            var date = record.Date.Date;
+            if (record.Status == AttendanceStatus.Absent)
+            {
+                var exists = await _context.LeaveRequests
+                    .AnyAsync(l => l.EmployeeId == employeeId && l.StartDate <= date && l.EndDate >= date);
+                if (!exists)
+                {
+                    var leaveReq = new LeaveRequest
+                    {
+                        Id = Guid.NewGuid(),
+                        EmployeeId = employeeId,
+                        StartDate = date,
+                        EndDate = date,
+                        NumberOfDays = 1,
+                        DurationType = LeaveDurationType.FullDay,
+                        PaidDays = 0,
+                        UnpaidDays = 1,
+                        LeaveType = LeaveType.AbsentWithoutLeave,
+                        Status = LeaveStatus.Approved,
+                        Reason = "UNPAID -Absent without leave",
+                        IsUnpaid = true,
+                        CreatedDate = DateTime.UtcNow,
+                        ActionedDate = DateTime.UtcNow
+                    };
+                    _context.LeaveRequests.Add(leaveReq);
+                    await _context.SaveChangesAsync();
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "LeaveRequest", "Create", leaveReq.Id);
+                }
+            }
+            else
+            {
+                var autoLeave = await _context.LeaveRequests
+                    .FirstOrDefaultAsync(l => l.EmployeeId == employeeId && 
+                                              l.StartDate == date && 
+                                              l.EndDate == date && 
+                                              l.LeaveType == LeaveType.AbsentWithoutLeave && 
+                                              l.Reason == "UNPAID -Absent without leave");
+                if (autoLeave != null)
+                {
+                    _context.LeaveRequests.Remove(autoLeave);
+                    await _context.SaveChangesAsync();
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "LeaveRequest", "Delete", autoLeave.Id);
+                }
+            }
+        }
 
         [HttpPost("upload")]
         public async Task<ActionResult<string>> UploadNote(IFormFile file)

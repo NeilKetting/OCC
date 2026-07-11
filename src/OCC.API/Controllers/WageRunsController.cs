@@ -153,6 +153,21 @@ namespace OCC.API.Controllers
                 .OrderByDescending(w => w.EndDate)
                 .FirstOrDefaultAsync();
 
+            // 5. Pre-load prepaid window (Thursday/Friday of previous cycle) leave requests and attendance records
+            var prepaidStart = request.StartDate.AddDays(-2).Date;
+            var prepaidEnd = request.StartDate.AddDays(-1).Date;
+
+            var prepaidLeaveRequests = await _context.LeaveRequests
+                .Where(lr => lr.Status == LeaveStatus.Approved &&
+                             lr.StartDate <= prepaidEnd &&
+                             lr.EndDate >= prepaidStart)
+                .ToListAsync();
+
+            var prepaidAttendanceRecords = await _context.AttendanceRecords
+                .Where(ar => ar.Date >= prepaidStart &&
+                             ar.Date <= prepaidEnd)
+                .ToListAsync();
+
             foreach (var emp in employees)
             {
                 var line = new WageRunLine
@@ -232,7 +247,7 @@ namespace OCC.API.Controllers
                         ? Branch.CPT
                         : Branch.JHB;
 
-                    if (companyDetails.Branches.TryGetValue(branchKey, out var branchDetails))
+                    if (companyDetails?.Branches != null && companyDetails.Branches.TryGetValue(branchKey, out var branchDetails))
                     {
                         // Clone with the branch shift so the original DB entity is untouched
                         empForCalc = new Employee
@@ -360,72 +375,92 @@ namespace OCC.API.Controllers
                 line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
                 // C. Variance Calculation (Previous Run)
-                if (lastRun != null)
+                double leaveDeductionDays = 0;
+                double leaveDeductionHours = 0;
+
+                var empLeaveRequests = prepaidLeaveRequests
+                    .Where(lr => lr.EmployeeId == emp.Id)
+                    .ToList();
+
+                var empAttendanceRecords = prepaidAttendanceRecords
+                    .Where(ar => ar.EmployeeId == emp.Id)
+                    .ToList();
+
+                for (var d = prepaidStart; d <= prepaidEnd; d = d.AddDays(1))
                 {
-                    var lastLine = lastRun.Lines.FirstOrDefault(l => l.EmployeeId == emp.Id);
-                    if (lastLine != null && lastLine.ProjectedHours > 0)
+                    // Skip weekends and public holidays
+                    if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
+                        continue;
+
+                    var isAbsent = empLeaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
+                        (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+
+                    if (!isAbsent)
                     {
-                        // Check what ACTUALLY happened in that window by looking at Leave Management (LeaveRequests)
-                        // Last Run Projected Window is always Thursday and Friday of Week 2 of that run
-                        var lastRunProjectedStart = DateTime.MinValue;
-                        var lastRunProjectedEnd = DateTime.MinValue;
-                        for (int i = 7; i <= 13; i++)
+                        var attendanceRecord = empAttendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
+                        if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
                         {
-                            var date = lastRun.StartDate.AddDays(i).Date;
-                            if (date.DayOfWeek == DayOfWeek.Thursday)
-                                lastRunProjectedStart = date;
-                            else if (date.DayOfWeek == DayOfWeek.Friday)
-                                lastRunProjectedEnd = date;
-                        }
-
-                        if (lastRunProjectedStart <= lastRunProjectedEnd)
-                        {
-                            var leaveRequests = await _context.LeaveRequests
-                                .Where(lr => lr.EmployeeId == emp.Id &&
-                                             lr.Status == LeaveStatus.Approved &&
-                                             lr.StartDate <= lastRunProjectedEnd &&
-                                             lr.EndDate >= lastRunProjectedStart)
-                                .ToListAsync();
-
-                            var attendanceRecords = await _context.AttendanceRecords
-                                .Where(ar => ar.EmployeeId == emp.Id &&
-                                             ar.Date >= lastRunProjectedStart &&
-                                             ar.Date <= lastRunProjectedEnd)
-                                .ToListAsync();
-
-                            double leaveDeductionDays = 0;
-                            for (var d = lastRunProjectedStart; d <= lastRunProjectedEnd; d = d.AddDays(1))
-                            {
-                                // Skip weekends and public holidays as they are not standard working days to deduct
-                                if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
-                                    continue;
-
-                                var isAbsent = leaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
-                                    (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
-
-                                if (!isAbsent)
-                                {
-                                    var attendanceRecord = attendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
-                                    if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
-                                    {
-                                        isAbsent = true;
-                                    }
-                                }
-
-                                if (isAbsent)
-                                {
-                                    leaveDeductionDays++;
-                                }
-                            }
-
-                            if (leaveDeductionDays > 0)
-                            {
-                                line.VarianceHours = -leaveDeductionDays * dailyHours;
-                                line.VarianceNotes = $"Adj from {lastRun.EndDate:MMM dd}: Absent {leaveDeductionDays:F1} day(s)";
-                                line.DaysWorkedWeek1 = -leaveDeductionDays;
-                            }
+                            isAbsent = true;
                         }
                     }
+
+                    if (isAbsent)
+                    {
+                        leaveDeductionDays++;
+                        
+                        double dayHours = 8.75;
+                        TimeSpan? startTime = emp.ShiftStartTime;
+                        TimeSpan? endTime = emp.ShiftEndTime;
+
+                        if (startTime == null || endTime == null)
+                        {
+                            var bEnum = Branch.JHB;
+                            if (string.Equals(emp.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || 
+                                string.Equals(emp.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
+                            {
+                                bEnum = Branch.CPT;
+                            }
+                            
+                            if (companyDetails != null && companyDetails.Branches != null && companyDetails.Branches.TryGetValue(bEnum, out var branchDetails))
+                            {
+                                startTime = branchDetails.ShiftStartTime;
+                                endTime = branchDetails.ShiftEndTime;
+                            }
+                        }
+
+                        if (startTime != null && endTime != null)
+                        {
+                            var duration = endTime.Value - startTime.Value;
+                            double rawHours = duration.TotalHours;
+                            if (rawHours > 0)
+                            {
+                                double lunch = 1.0;
+                                var dow = d.DayOfWeek;
+                                bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d);
+                                if (isWeekend || isHoliday)
+                                {
+                                    lunch = 0;
+                                }
+                                dayHours = Math.Max(0, rawHours - lunch);
+                            }
+                        }
+                        leaveDeductionHours += dayHours;
+                    }
+                }
+
+                if (leaveDeductionDays > 0)
+                {
+                    line.VarianceHours = -leaveDeductionHours;
+                    if (lastRun != null)
+                    {
+                        line.VarianceNotes = $"Adj from {lastRun.EndDate:MMM dd}: Absent {leaveDeductionDays:F1} day(s)";
+                    }
+                    else
+                    {
+                        line.VarianceNotes = $"Adj from prior cycle: Absent {leaveDeductionDays:F1} day(s)";
+                    }
+                    line.DaysWorkedWeek1 = -leaveDeductionDays;
                 }
 
                 // Recalculate TotalDaysWorked to include the deducted days offset (Week 1)
@@ -434,9 +469,10 @@ namespace OCC.API.Controllers
                 // D. Total Wage
                 // Formula: ((Normal + Projected + Variance) * Rate) + (OT15 * Rate * 1.5) + (OT20 * Rate * 2.0)
                 
-                line.TotalWage = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours) * line.HourlyRate +
-                                 (decimal)(line.Overtime15Hours + line.SaturdayOvertimeHours) * line.HourlyRate * 1.5m +
-                                 (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
+                var calculatedWage = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours) * line.HourlyRate +
+                                     (decimal)(line.Overtime15Hours + line.SaturdayOvertimeHours) * line.HourlyRate * 1.5m +
+                                     (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
+                line.TotalWage = Math.Max(0m, calculatedWage);
                     
                 // E. Loans (deducted according to frequency specified in loan agreement)
                 var empLoans = activeLoans.Where(l => l.EmployeeId == emp.Id).ToList();
