@@ -438,7 +438,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <!-- Create new record button -->
     <Style x:Key="CreateIconButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
         <Setter Property="Background" Value="{StaticResource CreateButtonGradient}"/>
@@ -446,12 +446,12 @@
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ModernPrimaryButtonBackgroundGradient}"/>
         <Setter Property="Padding" Value="16,0"/>
-<Setter Property="Height" Value="40"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="Button">                    
+                <ControlTemplate TargetType="Button">
                     <Grid x:Name="grid" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="buttonScale" ScaleX="1.0" ScaleY="1.0"/>
@@ -687,7 +687,7 @@
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="buttonScale" ScaleX="1.0" ScaleY="1.0"/>
                         </Grid.RenderTransform>
-                        
+
                         <!-- Base Border -->
                         <Border x:Name="border" 
                                 Background="{TemplateBinding Background}" 
@@ -695,7 +695,7 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8"
                                 TextElement.Foreground="{TemplateBinding Foreground}"/>
-                        
+
                         <!-- Hover Overlay Border -->
                         <Border x:Name="hoverOverlay" 
                                 Background="{TemplateBinding ap:ButtonProperties.HoverBackground}" 
@@ -755,7 +755,7 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
-                        
+
                         <!-- Pressed State -->
                         <Trigger Property="IsPressed" Value="True">
                             <Trigger.EnterActions>
@@ -775,7 +775,7 @@
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
-                        
+
                         <!-- Busy State triggered by Tag property -->
                         <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
                             <Setter TargetName="contentStackPanel" Property="Visibility" Value="Collapsed"/>
@@ -806,7 +806,7 @@
     </Style>
 
     <!-- // Detail View Button Start // -->
-    
+
     <!-- Login Button -->
     <Style x:Key="LoginButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
         <Setter Property="Content" Value="Create"/>
@@ -820,7 +820,7 @@
         <Setter Property="ap:ButtonProperties.HoverForeground" Value="White"/>
         <Setter Property="ap:ButtonProperties.HoverIconForeground" Value="White"/>
     </Style>
-    
+
     <!-- Create Button -->
     <Style x:Key="CreateButton" TargetType="Button" BasedOn="{StaticResource ActionButtonBase}">
         <Setter Property="Content" Value="Create"/>
@@ -1044,7 +1044,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
 </ResourceDictionary>
 
 

@@ -1,0 +1,26 @@
+- [x] Create WidgetConfig model (WpfClient)
+- [x] Add DashboardWidgets list to LocalSettings (WpfClient)
+- [x] Create WidgetViewModelBase (WpfClient)
+- [x] Create and refactor individual Widget ViewModels:
+  - [x] TasksWidgetViewModel
+  - [x] TodosWidgetViewModel
+  - [x] UsersWidgetViewModel
+  - [x] ProductivityWidgetViewModel
+  - [x] CalendarWidgetViewModel
+  - [x] ChatsWidgetViewModel
+  - [x] QuickActionsWidgetViewModel
+  - [x] BirthdayWidgetViewModel
+  - [x] AlertsWidgetViewModel
+- [x] Create individual Widget XAML Views:
+  - [x] TasksWidgetView
+  - [x] TodosWidgetView
+  - [x] UsersWidgetView
+  - [x] ProductivityWidgetView
+  - [x] CalendarWidgetView
+  - [x] ChatsWidgetView
+  - [x] QuickActionsWidgetView
+  - [x] BirthdayWidgetView
+  - [x] AlertsWidgetView
+- [x] Refactor DashboardViewModel (WpfClient)
+- [x] Refactor DashboardView.xaml (WpfClient)
+- [x] Build and verify clean warning-free compilation

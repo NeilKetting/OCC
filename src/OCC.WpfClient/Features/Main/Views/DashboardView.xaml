@@ -4,10 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
+             xmlns:views="clr-namespace:OCC.WpfClient.Features.Main.Views"
              xmlns:converters="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
-             xmlns:calModels="clr-namespace:OCC.WpfClient.Features.CalendarHub.Models"
-             xmlns:chatDtos="clr-namespace:OCC.Shared.DTOs;assembly=OCC.Shared"
-             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=vm:DashboardViewModel}"
              d:DesignHeight="700" d:DesignWidth="1100">
@@ -15,20 +13,51 @@
     <UserControl.Resources>
         <converters:UserInitialsConverter x:Key="UserInitialsConverter"/>
         <converters:UserColorConverter x:Key="UserColorConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <!-- View mappings for widgets -->
+        <DataTemplate DataType="{x:Type vm:BirthdayWidgetViewModel}">
+            <views:BirthdayWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AlertsWidgetViewModel}">
+            <views:AlertsWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TasksWidgetViewModel}">
+            <views:TasksWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TodosWidgetViewModel}">
+            <views:TodosWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsersWidgetViewModel}">
+            <views:UsersWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProductivityWidgetViewModel}">
+            <views:ProductivityWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CalendarWidgetViewModel}">
+            <views:CalendarWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ChatsWidgetViewModel}">
+            <views:ChatsWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SupportWidgetViewModel}">
+            <views:SupportWidgetView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:QuickActionsWidgetViewModel}">
+            <views:QuickActionsWidgetView />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>
         <Grid Margin="15,10,15,15">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Header & Birthday -->
-            <RowDefinition Height="Auto" /> <!-- Summary Cards -->
-            <RowDefinition Height="*" />    <!-- Two-Column Feed -->
-            <RowDefinition Height="Auto" /> <!-- Quick Actions -->
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header Row -->
+                <RowDefinition Height="*" />    <!-- Scrollable Grid Area -->
+                <RowDefinition Height="Auto" /> <!-- Drawer / Edit Mode Area -->
+            </Grid.RowDefinitions>
 
-        <!-- Row 0: Header Section -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,15">
-            <Grid Margin="0,0,0,0">
+            <!-- Row 0: Header Section -->
+            <Grid Grid.Row="0" Margin="0,0,0,15">
                 <StackPanel>
                     <TextBlock Foreground="White" FontSize="28" FontWeight="SemiBold">
                         <TextBlock.Text>
@@ -41,616 +70,146 @@
                     <TextBlock Text="{Binding CurrentDate}" Style="{StaticResource FormLabelText}"/>
                 </StackPanel>
 
-                <!-- Refresh Button -->
-                <Button Content="Refresh" Command="{Binding RefreshCommand}" 
-                        HorizontalAlignment="Right" 
-                        VerticalAlignment="Center" 
-                        Width="100" 
-                        Height="32" Style="{StaticResource CreateIconButton}"/>
+                <!-- Actions Right Side -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Command="{Binding CustomizeLayoutCommand}" 
+                            Margin="0,0,10,0" Height="32">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                <Setter Property="Content" Value="Customize Dashboard"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                        <Setter Property="Content" Value="Save Layout"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="Refresh" Command="{Binding RefreshCommand}" 
+                            Width="100" Height="32" Style="{StaticResource CreateIconButton}"/>
+                </StackPanel>
             </Grid>
 
-            <!-- Birthday Greeting Banner -->
-            <Border x:Name="BirthdayBanner" CornerRadius="12" Padding="20,15" BorderThickness="1" BorderBrush="#80EC4899" Margin="0,10,0,0">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#26EC4899" Offset="0"/>
-                        <GradientStop Color="#13F43F5E" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Visible"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding BirthdayGreeting}" Value="">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding BirthdayGreeting}" Value="{x:Null}">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+            <!-- Row 1: Scrollable Widget Container -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="itemsControl" ItemsSource="{Binding ActiveWidgets}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                            </Grid>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="Grid.Row" Value="{Binding Row}" />
+                            <Setter Property="Grid.Column" Value="{Binding Column}" />
+                            <Setter Property="Grid.ColumnSpan" Value="{Binding ColumnSpan}" />
+                            <Setter Property="Grid.RowSpan" Value="{Binding RowSpan}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:WidgetViewModelBase}">
+                            <Grid Margin="6">
+                                <!-- Outer styling for each widget -->
+                                <Border Style="{StaticResource GlassCard}" Padding="15">
+                                    <ContentPresenter Content="{Binding}" />
+                                </Border>
+
+                                <!-- Edit Overlay -->
+                                <Border Background="#B0111827" CornerRadius="12" BorderBrush="{StaticResource AccentBlue}" BorderThickness="1.5"
+                                        Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        MouseLeftButtonDown="OnWidgetMouseDown"
+                                        MouseMove="OnWidgetMouseMove"
+                                        MouseLeftButtonUp="OnWidgetMouseUp"
+                                        Cursor="SizeAll">
+                                    <Grid>
+                                        <!-- Widget Title and Hide controls -->
+                                        <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="Bold" FontSize="13" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,10,0,0" Opacity="0.9"/>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
+                                            <!-- Delete/Hide Button -->
+                                            <Button Command="{Binding RemoveCommand}" ToolTip="Hide Widget" Style="{StaticResource IconButton}" Height="28" Width="28">
+                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="13" Foreground="#EF4444"/>
+                                            </Button>
+                                        </StackPanel>
+
+                                        <!-- Centered Helper Text and Icon -->
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,15,0,0">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="24" Foreground="White" Opacity="0.6" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                            <TextBlock Text="Drag to Move" Foreground="White" FontSize="12" Opacity="0.6" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- Drag Resize Thumb at Bottom-Right corner -->
+                                        <Thumb Width="20" Height="20" Cursor="SizeNWSE" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                               DragDelta="OnResizeThumbDragDelta" DragCompleted="OnResizeThumbDragCompleted" Margin="0,0,5,5">
+                                            <Thumb.Template>
+                                                <ControlTemplate>
+                                                    <TextBlock Text="◢" Foreground="White" Opacity="0.7" FontSize="14" VerticalAlignment="Bottom" HorizontalAlignment="Right" Cursor="SizeNWSE"/>
+                                                </ControlTemplate>
+                                            </Thumb.Template>
+                                        </Thumb>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Row 2: Widget Library (Drawer) -->
+            <Border Grid.Row="2" Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Style="{StaticResource GlassCard}" CornerRadius="12" Margin="0,15,0,0" Padding="15">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EC4899" FontSize="28" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="Happy Birthday! 🎂🎉" Foreground="White" FontSize="16" FontWeight="Bold" Margin="0,0,0,4"/>
-                        <TextBlock Text="{Binding BirthdayGreeting}" Foreground="#FFF3F4F6" FontSize="14"/>
+                    
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Widget Library" Foreground="White" FontSize="15" FontWeight="SemiBold" Margin="0,0,15,0"/>
+                        <TextBlock Text="Click to add widgets back to dashboard" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,2,20,0"/>
                     </StackPanel>
-                </Grid>
-            </Border>
-        </StackPanel>
 
-        <!-- Row 1: Summary Cards -->
-        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,25">
-            <!-- Tasks Card -->
-            <Border Style="{StaticResource GlassCard}" Margin="0,0,5,0" Padding="30,5,15,5">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="TASKS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding TaskCount}" Foreground="White" FontSize="36" FontWeight="Bold" />
-                        <TextBlock Text="My Active Tasks" Foreground="{StaticResource TextSub}" FontSize="12"/>
-                    </StackPanel>
-                    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1A2E9DFF">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="18"/>
-                    </Border>
-                </Grid>
-            </Border>
-
-            <!-- To-Dos Card -->
-                <Border Style="{StaticResource GlassCard}" Margin="5,0" Padding="30,5,15,5">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="TO-DOS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding TodoCount}" Foreground="White" FontSize="36" FontWeight="Bold"/>
-                        <TextBlock Text="Personal Pending" Foreground="{StaticResource TextSub}" FontSize="12"/>
-                    </StackPanel>
-                    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1AFF8F00">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="18"/>
-                    </Border>
-                </Grid>
-            </Border>
-
-            <!-- User Management Card -->
-                <Border Style="{StaticResource GlassCard}" Margin="5,0" Padding="30,5,15,5">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="USERS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding UserCount}" Foreground="White" FontSize="36" FontWeight="Bold"/>
-                        <TextBlock Text="Registered Users" Foreground="{StaticResource TextSub}" FontSize="12"/>
-                    </StackPanel>
-                    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1A6B39FF">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#BE9DFF" FontSize="18"/>
-                    </Border>
-                </Grid>
-            </Border>
-
-            <!-- Productivity Card (Task Completion) -->
-                <Border Style="{StaticResource GlassCard}" Margin="10,0,0,0" Padding="30,5,15,5">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="TASK COMPLETION" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding CompletionRate, StringFormat={}{0}%}" Foreground="White" FontSize="36" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding CompletionRateText}" Foreground="{StaticResource TextSub}" FontSize="12"/>
-                    </StackPanel>
-                    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1A00FF88">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#00FF88" FontSize="18"/>
-                    </Border>
-                </Grid>
-            </Border>
-        </UniformGrid>
-
-        <!-- Row 2: Feeds Grid (Upcoming Schedule & Unread Chats) -->
-        <Grid Grid.Row="2" Margin="0,0,0,25">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="6*" />
-                <ColumnDefinition Width="5*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Left: Upcoming Schedule (Calendar) -->
-            <Border Grid.Column="0" Style="{StaticResource GlassCard}" Margin="0,0,12,0" Padding="10">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0" Margin="0,0,0,15">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Upcoming Schedule" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Next 7 Days" Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center" Margin="10,2,0,0"/>
-                        </StackPanel>
-                        
-                        <!-- Main Calendar Shortcut -->
-                        <Button Content="View Calendar" Command="{Binding NavigateToRouteCommand}" CommandParameter="Calendar" HorizontalAlignment="Right" Style="{StaticResource ModernTabButton}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
-                    </Grid>
-
-                    <Grid Grid.Row="1">
-                        <!-- Loading Spinner -->
-                        <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top" Background="Transparent" Foreground="{StaticResource AccentBlue}"
-                                     Visibility="{Binding IsLoadingEvents, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                        <!-- No Events Message -->
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,20,0,0">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding UpcomingEvents.Count}" Value="0"/>
-                                                <Condition Binding="{Binding IsLoadingEvents}" Value="False"/>
-                                            </MultiDataTrigger.Conditions>
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </MultiDataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,10" Opacity="0.5"/>
-                            <TextBlock Text="No events scheduled for the next 7 days." Foreground="{StaticResource TextSub}" FontSize="14" FontStyle="Italic" HorizontalAlignment="Center"/>
-                        </StackPanel>
-
-                        <!-- Events List -->
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ScrollViewer.Style>
-                                <Style TargetType="ScrollViewer">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="HasContent" Value="False">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </Trigger>
-                                        <DataTrigger Binding="{Binding UpcomingEvents.Count}" Value="0">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ScrollViewer.Style>
-                            
-                            <ItemsControl ItemsSource="{Binding UpcomingEvents}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type calModels:CalendarEvent}">
-                                        <!-- Clickable Event Card -->
-                                        <Button Command="{Binding DataContext.NavigateToEventCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,10" Cursor="Hand">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="cardBorder" Background="#0DFFFFFF" CornerRadius="10" Padding="15,10" BorderThickness="1" BorderBrush="#08FFFFFF">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/> <!-- Icon -->
-                                                                <ColumnDefinition Width="*"/>    <!-- Text details -->
-                                                                <ColumnDefinition Width="Auto"/> <!-- Date/Tag -->
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <!-- Type Icon -->
-                                                            <Border x:Name="IconBorder" Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#1C2E9DFF" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                                <TextBlock x:Name="IconTxt" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            </Border>
-
-                                                            <!-- Text info -->
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                                    <TextBlock Text="{Binding ProjectName}" Foreground="{StaticResource AccentBlue}" FontSize="11" FontWeight="SemiBold" 
-                                                                               Visibility="{Binding ProjectName, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,0,6,0"/>
-                                                                    <TextBlock Text="•" Foreground="{StaticResource TextSub}" FontSize="11" 
-                                                                               Visibility="{Binding ProjectName, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,0,6,0"/>
-                                                                    <TextBlock Text="{Binding Description}" Style="{StaticResource FormLabelText}" FontSize="11" TextTrimming="CharacterEllipsis" Opacity="0.7"/>
-                                                                </StackPanel>
-                                                            </StackPanel>
-
-                                                            <!-- Date Info -->
-                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,0,0">
-                                                                <TextBlock Text="{Binding StartDate, StringFormat={}{0:dd MMM}}" Foreground="White" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                                                                <TextBlock x:Name="TypeLabel" Text="Task" Foreground="{StaticResource TextSub}" FontSize="11" HorizontalAlignment="Right" Margin="0,2,0,0"/>
-                                                            </StackPanel>
-                                                        </Grid>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="cardBorder" Property="Background" Value="#1AFFFFFF"/>
-                                                            <Setter TargetName="cardBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
-                                                        </Trigger>
-                                                        <!-- Public Holiday style -->
-                                                        <DataTrigger Binding="{Binding Type}" Value="PublicHoliday">
-                                                            <Setter TargetName="IconBorder" Property="Background" Value="#1AFF8F00"/>
-                                                            <Setter TargetName="IconTxt" Property="Text" Value=""/>
-                                                            <Setter TargetName="IconTxt" Property="Foreground" Value="{StaticResource OrangeBrush}"/>
-                                                            <Setter TargetName="TypeLabel" Property="Text" Value="Holiday"/>
-                                                        </DataTrigger>
-                                                        <!-- Birthday style -->
-                                                        <DataTrigger Binding="{Binding Type}" Value="Birthday">
-                                                            <Setter TargetName="IconBorder" Property="Background" Value="#1AEC4899"/>
-                                                            <Setter TargetName="IconTxt" Property="Text" Value=""/>
-                                                            <Setter TargetName="IconTxt" Property="Foreground" Value="#EC4899"/>
-                                                            <Setter TargetName="TypeLabel" Property="Text" Value="Birthday"/>
-                                                        </DataTrigger>
-                                                        <!-- Leave style -->
-                                                        <DataTrigger Binding="{Binding Type}" Value="Leave">
-                                                            <Setter TargetName="IconBorder" Property="Background" Value="#1ABE9DFF"/>
-                                                            <Setter TargetName="IconTxt" Property="Text" Value=""/>
-                                                            <Setter TargetName="IconTxt" Property="Foreground" Value="#BE9DFF"/>
-                                                            <Setter TargetName="TypeLabel" Property="Text" Value="Leave"/>
-                                                        </DataTrigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Button.Template>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <Grid Grid.Column="1" Margin="12,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <!-- Top: Unread Chats -->
-                <Border Grid.Row="0" Style="{StaticResource GlassCard}" Margin="0,0,0,10" Padding="10">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <Grid Grid.Row="0" Margin="0,0,0,12">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Unread Chats" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                                <Border Background="#EF4444" CornerRadius="8" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding UnreadSessions.Count}" Value="0">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding UnreadSessions.Count}" Foreground="White" FontSize="11" FontWeight="Bold"/>
-                                </Border>
-                            </StackPanel>
-
-                            <!-- Go to chat shortcut -->
-                            <Button Content="Open Chat Hub" Command="{Binding NavigateToRouteCommand}" CommandParameter="Chat" HorizontalAlignment="Right" Style="{StaticResource ModernTabButton}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
-                        </Grid>
-
-                        <Grid Grid.Row="1">
-                            <!-- Loading Spinner -->
-                            <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top" Background="Transparent" Foreground="{StaticResource AccentBlue}"
-                                         Visibility="{Binding IsLoadingChats, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                            <!-- No Unread Chats Message -->
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding UnreadSessions.Count}" Value="0"/>
-                                                    <Condition Binding="{Binding IsLoadingChats}" Value="False"/>
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </MultiDataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,5" Opacity="0.5"/>
-                                <TextBlock Text="No unread messages. You are all caught up!" Foreground="{StaticResource TextSub}" FontSize="13" FontStyle="Italic" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Unread Chats List -->
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ScrollViewer.Style>
-                                    <Style TargetType="ScrollViewer">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="HasContent" Value="False">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </Trigger>
-                                            <DataTrigger Binding="{Binding UnreadSessions.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ScrollViewer.Style>
-
-                                <ItemsControl ItemsSource="{Binding UnreadSessions}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type chatDtos:ChatSessionDto}">
-                                            <!-- Clickable Session Card -->
-                                            <Button Command="{Binding DataContext.NavigateToChatSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,8" Cursor="Hand">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border x:Name="cardBorder" Background="#0DFFFFFF" CornerRadius="10" Padding="12,8" BorderThickness="1" BorderBrush="#08FFFFFF">
-                                                            <Grid>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Initials Avatar -->
-                                                                    <ColumnDefinition Width="*"/>    <!-- Name / Preview -->
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Time / Badge -->
-                                                                </Grid.ColumnDefinitions>
-
-                                                                <!-- Circular Initials Avatar -->
-                                                                <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" 
-                                                                        Background="{Binding Name, Converter={StaticResource UserColorConverter}}" 
-                                                                        Margin="0,0,10,0" VerticalAlignment="Center">
-                                                                    <TextBlock Text="{Binding Name, Converter={StaticResource UserInitialsConverter}}" 
-                                                                               Foreground="White" FontSize="12" FontWeight="Bold" 
-                                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                </Border>
-
-                                                                <!-- Content Preview -->
-                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                                    <TextBlock Text="{Binding LastMessage.Content, FallbackValue='No messages yet'}" Style="{StaticResource FormLabelText}" FontSize="11" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" Opacity="0.75"/>
-                                                                </StackPanel>
-
-                                                                <!-- Time & Badge -->
-                                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,0,0">
-                                                                    <TextBlock Text="{Binding LastMessage.SentDate, StringFormat={}{0:HH:mm}}" Foreground="{StaticResource TextSub}" FontSize="10" HorizontalAlignment="Right"/>
-                                                                    <Border Background="#EF4444" CornerRadius="7" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Right">
-                                                                        <TextBlock Text="{Binding UnreadCount}" Foreground="White" FontSize="9" FontWeight="Bold"/>
-                                                                    </Border>
-                                                                </StackPanel>
-                                                            </Grid>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="cardBorder" Property="Background" Value="#1AFFFFFF"/>
-                                                                <Setter TargetName="cardBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Grid>
-                    </Grid>
-                </Border>
-
-                <!-- Bottom: Support Hub Tickets -->
-                <Border Grid.Row="1" Style="{StaticResource GlassCard}" Margin="0,10,0,0" Padding="10">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <Grid Grid.Row="0" Margin="0,0,0,12">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Support Hub" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                                <Border Background="#FF8F00" CornerRadius="8" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SupportTicketsNeedingFeedback.Count}" Value="0">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding SupportTicketsNeedingFeedback.Count, StringFormat={}{0} Reply}" Foreground="White" FontSize="11" FontWeight="Bold"/>
-                                </Border>
-                            </StackPanel>
-
-                            <!-- Go to support hub shortcut -->
-                            <Button Content="Open Support Hub" Command="{Binding NavigateToRouteCommand}" CommandParameter="Support.SupportHub" HorizontalAlignment="Right" Style="{StaticResource ModernTabButton}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
-                        </Grid>
-
-                        <Grid Grid.Row="1">
-                            <!-- Loading Spinner -->
-                            <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top" Background="Transparent" Foreground="{StaticResource AccentBlue}"
-                                         Visibility="{Binding IsLoadingSupportTickets, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                            <!-- No Open Tickets Message -->
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding OpenSupportTickets.Count}" Value="0"/>
-                                                    <Condition Binding="{Binding IsLoadingSupportTickets}" Value="False"/>
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </MultiDataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,5" Opacity="0.5"/>
-                                <TextBlock Text="No active support tickets." Foreground="{StaticResource TextSub}" FontSize="13" FontStyle="Italic" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Support Tickets List -->
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ScrollViewer.Style>
-                                    <Style TargetType="ScrollViewer">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="HasContent" Value="False">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </Trigger>
-                                            <DataTrigger Binding="{Binding OpenSupportTickets.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ScrollViewer.Style>
-
-                                <ItemsControl ItemsSource="{Binding OpenSupportTickets}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:BugReport}">
-                                            <Button Command="{Binding DataContext.NavigateToRouteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Support.SupportHub" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,8" Cursor="Hand">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border x:Name="cardBorder" Background="#0DFFFFFF" CornerRadius="10" Padding="12,8" BorderThickness="1" BorderBrush="#08FFFFFF">
-                                                            <Grid>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Status Icon -->
-                                                                    <ColumnDefinition Width="*"/>    <!-- Description / Info -->
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Action Badge -->
-                                                                </Grid.ColumnDefinitions>
-
-                                                                <!-- Status icon with color -->
-                                                                <Border x:Name="StatusDot" Grid.Column="0" Width="10" Height="10" CornerRadius="5" Background="#00FF88" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-
-                                                                <!-- Ticket Details -->
-                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                    <TextBlock Text="{Binding Description}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                                        <TextBlock Text="{Binding ReporterName}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,6,0"/>
-                                                                        <TextBlock Text="•" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,6,0"/>
-                                                                        <TextBlock Text="{Binding Status}" Foreground="#BE9DFF" FontSize="11" x:Name="StatusText"/>
-                                                                    </StackPanel>
-                                                                </StackPanel>
-
-                                                                <!-- Feedback Request Badge -->
-                                                                <Border x:Name="FeedbackBadge" Grid.Column="2" Background="#FF8F00" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="Collapsed">
-                                                                    <TextBlock Text="Feedback Required" Foreground="White" FontSize="9" FontWeight="Bold"/>
-                                                                </Border>
-                                                            </Grid>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="cardBorder" Property="Background" Value="#1AFFFFFF"/>
-                                                                <Setter TargetName="cardBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
-                                                            </Trigger>
-                                                            <!-- Status styling -->
-                                                            <DataTrigger Binding="{Binding Status}" Value="Waiting for Client">
-                                                                <Setter TargetName="StatusDot" Property="Background" Value="#FF8F00"/>
-                                                                <Setter TargetName="StatusText" Property="Foreground" Value="#FF8F00"/>
-                                                                <Setter TargetName="FeedbackBadge" Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Status}" Value="In Progress">
-                                                                <Setter TargetName="StatusDot" Property="Background" Value="#2E9DFF"/>
-                                                                <Setter TargetName="StatusText" Property="Foreground" Value="#2E9DFF"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Status}" Value="Planning">
-                                                                <Setter TargetName="StatusDot" Property="Background" Value="#BE9DFF"/>
-                                                                <Setter TargetName="StatusText" Property="Foreground" Value="#BE9DFF"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Status}" Value="Fixed">
-                                                                <Setter TargetName="StatusDot" Property="Background" Value="#C084FC"/>
-                                                                <Setter TargetName="StatusText" Property="Foreground" Value="#C084FC"/>
-                                                            </DataTrigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Grid>
-                    </Grid>
-                </Border>
-            </Grid>
-        </Grid>
-
-        <!-- Row 3: Quick Actions Row -->
-        <Border Grid.Row="3" Style="{StaticResource GlassCard}" Padding="20,15">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Quick Actions" Foreground="White" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0"/>
-                
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ItemsControl ItemsSource="{Binding ActiveQuickActions}">
+                    <ItemsControl Grid.Column="1" ItemsSource="{Binding AvailableWidgets}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
+                                <WrapPanel Orientation="Horizontal"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Command="{Binding DataContext.NavigateToRouteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                        CommandParameter="{Binding Route}" 
-                                        Margin="0,0,10,0" 
-                                        Height="32" Padding="12,0" 
-                                        Style="{StaticResource PrimaryButton}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
+                            <DataTemplate DataType="{x:Type vm:WidgetViewModelBase}">
+                                <Button Content="{Binding Title, StringFormat={}+ {0}}" 
+                                        Command="{Binding DataContext.AddWidgetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                        CommandParameter="{Binding}" 
+                                        Margin="0,0,8,8" Height="28" Padding="10,0"
+                                        Style="{StaticResource PrimaryButton}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    
-                    <Button Content="⚙ Customize" 
-                            Command="{Binding OpenShortcutPickerCommand}" 
-                            Height="32" Padding="12,0" 
-                            Style="{StaticResource CreateIconButton}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-    </Grid>
 
-    <!-- Shortcut Customization Modal Overlay -->
-    <Grid Background="#A0000000" 
-          Visibility="{Binding IsShortcutPickerOpen, Converter={StaticResource BooleanToVisibilityConverter}}"
-          HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Border Style="{StaticResource GlassCard}" 
-                Width="480" Height="500" 
-                HorizontalAlignment="Center" VerticalAlignment="Center" 
-                Padding="25" CornerRadius="16" BorderThickness="1" BorderBrush="#20FFFFFF">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                
-                <!-- Header -->
-                <StackPanel Grid.Row="0" Margin="0,0,0,15">
-                    <TextBlock Text="Customize Quick Actions" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Select which shortcuts you want to pin to your quick actions bar." Style="{StaticResource FormLabelText}" FontSize="12" Margin="0,4,0,0" Opacity="0.75"/>
-                </StackPanel>
-                
-                <!-- Checklist -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15">
-                    <ItemsControl ItemsSource="{Binding ShortcutOptions}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsSelected}" Margin="0,4" Padding="10,0" VerticalContentAlignment="Center">
-                                    <CheckBox.Style>
-                                        <Style TargetType="CheckBox">
-                                            <Setter Property="Foreground" Value="White" />
-                                            <Setter Property="FontSize" Value="14" />
-                                        </Style>
-                                    </CheckBox.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding IconCode}" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource AccentBlue}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </CheckBox>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-                
-                <!-- Footer Buttons -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Cancel" Command="{Binding CancelShortcutsCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Width="90" Height="32"/>
-                    <Button Content="Save Actions" Command="{Binding SaveShortcutsCommand}" Style="{StaticResource PrimaryButton}" Width="120" Height="32"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+                    <Button Grid.Column="3" Content="Reset Layout" Command="{Binding ResetLayoutCommand}" Height="28" Padding="12,0" Style="{StaticResource CreateIconButton}"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
-</Grid>
 </UserControl>
