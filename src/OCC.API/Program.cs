@@ -30,6 +30,7 @@ builder.Configuration.AddJsonFile("appsettings.secrets.json", optional: true, re
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<OCC.API.Infrastructure.Filters.ConcurrencyExceptionFilter>();
+        options.Filters.Add<OCC.API.Infrastructure.Filters.DatabaseExceptionFilter>();
         options.Filters.Add<OCC.API.Infrastructure.Filters.SuppressRowVersionFilter>();
         options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
     })
@@ -113,6 +114,7 @@ builder.Services.AddScoped<OCC.API.Services.INotificationService, OCC.API.Servic
 builder.Services.AddHostedService<OCC.API.Services.DatabaseBackupService>();
 builder.Services.AddHostedService<OCC.API.Services.AutoClockInService>();
 builder.Services.AddHostedService<OCC.API.Services.SignalRHeartbeatService>();
+builder.Services.AddHostedService<OCC.API.Services.AuditLogCleanupService>();
 
 // Wage Calculation Engine
 builder.Services.Configure<OCC.API.Services.WageCalculationOptions>(

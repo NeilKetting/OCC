@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
+             xmlns:converters="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="950" d:DesignWidth="1100"
              d:DataContext="{d:DesignInstance vm:ProjectReportViewModel}">
@@ -14,6 +15,7 @@
                 <ResourceDictionary Source="/Styles/Colors.xaml"/>
                 <ResourceDictionary Source="/Styles/Common.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <converters:FileNameConverter x:Key="FileNameConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -26,14 +28,14 @@
         </Grid.RowDefinitions>
 
         <!-- HEADER SECTION -->
-        <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="10,10">
+        <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="10,5">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Height="80">
+                <StackPanel Grid.Column="0" Height="84" VerticalAlignment="Center">
                     <TextBlock Text="DAILY SITE PROJECT REPORT" Foreground="{StaticResource SecondaryGold}" FontSize="12" FontWeight="Bold"/>
                         <TextBlock Text="{Binding Project.Name}" Foreground="White" FontSize="28" FontWeight="Light" Margin="0,5,0,0"/>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -553,13 +555,22 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Incident & Progress Photos Card -->
+                    <!-- Report & Progress Photos Card -->
                     <Border Style="{StaticResource GlassCard}" Padding="20">
                         <StackPanel>
-                            <TextBlock Text="INCIDENT &amp; PROGRESS PHOTOS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+                            <!-- Header Grid -->
+                            <Grid Margin="0,0,0,15">
+                                <TextBlock Text="REPORT &amp; PROGRESS PHOTOS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <Button Command="{Binding UploadPhotoCommand}" Style="{StaticResource CreateIconButton}" HorizontalAlignment="Right" Height="28" Padding="10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Add Photo" Foreground="White" FontSize="11" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
 
                             <!-- No Photos Message -->
-                            <TextBlock Text="No site photos registered for this project." 
+                            <TextBlock Text="No report photos uploaded yet." 
                                        Foreground="{StaticResource TextSub}" 
                                        FontSize="13" 
                                        FontStyle="Italic"
@@ -568,7 +579,7 @@
                                        Visibility="{Binding HasPhotos, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
 
                             <!-- Photos ItemsControl -->
-                            <ItemsControl ItemsSource="{Binding IncidentPhotos}" Visibility="{Binding HasPhotos, Converter={StaticResource VisibilityConverter}}">
+                            <ItemsControl ItemsSource="{Binding ReportPhotos}" Visibility="{Binding HasPhotos, Converter={StaticResource VisibilityConverter}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel/>
@@ -576,13 +587,29 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="0,0,15,15" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="3" Background="#10FFFFFF">
-                                            <Grid Width="160" Height="120">
-                                                <Image Source="{Binding FilePath}" Stretch="UniformToFill"/>
-                                                <!-- Overlay File Name/Caption -->
-                                                <Border VerticalAlignment="Bottom" Background="#B0000000" Padding="5">
-                                                    <TextBlock Text="{Binding FileName}" Foreground="White" FontSize="10" TextTrimming="CharacterEllipsis"/>
-                                                </Border>
+                                        <Border Margin="0,0,15,15" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="5" Background="#10FFFFFF" Width="160" Height="120">
+                                            <Grid>
+                                                <!-- Image Preview (Centered, aspect ratio preserved) -->
+                                                <Image Source="{Binding}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                
+                                                <!-- Custom Sleek Circle Delete Button Overlay -->
+                                                <Button Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" 
+                                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                                        Margin="0,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="bg" Background="#A0EF4444" CornerRadius="10" Width="20" Height="20">
+                                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="8" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="bg" Property="Background" Value="#EF4444"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

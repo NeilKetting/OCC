@@ -57,7 +57,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         // Display lists
         [ObservableProperty] private ObservableCollection<VendorReportRow> _vendorReportRows = new();
-        [ObservableProperty] private ObservableCollection<IncidentPhotoDto> _incidentPhotos = new();
+        [ObservableProperty] private ObservableCollection<string> _reportPhotos = new();
         [ObservableProperty] private ObservableCollection<ProjectVariationOrder> _variationOrders = new();
         [ObservableProperty] private ObservableCollection<ProjectReportHistory> _reportHistory = new();
         [ObservableProperty] private bool _hasPhotos;
@@ -145,6 +145,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     AsbestosTon = draft.AsbestosTon;
                     PowPercentRequired = draft.PowPercentRequired;
                     DelayDays = draft.DelayDays;
+                    LoadPhotosFromDraft(draft.PhotoUrls);
                 }
                 else
                 {
@@ -156,6 +157,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     AsbestosTon = "0";
                     PowPercentRequired = 0;
                     DelayDays = 0;
+                    ReportPhotos.Clear();
+                    HasPhotos = false;
                 }
 
                 // Calculate Comprehensive POW progress
@@ -357,9 +360,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 // Fetch subcontractor audits and build vendor report
                 await BuildVendorReportAsync(nonGroupTasks);
 
-                // Fetch project incident photos
-                await FetchIncidentPhotosAsync();
-
                 // Fetch variation orders
                 await FetchVariationOrdersAsync();
 
@@ -460,13 +460,18 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 {
                     // Find scope (comma separated specialties)
                     string scope = "Sub-Contractor";
+                    string appScore = "100%";
                     try
                     {
                         var contractors = await _subContractorService.GetSubContractorsAsync();
                         var conObj = contractors.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-                        if (conObj != null && !string.IsNullOrEmpty(conObj.Specialties))
+                        if (conObj != null)
                         {
-                            scope = conObj.Specialties;
+                            if (!string.IsNullOrEmpty(conObj.Specialties))
+                            {
+                                scope = conObj.Specialties;
+                            }
+                            appScore = $"{conObj.OnTimeRate:0}%";
                         }
                     }
                     catch { }
@@ -475,11 +480,11 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     {
                         VendorName = name,
                         Scope = scope,
-                        SafetyApproved = "Yes",
-                        AppScore = "100%",
-                        Audit1 = audit1,
-                        Audit2 = audit2,
-                        Audit3 = audit3
+                        SafetyApproved = "Pending",
+                        AppScore = appScore,
+                        Audit1 = "-",
+                        Audit2 = "-",
+                        Audit3 = "-"
                     });
                 }
             }
@@ -489,33 +494,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
         }
 
-        private async Task FetchIncidentPhotosAsync()
-        {
-            try
-            {
-                IncidentPhotos.Clear();
-                var incidents = await _healthSafetyService.GetIncidentsAsync();
-                var projectIncidents = incidents.Where(i => i.Location != null && Project != null && i.Location.Contains(Project.Name, StringComparison.OrdinalIgnoreCase)).ToList();
-
-                foreach (var inc in projectIncidents)
-                {
-                    var detail = await _healthSafetyService.GetIncidentAsync(inc.Id);
-                    if (detail?.Photos != null)
-                    {
-                        foreach (var photo in detail.Photos)
-                        {
-                            IncidentPhotos.Add(photo);
-                        }
-                    }
-                }
-                HasPhotos = IncidentPhotos.Any();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to fetch project incident photos.");
-                HasPhotos = false;
-            }
-        }
+        // Removed FetchIncidentPhotosAsync in favor of direct draft report photo attachments
 
         private async Task FetchVariationOrdersAsync()
         {
@@ -626,6 +605,20 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 }
                 var overdueMilestoneReasonsJson = JsonSerializer.Serialize(reasonsMap);
 
+                var baseUrl = _connectionSettings.ApiBaseUrl?.TrimEnd('/') ?? "";
+                var relativeUrls = new List<string>();
+                foreach (var url in ReportPhotos)
+                {
+                    if (!string.IsNullOrEmpty(baseUrl) && url.StartsWith(baseUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        relativeUrls.Add(url.Substring(baseUrl.Length));
+                    }
+                    else
+                    {
+                        relativeUrls.Add(url);
+                    }
+                }
+
                 var draft = new ProjectReportDraft
                 {
                     ProjectId = ProjectId,
@@ -636,7 +629,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     AsbestosTon = AsbestosTon,
                     PowPercentRequired = PowPercentRequired,
                     DelayDays = DelayDays,
-                    OverdueMilestoneReasons = overdueMilestoneReasonsJson
+                    OverdueMilestoneReasons = overdueMilestoneReasonsJson,
+                    PhotoUrls = string.Join(";", relativeUrls)
                 };
 
                 await _projectReportService.SaveDraftAsync(ProjectId, draft);
@@ -745,9 +739,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     }
                 }
 
-                // Download incident photos to temporary local files
+                // Download report photos to temporary local files
                 var localPhotoPaths = new List<string>();
-                if (IncidentPhotos != null && IncidentPhotos.Any())
+                if (ReportPhotos != null && ReportPhotos.Any())
                 {
                     var tempPhotosDir = Path.Combine(Path.GetTempPath(), "OCC_Report_Photos");
                     try
@@ -769,23 +763,25 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                         }
 
-                        foreach (var photo in IncidentPhotos)
+                        int photoIndex = 1;
+                        foreach (var url in ReportPhotos)
                         {
-                            if (string.IsNullOrEmpty(photo.FilePath)) continue;
+                            if (string.IsNullOrEmpty(url)) continue;
                             try
                             {
                                 var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
-                                var fullUrl = photo.FilePath.StartsWith("http") ? photo.FilePath : $"{baseUrl}/{photo.FilePath.TrimStart('/')}";
+                                var fullUrl = url.StartsWith("http") ? url : $"{baseUrl}/{url.TrimStart('/')}";
                                 var bytes = await client.GetByteArrayAsync(fullUrl);
-                                var ext = Path.GetExtension(photo.FileName);
+                                var ext = Path.GetExtension(url);
                                 if (string.IsNullOrEmpty(ext)) ext = ".jpg";
-                                var localFile = Path.Combine(tempPhotosDir, $"{photo.Id}{ext}");
+                                var localFile = Path.Combine(tempPhotosDir, $"report_photo_{photoIndex}{ext}");
                                 await File.WriteAllBytesAsync(localFile, bytes);
                                 localPhotoPaths.Add(localFile);
+                                photoIndex++;
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogWarning(ex, "Failed to download incident photo {PhotoId}", photo.Id);
+                                _logger.LogWarning(ex, "Failed to download report photo {Url}", url);
                             }
                         }
                     }
@@ -851,17 +847,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var path = await _pdfService.GenerateProjectReportPdfAsync(model);
                 
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
-
-                // Upload generated PDF to server history
-                var reportName = $"{Project?.Name ?? "Project"} - Week {WeekNumber}";
-                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-                {
-                    var uploaded = await _projectReportService.UploadReportAsync(ProjectId, WeekNumber, reportName, fs, Path.GetFileName(path));
-                    if (uploaded != null)
-                    {
-                        await LoadHistoryAsync();
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -985,6 +970,97 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 current = current.AddDays(1);
             }
             return workingDays;
+        }
+
+        private void LoadPhotosFromDraft(string photoUrlsStr)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                ReportPhotos.Clear();
+                if (!string.IsNullOrEmpty(photoUrlsStr))
+                {
+                    var baseUrl = _connectionSettings.ApiBaseUrl?.TrimEnd('/') ?? "";
+                    var urls = photoUrlsStr.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var url in urls)
+                    {
+                        var fullUrl = url.StartsWith("http", StringComparison.OrdinalIgnoreCase) 
+                            ? url 
+                            : $"{baseUrl}/{url.TrimStart('/')}";
+                        ReportPhotos.Add(fullUrl);
+                    }
+                }
+                HasPhotos = ReportPhotos.Any();
+            });
+        }
+
+        [RelayCommand]
+        private async Task UploadPhotoAsync()
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Image Files (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png",
+                Title = "Select Project Report Photo"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                IsBusy = true;
+                BusyText = "Uploading photo...";
+                try
+                {
+                    using var stream = new FileStream(openFileDialog.FileName, FileMode.Open, FileAccess.Read);
+                    var relativeUrl = await _projectReportService.UploadReportPhotoAsync(stream, Path.GetFileName(openFileDialog.FileName));
+                    
+                    if (!string.IsNullOrEmpty(relativeUrl))
+                    {
+                        var baseUrl = _connectionSettings.ApiBaseUrl?.TrimEnd('/') ?? "";
+                        var fullUrl = relativeUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) 
+                            ? relativeUrl 
+                            : $"{baseUrl}/{relativeUrl.TrimStart('/')}";
+
+                        App.Current.Dispatcher.Invoke(() =>
+                        {
+                            ReportPhotos.Add(fullUrl);
+                            HasPhotos = ReportPhotos.Any();
+                        });
+                        // Save changes to database immediately
+                        await SaveLocalReportDataAsync();
+                        NotifySuccess("Upload Success", "Photo uploaded and added to the report.");
+                    }
+                    else
+                    {
+                        NotifyError("Upload Error", "Failed to upload photo.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    NotifyError("Upload Error", $"An error occurred: {ex.Message}");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task RemovePhotoAsync(string photoUrl)
+        {
+            if (photoUrl == null) return;
+            try
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    ReportPhotos.Remove(photoUrl);
+                    HasPhotos = ReportPhotos.Any();
+                });
+                await SaveLocalReportDataAsync();
+                NotifySuccess("Removed", "Photo removed from the report.");
+            }
+            catch (Exception ex)
+            {
+                NotifyError("Error", $"Failed to remove photo: {ex.Message}");
+            }
         }
     }
 

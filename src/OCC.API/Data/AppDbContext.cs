@@ -61,6 +61,7 @@ namespace OCC.API.Data
         public DbSet<BugReport> BugReports { get; set; }
         public DbSet<BugComment> BugComments { get; set; }
         public DbSet<PersonalTodo> PersonalTodos { get; set; }
+        public DbSet<NoticeBoardItem> NoticeBoardItems { get; set; }
 
         // HSEQ Modules
         public DbSet<Incident> Incidents { get; set; }
@@ -631,6 +632,17 @@ namespace OCC.API.Data
                         .Property("RowVersion")
                         .IsRowVersion()
                         .IsRequired(false);
+                }
+
+                // Configure precision for all decimal properties to suppress warnings
+                var properties = entityType.GetProperties();
+                foreach (var property in properties)
+                {
+                    if (property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
+                    {
+                        property.SetPrecision(18);
+                        property.SetScale(2);
+                    }
                 }
             }
         }

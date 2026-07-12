@@ -956,12 +956,12 @@ namespace OCC.WpfClient.Services
                 {
                     container.Page(page =>
                     {
-                        page.Margin(30);
-                        page.Size(PageSizes.A4);
+                        page.Margin(20);
+                        page.Size(PageSizes.A4.Landscape());
                         page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
 
                         page.Header().Element(c => ComposeProjectReportHeader(c, model));
-                        page.Content().PaddingVertical(10).Element(c => ComposeProjectReportContent(c, model));
+                        page.Content().PaddingTop(3).PaddingBottom(10).Element(c => ComposeProjectReportContent(c, model));
                         page.Footer().Element(c => ComposeProjectReportFooter(c, new CompanyDetails()));
                     });
                 });
@@ -977,7 +977,7 @@ namespace OCC.WpfClient.Services
 
         private void ComposeProjectReportHeader(IContainer container, ProjectReportPrintModel model)
         {
-            container.PaddingBottom(10).Row(row =>
+            container.Row(row =>
             {
                 // Left: OCC Logo
                 row.RelativeItem().AlignLeft().Column(col =>
@@ -1053,308 +1053,342 @@ namespace OCC.WpfClient.Services
                     titleRow.RelativeItem().AlignRight().Text($"REPORT WEEK {model.WeekNumber}").FontSize(10).Bold().FontColor(ColorPrimary);
                 });
 
-                // Dashboard Cards row (Blocks 1-4)
-                col.Item().PaddingTop(12).Row(row =>
+                // Main split: Left side (4/6 width) has cards 1-4 and dates/waste, Right side (2/6 width) has status summary
+                col.Item().PaddingTop(12).Row(outerRow =>
                 {
-                    // Block 1: REPORT INFO
-                    row.RelativeItem().PaddingRight(4).Element(c => ComposeMetricBlock(c, "REPORT INFO", blockCol =>
+                    // Left Column (Cards 1-4 + Milestones & Waste)
+                    outerRow.RelativeItem(4).Column(leftCol =>
                     {
-                        blockCol.Item().Text(t => { t.Span("Date: ").SemiBold(); t.Span(model.ReportDate.ToString("yyyy/MM/dd")); });
-                        blockCol.Item().Text(t => { t.Span("Week: ").SemiBold(); t.Span(model.WeekNumber.ToString()); });
-                        blockCol.Item().Text(t => { t.Span("Status: ").SemiBold(); t.Span(model.Project.Status).Bold().FontColor(GetStatusColor(model.Project.Status)); });
-                    }));
+                        // 4 Metric cards in a sub-row (so they share height with each other, but not with the summary)
+                        leftCol.Item().Row(subRow =>
+                        {
+                            // Block 1: REPORT INFO
+                            subRow.RelativeItem().PaddingRight(3).Element(c => ComposeMetricBlock(c, "REPORT INFO", blockCol =>
+                            {
+                                blockCol.Item().Text(t => { t.Span("Date: ").SemiBold(); t.Span(model.ReportDate.ToString("yyyy/MM/dd")); });
+                                blockCol.Item().Text(t => { t.Span("Week: ").SemiBold(); t.Span(model.WeekNumber.ToString()); });
+                                blockCol.Item().Text(t => { t.Span("Status: ").SemiBold(); t.Span(model.Project.Status).Bold().FontColor(GetStatusColor(model.Project.Status)); });
+                            }));
 
-                    // Block 2: POW REQUIREMENT
-                    row.RelativeItem().PaddingHorizontal(2).Element(c => ComposeMetricBlock(c, "POW PROGRESS", blockCol =>
-                    {
-                        blockCol.Item().Text(t => { t.Span("Required: ").SemiBold(); t.Span($"{model.PowPercentRequired:F1}%"); });
-                        blockCol.Item().Text(t => { t.Span("Actual: ").SemiBold(); t.Span($"{model.OverallProgress:F1}%"); });
-                        blockCol.Item().Text(t => { t.Span("Delay: ").SemiBold(); t.Span($"{model.DelayDays} Days").FontColor(model.DelayDays > 0 ? Colors.Red.Darken2 : ColorSecondary); });
-                    }));
+                            // Block 2: POW REQUIREMENT
+                            subRow.RelativeItem().PaddingHorizontal(1.5f).Element(c => ComposeMetricBlock(c, "POW PROGRESS", blockCol =>
+                            {
+                                blockCol.Item().Text(t => { t.Span("Required: ").SemiBold(); t.Span($"{model.PowPercentRequired:F1}%"); });
+                                blockCol.Item().Text(t => { t.Span("Actual: ").SemiBold(); t.Span($"{model.OverallProgress:F1}%"); });
+                                blockCol.Item().Text(t => { t.Span("Delay: ").SemiBold(); t.Span($"{model.DelayDays} Days").FontColor(model.DelayDays > 0 ? Colors.Red.Darken2 : ColorSecondary); });
+                            }));
 
-                    // Block 3: PROGRAM OF WORKS
-                    row.RelativeItem().PaddingHorizontal(2).Element(c => ComposeMetricBlock(c, "PROGRAM OF WORKS", blockCol =>
-                    {
-                        blockCol.Item().Text(t => { t.Span("Total Tasks: ").SemiBold(); t.Span(model.TotalTasks.ToString()); });
-                        blockCol.Item().Text(t => { t.Span("Active: ").SemiBold(); t.Span(model.InProgressTasks.ToString()).FontColor(Colors.Blue.Darken2); });
-                        blockCol.Item().Text(t => { t.Span("Completed: ").SemiBold(); t.Span(model.CompletedTasks.ToString()).FontColor(Colors.Green.Darken2); });
-                    }));
+                            // Block 3: PROGRAM OF WORKS
+                            subRow.RelativeItem().PaddingHorizontal(1.5f).Element(c => ComposeMetricBlock(c, "PROGRAM OF WORKS", blockCol =>
+                            {
+                                blockCol.Item().Text(t => { t.Span("Total Tasks: ").SemiBold(); t.Span(model.TotalTasks.ToString()); });
+                                blockCol.Item().Text(t => { t.Span("Active: ").SemiBold(); t.Span(model.InProgressTasks.ToString()).FontColor(Colors.Blue.Darken2); });
+                                blockCol.Item().Text(t => { t.Span("Completed: ").SemiBold(); t.Span(model.CompletedTasks.ToString()).FontColor(Colors.Green.Darken2); });
+                            }));
 
-                    // Block 4: SAFE WORKING HOURS
-                    row.RelativeItem().PaddingLeft(4).Element(c => ComposeMetricBlock(c, "SAFE WORKING HOURS", blockCol =>
+                            // Block 4: SAFE WORKING HOURS
+                            subRow.RelativeItem().PaddingLeft(3).Element(c => ComposeMetricBlock(c, "SAFE WORKING HOURS", blockCol =>
+                            {
+                                blockCol.Item().AlignCenter().Text($"{model.SafeWorkingHours:N0}").FontSize(14).ExtraBold().FontColor(Colors.Green.Darken3);
+                                blockCol.Item().AlignCenter().Text("Safe Hours to Date").FontSize(7.5f).FontColor(Colors.Grey.Medium);
+                            }));
+                        });
+
+                        // Milestones & Waste side-by-side (moved closer)
+                        leftCol.Item().PaddingTop(14).Row(datesRow =>
+                        {
+                            // Left: Contract Dates & Milestones Card/Column
+                            datesRow.RelativeItem(3).Column(datesCol =>
+                            {
+                                datesCol.Item().Text("CONTRACT DATES & MILESTONES").FontSize(9).ExtraBold().FontColor(ColorSecondary);
+                                
+                                if (!model.ThisWeekMilestones.Any())
+                                {
+                                    datesCol.Item().PaddingTop(2).Text("No milestones scheduled for this week.").FontSize(7.5f).Italic().FontColor(Colors.Grey.Medium);
+                                }
+                                else
+                                {
+                                    datesCol.Item().PaddingTop(3).Table(table =>
+                                    {
+                                        table.ColumnsDefinition(cols =>
+                                        {
+                                            cols.RelativeColumn(3.0f); // Milestone Name
+                                            cols.RelativeColumn(1.0f); // Start Date
+                                            cols.RelativeColumn(1.0f); // Due Date
+                                        });
+
+                                        table.Header(h =>
+                                        {
+                                            h.Cell().Background(ColorSecondary).Padding(3).Text("Milestone").SemiBold().FontSize(7).FontColor(Colors.White);
+                                            h.Cell().Background(ColorSecondary).Padding(3).Text("Start Date").SemiBold().FontSize(7).FontColor(Colors.White);
+                                            h.Cell().Background(ColorSecondary).Padding(3).Text("Due Date").SemiBold().FontSize(7).FontColor(Colors.White);
+                                        });
+
+                                        foreach (var m in model.ThisWeekMilestones)
+                                        {
+                                            var nameText = m.Name;
+                                            if (m.PlannedDate < DateTime.Today && !m.IsComplete && !string.IsNullOrEmpty(m.Reason))
+                                            {
+                                                nameText += $"\nReason: {m.Reason}";
+                                            }
+
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(nameText).FontSize(7);
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.StartDate)).FontSize(7);
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.PlannedDate)).FontSize(7);
+                                        }
+                                    });
+                                }
+
+                                // Overdue Milestones Section
+                                datesCol.Item().PaddingTop(6).Text("OVERDUE MILESTONES").FontSize(8).ExtraBold().FontColor(ColorSecondary);
+                                
+                                if (!model.OverdueMilestones.Any())
+                                {
+                                    datesCol.Item().PaddingTop(2).Text("No overdue milestones.").FontSize(7.5f).Italic().FontColor(Colors.Grey.Medium);
+                                }
+                                else
+                                {
+                                    datesCol.Item().PaddingTop(3).Table(table =>
+                                    {
+                                        table.ColumnsDefinition(cols =>
+                                        {
+                                            cols.RelativeColumn(3.0f); // Milestone Name + Reason
+                                            cols.RelativeColumn(1.1f); // Start Date
+                                            cols.RelativeColumn(1.1f); // Due Date
+                                            cols.RelativeColumn(0.8f); // Progress
+                                        });
+
+                                        table.Header(h =>
+                                        {
+                                            h.Cell().Background(ColorSecondary).Padding(3).Text("Milestone").SemiBold().FontSize(7).FontColor(Colors.White);
+                                            h.Cell().Background(ColorSecondary).Padding(3).Text("Start Date").SemiBold().FontSize(7).FontColor(Colors.White);
+                                            h.Cell().Background(ColorSecondary).Padding(3).Text("Due Date").SemiBold().FontSize(7).FontColor(Colors.White);
+                                            h.Cell().Background(ColorSecondary).Padding(3).AlignRight().Text("Prog").SemiBold().FontSize(7).FontColor(Colors.White);
+                                        });
+
+                                        foreach (var m in model.OverdueMilestones)
+                                        {
+                                            var nameText = m.Name;
+                                            if (!string.IsNullOrEmpty(m.Reason))
+                                            {
+                                                nameText += $"\nReason: {m.Reason}";
+                                            }
+
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(nameText).FontSize(7);
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.StartDate)).FontSize(7);
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.PlannedDate)).FontSize(7);
+                                            table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).AlignRight().Text($"{m.Progress}%").FontSize(7);
+                                        }
+                                    });
+                                }
+                            });
+
+                            datesRow.ConstantItem(15);
+
+                            // Right: Waste Disposal Table
+                            datesRow.RelativeItem(2).Column(wasteCol =>
+                            {
+                                wasteCol.Item().Text("ENVIRONMENTAL & WASTE").FontSize(9).ExtraBold().FontColor(ColorSecondary);
+                                wasteCol.Item().PaddingTop(3).Table(table =>
+                                {
+                                    table.ColumnsDefinition(cols =>
+                                    {
+                                        cols.RelativeColumn();
+                                        cols.RelativeColumn(0.8f);
+                                    });
+
+                                    table.Header(h =>
+                                    {
+                                        h.Cell().Background(ColorSecondary).Padding(4).Text("Waste Type").SemiBold().FontSize(8).FontColor(Colors.White);
+                                        h.Cell().Background(ColorSecondary).Padding(4).AlignRight().Text("Qty").SemiBold().FontSize(8).FontColor(Colors.White);
+                                    });
+
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("General Waste (T)").FontSize(8);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.GeneralWasteTon).FontSize(8);
+
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("Rubble (m3)").FontSize(8);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.RubbleM3).FontSize(8);
+
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("Scrap Metals (T)").FontSize(8);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.ScrapMetalsTon).FontSize(8);
+
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("Asbestos (T)").FontSize(8);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.AsbestosTon).FontSize(8);
+                                });
+                            });
+                        });
+                    });
+
+                    // Right Column (Project Status Summary)
+                    outerRow.RelativeItem(2).PaddingLeft(3).AlignTop().Element(c => ComposeMetricBlock(c, "PROJECT STATUS SUMMARY", blockCol =>
                     {
-                        blockCol.Item().AlignCenter().Text($"{model.SafeWorkingHours:N0}").FontSize(14).ExtraBold().FontColor(Colors.Green.Darken3);
-                        blockCol.Item().AlignCenter().Text("Safe Hours to Date").FontSize(7.5f).FontColor(Colors.Grey.Medium);
+                        blockCol.Item().Text(model.StatusSummary).FontSize(8.5f).LineHeight(1.15f);
                     }));
                 });
 
-                // Block 5: PROJECT STATUS SUMMARY
-                col.Item().PaddingTop(10).Element(c => ComposeMetricBlock(c, "PROJECT STATUS SUMMARY", blockCol =>
+                // Row with Vendor Report (left) and Variation Orders (right) sharing the space
+                col.Item().PaddingTop(16).Row(vendorVoRow =>
                 {
-                    blockCol.Item().Text(model.StatusSummary).FontSize(9).LineHeight(1.15f);
-                }));
-
-                 // Milestones & Waste side-by-side
-                 col.Item().PaddingTop(12).Row(datesRow =>
-                 {
-                     // Left: Contract Dates & Milestones Card/Column
-                     datesRow.RelativeItem(3).Column(datesCol =>
-                     {
-                         datesCol.Item().Text("CONTRACT DATES & MILESTONES").FontSize(9).ExtraBold().FontColor(ColorSecondary);
-                         
-                         // Project Dates Row
-                         datesCol.Item().PaddingTop(3).Row(r =>
-                         {
-                             r.RelativeItem().Text(t => { t.Span("Start: ").FontSize(7.5f).SemiBold(); t.Span(FormatDate(model.Project.StartDate)).FontSize(7.5f); });
-                             r.RelativeItem().AlignRight().Text(t => { t.Span("Finish: ").FontSize(7.5f).SemiBold(); t.Span(FormatDate(model.Project.EndDate)).FontSize(7.5f); });
-                         });
-                         
-                         datesCol.Item().PaddingTop(5).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
-                         
-                         // This Week's Milestones Section
-                         datesCol.Item().PaddingTop(5).Text("THIS WEEK'S MILESTONES").FontSize(8).ExtraBold().FontColor(ColorSecondary);
-                         
-                         if (!model.ThisWeekMilestones.Any())
-                         {
-                             datesCol.Item().PaddingTop(2).Text("No milestones scheduled for this week.").FontSize(7.5f).Italic().FontColor(Colors.Grey.Medium);
-                         }
-                         else
-                         {
-                              datesCol.Item().PaddingTop(3).Table(table =>
-                              {
-                                  table.ColumnsDefinition(cols =>
-                                  {
-                                      cols.RelativeColumn(3.0f); // Milestone Name
-                                      cols.RelativeColumn(1.0f); // Start Date
-                                      cols.RelativeColumn(1.0f); // Due Date
-                                  });
-
-                                  table.Header(h =>
-                                  {
-                                      h.Cell().Background(ColorSecondary).Padding(3).Text("Milestone").SemiBold().FontSize(7).FontColor(Colors.White);
-                                      h.Cell().Background(ColorSecondary).Padding(3).Text("Start Date").SemiBold().FontSize(7).FontColor(Colors.White);
-                                      h.Cell().Background(ColorSecondary).Padding(3).Text("Due Date").SemiBold().FontSize(7).FontColor(Colors.White);
-                                  });
-
-                                  foreach (var m in model.ThisWeekMilestones)
-                                  {
-                                      var nameText = m.Name;
-                                      if (m.PlannedDate < DateTime.Today && !m.IsComplete && !string.IsNullOrEmpty(m.Reason))
-                                      {
-                                          nameText += $"\nReason: {m.Reason}";
-                                      }
-
-                                      table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(nameText).FontSize(7);
-                                      table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.StartDate)).FontSize(7);
-                                      table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.PlannedDate)).FontSize(7);
-                                  }
-                              });
-                         }
-
-                         // Overdue Milestones Section
-                         datesCol.Item().PaddingTop(8).Text("OVERDUE MILESTONES").FontSize(8).ExtraBold().FontColor(ColorSecondary);
-                         
-                         if (!model.OverdueMilestones.Any())
-                         {
-                             datesCol.Item().PaddingTop(2).Text("No overdue milestones.").FontSize(7.5f).Italic().FontColor(Colors.Grey.Medium);
-                         }
-                         else
-                         {
-                             datesCol.Item().PaddingTop(3).Table(table =>
-                             {
-                                 table.ColumnsDefinition(cols =>
-                                 {
-                                     cols.RelativeColumn(3.0f); // Milestone Name + Reason
-                                     cols.RelativeColumn(1.1f); // Start Date
-                                     cols.RelativeColumn(1.1f); // Due Date
-                                     cols.RelativeColumn(0.8f); // Progress
-                                 });
-
-                                 table.Header(h =>
-                                 {
-                                     h.Cell().Background(ColorSecondary).Padding(3).Text("Milestone").SemiBold().FontSize(7).FontColor(Colors.White);
-                                     h.Cell().Background(ColorSecondary).Padding(3).Text("Start Date").SemiBold().FontSize(7).FontColor(Colors.White);
-                                     h.Cell().Background(ColorSecondary).Padding(3).Text("Due Date").SemiBold().FontSize(7).FontColor(Colors.White);
-                                     h.Cell().Background(ColorSecondary).Padding(3).AlignRight().Text("Prog").SemiBold().FontSize(7).FontColor(Colors.White);
-                                 });
-
-                                 foreach (var m in model.OverdueMilestones)
-                                 {
-                                     var nameText = m.Name;
-                                     if (!string.IsNullOrEmpty(m.Reason))
-                                     {
-                                         nameText += $"\nReason: {m.Reason}";
-                                     }
-
-                                     table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(nameText).FontSize(7);
-                                     table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.StartDate)).FontSize(7);
-                                     table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).Text(FormatDate(m.PlannedDate)).FontSize(7);
-                                     table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).Padding(3).AlignRight().Text($"{m.Progress}%").FontSize(7);
-                                 }
-                             });
-                         }
-                     });
-
-                     datesRow.ConstantItem(15);
-
-                    // Right: Waste Disposal Table
-                    datesRow.RelativeItem(2).Column(wasteCol =>
+                    // Left: Vendor Report
+                    vendorVoRow.RelativeItem(3).Column(vendorCol =>
                     {
-                        wasteCol.Item().Text("ENVIRONMENTAL & WASTE").FontSize(9).ExtraBold().FontColor(ColorSecondary);
-                        wasteCol.Item().PaddingTop(3).Table(table =>
+                        vendorCol.Item().Text("VENDOR REPORT - HSEQ COMPLIANCE").FontSize(9).ExtraBold().FontColor(ColorSecondary);
+                        vendorCol.Item().PaddingTop(3).Table(table =>
                         {
                             table.ColumnsDefinition(cols =>
                             {
-                                cols.RelativeColumn();
-                                cols.RelativeColumn(0.8f);
+                                cols.RelativeColumn(2.2f);
+                                cols.RelativeColumn(1.8f);
+                                cols.RelativeColumn(1.6f);
+                                cols.RelativeColumn(1.2f);
+                                cols.RelativeColumn(1.2f);
+                                cols.RelativeColumn(1.2f);
                             });
 
                             table.Header(h =>
                             {
-                                h.Cell().Background(ColorSecondary).Padding(4).Text("Waste Type").SemiBold().FontSize(8).FontColor(Colors.White);
-                                h.Cell().Background(ColorSecondary).Padding(4).AlignRight().Text("Qty").SemiBold().FontSize(8).FontColor(Colors.White);
+                                h.Cell().Background(ColorSecondary).Padding(4).Text("Vendor Name").SemiBold().FontSize(8).FontColor(Colors.White);
+                                h.Cell().Background(ColorSecondary).Padding(4).Text("Scope").SemiBold().FontSize(8).FontColor(Colors.White);
+                                h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("Safety File").SemiBold().FontSize(8).FontColor(Colors.White);
+                                h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("AU 1").SemiBold().FontSize(8).FontColor(Colors.White);
+                                h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("AU 2").SemiBold().FontSize(8).FontColor(Colors.White);
+                                h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("AU 3").SemiBold().FontSize(8).FontColor(Colors.White);
                             });
 
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("General Waste (T)").FontSize(8);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.GeneralWasteTon).FontSize(8);
+                            foreach (var row in model.VendorReportRows.Where(r => r.VendorName.Equals("Orange Circle Construction", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(row.VendorName).FontSize(7.5f);
+                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(row.Scope).FontSize(7.5f);
+                                
+                                var safetyCell = table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter();
+                                var isSafetyApproved = row.SafetyApproved?.Equals("Yes", StringComparison.OrdinalIgnoreCase) == true;
+                                safetyCell.Text(row.SafetyApproved ?? "-").FontSize(7.5f).FontColor(isSafetyApproved ? Colors.Green.Darken2 : Colors.Red.Darken2).Bold();
 
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("Rubble (m3)").FontSize(8);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.RubbleM3).FontSize(8);
-
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("Scrap Metals (T)").FontSize(8);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.ScrapMetalsTon).FontSize(8);
-
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text("Asbestos (T)").FontSize(8);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.AsbestosTon).FontSize(8);
+                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.Audit1 ?? "-").FontSize(7.5f);
+                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.Audit2 ?? "-").FontSize(7.5f);
+                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.Audit3 ?? "-").FontSize(7.5f);
+                            }
                         });
                     });
-                });
 
-                // Vendor Report
-                col.Item().PaddingTop(12).Column(vendorCol =>
-                {
-                    vendorCol.Item().Text("VENDOR REPORT - HSEQ COMPLIANCE").FontSize(9).ExtraBold().FontColor(ColorSecondary);
-                    vendorCol.Item().PaddingTop(3).Table(table =>
+                    vendorVoRow.ConstantItem(15);
+
+                    // Right: Variation Orders
+                    vendorVoRow.RelativeItem(3).Column(voCol =>
                     {
-                        table.ColumnsDefinition(cols =>
+                        voCol.Item().Text("SITE INSTRUCTIONS / VARIATION ORDERS").FontSize(9).ExtraBold().FontColor(ColorSecondary);
+                        
+                        if (!model.VariationOrders.Any())
                         {
-                            cols.RelativeColumn(2.5f);
-                            cols.RelativeColumn(2f);
-                            cols.RelativeColumn(1.6f);
-                            cols.RelativeColumn(1.2f);
-                            cols.RelativeColumn(0.8f);
-                            cols.RelativeColumn(0.8f);
-                            cols.RelativeColumn(0.8f);
-                        });
-
-                        table.Header(h =>
+                            voCol.Item().PaddingTop(3).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text("No site instructions or variation orders recorded.").FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                        }
+                        else
                         {
-                            h.Cell().Background(ColorSecondary).Padding(4).Text("Vendor Name").SemiBold().FontSize(8).FontColor(Colors.White);
-                            h.Cell().Background(ColorSecondary).Padding(4).Text("Scope").SemiBold().FontSize(8).FontColor(Colors.White);
-                            h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("Safety File").SemiBold().FontSize(8).FontColor(Colors.White);
-                            h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("App Score").SemiBold().FontSize(8).FontColor(Colors.White);
-                            h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("AU 1").SemiBold().FontSize(8).FontColor(Colors.White);
-                            h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("AU 2").SemiBold().FontSize(8).FontColor(Colors.White);
-                            h.Cell().Background(ColorSecondary).Padding(4).AlignCenter().Text("AU 3").SemiBold().FontSize(8).FontColor(Colors.White);
-                        });
+                            voCol.Item().PaddingTop(3).Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn(1.2f);
+                                    cols.RelativeColumn(3f);
+                                    cols.RelativeColumn(1.5f);
+                                    cols.RelativeColumn(1.2f);
+                                    cols.RelativeColumn(2f);
+                                });
 
-                        foreach (var row in model.VendorReportRows)
-                        {
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(row.VendorName).FontSize(7.5f);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(row.Scope).FontSize(7.5f);
-                            
-                            var safetyCell = table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter();
-                            var isSafetyApproved = row.SafetyApproved?.Equals("Yes", StringComparison.OrdinalIgnoreCase) == true;
-                            safetyCell.Text(row.SafetyApproved ?? "-").FontSize(7.5f).FontColor(isSafetyApproved ? Colors.Green.Darken2 : Colors.Red.Darken2).Bold();
+                                table.Header(h =>
+                                {
+                                    h.Cell().Background(ColorSecondary).Padding(4).Text("Date").SemiBold().FontSize(8).FontColor(Colors.White);
+                                    h.Cell().Background(ColorSecondary).Padding(4).Text("Description").SemiBold().FontSize(8).FontColor(Colors.White);
+                                    h.Cell().Background(ColorSecondary).Padding(4).Text("Approved By").SemiBold().FontSize(8).FontColor(Colors.White);
+                                    h.Cell().Background(ColorSecondary).Padding(4).Text("Status").SemiBold().FontSize(8).FontColor(Colors.White);
+                                    h.Cell().Background(ColorSecondary).Padding(4).Text("Comments").SemiBold().FontSize(8).FontColor(Colors.White);
+                                });
 
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.AppScore ?? "-").FontSize(7.5f);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.Audit1 ?? "-").FontSize(7.5f);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.Audit2 ?? "-").FontSize(7.5f);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(row.Audit3 ?? "-").FontSize(7.5f);
+                                foreach (var vo in model.VariationOrders)
+                                {
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.Date.ToString("yyyy/MM/dd")).FontSize(7.5f);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.Description).FontSize(7.5f);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.ApprovedBy ?? "-").FontSize(7.5f);
+                                    
+                                    var statusCell = table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4);
+                                    var isApproved = vo.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true;
+                                    statusCell.Background(isApproved ? Colors.Green.Lighten5 : Colors.Grey.Lighten4)
+                                        .Text(vo.Status ?? "-").FontSize(7.5f).FontColor(isApproved ? Colors.Green.Darken3 : Colors.Grey.Darken2).Bold();
+
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.AdditionalComments ?? "-").FontSize(7.5f);
+                                }
+                            });
                         }
                     });
                 });
 
-                // Variation Orders
-                col.Item().PaddingTop(12).Column(voCol =>
+                // Photos Grid (distributes 3 to 10 photos dynamically inside a single page grid layout)
+                var validPhotos = model.IncidentPhotoPaths.Where(File.Exists).ToList();
+                if (validPhotos.Any())
                 {
-                    voCol.Item().Text("SITE INSTRUCTIONS / VARIATION ORDERS").FontSize(9).ExtraBold().FontColor(ColorSecondary);
-                    
-                    if (!model.VariationOrders.Any())
+                    col.Item().PaddingTop(10).Column(photoCol =>
                     {
-                        voCol.Item().PaddingTop(3).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text("No site instructions or variation orders recorded.").FontSize(8).Italic().FontColor(Colors.Grey.Medium);
-                    }
-                    else
-                    {
-                        voCol.Item().PaddingTop(3).Table(table =>
+                        photoCol.Item().Text("REPORT & PROGRESS PHOTOS").FontSize(9).ExtraBold().FontColor(ColorSecondary);
+
+                        var count = validPhotos.Count;
+                        int colsCount = 4;
+                        float imgHeight = 75;
+
+                        if (count <= 4)
                         {
-                            table.ColumnsDefinition(cols =>
-                            {
-                                cols.RelativeColumn(1.2f);
-                                cols.RelativeColumn(3f);
-                                cols.RelativeColumn(1.5f);
-                                cols.RelativeColumn(1.2f);
-                                cols.RelativeColumn(2f);
-                            });
-
-                            table.Header(h =>
-                            {
-                                h.Cell().Background(ColorSecondary).Padding(4).Text("Date").SemiBold().FontSize(8).FontColor(Colors.White);
-                                h.Cell().Background(ColorSecondary).Padding(4).Text("Description").SemiBold().FontSize(8).FontColor(Colors.White);
-                                h.Cell().Background(ColorSecondary).Padding(4).Text("Approved By").SemiBold().FontSize(8).FontColor(Colors.White);
-                                h.Cell().Background(ColorSecondary).Padding(4).Text("Status").SemiBold().FontSize(8).FontColor(Colors.White);
-                                h.Cell().Background(ColorSecondary).Padding(4).Text("Comments").SemiBold().FontSize(8).FontColor(Colors.White);
-                            });
-
-                            foreach (var vo in model.VariationOrders)
-                            {
-                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.Date.ToString("yyyy/MM/dd")).FontSize(7.5f);
-                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.Description).FontSize(7.5f);
-                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.ApprovedBy ?? "-").FontSize(7.5f);
-                                
-                                var statusCell = table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4);
-                                var isApproved = vo.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true;
-                                statusCell.Background(isApproved ? Colors.Green.Lighten5 : Colors.Grey.Lighten4)
-                                    .Text(vo.Status ?? "-").FontSize(7.5f).FontColor(isApproved ? Colors.Green.Darken3 : Colors.Grey.Darken2).Bold();
-
-                                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Text(vo.AdditionalComments ?? "-").FontSize(7.5f);
-                            }
-                        });
-                    }
-                });
-
-                // Photos Grid
-                if (model.IncidentPhotoPaths.Any())
-                {
-                    col.Item().PaddingTop(12).Column(photoCol =>
-                    {
-                        photoCol.Item().Text("INCIDENT & PROGRESS PHOTOS").FontSize(9).ExtraBold().FontColor(ColorSecondary);
-#pragma warning disable CS0618
-                        photoCol.Item().PaddingTop(3).Grid(grid =>
+                            colsCount = count;
+                            imgHeight = 110;
+                        }
+                        else if (count <= 8)
                         {
-                            grid.Columns(4); // 4 columns
-                            grid.Spacing(8);
+                            colsCount = 4;
+                            imgHeight = 75;
+                        }
+                        else
+                        {
+                            colsCount = 5;
+                            imgHeight = 70;
+                        }
 
-                            foreach (var path in model.IncidentPhotoPaths)
+                        photoCol.Item().PaddingTop(4).Column(gridCol =>
+                        {
+                            for (int rowIndex = 0; rowIndex < (int)Math.Ceiling((double)count / colsCount); rowIndex++)
                             {
-                                if (File.Exists(path))
+                                var rowPhotos = validPhotos.Skip(rowIndex * colsCount).Take(colsCount).ToList();
+                                gridCol.Item().PaddingTop(rowIndex > 0 ? 5 : 0).Row(row =>
                                 {
-                                    try
+                                    foreach (var path in rowPhotos)
                                     {
-                                        grid.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Background(Colors.Grey.Lighten5).Padding(2).Column(imgCol =>
+                                        try
                                         {
-                                            imgCol.Item().Height(70).Image(path).FitArea();
-                                            imgCol.Item().AlignCenter().Text(Path.GetFileName(path)).FontSize(6).FontColor(Colors.Grey.Darken1);
-                                        });
+                                            row.RelativeItem()
+                                                .PaddingHorizontal(2.5f)
+                                                .Border(0.4f)
+                                                .BorderColor(Colors.Grey.Lighten2)
+                                                .Height(imgHeight)
+                                                .AlignCenter()
+                                                .AlignMiddle()
+                                                .Image(path)
+                                                .FitArea();
+                                        }
+                                        catch
+                                        {
+                                            // Skip corrupted/invalid image files
+                                        }
                                     }
-                                    catch
+
+                                    // If the last row is not full, add empty space relative columns to pad it out evenly!
+                                    if (rowPhotos.Count < colsCount)
                                     {
-                                        // Skip corrupted/invalid image files
+                                        var emptyCount = colsCount - rowPhotos.Count;
+                                        for (int ec = 0; ec < emptyCount; ec++)
+                                        {
+                                            row.RelativeItem().PaddingHorizontal(2.5f);
+                                        }
                                     }
-                                }
+                                });
                             }
                         });
-#pragma warning restore CS0618
                     });
                 }
             });

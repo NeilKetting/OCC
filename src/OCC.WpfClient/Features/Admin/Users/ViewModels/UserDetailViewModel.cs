@@ -39,6 +39,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _hasInventoryAccess;
         [ObservableProperty] private bool _hasPurchaseOrderAccess;
         [ObservableProperty] private bool _hasCalendarAccess;
+        [ObservableProperty] private bool _hasTodoAccess;
 
         // Additional Hubs
         [ObservableProperty] private bool _hasCustomerAccess;
@@ -121,6 +122,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 HasSettingsAccess = true;
                 HasAuditLogAccess = true;
                 HasCalendarAccess = true;
+                HasTodoAccess = true;
             }
             else if (value == UserRole.HSEQ)
             {
@@ -146,6 +148,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             HasInventoryAccess = current.Contains(NavigationRoutes.Inventory, StringComparer.OrdinalIgnoreCase);
             HasPurchaseOrderAccess = current.Contains(NavigationRoutes.PurchaseOrder, StringComparer.OrdinalIgnoreCase);
             HasCalendarAccess = current.Contains(NavigationRoutes.Calendar, StringComparer.OrdinalIgnoreCase);
+            HasTodoAccess = current.Contains(NavigationRoutes.TodoHub, StringComparer.OrdinalIgnoreCase);
 
             HasCustomerAccess = current.Contains(NavigationRoutes.Customers, StringComparer.OrdinalIgnoreCase);
             HasProjectsAccess = current.Contains(NavigationRoutes.Projects, StringComparer.OrdinalIgnoreCase);
@@ -175,6 +178,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             if (HasInventoryAccess) selected.Add(NavigationRoutes.Inventory);
             if (HasPurchaseOrderAccess) selected.Add(NavigationRoutes.PurchaseOrder);
             if (HasCalendarAccess) selected.Add(NavigationRoutes.Calendar);
+            if (HasTodoAccess) selected.Add(NavigationRoutes.TodoHub);
 
             if (HasCustomerAccess) selected.Add(NavigationRoutes.Customers);
             if (HasProjectsAccess) selected.Add(NavigationRoutes.Projects);

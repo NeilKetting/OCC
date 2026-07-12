@@ -440,3 +440,7 @@ staging-releases/
 /rates_update_report.md
 /banking_comparison_report.md
 /restore_banking_details.sql
+
+# Local Uploads and Temp Report Files
+**/wwwroot/uploads/**
+

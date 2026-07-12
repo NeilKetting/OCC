@@ -89,10 +89,39 @@ namespace OCC.API.Controllers
                 existing.StreamingActual = draft.StreamingActual;
                 existing.PowPercentRequired = draft.PowPercentRequired;
                 existing.DelayDays = draft.DelayDays;
+                existing.OverdueMilestoneReasons = draft.OverdueMilestoneReasons;
+                existing.PhotoUrls = draft.PhotoUrls;
             }
 
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpPost("draft/upload-photo")]
+        public async Task<ActionResult<string>> UploadReportPhoto(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "project_reports");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var photoId = Guid.NewGuid();
+            var fileName = $"{photoId}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"/uploads/project_reports/{fileName}";
+            return Ok(new { url = relativePath });
         }
 
         [HttpGet("history/{projectId}")]

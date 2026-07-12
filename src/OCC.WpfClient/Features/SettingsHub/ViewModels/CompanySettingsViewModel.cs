@@ -14,6 +14,7 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
     public partial class CompanySettingsViewModel : ViewModelBase
     {
         private readonly ISettingsService _settingsService;
+        private readonly IAuditLogService _auditLogService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<CompanySettingsViewModel> _logger;
         private readonly IToastService _toastService;
@@ -23,6 +24,9 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
         [ObservableProperty]
         private CompanyDetails _companyDetails = new();
+
+        [ObservableProperty]
+        private int _totalAuditLogsCount;
 
         public bool IsMondayEnabled
         {
@@ -60,6 +64,33 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             set { UpdateDay(DayOfWeek.Sunday, value); OnPropertyChanged(); }
         }
 
+        public int AuditLogRetentionMonthsIndex
+        {
+            get
+            {
+                return CompanyDetails.AuditLogRetentionMonths switch
+                {
+                    1 => 1,
+                    3 => 2,
+                    6 => 3,
+                    12 => 4,
+                    _ => 0
+                };
+            }
+            set
+            {
+                CompanyDetails.AuditLogRetentionMonths = value switch
+                {
+                    1 => 1,
+                    2 => 3,
+                    3 => 6,
+                    4 => 12,
+                    _ => 0
+                };
+                OnPropertyChanged();
+            }
+        }
+
         private void UpdateDay(DayOfWeek day, bool enabled)
         {
             if (enabled && !CompanyDetails.AutoClockInDays.Contains(day))
@@ -84,12 +115,14 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
         public CompanySettingsViewModel(
             ISettingsService settingsService, 
+            IAuditLogService auditLogService,
             IDialogService dialogService, 
             ILogger<CompanySettingsViewModel> logger,
             IToastService toastService,
             IPermissionService permissionService)
         {
             _settingsService = settingsService;
+            _auditLogService = auditLogService;
             _dialogService = dialogService;
             _logger = logger;
             _toastService = toastService;
@@ -104,13 +137,21 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             IsBusy = true;
             try
             {
-                var details = await _settingsService.GetCompanyDetailsAsync();
+                var detailsTask = _settingsService.GetCompanyDetailsAsync();
+                var logCountTask = _auditLogService.GetTotalCountAsync();
+
+                await Task.WhenAll(detailsTask, logCountTask);
+
+                var details = detailsTask.Result;
                 if (details != null)
                 {
                     details.AutoClockInDays ??= new System.Collections.Generic.List<DayOfWeek>();
                     CompanyDetails = details;
                     RefreshDays();
+                    OnPropertyChanged(nameof(AuditLogRetentionMonthsIndex));
                 }
+
+                TotalAuditLogsCount = logCountTask.Result;
             }
             catch (Exception ex)
             {

@@ -12,5 +12,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<bool> SaveDraftAsync(Guid projectId, ProjectReportDraft draft);
         Task<IEnumerable<ProjectReportHistory>> GetHistoryAsync(Guid projectId);
         Task<ProjectReportHistory?> UploadReportAsync(Guid projectId, int weekNumber, string reportName, Stream fileStream, string fileName);
+        Task<string> UploadReportPhotoAsync(Stream fileStream, string fileName);
     }
 }

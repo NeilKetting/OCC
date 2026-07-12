@@ -225,6 +225,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         
         public bool CanAccessDashboard => _permissionService.CanAccess(NavigationRoutes.Home);
         public bool CanAccessCalendar => _permissionService.CanAccess(NavigationRoutes.Calendar);
+        public bool CanAccessTodo => _permissionService.CanAccess(NavigationRoutes.TodoHub);
         public bool CanAccessChat => _permissionService.CanAccess(NavigationRoutes.Chat);
         public bool CanAccessStaff => _permissionService.CanAccess(NavigationRoutes.StaffManagement);
         public bool CanAccessAttendance => _permissionService.CanAccess(NavigationRoutes.AttendanceLive);

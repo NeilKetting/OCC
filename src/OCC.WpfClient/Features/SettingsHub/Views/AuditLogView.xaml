@@ -182,74 +182,91 @@
 
             <!-- Data Grid -->
             <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="10,0,10,10" CornerRadius="0">
-                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" Style="{StaticResource ModernDataGrid}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="TIMESTAMP" Binding="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="Auto" FontWeight="SemiBold" />
-                        <DataGridTextColumn Header="USER" Binding="{Binding UserName}" Width="Auto" Foreground="{StaticResource TextSub}" />
-                        
-                        <!-- Action Badge Pill -->
-                        <DataGridTemplateColumn Header="ACTION" Width="Auto">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="4">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#15FFAB00"/>
-                                                <Setter Property="BorderBrush" Value="{StaticResource SecondaryGold}"/>
-                                                <Setter Property="BorderThickness" Value="1"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Action}" Value="Create">
-                                                        <Setter Property="Background" Value="#1500C853"/>
-                                                        <Setter Property="BorderBrush" Value="#00C853"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Action}" Value="Delete">
-                                                        <Setter Property="Background" Value="#15E81123"/>
-                                                        <Setter Property="BorderBrush" Value="#E81123"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock Text="{Binding Action}" FontSize="10" FontWeight="Bold" TextAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="{StaticResource SecondaryGold}"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="TIMESTAMP" Binding="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="Auto" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="USER" Binding="{Binding UserName}" Width="Auto" Foreground="{StaticResource TextSub}" />
+                            
+                            <!-- Action Badge Pill -->
+                            <DataGridTemplateColumn Header="ACTION" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="4">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#15FFAB00"/>
+                                                    <Setter Property="BorderBrush" Value="{StaticResource SecondaryGold}"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Action}" Value="Create">
-                                                            <Setter Property="Foreground" Value="#00C853"/>
+                                                            <Setter Property="Background" Value="#1500C853"/>
+                                                            <Setter Property="BorderBrush" Value="#00C853"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Action}" Value="Delete">
-                                                            <Setter Property="Foreground" Value="#E81123"/>
+                                                            <Setter Property="Background" Value="#15E81123"/>
+                                                            <Setter Property="BorderBrush" Value="#E81123"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Action}" FontSize="10" FontWeight="Bold" TextAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource SecondaryGold}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Action}" Value="Create">
+                                                                <Setter Property="Foreground" Value="#00C853"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Action}" Value="Delete">
+                                                                <Setter Property="Foreground" Value="#E81123"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="TABLE" Binding="{Binding TableName}" Width="Auto" Foreground="{StaticResource TextSub}" />
-                        <DataGridTextColumn Header="AFFECTED RECORD" Binding="{Binding EntityName}" Width="*" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="TABLE" Binding="{Binding TableName}" Width="Auto" Foreground="{StaticResource TextSub}" />
+                            <DataGridTextColumn Header="AFFECTED RECORD" Binding="{Binding EntityName}" Width="*" FontWeight="SemiBold" />
 
-                        <!-- Detail Actions -->
-                        <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="View Details">
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                            <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
-                        </Style>
-                    </DataGrid.RowStyle>
-                </DataGrid>
+                            <!-- Detail Actions -->
+                            <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="View Details">
+                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="14"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+
+                    <!-- Load More Button -->
+                    <Button Grid.Row="1" 
+                            Content="Load More Logs" 
+                            Command="{Binding LoadMoreCommand}" 
+                            Visibility="{Binding HasMore, Converter={StaticResource VisibilityConverter}}"
+                            Style="{StaticResource ModernBorderButton}" 
+                            HorizontalAlignment="Center" 
+                            Padding="20,6" 
+                            Margin="15"/>
+                </Grid>
             </Border>
 
             <!-- Loading Overlay -->

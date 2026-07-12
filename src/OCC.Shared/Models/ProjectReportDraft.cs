@@ -25,5 +25,6 @@ namespace OCC.Shared.Models
         public DateTime? StreamingActual { get; set; }
 
         public string OverdueMilestoneReasons { get; set; } = string.Empty;
+        public string PhotoUrls { get; set; } = string.Empty;
     }
 }

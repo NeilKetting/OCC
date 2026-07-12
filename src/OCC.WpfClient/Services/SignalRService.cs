@@ -158,6 +158,10 @@ namespace OCC.WpfClient.Services
                         // Silent refresh for project data (no toast)
                         WeakReferenceMessenger.Default.Send(new OCC.WpfClient.Infrastructure.Messages.ProjectUpdatedMessage(id));
                     }
+                    else if (entityType == "NoticeBoardItem")
+                    {
+                        WeakReferenceMessenger.Default.Send(new OCC.WpfClient.Infrastructure.Messages.NoticeBoardUpdatedMessage(id, action));
+                    }
                 });
             });
         }

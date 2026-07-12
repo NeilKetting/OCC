@@ -31,6 +31,7 @@ using System.Net.Http;
 using OCC.WpfClient.Features.HseqHub;
 using OCC.WpfClient.Features.AttendanceHub;
 using OCC.WpfClient.Features.CalendarHub;
+using OCC.WpfClient.Features.TodoHub;
 
 
 
@@ -132,6 +133,9 @@ namespace OCC.WpfClient
             services.AddSingleton<ITaskAttachmentService, TaskAttachmentService>();
             services.AddSingleton<IPdfService, PdfService>();
             services.AddSingleton<IExportService, ExportService>();
+            services.AddSingleton<IOutlookService, OutlookService>();
+            services.AddSingleton<ITodoService, TodoService>();
+            services.AddSingleton<INoticeBoardService, NoticeBoardService>();
 
             // Feature Discovery
             var features = new List<IFeature>
@@ -149,7 +153,8 @@ namespace OCC.WpfClient
                 new SettingsFeature(),
                 new AttendanceFeature(),
                 new HseqFeature(),
-                new CalendarFeature()       // ← Unified calendar: Tasks, Holidays, Birthdays, Leave
+                new CalendarFeature(),      // ← Unified calendar: Tasks, Holidays, Birthdays, Leave
+                new TodoFeature()
             };
 
             foreach (var feature in features)

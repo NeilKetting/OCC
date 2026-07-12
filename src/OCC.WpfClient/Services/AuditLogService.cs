@@ -6,8 +6,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
+using OCC.Shared.DTOs;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
+using System.Web;
 
 namespace OCC.WpfClient.Services
 {
@@ -45,24 +47,53 @@ namespace OCC.WpfClient.Services
 
         private string GetFullUrl(string path)
         {
-            var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5000/";
+            var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5237/";
             if (!baseUrl.EndsWith("/")) baseUrl += "/";
             return $"{baseUrl}{path}";
         }
 
-        public async Task<IEnumerable<AuditLog>> GetAuditLogsAsync()
+        public async Task<AuditLogsResponseDto?> GetAuditLogsAsync(
+            string? search, 
+            Guid? userId, 
+            DateTime? startDate, 
+            DateTime? endDate, 
+            int skip, 
+            int take)
         {
             EnsureAuthorization();
-            var url = GetFullUrl("api/Audit");
+            
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            if (!string.IsNullOrEmpty(search)) query["search"] = search;
+            if (userId.HasValue && userId.Value != Guid.Empty) query["userId"] = userId.Value.ToString();
+            if (startDate.HasValue) query["startDate"] = startDate.Value.ToString("yyyy-MM-dd");
+            if (endDate.HasValue) query["endDate"] = endDate.Value.ToString("yyyy-MM-dd");
+            query["skip"] = skip.ToString();
+            query["take"] = take.ToString();
+
+            var url = GetFullUrl($"api/Audit?{query}");
             try
             {
-                return await _httpClient.GetFromJsonAsync<IEnumerable<AuditLog>>(url, _options)
-                       ?? new List<AuditLog>();
+                return await _httpClient.GetFromJsonAsync<AuditLogsResponseDto>(url, _options);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching audit logs from {Url}", url);
-                return new List<AuditLog>();
+                return null;
+            }
+        }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl("api/Audit/count");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<int>(url, _options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching audit logs total count from {Url}", url);
+                return 0;
             }
         }
     }

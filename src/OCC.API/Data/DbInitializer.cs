@@ -122,6 +122,7 @@ namespace OCC.API.Data
                 // Even in prod, we might want to ensure these names are correct if they exist
                 PatchSubContractorNames(context, logger);
             }
+            SeedNoticeBoard(context, logger);
         }
 
         private static void PatchSubContractorNames(AppDbContext context, ILogger logger)
@@ -447,6 +448,41 @@ namespace OCC.API.Data
             context.InventoryItems.Add(new InventoryItem { Description = "Red Brick", Sku = "BRK-RED", UnitOfMeasure = "ea", Category = "Building", AverageCost = 2.5m, Price = 4.5m, QuantityOnHand = 5000, JhbReorderPoint = 1000, CptReorderPoint = 500, Supplier = "BuildIt", Location = "CPT" });
             context.SaveChanges();
             logger.LogInformation("Inventory seeded.");
+        }
+
+        private static void SeedNoticeBoard(AppDbContext context, ILogger logger)
+        {
+            if (context.NoticeBoardItems.Any()) return;
+
+            context.NoticeBoardItems.Add(new NoticeBoardItem
+            {
+                Title = "Welcome to the OCC Notice Board!",
+                Content = "This notice board will show operational updates, bug-testing reminders, and system alerts. Administrators can post new announcements directly from this widget.",
+                Category = NoticeCategory.Announcement,
+                IsPinned = true,
+                CreatedBy = "System"
+            });
+
+            context.NoticeBoardItems.Add(new NoticeBoardItem
+            {
+                Title = "Bug Resolution Process",
+                Content = "Please ensure that once a bug is fixed and tested successfully, the snag or bug report is officially marked as Closed in the portal.",
+                Category = NoticeCategory.BugTesting,
+                IsPinned = false,
+                CreatedBy = "Neil Ketting"
+            });
+
+            context.NoticeBoardItems.Add(new NoticeBoardItem
+            {
+                Title = "Server Maintenance Window",
+                Content = "Database maintenance is scheduled for Sunday, July 19th from 2:00 AM to 4:00 AM UTC. Expect temporary downtime during this window.",
+                Category = NoticeCategory.Maintenance,
+                IsPinned = false,
+                CreatedBy = "System"
+            });
+
+            context.SaveChanges();
+            logger.LogInformation("Notice board items seeded successfully.");
         }
     }
 }

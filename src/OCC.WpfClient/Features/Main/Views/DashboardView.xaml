@@ -46,6 +46,9 @@
         <DataTemplate DataType="{x:Type vm:QuickActionsWidgetViewModel}">
             <views:QuickActionsWidgetView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:NoticeBoardWidgetViewModel}">
+            <views:NoticeBoardWidgetView />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>
@@ -92,7 +95,7 @@
 
             <!-- Row 1: Scrollable Widget Container -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="itemsControl" ItemsSource="{Binding ActiveWidgets}">
+                <ItemsControl x:Name="itemsControl" ItemsSource="{Binding ActiveWidgets}" Height="{Binding GridHeight}" VerticalAlignment="Top">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <Grid>
@@ -221,6 +224,79 @@
                     <Button Grid.Column="3" Content="Reset Layout" Command="{Binding ResetLayoutCommand}" Height="28" Padding="12,0" Style="{StaticResource CreateIconButton}"/>
                 </Grid>
             </Border>
+        </Grid>
+
+        <!-- Futuristic Loading Overlay -->
+        <Grid x:Name="LoadingOverlay" Background="#F2090A15" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.Resources>
+                <Storyboard x:Key="SpinnerStoryboard" RepeatBehavior="Forever">
+                    <!-- Clockwise rotation for Inner Ring -->
+                    <DoubleAnimation Storyboard.TargetName="InnerRing"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                     From="0" To="360" Duration="0:0:2.5"/>
+                    <!-- Counter-clockwise rotation for Outer Ring -->
+                    <DoubleAnimation Storyboard.TargetName="OuterRing"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                     From="360" To="0" Duration="0:0:3.5"/>
+                    <!-- Pulsating glow for OCC logo -->
+                    <DoubleAnimation Storyboard.TargetName="LogoGlow"
+                                     Storyboard.TargetProperty="Opacity"
+                                     From="0.4" To="0.9" Duration="0:0:1" AutoReverse="True"/>
+                    <!-- Pulsating text -->
+                    <DoubleAnimation Storyboard.TargetName="LoadingText"
+                                     Storyboard.TargetProperty="Opacity"
+                                     From="0.3" To="1" Duration="0:0:0.8" AutoReverse="True"/>
+                </Storyboard>
+            </Grid.Resources>
+
+            <Grid.Triggers>
+                <EventTrigger RoutedEvent="Grid.Loaded">
+                    <BeginStoryboard Storyboard="{StaticResource SpinnerStoryboard}"/>
+                </EventTrigger>
+            </Grid.Triggers>
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- Ring and Logo Container (Doubled size) -->
+                <Grid Width="320" Height="320" Margin="0,0,0,30">
+                    <!-- Neon radial glow behind -->
+                    <Ellipse Width="280" Height="280" Fill="#1000FFFF" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Ellipse.Effect>
+                            <BlurEffect Radius="80"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
+
+                    <!-- Outer Ring (Counter-Clockwise) -->
+                    <Ellipse x:Name="OuterRing" Width="240" Height="240" Stroke="#4000FFFF" StrokeThickness="3.0" StrokeDashArray="3 5" RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Ellipse.RenderTransform>
+                    </Ellipse>
+
+                    <!-- Inner Ring (Clockwise) -->
+                    <Ellipse x:Name="InnerRing" Width="190" Height="190" Stroke="#A000FFFF" StrokeThickness="5.0" StrokeDashArray="6 3" RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Ellipse.RenderTransform>
+                    </Ellipse>
+
+                    <!-- Center Logo (Pulsating) -->
+                    <Grid x:Name="LogoGlow" RenderTransformOrigin="0.5,0.5">
+                        <TextBlock Text="OCC" Foreground="White" FontFamily="Segoe UI" FontWeight="ExtraBold" FontSize="44" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="#00FFFF" BlurRadius="30" ShadowDepth="0" Direction="0"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+
+                <!-- Loading Subtitle -->
+                <TextBlock x:Name="LoadingText" Text="SYNCHRONIZING DIGITAL WIDGETS..." Foreground="#00FFFF" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5,0,0">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="#00FFFF" BlurRadius="12" ShadowDepth="0" Direction="0"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+                <TextBlock Text="Optimizing real-time dashboard analytics" Foreground="{StaticResource TextSub}" FontSize="15" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>

@@ -6,14 +6,18 @@
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:TodosWidgetViewModel}">
-    <Grid Height="70">
+    <Grid Height="70" Background="Transparent" Cursor="Hand">
+        <Grid.InputBindings>
+            <MouseBinding MouseAction="LeftClick" Command="{Binding OpenTodosHubCommand}"/>
+        </Grid.InputBindings>
+        
         <StackPanel VerticalAlignment="Center" Margin="15,0,0,0">
             <TextBlock Text="TO-DOS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
             <TextBlock Text="{Binding TodoCount}" Foreground="White" FontSize="36" FontWeight="Bold" />
             <TextBlock Text="Personal Pending" Foreground="{StaticResource TextSub}" FontSize="12"/>
         </StackPanel>
         <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1AFF8F00" Margin="0,0,10,0">
-            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="18"/>
+            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
     </Grid>
 </UserControl>

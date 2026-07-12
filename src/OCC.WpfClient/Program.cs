@@ -1,4 +1,3 @@
-using System;
 using Velopack;
 
 namespace OCC.WpfClient

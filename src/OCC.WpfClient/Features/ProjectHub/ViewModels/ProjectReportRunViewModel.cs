@@ -445,63 +445,57 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var localPhotoPaths = new List<string>();
             try
             {
-                var incidents = await _healthSafetyService.GetIncidentsAsync();
-                var projectIncidents = incidents.Where(i => i.Location != null && i.Location.Contains(projectName, StringComparison.OrdinalIgnoreCase)).ToList();
-
-                var photos = new List<IncidentPhotoDto>();
-                foreach (var inc in projectIncidents)
+                var draft = await _projectReportService.GetDraftAsync(projectId);
+                if (draft != null && !string.IsNullOrEmpty(draft.PhotoUrls))
                 {
-                    var detail = await _healthSafetyService.GetIncidentAsync(inc.Id);
-                    if (detail?.Photos != null)
+                    var urls = draft.PhotoUrls.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                    if (urls.Any())
                     {
-                        photos.AddRange(detail.Photos);
-                    }
-                }
-
-                if (photos.Any())
-                {
-                    var tempPhotosDir = Path.Combine(Path.GetTempPath(), $"OCC_Report_Photos_{projectId}");
-                    try
-                    {
-                        if (Directory.Exists(tempPhotosDir))
-                        {
-                            Directory.Delete(tempPhotosDir, true);
-                        }
-                    }
-                    catch { }
-
-                    Directory.CreateDirectory(tempPhotosDir);
-                    using var client = _httpClientFactory.CreateClient();
-                    var token = _authService.CurrentToken;
-                    if (!string.IsNullOrEmpty(token))
-                    {
-                        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                    }
-
-                    foreach (var photo in photos)
-                    {
-                        if (string.IsNullOrEmpty(photo.FilePath)) continue;
+                        var tempPhotosDir = Path.Combine(Path.GetTempPath(), $"OCC_Report_Photos_{projectId}");
                         try
                         {
-                            var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
-                            var fullUrl = photo.FilePath.StartsWith("http") ? photo.FilePath : $"{baseUrl}/{photo.FilePath.TrimStart('/')}";
-                            var bytes = await client.GetByteArrayAsync(fullUrl);
-                            var ext = Path.GetExtension(photo.FileName);
-                            if (string.IsNullOrEmpty(ext)) ext = ".jpg";
-                            var localFile = Path.Combine(tempPhotosDir, $"{photo.Id}{ext}");
-                            await File.WriteAllBytesAsync(localFile, bytes);
-                            localPhotoPaths.Add(localFile);
+                            if (Directory.Exists(tempPhotosDir))
+                            {
+                                Directory.Delete(tempPhotosDir, true);
+                            }
                         }
-                        catch (Exception ex)
+                        catch { }
+
+                        Directory.CreateDirectory(tempPhotosDir);
+                        using var client = _httpClientFactory.CreateClient();
+                        var token = _authService.CurrentToken;
+                        if (!string.IsNullOrEmpty(token))
                         {
-                            _logger.LogWarning(ex, "Failed to download photo {PhotoId}", photo.Id);
+                            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        }
+
+                        int photoIndex = 1;
+                        foreach (var url in urls)
+                        {
+                            if (string.IsNullOrEmpty(url)) continue;
+                            try
+                            {
+                                var baseUrl = _connectionSettings.ApiBaseUrl.TrimEnd('/');
+                                var fullUrl = url.StartsWith("http") ? url : $"{baseUrl}/{url.TrimStart('/')}";
+                                var bytes = await client.GetByteArrayAsync(fullUrl);
+                                var ext = Path.GetExtension(url);
+                                if (string.IsNullOrEmpty(ext)) ext = ".jpg";
+                                var localFile = Path.Combine(tempPhotosDir, $"report_photo_{photoIndex}{ext}");
+                                await File.WriteAllBytesAsync(localFile, bytes);
+                                localPhotoPaths.Add(localFile);
+                                photoIndex++;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Failed to download report photo {Url}", url);
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to fetch project incident photos for project {ProjectName}", projectName);
+                _logger.LogWarning(ex, "Failed to fetch project report photos for project {ProjectName}", projectName);
             }
             return localPhotoPaths;
         }

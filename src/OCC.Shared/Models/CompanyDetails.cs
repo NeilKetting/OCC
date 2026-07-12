@@ -27,6 +27,9 @@ namespace OCC.Shared.Models
         /// <summary> Which days of the week auto clock-in should run. </summary>
         public List<System.DayOfWeek> AutoClockInDays { get; set; } = new();
 
+        /// <summary> How many months to retain audit logs. 0 means keep forever. </summary>
+        public int AuditLogRetentionMonths { get; set; } = 3;
+
         // --- Backwards Compatibility Wrappers (Default to JHB) ---
 
         /// <summary> Default department emails (defaults to JHB). </summary>

@@ -122,5 +122,36 @@ namespace OCC.WpfClient.Services
                 return null;
             }
         }
+
+        public async Task<string> UploadReportPhotoAsync(Stream fileStream, string fileName)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl("api/ProjectReports/draft/upload-photo");
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                var fileContent = new StreamContent(fileStream);
+                var extension = Path.GetExtension(fileName).ToLower();
+                var mimeType = extension == ".png" ? "image/png" : "image/jpeg";
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
+                content.Add(fileContent, "file", fileName);
+
+                var response = await _httpClient.PostAsync(url, content);
+                response.EnsureSuccessStatusCode();
+                
+                var result = await response.Content.ReadFromJsonAsync<UploadPhotoResult>();
+                return result?.Url ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading project report photo to {Url}", url);
+                return string.Empty;
+            }
+        }
+
+        private class UploadPhotoResult
+        {
+            public string Url { get; set; } = string.Empty;
+        }
     }
 }

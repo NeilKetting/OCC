@@ -74,11 +74,20 @@ namespace OCC.WpfClient.Services.Infrastructure
 
                 appointment.Subject = $"To-Do: {title}";
                 appointment.Body = notes ?? string.Empty;
-                appointment.Start = dueDate.Value.Date;
-                appointment.End = dueDate.Value.Date.AddDays(1);
-                appointment.AllDayEvent = true;
+                appointment.Start = dueDate.Value;
+                if (dueDate.Value.TimeOfDay == TimeSpan.Zero)
+                {
+                    appointment.End = dueDate.Value.Date.AddDays(1);
+                    appointment.AllDayEvent = true;
+                    appointment.ReminderMinutesBeforeStart = 0;
+                }
+                else
+                {
+                    appointment.End = dueDate.Value.AddMinutes(30);
+                    appointment.AllDayEvent = false;
+                    appointment.ReminderMinutesBeforeStart = 15;
+                }
                 appointment.ReminderSet = true;
-                appointment.ReminderMinutesBeforeStart = 0; // Remind at start of day
 
                 appointment.Save();
 

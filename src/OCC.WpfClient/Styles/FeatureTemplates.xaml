@@ -33,7 +33,9 @@ xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views
 xmlns:attndVm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
 xmlns:attndViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views"
 xmlns:calVm="clr-namespace:OCC.WpfClient.Features.CalendarHub.ViewModels"
-xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
+xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views"
+xmlns:todoVm="clr-namespace:OCC.WpfClient.Features.TodoHub.ViewModels"
+xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
 
     <!-- Auth -->
     <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
@@ -318,6 +320,11 @@ xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views">
     <!-- Calendar Hub -->
     <DataTemplate DataType="{x:Type calVm:CalendarHubViewModel}">
         <calViews:CalendarHubView />
+    </DataTemplate>
+
+    <!-- Todo Hub -->
+    <DataTemplate DataType="{x:Type todoVm:TodoHubViewModel}">
+        <todoViews:TodoHubView />
     </DataTemplate>
 
 </ResourceDictionary>

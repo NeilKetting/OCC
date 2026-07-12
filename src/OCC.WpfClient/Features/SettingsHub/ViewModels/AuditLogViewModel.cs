@@ -30,7 +30,14 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
         private readonly IAttendanceService _attendanceService;
         private readonly ILogger<AuditLogViewModel> _logger;
 
-        private List<AuditLogDisplayModel> _allLogs = new();
+        private readonly List<AuditLogDisplayModel> _allLogs = new();
+        private Dictionary<string, string>? _userMap;
+        private Dictionary<string, string>? _projectMap;
+        private Dictionary<string, string>? _employeeMap;
+        private Dictionary<string, string>? _teamMap;
+
+        private int _skip = 0;
+        private const int PageSize = 100;
 
         [ObservableProperty]
         private ObservableCollection<User> _users = new();
@@ -48,6 +55,9 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
         [ObservableProperty]
         private DateTime? _endDate;
+
+        [ObservableProperty]
+        private bool _hasMore;
 
         // Stats Counters
         [ObservableProperty] private int _createCount;
@@ -89,101 +99,148 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
         public override async Task LoadDataAsync()
         {
+            await LoadPageAsync(reset: true);
+        }
+
+        public async Task LoadPageAsync(bool reset)
+        {
+            IsBusy = true;
+            BusyText = reset ? "Loading audit logs..." : "Loading more logs...";
+
             try
             {
-                IsBusy = true;
-                BusyText = "Loading audit logs...";
-
-                var logsTask = _auditLogService.GetAuditLogsAsync();
-                var usersTask = _userService.GetUsersAsync();
-                var projectsTask = _projectService.GetProjectsAsync();
-                var employeesTask = _employeeService.GetEmployeesAsync();
-                var teamsTask = _attendanceService.GetTeamsAsync();
-
-                await Task.WhenAll(logsTask, usersTask, projectsTask, employeesTask, teamsTask);
-
-                var logs = logsTask.Result ?? Enumerable.Empty<AuditLog>();
-                var users = usersTask.Result ?? Enumerable.Empty<User>();
-                var projects = projectsTask.Result ?? Enumerable.Empty<Project>();
-                var employees = employeesTask.Result ?? Enumerable.Empty<EmployeeSummaryDto>();
-                var teams = teamsTask.Result ?? Enumerable.Empty<Team>();
-
-                // Build mapping dictionaries to resolve GUID strings into display names
-                var userMap = users.ToDictionary(u => u.Id.ToString().ToLower(), u => u.DisplayName ?? u.Email);
-                var projectMap = projects.ToDictionary(p => p.Id.ToString().ToLower(), p => p.Name);
-                var employeeMap = employees.ToDictionary(e => e.Id.ToString().ToLower(), e => $"{e.FirstName} {e.LastName}".Trim());
-                var teamMap = teams.ToDictionary(t => t.Id.ToString().ToLower(), t => t.Name);
-
-                var sortedUsers = users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
-                var list = new List<User>
+                if (reset)
                 {
-                    new User { Id = Guid.Empty, FirstName = "All", LastName = "" },
-                    new User { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), FirstName = "System", LastName = "" }
-                };
-                list.AddRange(sortedUsers);
-                Users = new ObservableCollection<User>(list);
-                SelectedUser = list[0]; // Set default to "All"
+                    _skip = 0;
+                    _allLogs.Clear();
+                }
 
-                _allLogs = logs.Select(l =>
+                // Lazy load reference mappings
+                if (_userMap == null)
                 {
-                    // Map operator user name
-                    var userIdClean = (l.UserId ?? string.Empty).Trim().ToLower();
-                    var userName = userMap.TryGetValue(userIdClean, out var name) ? name : l.UserId;
+                    var usersTask = _userService.GetUsersAsync();
+                    var projectsTask = _projectService.GetProjectsAsync();
+                    var employeesTask = _employeeService.GetEmployeesAsync();
+                    var teamsTask = _attendanceService.GetTeamsAsync();
 
-                    // Clean target RecordId if it is serialised JSON
-                    var recordIdClean = (l.RecordId ?? string.Empty).Trim();
-                    if (recordIdClean.StartsWith("{") && recordIdClean.Contains("\"Id\":"))
+                    await Task.WhenAll(usersTask, projectsTask, employeesTask, teamsTask);
+
+                    var users = usersTask.Result ?? Enumerable.Empty<User>();
+                    var projects = projectsTask.Result ?? Enumerable.Empty<Project>();
+                    var employees = employeesTask.Result ?? Enumerable.Empty<EmployeeSummaryDto>();
+                    var teams = teamsTask.Result ?? Enumerable.Empty<Team>();
+
+                    _userMap = users.ToDictionary(u => u.Id.ToString().ToLower(), u => u.DisplayName ?? u.Email);
+                    _projectMap = projects.ToDictionary(p => p.Id.ToString().ToLower(), p => p.Name);
+                    _employeeMap = employees.ToDictionary(e => e.Id.ToString().ToLower(), e => $"{e.FirstName} {e.LastName}".Trim());
+                    _teamMap = teams.ToDictionary(t => t.Id.ToString().ToLower(), t => t.Name);
+
+                    var sortedUsers = users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
+                    var list = new List<User>
                     {
-                        try
+                        new User { Id = Guid.Empty, FirstName = "All", LastName = "" },
+                        new User { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), FirstName = "System", LastName = "" }
+                    };
+                    list.AddRange(sortedUsers);
+                    Users = new ObservableCollection<User>(list);
+                    SelectedUser = list[0];
+                }
+
+                Guid? selectedUserId = SelectedUser?.Id;
+                var resultDto = await _auditLogService.GetAuditLogsAsync(
+                    SearchQuery,
+                    selectedUserId,
+                    StartDate,
+                    EndDate,
+                    _skip,
+                    PageSize
+                );
+
+                if (resultDto != null)
+                {
+                    var userMap = _userMap!;
+                    var projectMap = _projectMap!;
+                    var employeeMap = _employeeMap!;
+                    var teamMap = _teamMap!;
+
+                    var mapped = resultDto.Items.Select(l =>
+                    {
+                        var userIdClean = (l.UserId ?? string.Empty).Trim().ToLower();
+                        var userName = userMap.TryGetValue(userIdClean, out var name) ? name : l.UserId;
+
+                        var recordIdClean = (l.RecordId ?? string.Empty).Trim();
+                        if (recordIdClean.StartsWith("{") && recordIdClean.Contains("\"Id\":"))
                         {
-                            int start = recordIdClean.IndexOf("\"Id\":\"") + 6;
-                            if (start > 6)
+                            try
                             {
-                                int end = recordIdClean.IndexOf("\"", start);
-                                if (end > start)
+                                int start = recordIdClean.IndexOf("\"Id\":\"") + 6;
+                                if (start > 6)
                                 {
-                                    recordIdClean = recordIdClean.Substring(start, end - start);
+                                    int end = recordIdClean.IndexOf("\"", start);
+                                    if (end > start)
+                                    {
+                                        recordIdClean = recordIdClean.Substring(start, end - start);
+                                    }
                                 }
                             }
+                            catch { }
                         }
-                        catch { }
-                    }
-                    recordIdClean = recordIdClean.ToLower();
+                        recordIdClean = recordIdClean.ToLower();
 
-                    // Resolve display name for the entity
-                    string entityName = l.RecordId ?? string.Empty;
-                    var tableClean = (l.TableName ?? string.Empty).Trim().ToLower();
+                        string entityName = l.RecordId ?? string.Empty;
+                        var tableClean = (l.TableName ?? string.Empty).Trim().ToLower();
 
-                    if (tableClean == "project" || tableClean == "projects")
+                        if (tableClean == "project" || tableClean == "projects")
+                        {
+                            if (projectMap.TryGetValue(recordIdClean, out var projName)) entityName = projName;
+                        }
+                        else if (tableClean == "employee" || tableClean == "employees")
+                        {
+                            if (employeeMap.TryGetValue(recordIdClean, out var empName)) entityName = empName;
+                        }
+                        else if (tableClean == "team" || tableClean == "teams")
+                        {
+                            if (teamMap.TryGetValue(recordIdClean, out var teamName)) entityName = teamName;
+                        }
+                        else if (tableClean == "user" || tableClean == "users")
+                        {
+                            if (userMap.TryGetValue(recordIdClean, out var usrName)) entityName = usrName;
+                        }
+
+                        return new AuditLogDisplayModel(l, userName ?? "System", entityName);
+                    }).ToList();
+
+                    foreach (var item in mapped)
                     {
-                        if (projectMap.TryGetValue(recordIdClean, out var projName)) entityName = projName;
-                    }
-                    else if (tableClean == "employee" || tableClean == "employees")
-                    {
-                        if (employeeMap.TryGetValue(recordIdClean, out var empName)) entityName = empName;
-                    }
-                    else if (tableClean == "team" || tableClean == "teams")
-                    {
-                        if (teamMap.TryGetValue(recordIdClean, out var teamName)) entityName = teamName;
-                    }
-                    else if (tableClean == "user" || tableClean == "users")
-                    {
-                        if (userMap.TryGetValue(recordIdClean, out var usrName)) entityName = usrName;
+                        _allLogs.Add(item);
                     }
 
-                    return new AuditLogDisplayModel(l, userName ?? "System", entityName);
-                }).OrderByDescending(l => l.Timestamp).ToList();
+                    Items = new ObservableCollection<AuditLogDisplayModel>(_allLogs);
 
-                FilterItems();
+                    TotalCount = resultDto.TotalCount;
+                    CreateCount = resultDto.CreateCount;
+                    UpdateCount = resultDto.UpdateCount;
+                    DeleteCount = resultDto.DeleteCount;
+
+                    HasMore = Items.Count < TotalCount;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading audit log records");
+                _logger.LogError(ex, "Error loading audit logs page");
             }
             finally
             {
                 IsBusy = false;
             }
+        }
+
+        [RelayCommand]
+        public async Task LoadMoreAsync()
+        {
+            if (!HasMore || IsBusy) return;
+            _skip += PageSize;
+            await LoadPageAsync(reset: false);
         }
 
         [RelayCommand]
@@ -261,11 +318,17 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
             FilterItems();
         }
 
-        partial void OnSelectedUserChanged(User? value) => FilterItems();
+        partial void OnSelectedUserChanged(User? value)
+        {
+            if (_userMap != null) // Only reload if initial load is done
+            {
+                FilterItems();
+            }
+        }
 
         partial void OnStartDateChanged(DateTime? value)
         {
-            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 7)
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 7 && _userMap != null)
             {
                 FilterItems();
             }
@@ -273,7 +336,7 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
         partial void OnEndDateChanged(DateTime? value)
         {
-            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 7)
+            if (!_isUpdatingTimeSpan && SelectedTimeSpanIndex == 7 && _userMap != null)
             {
                 FilterItems();
             }
@@ -281,59 +344,7 @@ namespace OCC.WpfClient.Features.SettingsHub.ViewModels
 
         protected override void FilterItems()
         {
-            IEnumerable<AuditLogDisplayModel> filtered = _allLogs;
-
-            // 1. User Filter
-            if (SelectedUser != null && SelectedUser.Id != Guid.Empty)
-            {
-                if (SelectedUser.Id == Guid.Parse("00000000-0000-0000-0000-000000000001"))
-                {
-                    filtered = filtered.Where(l => l.Log.UserId.ToLower() == "system");
-                }
-                else
-                {
-                    var targetUserId = SelectedUser.Id.ToString().ToLower();
-                    filtered = filtered.Where(l => l.Log.UserId.ToLower() == targetUserId);
-                }
-            }
-
-            // 2. Date presets / range filtering
-            if (StartDate.HasValue || EndDate.HasValue)
-            {
-                if (StartDate.HasValue)
-                {
-                    var startVal = StartDate.Value.Date;
-                    filtered = filtered.Where(l => l.Timestamp >= startVal);
-                }
-                if (EndDate.HasValue)
-                {
-                    var endVal = EndDate.Value.Date.AddDays(1).AddTicks(-1); // inclusive end of day
-                    filtered = filtered.Where(l => l.Timestamp <= endVal);
-                }
-            }
-
-            // 3. Search Query text matching
-            if (!string.IsNullOrWhiteSpace(SearchQuery))
-            {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(l =>
-                    (l.UserName?.ToLower().Contains(query) ?? false) ||
-                    (l.Action?.ToLower().Contains(query) ?? false) ||
-                    (l.TableName?.ToLower().Contains(query) ?? false) ||
-                    (l.EntityName?.ToLower().Contains(query) ?? false) ||
-                    (l.NewValues?.ToLower().Contains(query) ?? false) ||
-                    (l.OldValues?.ToLower().Contains(query) ?? false)
-                );
-            }
-
-            var result = filtered.ToList();
-            Items = new ObservableCollection<AuditLogDisplayModel>(result);
-
-            // Compute statistics
-            TotalCount = result.Count;
-            CreateCount = result.Count(l => string.Equals(l.Action, "Create", StringComparison.OrdinalIgnoreCase));
-            UpdateCount = result.Count(l => string.Equals(l.Action, "Update", StringComparison.OrdinalIgnoreCase));
-            DeleteCount = result.Count(l => string.Equals(l.Action, "Delete", StringComparison.OrdinalIgnoreCase));
+            _ = LoadPageAsync(reset: true);
         }
     }
 }

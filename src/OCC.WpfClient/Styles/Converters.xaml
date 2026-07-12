@@ -22,6 +22,8 @@
     <conv:LeaveTypeColorConverter x:Key="LeaveTypeColorConverter" />
     <conv:LeaveStatusColorConverter x:Key="LeaveStatusColorConverter" />
     <conv:OrderStatusColorConverter x:Key="OrderStatusColorConverter" />
+    <conv:TodoDueDateConverter x:Key="TodoDueDateConverter" />
+    <conv:AuditScoreColorConverter x:Key="AuditScoreColorConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
 </ResourceDictionary>

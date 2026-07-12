@@ -38,8 +38,12 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         private readonly IPermissionService _permissionService;
         private readonly LocalSettingsService _localSettingsService;
         private readonly IBugReportService _bugService;
+        private readonly ITodoService _todoService;
+        private readonly INoticeBoardService _noticeBoardService;
 
-        private bool _isLoadingData;
+        [ObservableProperty]
+        private bool _isLoading;
+
         private List<WidgetViewModelBase> _allPossibleWidgets = new();
 
         #endregion
@@ -57,6 +61,17 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<WidgetViewModelBase> _activeWidgets = new();
+
+        public double GridHeight
+        {
+            get
+            {
+                if (IsEditMode) return 2200;
+                
+                int maxRow = ActiveWidgets.Any() ? ActiveWidgets.Max(w => w.Row + w.RowSpan) : 0;
+                return maxRow * 110 + 20;
+            }
+        }
 
         [ObservableProperty]
         private ObservableCollection<WidgetViewModelBase> _availableWidgets = new();
@@ -81,7 +96,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             ISignalRService signalRService,
             IPermissionService permissionService,
             LocalSettingsService localSettingsService,
-            IBugReportService bugService)
+            IBugReportService bugService,
+            ITodoService todoService,
+            INoticeBoardService noticeBoardService)
         {
             _userService = userService;
             _toastService = toastService;
@@ -96,6 +113,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _permissionService = permissionService;
             _localSettingsService = localSettingsService;
             _bugService = bugService;
+            _todoService = todoService;
+            _noticeBoardService = noticeBoardService;
             Title = "Dashboard";
             
             UserName = _authService.CurrentUser?.DisplayName ?? "User";
@@ -126,6 +145,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 widget.IsEditMode = IsEditMode;
             }
             LoadWidgetLayout();
+            OnPropertyChanged(nameof(GridHeight));
         }
 
         [RelayCommand]
@@ -162,13 +182,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 new BirthdayWidgetViewModel(_employeeService, _authService),
                 new AlertsWidgetViewModel(_employeeService),
                 new TasksWidgetViewModel(_taskService),
-                new TodosWidgetViewModel(_taskService),
+                new TodosWidgetViewModel(_todoService),
                 new UsersWidgetViewModel(_userService),
                 new ProductivityWidgetViewModel(_taskService),
                 new CalendarWidgetViewModel(_calendarService),
                 new ChatsWidgetViewModel(_httpClientFactory, _connectionSettings, _authService, _encryptionService),
                 new SupportWidgetViewModel(_bugService, _authService, _permissionService),
-                new QuickActionsWidgetViewModel(_permissionService, _localSettingsService)
+                new QuickActionsWidgetViewModel(_permissionService, _localSettingsService),
+                new NoticeBoardWidgetViewModel(_noticeBoardService, _authService, _toastService)
             };
 
             foreach (var widget in _allPossibleWidgets)
@@ -297,6 +318,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
             ActiveWidgets = new ObservableCollection<WidgetViewModelBase>(activeList.OrderBy(w => w.Row).ThenBy(w => w.Column));
             AvailableWidgets = new ObservableCollection<WidgetViewModelBase>(availableList);
+            OnPropertyChanged(nameof(GridHeight));
         }
 
         private void SaveWidgetLayout()
@@ -320,10 +342,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
         private async Task LoadData()
         {
-            if (_isLoadingData) return;
+            if (IsLoading) return;
             try
             {
-                _isLoadingData = true;
+                IsLoading = true;
+                var startTime = DateTime.UtcNow;
 
                 UserName = _authService.CurrentUser?.DisplayName ?? "User";
                 Greeting = GetGreeting();
@@ -380,11 +403,40 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 }
                 catch { }
 
-                // Refresh all widget data in parallel
-                var refreshTasks = _allPossibleWidgets.Select(w => w.RefreshDataAsync());
+                // Identify which widgets are configured to be visible
+                var saved = _localSettingsService.Settings.DashboardWidgets;
+                if (saved == null || saved.Count == 0)
+                {
+                    LoadWidgetLayout();
+                    saved = _localSettingsService.Settings.DashboardWidgets;
+                }
+
+                var activeIds = saved?.Where(cfg => cfg.IsVisible).Select(cfg => cfg.WidgetId).ToList() ?? new List<string>();
+
+                // Birthday widget layout visibility dynamically checks for greetings,
+                // so we must always refresh it if it's configured visible.
+                if (saved != null && saved.Any(cfg => cfg.WidgetId == "Birthday" && cfg.IsVisible))
+                {
+                    if (!activeIds.Contains("Birthday"))
+                    {
+                        activeIds.Add("Birthday");
+                    }
+                }
+
+                // Refresh only active widgets in parallel to save API requests and bandwidth
+                var activeWidgetsToRefresh = _allPossibleWidgets.Where(w => activeIds.Contains(w.WidgetId));
+                var refreshTasks = activeWidgetsToRefresh.Select(w => w.RefreshDataAsync());
                 await Task.WhenAll(refreshTasks);
 
                 LoadWidgetLayout();
+
+                // Enforce a minimum display time of 4 seconds for the loading animation
+                var elapsed = DateTime.UtcNow - startTime;
+                if (elapsed.TotalMilliseconds < 4000)
+                {
+                    var remaining = 4000 - (int)elapsed.TotalMilliseconds;
+                    await Task.Delay(remaining);
+                }
             }
             catch 
             { 
@@ -392,7 +444,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             }
             finally
             {
-                _isLoadingData = false;
+                IsLoading = false;
             }
         }
 

@@ -121,6 +121,45 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+
+                        <!-- Audit Log Maintenance -->
+                        <Border Background="{StaticResource InputBackground}" CornerRadius="12" Padding="24" Visibility="{Binding IsAdmin, Converter={StaticResource VisibilityConverter}}" Margin="0,32,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
+                                    <TextBlock Text="Audit Log Maintenance" Margin="12,0,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Retention Period" Style="{StaticResource FormLabelText}"/>
+                                        <ComboBox SelectedIndex="{Binding AuditLogRetentionMonthsIndex}" 
+                                                  Style="{StaticResource ModernComboBox}" 
+                                                  Width="250" HorizontalAlignment="Left" Margin="0,8">
+                                            <ComboBoxItem Content="Keep Forever"/>
+                                            <ComboBoxItem Content="1 Month"/>
+                                            <ComboBoxItem Content="3 Months"/>
+                                            <ComboBoxItem Content="6 Months"/>
+                                            <ComboBoxItem Content="12 Months"/>
+                                        </ComboBox>
+                                        <TextBlock Text="Older audit logs will be automatically purged by the server once a day." FontSize="12" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="24,0,0,0" MinWidth="180">
+                                        <Border Background="#1A2E9DFF" CornerRadius="8" Padding="16,12">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="TOTAL AUDIT LOGS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TotalAuditLogsCount}" FontSize="28" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 

@@ -138,6 +138,7 @@
                                     <CheckBox IsChecked="{Binding HasProjectsAccess}" Content="Project Management" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasHealthSafetyAccess}" Content="HSEQ Compliance" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                     <CheckBox IsChecked="{Binding HasCalendarAccess}" Content="Calendar" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
+                                    <CheckBox IsChecked="{Binding HasTodoAccess}" Content="Personal To-Dos" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,10"/>
                                 </UniformGrid>
 
                                 <TextBlock Text="SUPPLY CHAIN" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,15,0,12"/>
