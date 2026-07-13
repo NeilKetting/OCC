@@ -13,19 +13,32 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <!-- Hover background -->
-                        <Border x:Name="HighlightBorder" Grid.ColumnSpan="2" Background="Transparent" />
+                        <Border x:Name="HighlightBorder" Grid.ColumnSpan="3" Background="Transparent" />
 
                         <!-- Separator line (Tag="HasSeparator") -->
-                        <Border x:Name="ItemSeparator" Grid.ColumnSpan="2" BorderBrush="#3b4a54" BorderThickness="0,1,0,0" VerticalAlignment="Top" Visibility="Collapsed" Margin="0,0"/>
+                        <Border x:Name="ItemSeparator" Grid.ColumnSpan="3" BorderBrush="#3b4a54" BorderThickness="0,1,0,0" VerticalAlignment="Top" Visibility="Collapsed" Margin="0,0"/>
 
                         <!-- Icon -->
                         <ContentPresenter Grid.Column="0" ContentSource="Icon" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,0,0,0"/>
 
                         <!-- Text -->
                         <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" Margin="10,0,25,0"/>
+
+                        <!-- Submenu Arrow -->
+                        <TextBlock x:Name="SubMenuArrow" Grid.Column="2" Text="" FontFamily="pack://application:,,,/Assets/Fonts/#Segoe MDL2 Assets" FontSize="8" Margin="0,0,15,0" VerticalAlignment="Center" Foreground="#99ffffff" Visibility="Collapsed"/>
+
+                        <!-- Popup for Submenu -->
+                        <Popup x:Name="PART_Popup" AllowsTransparency="true" Focusable="false" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}" Placement="Right">
+                            <Border x:Name="SubMenuBorder" Background="#232d36" BorderBrush="#3b4a54" BorderThickness="1" CornerRadius="8" Padding="0,5" Margin="0,0,0,0">
+                                <ScrollViewer x:Name="SubMenuScrollViewer" CanContentScroll="True">
+                                    <ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Cycle" Grid.IsSharedSizeScope="true" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" KeyboardNavigation.TabNavigation="Cycle"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
@@ -34,6 +47,13 @@
                         <Trigger Property="Tag" Value="HasSeparator">
                             <Setter TargetName="ItemSeparator" Property="Visibility" Value="Visible" />
                             <Setter Property="Height" Value="46"/>
+                        </Trigger>
+                        <!-- Submenu Header (has sub-items) -->
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter TargetName="SubMenuArrow" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsSubmenuOpen" Value="true">
+                            <Setter TargetName="HighlightBorder" Property="Background" Value="#2a3942"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

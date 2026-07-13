@@ -335,7 +335,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 if (records != null)
                 {
                     return records
-                        .Where(r => r.ProjectId == projectId && r.Status == AttendanceStatus.Present)
+                        .Where(r => r.ProjectId == projectId && 
+                                   (r.Status == AttendanceStatus.Present || 
+                                    r.Status == AttendanceStatus.Late || 
+                                    r.Status == AttendanceStatus.LeaveEarly))
                         .Sum(r => r.HoursWorked);
                 }
             }

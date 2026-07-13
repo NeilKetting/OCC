@@ -57,6 +57,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         // Display lists
         [ObservableProperty] private ObservableCollection<VendorReportRow> _vendorReportRows = new();
+        [ObservableProperty] private ObservableCollection<VendorReportRow> _primaryContractorRows = new();
+        [ObservableProperty] private ObservableCollection<VendorReportRow> _subContractorRows = new();
         [ObservableProperty] private ObservableCollection<string> _reportPhotos = new();
         [ObservableProperty] private ObservableCollection<ProjectVariationOrder> _variationOrders = new();
         [ObservableProperty] private ObservableCollection<ProjectReportHistory> _reportHistory = new();
@@ -404,7 +406,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 if (records != null)
                 {
                     SafeWorkingHours = records
-                        .Where(r => r.ProjectId == ProjectId && r.Status == AttendanceStatus.Present)
+                        .Where(r => r.ProjectId == ProjectId && 
+                                   (r.Status == AttendanceStatus.Present || 
+                                    r.Status == AttendanceStatus.Late || 
+                                    r.Status == AttendanceStatus.LeaveEarly))
                         .Sum(r => r.HoursWorked);
                 }
                 else
@@ -424,6 +429,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             try
             {
                 VendorReportRows.Clear();
+                PrimaryContractorRows.Clear();
+                SubContractorRows.Clear();
 
                 // 1. Load project audits to match scores
                 var allAudits = await _healthSafetyService.GetAuditsAsync();
@@ -437,7 +444,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 string audit3 = projectAudits.Count > 2 ? $"{projectAudits[2].ActualScore}%" : "-";
 
                 // 2. Add OCC (internal) row
-                VendorReportRows.Add(new VendorReportRow
+                var occRow = new VendorReportRow
                 {
                     VendorName = "Orange Circle Construction",
                     Scope = "Primary Contractor",
@@ -446,7 +453,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     Audit1 = audit1,
                     Audit2 = audit2,
                     Audit3 = audit3
-                });
+                };
+                VendorReportRows.Add(occRow);
+                PrimaryContractorRows.Add(occRow);
 
                 // 3. Extract subcontractors from task assignments
                 var subbies = nonGroupTasks
@@ -476,7 +485,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     }
                     catch { }
 
-                    VendorReportRows.Add(new VendorReportRow
+                    var subRow = new VendorReportRow
                     {
                         VendorName = name,
                         Scope = scope,
@@ -485,7 +494,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         Audit1 = "-",
                         Audit2 = "-",
                         Audit3 = "-"
-                    });
+                    };
+                    VendorReportRows.Add(subRow);
+                    SubContractorRows.Add(subRow);
                 }
             }
             catch (Exception ex)

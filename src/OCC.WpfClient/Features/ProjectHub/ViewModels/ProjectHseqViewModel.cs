@@ -62,7 +62,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 if (records != null)
                 {
                     SafeWorkingHours = records
-                        .Where(r => r.ProjectId == ProjectId && r.Status == AttendanceStatus.Present)
+                        .Where(r => r.ProjectId == ProjectId && 
+                                   (r.Status == AttendanceStatus.Present || 
+                                    r.Status == AttendanceStatus.Late || 
+                                    r.Status == AttendanceStatus.LeaveEarly))
                         .Sum(r => r.HoursWorked);
                 }
             }

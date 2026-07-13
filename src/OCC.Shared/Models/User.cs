@@ -69,9 +69,9 @@ namespace OCC.Shared.Models
         /// <summary> The high-level role group assigned to the user (e.g. Admin, SiteManager). </summary>
         public UserRole UserRole { get; set; } = UserRole.Guest;
 
-        /// <summary> Helper property returning the full name in "FirstName, LastName" format. </summary>
+        /// <summary> Helper property returning the full name in "FirstName LastName" format. </summary>
         public string? DisplayName => (!string.IsNullOrWhiteSpace(FirstName) && !string.IsNullOrWhiteSpace(LastName)) 
-            ? $"{FirstName}, {LastName}" 
+            ? $"{FirstName} {LastName}" 
             : $"{FirstName} {LastName}".Trim();
     }
 

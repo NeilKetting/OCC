@@ -571,32 +571,50 @@
                         </DataGrid.Columns>
 
 
-                        <DataGrid.ContextMenu>
-                            <ContextMenu Style="{StaticResource ModernContextMenu}">
-                                <MenuItem Header="Edit Task" Command="{Binding EditTaskCommand}" CommandParameter="{Binding SelectedTask}">
-                                    <MenuItem.Icon>
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Add Subtask" Command="{Binding CreateSubtaskCommand}" CommandParameter="{Binding SelectedTask}">
-                                    <MenuItem.Icon>
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator/>
-                                <MenuItem Header="Assign To..." Command="{Binding ShowAssignToCommand}" CommandParameter="{Binding SelectedTask}">
-                                    <MenuItem.Icon>
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator/>
-                                <MenuItem Header="Delete Task" Command="{Binding DeleteTaskCommand}" CommandParameter="{Binding SelectedTask}" Foreground="{StaticResource ErrorRed}">
-                                    <MenuItem.Icon>
-                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource ErrorRed}"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </DataGrid.ContextMenu>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                            <MenuItem Header="Edit Task" Command="{Binding Data.EditTaskCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Add Subtask" Command="{Binding Data.CreateSubtaskCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator/>
+                                            <MenuItem Header="Assign To..." Command="{Binding Data.ShowAssignToCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator/>
+                                            <MenuItem Header="Status" Visibility="{Binding IsGroup, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                                </MenuItem.Icon>
+                                                <MenuItem Header="Not Started" Command="{Binding Data.QuickStatusNotStartedCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="Started" Command="{Binding Data.QuickStatusStartedCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="Halfway" Command="{Binding Data.QuickStatusHalfwayCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="Almost Done" Command="{Binding Data.QuickStatusAlmostDoneCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="Completed" Command="{Binding Data.QuickStatusCompletedCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}"/>
+                                                <MenuItem Header="On Hold" Command="{Binding Data.QuickStatusOnHoldCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}"/>
+                                            </MenuItem>
+                                            <Separator Visibility="{Binding IsGroup, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}"/>
+                                            <MenuItem Header="Delete Task" Command="{Binding Data.DeleteTaskCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="{StaticResource ErrorRed}"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.RowStyle>
                     </DataGrid>
 
                     <!-- Empty State -->

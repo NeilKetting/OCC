@@ -117,7 +117,7 @@ namespace OCC.Shared.Models
         /// <summary>
         /// Computed full name of the employee.
         /// </summary>
-        public string DisplayName => $"{FirstName}, {LastName}".Trim();
+        public string DisplayName => $"{FirstName} {LastName}".Trim();
 
         /// <summary>
         /// Assigned employee number (e.g., EMP001).

@@ -847,6 +847,98 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 }
             }
         }
+
+        [RelayCommand]
+        private async Task QuickStatusNotStarted(ProjectTask task) => await UpdateTaskStatusAsync(task, "Not Started");
+
+        [RelayCommand]
+        private async Task QuickStatusStarted(ProjectTask task) => await UpdateTaskStatusAsync(task, "Started");
+
+        [RelayCommand]
+        private async Task QuickStatusHalfway(ProjectTask task) => await UpdateTaskStatusAsync(task, "Halfway");
+
+        [RelayCommand]
+        private async Task QuickStatusAlmostDone(ProjectTask task) => await UpdateTaskStatusAsync(task, "Almost Done");
+
+        [RelayCommand]
+        private async Task QuickStatusCompleted(ProjectTask task) => await UpdateTaskStatusAsync(task, "Completed");
+
+        [RelayCommand]
+        private async Task QuickStatusOnHold(ProjectTask task) => await UpdateTaskStatusAsync(task, "On Hold");
+
+        private async Task UpdateTaskStatusAsync(ProjectTask task, string newStatus)
+        {
+            if (task == null) return;
+
+            string? holdReason = null;
+            bool isOnHold = newStatus == "On Hold";
+
+            if (isOnHold)
+            {
+                holdReason = await _dialogService.ShowInputDialogAsync(
+                    "Task On Hold", 
+                    "Please enter the reason for placing this task on hold:", 
+                    task.HoldReason ?? "");
+
+                if (holdReason == null) return; // User cancelled
+                
+                if (string.IsNullOrWhiteSpace(holdReason))
+                {
+                    NotifyError("Validation Error", "A reason is required when placing a task on hold.");
+                    return;
+                }
+            }
+
+            try
+            {
+                task.Status = newStatus;
+                task.IsOnHold = isOnHold;
+                if (isOnHold)
+                {
+                    task.HoldReason = holdReason ?? string.Empty;
+                }
+                else
+                {
+                    task.HoldReason = string.Empty;
+                    // Sync percent complete based on standard status mapping
+                    switch (newStatus)
+                    {
+                        case "Not Started":
+                            task.PercentComplete = 0;
+                            task.IsComplete = false;
+                            break;
+                        case "Started":
+                            task.PercentComplete = 25;
+                            task.IsComplete = false;
+                            break;
+                        case "Halfway":
+                            task.PercentComplete = 50;
+                            task.IsComplete = false;
+                            break;
+                        case "Almost Done":
+                            task.PercentComplete = 75;
+                            task.IsComplete = false;
+                            break;
+                        case "Completed":
+                            task.PercentComplete = 100;
+                            task.IsComplete = true;
+                            break;
+                    }
+                }
+
+                // Call task service to update
+                await _taskService.UpdateTaskAsync(task);
+
+                // Send message to notify other components/views
+                WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(task.Id));
+
+                NotifySuccess("Task Updated", $"Task '{task.Name}' status updated to '{newStatus}'.");
+            }
+            catch (Exception ex)
+            {
+                NotifyError("Error Updating Task", $"Failed to update task status: {ex.Message}");
+            }
+        }
     }
 
     public partial class SubContractorSelectionViewModel : ObservableObject

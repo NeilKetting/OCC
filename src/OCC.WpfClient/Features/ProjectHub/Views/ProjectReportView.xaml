@@ -394,8 +394,36 @@
                     <!-- Vendor Report / HSEQ Compliance Card -->
                     <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                         <StackPanel>
+                            <StackPanel.Resources>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="FontSize" Value="10"/>
+                                    <Setter Property="Padding" Value="10,8"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#20FFFFFF"/>
+                                </Style>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="10,12"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </StackPanel.Resources>
                             <TextBlock Text="VENDOR REPORT - HSEQ COMPLIANCE" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
-                            <DataGrid ItemsSource="{Binding VendorReportRows}" 
+                            
+                            <!-- Primary Contractor: Orange Circle Construction -->
+                            <DataGrid ItemsSource="{Binding PrimaryContractorRows}" 
                                       AutoGenerateColumns="False" 
                                       Background="Transparent" 
                                       BorderThickness="0" 
@@ -405,32 +433,6 @@
                                       RowBackground="Transparent" 
                                       AlternatingRowBackground="#05FFFFFF"
                                       HeadersVisibility="Column">
-                                <DataGrid.Resources>
-                                    <Style TargetType="DataGridColumnHeader">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="FontSize" Value="10"/>
-                                        <Setter Property="Padding" Value="10,8"/>
-                                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                        <Setter Property="BorderBrush" Value="#20FFFFFF"/>
-                                    </Style>
-                                    <Style TargetType="DataGridCell">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="BorderThickness" Value="0"/>
-                                        <Setter Property="Padding" Value="10,12"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="DataGridCell">
-                                                    <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                                        <ContentPresenter VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </DataGrid.Resources>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="VENDOR NAME" Binding="{Binding VendorName}" Width="2*"/>
                                     <DataGridTextColumn Header="SCOPE" Binding="{Binding Scope}" Width="1.5*"/>
@@ -472,6 +474,160 @@
                                     </DataGridTextColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+
+                            <!-- Sub-Contractors Expander (Collapsed by default, hidden if empty) -->
+                            <Expander IsExpanded="False" 
+                                      Background="Transparent" 
+                                      BorderThickness="0" 
+                                      Margin="0,10,0,0"
+                                      Visibility="{Binding SubContractorRows, Converter={StaticResource VisibilityConverter}}">
+                                <Expander.Style>
+                                    <Style TargetType="Expander">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Expander">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}">
+                                                        <Grid>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="*" x:Name="ContentRow"/>
+                                                            </Grid.RowDefinitions>
+                                                            
+                                                            <ToggleButton x:Name="HeaderSite"
+                                                                          Grid.Row="0"
+                                                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                                                          Background="#0AFFFFFF"
+                                                                          BorderBrush="{StaticResource GlassBorderUltraLight}"
+                                                                          BorderThickness="0,1,0,1"
+                                                                          Padding="10,8"
+                                                                          Cursor="Hand">
+                                                                <ToggleButton.Template>
+                                                                    <ControlTemplate TargetType="ToggleButton">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                                Padding="{TemplateBinding Padding}">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                    <ColumnDefinition Width="Auto"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <ContentPresenter Grid.Column="0" Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+                                                                                <TextBlock x:Name="Arrow" 
+                                                                                           Grid.Column="1" 
+                                                                                           Text="&#xE70D;" 
+                                                                                           Style="{StaticResource SymbolIcon}" 
+                                                                                           FontSize="10" 
+                                                                                           Foreground="{StaticResource TextSub}" 
+                                                                                           VerticalAlignment="Center"
+                                                                                           RenderTransformOrigin="0.5,0.5">
+                                                                                    <TextBlock.RenderTransform>
+                                                                                        <RotateTransform Angle="0"/>
+                                                                                    </TextBlock.RenderTransform>
+                                                                                </TextBlock>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="True">
+                                                                                <Setter TargetName="Arrow" Property="RenderTransform">
+                                                                                    <Setter.Value>
+                                                                                        <RotateTransform Angle="180"/>
+                                                                                    </Setter.Value>
+                                                                                </Setter>
+                                                                                <Setter TargetName="Arrow" Property="Foreground" Value="{StaticResource SecondaryGold}"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Arrow" Property="Foreground" Value="White"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </ToggleButton.Template>
+                                                                <ToggleButton.Content>
+                                                                    <ContentPresenter Content="{TemplateBinding Header}" />
+                                                                </ToggleButton.Content>
+                                                            </ToggleButton>
+
+                                                            <ContentPresenter x:Name="ExpandSite"
+                                                                              Grid.Row="1"
+                                                                              Visibility="Collapsed"
+                                                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                              Margin="0"/>
+                                                        </Grid>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsExpanded" Value="True">
+                                                            <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Expander.Style>
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock Text="Sub-Contractors" Foreground="White" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <Border Background="#1AFFFFFF" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding SubContractorRows.Count, StringFormat='{}{0}'}" Foreground="{StaticResource SecondaryGold}" FontSize="9" FontWeight="Bold"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Expander.Header>
+                                <DataGrid ItemsSource="{Binding SubContractorRows}" 
+                                          AutoGenerateColumns="False" 
+                                          Background="Transparent" 
+                                          BorderThickness="0" 
+                                          CanUserAddRows="False" 
+                                          GridLinesVisibility="Horizontal" 
+                                          HorizontalGridLinesBrush="#10FFFFFF" 
+                                          RowBackground="Transparent" 
+                                          AlternatingRowBackground="#05FFFFFF"
+                                          HeadersVisibility="None"
+                                          Margin="0,5,0,0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="VENDOR NAME" Binding="{Binding VendorName}" Width="2*"/>
+                                        <DataGridTextColumn Header="SCOPE" Binding="{Binding Scope}" Width="1.5*"/>
+                                        <DataGridTextColumn Header="SAFETY APPROVED" Binding="{Binding SafetyApproved}" Width="1.2*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource SuccessGreen}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="APP SCORE" Binding="{Binding AppScore}" Width="1*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="AU 1" Binding="{Binding Audit1}" Width="0.8*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="AU 2" Binding="{Binding Audit2}" Width="0.8*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="AU 3" Binding="{Binding Audit3}" Width="0.8*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Expander>
                         </StackPanel>
                     </Border>
 
