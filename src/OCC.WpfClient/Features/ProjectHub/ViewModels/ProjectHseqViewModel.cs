@@ -58,16 +58,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             try
             {
-                var records = await _attendanceService.GetAttendanceRecordsAsync();
-                if (records != null)
-                {
-                    SafeWorkingHours = records
-                        .Where(r => r.ProjectId == ProjectId && 
-                                   (r.Status == AttendanceStatus.Present || 
-                                    r.Status == AttendanceStatus.Late || 
-                                    r.Status == AttendanceStatus.LeaveEarly))
-                        .Sum(r => r.HoursWorked);
-                }
+                SafeWorkingHours = await _attendanceService.GetProjectSafeHoursAsync(ProjectId);
             }
             catch
             {

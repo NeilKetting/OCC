@@ -372,6 +372,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"EXCEPTION IN LoadReportDataAsync: {ex}");
                 _logger.LogError(ex, "Error loading project report data for project {ProjectId}", projectId);
                 if (!silent)
                 {
@@ -400,22 +401,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5237/";
                 if (!baseUrl.EndsWith("/")) baseUrl += "/";
-                var url = $"{baseUrl}api/AttendanceRecords";
+                var url = $"{baseUrl}api/HseqStats/project/{ProjectId}";
 
-                var records = await client.GetFromJsonAsync<List<AttendanceRecord>>(url);
-                if (records != null)
-                {
-                    SafeWorkingHours = records
-                        .Where(r => r.ProjectId == ProjectId && 
-                                   (r.Status == AttendanceStatus.Present || 
-                                    r.Status == AttendanceStatus.Late || 
-                                    r.Status == AttendanceStatus.LeaveEarly))
-                        .Sum(r => r.HoursWorked);
-                }
-                else
-                {
-                    SafeWorkingHours = 0;
-                }
+                SafeWorkingHours = await client.GetFromJsonAsync<double>(url);
             }
             catch (Exception ex)
             {
@@ -985,7 +973,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         private void LoadPhotosFromDraft(string photoUrlsStr)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            ExecuteOnUIThread(() =>
             {
                 ReportPhotos.Clear();
                 if (!string.IsNullOrEmpty(photoUrlsStr))
@@ -1029,7 +1017,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                             ? relativeUrl 
                             : $"{baseUrl}/{relativeUrl.TrimStart('/')}";
 
-                        App.Current.Dispatcher.Invoke(() =>
+                        ExecuteOnUIThread(() =>
                         {
                             ReportPhotos.Add(fullUrl);
                             HasPhotos = ReportPhotos.Any();
@@ -1060,7 +1048,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             if (photoUrl == null) return;
             try
             {
-                App.Current.Dispatcher.Invoke(() =>
+                ExecuteOnUIThread(() =>
                 {
                     ReportPhotos.Remove(photoUrl);
                     HasPhotos = ReportPhotos.Any();
@@ -1070,7 +1058,19 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception ex)
             {
-                NotifyError("Error", $"Failed to remove photo: {ex.Message}");
+                NotifyError("Error", $"Could not remove photo: {ex.Message}");
+            }
+        }
+
+        private void ExecuteOnUIThread(Action action)
+        {
+            if (App.Current?.Dispatcher == null)
+            {
+                action();
+            }
+            else
+            {
+                App.Current.Dispatcher.Invoke(action);
             }
         }
     }

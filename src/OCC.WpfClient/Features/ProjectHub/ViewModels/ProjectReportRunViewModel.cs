@@ -329,18 +329,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 var baseUrl = _connectionSettings.ApiBaseUrl ?? "http://localhost:5237/";
                 if (!baseUrl.EndsWith("/")) baseUrl += "/";
-                var url = $"{baseUrl}api/AttendanceRecords";
+                var url = $"{baseUrl}api/HseqStats/project/{projectId}";
 
-                var records = await client.GetFromJsonAsync<List<AttendanceRecord>>(url);
-                if (records != null)
-                {
-                    return records
-                        .Where(r => r.ProjectId == projectId && 
-                                   (r.Status == AttendanceStatus.Present || 
-                                    r.Status == AttendanceStatus.Late || 
-                                    r.Status == AttendanceStatus.LeaveEarly))
-                        .Sum(r => r.HoursWorked);
-                }
+                return await client.GetFromJsonAsync<double>(url);
             }
             catch (Exception ex)
             {

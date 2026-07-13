@@ -77,6 +77,21 @@ namespace OCC.WpfClient.Services
             }
         }
 
+        public async Task<double> GetProjectSafeHoursAsync(Guid projectId)
+        {
+            EnsureAuthorization();
+            var url = GetFullUrl($"api/HseqStats/project/{projectId}");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<double>(url, _options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching project safe hours for project {ProjectId}", projectId);
+                return 0;
+            }
+        }
+
         public async Task<IEnumerable<AttendanceRecord>> GetTodaysAttendanceAsync()
         {
             var today = DateTime.Today;

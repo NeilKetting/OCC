@@ -22,8 +22,11 @@ namespace OCC.API.Controllers
         [HttpGet("dashboard")]
         public async Task<ActionResult<object>> GetDashboardStats()
         {
-            // 1. Total Safe Man Hours (From Attendance since the last incident)
+            // 1. Total Safe Man Hours (From Attendance since the last severe incident)
             var lastIncidentDate = await _context.Incidents
+                .Where(i => i.Severity == OCC.Shared.Enums.IncidentSeverity.High || 
+                           i.Severity == OCC.Shared.Enums.IncidentSeverity.Critical || 
+                           i.Severity == OCC.Shared.Enums.IncidentSeverity.Fatality)
                 .OrderByDescending(i => i.Date)
                 .Select(i => (DateTime?)i.Date)
                 .FirstOrDefaultAsync();
@@ -66,6 +69,42 @@ namespace OCC.API.Controllers
                 Environmentals = incidents.Count(i => i.Type == Shared.Enums.IncidentType.Environmental),
                 RecentAuditScores = auditScores
             });
+        }
+
+        [HttpGet("project/{projectId}")]
+        public async Task<ActionResult<double>> GetProjectSafeHours(Guid projectId)
+        {
+            var lastIncidentDate = await _context.Incidents
+                .Where(i => i.ProjectId == projectId && 
+                           (i.Severity == OCC.Shared.Enums.IncidentSeverity.High || 
+                            i.Severity == OCC.Shared.Enums.IncidentSeverity.Critical || 
+                            i.Severity == OCC.Shared.Enums.IncidentSeverity.Fatality))
+                .OrderByDescending(i => i.Date)
+                .Select(i => (DateTime?)i.Date)
+                .FirstOrDefaultAsync();
+
+            double totalHours = 0;
+            if (lastIncidentDate.HasValue)
+            {
+                totalHours = await _context.AttendanceRecords
+                    .Where(a => a.ProjectId == projectId && 
+                               a.Date > lastIncidentDate.Value &&
+                               (a.Status == OCC.Shared.Models.AttendanceStatus.Present || 
+                                a.Status == OCC.Shared.Models.AttendanceStatus.Late || 
+                                a.Status == OCC.Shared.Models.AttendanceStatus.LeaveEarly))
+                    .SumAsync(a => a.HoursWorked);
+            }
+            else
+            {
+                totalHours = await _context.AttendanceRecords
+                    .Where(a => a.ProjectId == projectId &&
+                               (a.Status == OCC.Shared.Models.AttendanceStatus.Present || 
+                                a.Status == OCC.Shared.Models.AttendanceStatus.Late || 
+                                a.Status == OCC.Shared.Models.AttendanceStatus.LeaveEarly))
+                    .SumAsync(a => a.HoursWorked);
+            }
+
+            return Ok(totalHours);
         }
 
         [HttpGet("history/{year?}")]
