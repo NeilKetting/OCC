@@ -27,6 +27,7 @@ namespace OCC.Shared.DTOs
     public class IncidentSummaryDto
     {
         public Guid Id { get; set; }
+        public Guid? ProjectId { get; set; }
         public DateTime Date { get; set; }
         public IncidentType Type { get; set; }
         public IncidentSeverity Severity { get; set; }
@@ -40,6 +41,7 @@ namespace OCC.Shared.DTOs
     public class IncidentDto
     {
         public Guid Id { get; set; }
+        public Guid? ProjectId { get; set; }
         public DateTime Date { get; set; }
         public IncidentType Type { get; set; }
         public IncidentSeverity Severity { get; set; }

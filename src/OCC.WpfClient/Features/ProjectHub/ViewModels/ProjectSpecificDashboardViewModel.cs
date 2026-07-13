@@ -24,6 +24,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly Services.Interfaces.ISnagService _snagService;
         private readonly Services.Interfaces.IAttendanceService _attendanceService;
         private readonly Services.Interfaces.IProjectVariationOrderService _voService;
+        private readonly Services.Interfaces.IHealthSafetyService _hseqService;
         private List<ProjectTask> _allTasks = new();
         private Project? _project;
 
@@ -70,11 +71,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ProjectSpecificDashboardViewModel(
             Services.Interfaces.ISnagService snagService,
             Services.Interfaces.IAttendanceService attendanceService,
-            Services.Interfaces.IProjectVariationOrderService voService)
+            Services.Interfaces.IProjectVariationOrderService voService,
+            Services.Interfaces.IHealthSafetyService hseqService)
         {
             _snagService = snagService;
             _attendanceService = attendanceService;
             _voService = voService;
+            _hseqService = hseqService;
             Title = "Stats";
         }
 
@@ -120,15 +123,42 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             try
             {
+                DateTime? lastIncidentDate = null;
+                try
+                {
+                    var incidents = await _hseqService.GetIncidentsAsync();
+                    if (incidents != null)
+                    {
+                        var projIncidents = incidents
+                            .Where(i => i.ProjectId == projectId)
+                            .OrderByDescending(i => i.Date)
+                            .ToList();
+                        
+                        if (projIncidents.Any())
+                        {
+                            lastIncidentDate = projIncidents.First().Date;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fallback to null
+                }
+
                 var records = await _attendanceService.GetAttendanceRecordsAsync();
                 if (records != null)
                 {
-                    SafeWorkingHours = records
-                        .Where(r => r.ProjectId == projectId && 
+                    var query = records.Where(r => r.ProjectId == projectId && 
                                    (r.Status == AttendanceStatus.Present || 
                                     r.Status == AttendanceStatus.Late || 
-                                    r.Status == AttendanceStatus.LeaveEarly))
-                        .Sum(r => r.HoursWorked);
+                                    r.Status == AttendanceStatus.LeaveEarly));
+
+                    if (lastIncidentDate.HasValue)
+                    {
+                        query = query.Where(r => r.Date > lastIncidentDate.Value);
+                    }
+
+                    SafeWorkingHours = query.Sum(r => r.HoursWorked);
                 }
             }
             catch

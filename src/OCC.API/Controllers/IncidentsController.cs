@@ -241,6 +241,7 @@ namespace OCC.API.Controllers
             return new IncidentSummaryDto
             {
                 Id = incident.Id,
+                ProjectId = incident.ProjectId,
                 Date = incident.Date,
                 Type = incident.Type,
                 Severity = incident.Severity,
@@ -257,6 +258,7 @@ namespace OCC.API.Controllers
             return new IncidentDto
             {
                 Id = incident.Id,
+                ProjectId = incident.ProjectId,
                 Date = incident.Date,
                 Type = incident.Type,
                 Severity = incident.Severity,

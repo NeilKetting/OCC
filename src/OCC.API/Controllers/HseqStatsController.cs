@@ -22,11 +22,24 @@ namespace OCC.API.Controllers
         [HttpGet("dashboard")]
         public async Task<ActionResult<object>> GetDashboardStats()
         {
-            // 1. Total Safe Man Hours (From Attendance)
-            // Naive calc: Sum of hoursWorked in AttendanceRecords for current month/year?
-            // Or total cumulative? Usually cumulative for Safe Hours.
-            var totalHours = await _context.AttendanceRecords
-                .SumAsync(a => a.HoursWorked);
+            // 1. Total Safe Man Hours (From Attendance since the last incident)
+            var lastIncidentDate = await _context.Incidents
+                .OrderByDescending(i => i.Date)
+                .Select(i => (DateTime?)i.Date)
+                .FirstOrDefaultAsync();
+
+            double totalHours = 0;
+            if (lastIncidentDate.HasValue)
+            {
+                totalHours = await _context.AttendanceRecords
+                    .Where(a => a.Date > lastIncidentDate.Value)
+                    .SumAsync(a => a.HoursWorked);
+            }
+            else
+            {
+                totalHours = await _context.AttendanceRecords
+                    .SumAsync(a => a.HoursWorked);
+            }
 
             // 2. Incident Counts
             var incidents = await _context.Incidents
@@ -128,7 +141,18 @@ namespace OCC.API.Controllers
                     var duration = record.CheckOutTime.Value - record.CheckInTime.Value;
                     if (duration.TotalHours > 0)
                     {
-                        double lunchHours = (duration.TotalHours > 5) ? 0.75 : 0;
+                        double lunchHours = 0;
+                        var dow = record.Date.DayOfWeek;
+                        bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                        bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+                        
+                        if (!isWeekend && !isHoliday)
+                        {
+                            if (record.CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))
+                            {
+                                lunchHours = 1.0;
+                            }
+                        }
                         var hours = Math.Max(0, Math.Round(duration.TotalHours - lunchHours, 2));
                         
                         if (record.HoursWorked != hours)
