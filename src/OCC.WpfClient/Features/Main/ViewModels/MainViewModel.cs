@@ -83,6 +83,9 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         // Timer to tick every second for the clock display
         private readonly System.Windows.Threading.DispatcherTimer _clockTimer; 
         
+        // Timer to check for application updates in the background every hour
+        private readonly System.Windows.Threading.DispatcherTimer _updateTimer;
+
         // Backing field for the currently active tab/hub
         private ViewModelBase? _activeHub;                                  
 
@@ -373,6 +376,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _clockTimer.Start();
             UpdateTime(); // initial call
 
+            // Setup hourly background update check timer
+            _updateTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromHours(1)
+            };
+            _updateTimer.Tick += async (s, e) => await CheckForUpdatesSilentAsync();
+            _updateTimer.Start();
+
             // Register message handlers via the CommunityToolkit WeakReferenceMessenger
             WeakReferenceMessenger.Default.Register<ToastNotificationMessage>(this);
             WeakReferenceMessenger.Default.Register<CloseHubMessage>(this);
@@ -596,6 +607,15 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     if (confirmed)
                     {
                         IsAppBusy = true;
+                        BusyMessage = "Checking for newer updates...";
+                        
+                        // Double-check to see if there is an even newer remote release before we start the download
+                        var latestUpdate = await _updateService.CheckForUpdatesAsync();
+                        if (latestUpdate != null)
+                        {
+                            update = latestUpdate;
+                        }
+
                         BusyMessage = "Downloading update...";
                         
                         await _updateService.DownloadUpdatesAsync(update, p => 
@@ -617,6 +637,55 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 IsAppBusy = false;
                 _logger.LogError(ex, "Error checking for updates from main menu");
                 await _dialogService.ShowAlertAsync("Update Error", "An error occurred while checking for updates. Please check your internet connection and try again.");
+            }
+        }
+
+        /// <summary>
+        /// Background update check method triggered hourly.
+        /// Runs silently and only prompts the user if a new update is actually found.
+        /// </summary>
+        private async Task CheckForUpdatesSilentAsync()
+        {
+            try
+            {
+                _logger.LogInformation("Background hourly check: Checking for updates...");
+                var update = await _updateService.CheckForUpdatesAsync();
+                if (update != null)
+                {
+                    _logger.LogInformation($"Background hourly check: Found new update version {update.TargetFullRelease.Version}");
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        var confirmed = await _dialogService.ShowConfirmationAsync("Update Available", 
+                            $"A new version (v{update.TargetFullRelease.Version}) is available. Would you like to download and install it now? The application will restart after downloading.");
+                        
+                        if (confirmed)
+                        {
+                            IsAppBusy = true;
+                            BusyMessage = "Checking for newer updates...";
+                            
+                            // Double check if an even newer version was pushed over the weekend/idle period
+                            var latestUpdate = await _updateService.CheckForUpdatesAsync();
+                            if (latestUpdate != null)
+                            {
+                                update = latestUpdate;
+                            }
+
+                            BusyMessage = "Downloading update...";
+                            
+                            await _updateService.DownloadUpdatesAsync(update, p => 
+                            {
+                                BusyMessage = $"Downloading update ({p}%)...";
+                            });
+
+                            await _dialogService.ShowAlertAsync("Update Ready", "The update has been downloaded. The application will now restart to apply changes.");
+                            _updateService.ApplyUpdatesAndRestart(update);
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in background update check");
             }
         }
 

@@ -206,6 +206,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
         public bool IsBibcColumnVisible => SelectedBranch == "Cape Town";
         public bool IsBibcRateVisible => IsAdminUser && SelectedBranch == "Cape Town";
+        public bool IsWashingGasVisible => SelectedBranch != "Cape Town";
 
         partial void OnSelectedBranchChanged(string value)
         {
@@ -224,9 +225,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
 
             IsDeductionsButtonVisible = value != "Cape Town";
-            IsDeductionsVisible = value != "Cape Town";
+            IsDeductionsVisible = true;
             OnPropertyChanged(nameof(IsBibcColumnVisible));
             OnPropertyChanged(nameof(IsBibcRateVisible));
+            OnPropertyChanged(nameof(IsWashingGasVisible));
         }
         partial void OnSelectedPayTypeChanged(string value)
         {

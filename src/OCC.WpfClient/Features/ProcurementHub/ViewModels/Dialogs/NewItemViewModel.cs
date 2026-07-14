@@ -125,7 +125,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
         }
 
         [RelayCommand]
-        private new void Cancel()
+        private void Cancel()
         {
             Completed?.Invoke(null);
             Close();

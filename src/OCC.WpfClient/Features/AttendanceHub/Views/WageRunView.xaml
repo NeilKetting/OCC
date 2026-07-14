@@ -51,26 +51,19 @@
                     <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh history" Margin="0,2,0,2">
                         <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
                     </Button>
-                    <!-- Print PDF -->
-                    <Button Style="{StaticResource PrintButton}" Command="{Binding PrintPdfCommand}" ToolTip="Print Wage Run PDF"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                    <!-- Print Options Dropdown -->
+                    <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" Click="PrintButton_Click" ToolTip="Print Options"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Content="Print">
+                        <Button.ContextMenu>
+                            <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                <MenuItem Header="Standard Wage Run PDF" Command="{Binding PrintPdfCommand}" Style="{StaticResource ModernMenuItem}"/>
+                                <MenuItem Header="Print Filtered Columns" Command="{Binding PrintFilteredPdfCommand}" Style="{StaticResource ModernMenuItem}"/>
+                                <MenuItem Header="Print Salary Version" Command="{Binding PrintSalaryVersionCommand}" Style="{StaticResource ModernMenuItem}"/>
+                                <MenuItem Header="Supervisor Payment Checklist" Command="{Binding PrintSupervisorPaymentsCommand}" Style="{StaticResource ModernMenuItem}"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
                     </Button>
-                    <!-- Print Filtered Columns -->
-                    <Button Style="{StaticResource PrintButton}" Command="{Binding PrintFilteredPdfCommand}" ToolTip="Print Filtered Grid Columns PDF"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Content="Print Filtered Columns">
-                    </Button>
-                    <!-- Salary PDF Button -->
-                    <Button Command="{Binding PrintSalaryVersionCommand}" ToolTip="Print Salary Version PDF"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource PrintButton}"
-                            Content="Print Salary Version"/>
-
-                    <!-- Print Supervisor Payments PDF -->
-                    <Button Command="{Binding PrintSupervisorPaymentsCommand}" ToolTip="Print Supervisor Payments Checklist PDF"
-                            Style="{StaticResource PrintButton}"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Content="Supervisor Payment Check List"/>
                     <!-- Export Draft Bank File -->
                     <Button Command="{Binding ExportDraftRunBankFileCommand}" ToolTip="Export Draft Bank File"
                             Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
@@ -417,7 +410,7 @@
                         </DataGridTemplateColumn>
                         <!-- WASHING — editable -->
                         <DataGridTemplateColumn Header="WASHING" Width="Auto"
-                                                Visibility="{Binding Data.IsDeductionsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                                Visibility="{Binding Data.IsWashingGasVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DeductionWashingDisplay}" HorizontalAlignment="Right"/>
@@ -431,7 +424,7 @@
                         </DataGridTemplateColumn>
                         <!-- GAS — editable -->
                         <DataGridTemplateColumn Header="GAS" Width="Auto"
-                                                Visibility="{Binding Data.IsDeductionsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                                Visibility="{Binding Data.IsWashingGasVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DeductionGasDisplay}" HorizontalAlignment="Right"/>

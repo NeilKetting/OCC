@@ -198,5 +198,52 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             NewRate = $"R {p.NewRate:F2}",
             Increase = $"{IncreasePercentage}%"
         }).ToList();
+
+        public override async Task PrintAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating report...";
+                
+                if (_pdfService == null)
+                {
+                    _logger?.LogError("IPdfService is not initialized. Ensure it is registered in the DI container.");
+                    NotifyError("Print Error", "The PDF generation service is currently unavailable.");
+                    return;
+                }
+
+                var selected = Previews.Where(p => p.IsChecked).Select(p => new
+                {
+                    p.EmployeeNumber,
+                    p.Name,
+                    OldRate = $"R {p.OldRate:F2}",
+                    NewRate = $"R {p.NewRate:F2}",
+                    Increase = $"{IncreasePercentage}%"
+                }).ToList();
+
+                var cols = new List<ReportColumnDefinition>
+                {
+                    new() { Header = "Emp #", PropertyName = "EmployeeNumber", Width = 1.0 },
+                    new() { Header = "Employee Name", PropertyName = "Name", Width = 2.5 },
+                    new() { Header = "Old Rate", PropertyName = "OldRate", Width = 1.5 },
+                    new() { Header = "New Rate", PropertyName = "NewRate", Width = 1.5 },
+                    new() { Header = "Increase", PropertyName = "Increase", Width = 1.2 }
+                };
+
+                var path = await _pdfService.GenerateListReportPdfAsync("Bulk Raise Preview Report", selected, cols, false);
+                
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing bulk raise report");
+                NotifyError("Print Error", "An error occurred while generating the PDF report.");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
     }
 }

@@ -35,6 +35,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Views
             {
                 btn.ContextMenu.PlacementTarget = btn;
                 btn.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                btn.ContextMenu.DataContext = btn.DataContext;
                 btn.ContextMenu.IsOpen = true;
             }
         }
