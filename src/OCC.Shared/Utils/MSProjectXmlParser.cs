@@ -108,7 +108,7 @@ namespace OCC.Shared.Utils
                 // Map XML UIDs to new GUIDs for internal linking
                 var uidMap = new Dictionary<string, string>();
                 // Store predecessors temporarily for later resolution
-                var pendingLinks = new List<(ProjectTask Task, string PredecessorXmlUid, int Type)>();
+                var pendingLinks = new List<(ProjectTask Task, string PredecessorXmlUid, int Type, double LagDays)>();
 
                 foreach (var taskElem in elements)
                 {
@@ -193,14 +193,22 @@ namespace OCC.Shared.Utils
                     foreach (var predLink in predecessors)
                     {
                         var predUid = predLink.Element(ns + "PredecessorUID")?.Value;
-                        var typeStr = predLink.Element(ns + "Type")?.Value; // 1=FF, 2=FS, 3=SS, 4=SF
+                        var typeStr = predLink.Element(ns + "Type")?.Value; // 0=FF, 1=FS, 2=SS, 3=SF standard
+                        var lagStr = predLink.Element(ns + "LinkLag")?.Value; // lag in tenths of a minute
                         
                         if (!string.IsNullOrEmpty(predUid))
                         {
                             int type = 1; 
                             if (int.TryParse(typeStr, out var t)) type = t;
                             
-                            pendingLinks.Add((task, predUid, type));
+                            double lagDays = 0;
+                            if (int.TryParse(lagStr, out var lagTenths))
+                            {
+                                // 1 day = 4800 tenths of a minute (8 hours * 60 minutes * 10 tenths)
+                                lagDays = Math.Round(lagTenths / 4800.0, 2);
+                            }
+                            
+                            pendingLinks.Add((task, predUid, type, lagDays));
                         }
                     }
 
@@ -212,8 +220,15 @@ namespace OCC.Shared.Utils
                 {
                     if (uidMap.TryGetValue(link.PredecessorXmlUid, out var predGuid))
                     {
-                        // Store as "GUID|Type"
-                        link.Task.Predecessors.Add($"{predGuid}|{link.Type}");
+                        // Map standard MS Project XML Types: 0=FF, 1=FS, 2=SS, 3=SF
+                        string typeStr = "FS";
+                        if (link.Type == 0) typeStr = "FF";
+                        else if (link.Type == 1) typeStr = "FS";
+                        else if (link.Type == 2) typeStr = "SS";
+                        else if (link.Type == 3) typeStr = "SF";
+
+                        // Store as "GUID|Type|LagDays"
+                        link.Task.Predecessors.Add($"{predGuid}|{typeStr}|{link.LagDays}");
                     }
                 }
 

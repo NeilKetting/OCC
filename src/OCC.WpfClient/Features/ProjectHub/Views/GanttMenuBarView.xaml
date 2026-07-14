@@ -17,24 +17,174 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             
-            <!-- Left Controls: Filter / View Options -->
-            <Grid Grid.Column="0">
-                <TextBlock Text="Gantt Chart" Style="{StaticResource HeaderText}"/>
-            </Grid>
+            <!-- Left: Title + Predecessor Cascade Actions -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Gantt Chart" Style="{StaticResource HeaderText}" VerticalAlignment="Center"/>
 
-            <!-- Right Controls: Zoom and Date Navigation -->
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
+
+                <!-- Apply Predecessor Scheduling -->
+                <Button Command="{Binding ApplyPredecessorCascadeCommand}" 
+                        Style="{StaticResource SecondaryButton}" 
+                        VerticalAlignment="Center"
+                        ToolTip="Recalculate task dates based on predecessor (Finish-to-Start) relationships">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8F1;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Apply Scheduling" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Save Schedule (only visible when pending changes exist) -->
+                <Button Command="{Binding SaveCascadeChangesCommand}"
+                        Visibility="{Binding HasPendingCascadeChanges, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        ToolTip="Save cascaded date changes to the database">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                            <Setter Property="Background" Value="#CC2E7D32"/>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74E;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Save Schedule" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
+
+                <!-- Add Task -->
+                <Button Command="{Binding NewTaskCommand}" 
+                        Style="{StaticResource PrimaryButton}" 
+                        VerticalAlignment="Center"
+                        ToolTip="Create a new top-level task for the project">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Add Task" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Add Subtask -->
+                <Button Command="{Binding CreateSubtaskCommand}" 
+                        Style="{StaticResource SecondaryButton}" 
+                        VerticalAlignment="Center"
+                        Margin="6,0,0,0"
+                        ToolTip="Create a child subtask under the selected task">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8A7;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Add Subtask" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Edit -->
+                <Button Command="{Binding EditTaskCommand}" 
+                        Style="{StaticResource SecondaryButton}" 
+                        VerticalAlignment="Center"
+                        Margin="6,0,0,0"
+                        ToolTip="Edit details of the selected task">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Edit" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Delete -->
+                <Button Command="{Binding DeleteTaskCommand}" 
+                        Style="{StaticResource SecondaryButton}" 
+                        VerticalAlignment="Center"
+                        Margin="6,0,0,0"
+                        ToolTip="Delete the selected task">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{StaticResource ErrorRed}"/>
+                        <TextBlock Text="Delete" VerticalAlignment="Center" Foreground="{StaticResource ErrorRed}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Right Controls: Show Links Toggle + Zoom + Date Navigation -->
             <StackPanel Grid.Column="2" Orientation="Horizontal">
+
+                <!-- Show Links Toggle -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <TextBlock Text="Show Links" VerticalAlignment="Center" Foreground="{StaticResource TextSub}" Margin="0,0,8,0" FontSize="11"/>
+                    <ToggleButton IsChecked="{Binding ShowDependencyLines, Mode=TwoWay}" 
+                                  Width="40" Height="20"
+                                  VerticalAlignment="Center"
+                                  ToolTip="Show or hide dependency connector lines">
+                        <ToggleButton.Style>
+                            <Style TargetType="ToggleButton">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Grid>
+                                                <!-- Track -->
+                                                <Border x:Name="Track" 
+                                                        Background="#555" 
+                                                        CornerRadius="10" 
+                                                        Width="40" Height="20"/>
+                                                <!-- Thumb -->
+                                                <Ellipse x:Name="Thumb" 
+                                                         Width="14" Height="14" 
+                                                         Fill="White"
+                                                         HorizontalAlignment="Left"
+                                                         Margin="3,0,0,0">
+                                                    <Ellipse.RenderTransform>
+                                                        <TranslateTransform x:Name="ThumbTranslate" X="0"/>
+                                                    </Ellipse.RenderTransform>
+                                                </Ellipse>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Trigger.EnterActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <ColorAnimation Storyboard.TargetName="Track"
+                                                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                                To="#E8750A" Duration="0:0:0.15"/>
+                                                                <DoubleAnimation Storyboard.TargetName="ThumbTranslate"
+                                                                                 Storyboard.TargetProperty="X"
+                                                                                 To="20" Duration="0:0:0.15"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </Trigger.EnterActions>
+                                                    <Trigger.ExitActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <ColorAnimation Storyboard.TargetName="Track"
+                                                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                                To="#555" Duration="0:0:0.15"/>
+                                                                <DoubleAnimation Storyboard.TargetName="ThumbTranslate"
+                                                                                 Storyboard.TargetProperty="X"
+                                                                                 To="0" Duration="0:0:0.15"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </Trigger.ExitActions>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Thumb" Property="Fill" Value="#E0E0E0"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ToggleButton.Style>
+                    </ToggleButton>
+                </StackPanel>
+
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="5,5,15,5" Height="20" VerticalAlignment="Center"/>
+
                 <Button Command="{Binding GoToTodayCommand}" Content="Today" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" />
                 <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Zoom" VerticalAlignment="Center" Foreground="{StaticResource TextSub}" Margin="0,0,10,0"/>
                     <Button Style="{StaticResource ToolbarIconButton}" Command="{Binding ZoomOutCommand}" Width="24" Height="24" Padding="0">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="10" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE949;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="10" VerticalAlignment="Center"/>
                     </Button>
                     <Slider Value="{Binding ZoomLevel}" Minimum="0.4" Maximum="3.0" Width="100" VerticalAlignment="Center" Margin="5,0" />
                     <Button Style="{StaticResource ToolbarIconButton}" Command="{Binding ZoomInCommand}" Width="24" Height="24" Padding="0">
-                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="10" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE948;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource OrangeBrush}" FontSize="10" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
             </StackPanel>

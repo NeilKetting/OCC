@@ -12,21 +12,52 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
     /// <summary>
     /// ViewModel for the Project Gantt View, responsible for calculating layout coordinate and managing task visuals.
     /// </summary>
-    public partial class ProjectGanttViewModel : ViewModelBase
+    public partial class ProjectGanttViewModel : ViewModelBase, IOverlayProvider
     {
         #region Private Members
 
         private readonly IProjectService _projectService;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IProjectTaskService _taskService;
+        private readonly IDialogService _dialogService;
+        
         private List<ProjectTask> _rootTasks = new();
+        private Guid _projectId;
+        private List<ProjectTask> _allTasksFlat = new();
+        /// <summary>Maps row-number (1-based) back to task ID string, for parsing user-typed predecessors.</summary>
+        private Dictionary<int, string> _rowNumberToTaskId = new();
+        /// <summary>Maps task ID string to row-number (1-based), for display.</summary>
+        private Dictionary<string, int> _taskIdToRowNumber = new();
 
         #endregion
 
         #region Observables
+
+        /// <summary>Active overlay task details drawer.</summary>
+        [ObservableProperty] private TaskDetailViewModel? _currentTaskDetail;
+
+        /// <summary>Currently selected task wrapper in the list.</summary>
+        [ObservableProperty] private GanttTaskWrapper? _selectedTaskWrapper;
+
+        public bool IsTaskSelected => SelectedTaskWrapper != null;
+
+        partial void OnSelectedTaskWrapperChanged(GanttTaskWrapper? value)
+        {
+            OnPropertyChanged(nameof(IsTaskSelected));
+            NewTaskCommand.NotifyCanExecuteChanged();
+            CreateSubtaskCommand.NotifyCanExecuteChanged();
+            EditTaskCommand.NotifyCanExecuteChanged();
+            DeleteTaskCommand.NotifyCanExecuteChanged();
+        }
+
+        public ViewModelBase? ActiveOverlay => CurrentTaskDetail;
 
         /// <summary>
         /// Collection of wrapped tasks ready for rendering in the Gantt chart.
@@ -102,6 +133,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private string _activeSmartFilter = "All Tasks"; // "All", "Overdue", "Today", "Week", "Month"
         [ObservableProperty] private Guid? _filterSubContractorId;
 
+        /// <summary>Controls whether dependency connector lines are visible on the Gantt chart.</summary>
+        [ObservableProperty] private bool _showDependencyLines = true;
+
+        /// <summary>True while predecessor cascade changes have been computed but not yet saved.</summary>
+        [ObservableProperty] private bool _hasPendingCascadeChanges;
+
+        /// <summary>Width of the Predecessors column in the left panel. Bound by both header and row grids.</summary>
+        [ObservableProperty] private double _predColumnWidth = 70;
+
         public ObservableCollection<OCC.Shared.DTOs.SubContractorFilterDto> SubContractorFilters { get; } = new();
 
         #endregion
@@ -114,15 +154,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ProjectGanttViewModel()
         {
             _projectService = null!;
+            _serviceProvider = null!;
+            _taskService = null!;
+            _dialogService = null!;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProjectGanttViewModel"/> with the required project manager.
         /// </summary>
-        /// <param name="projectService">The service for project and task logic.</param>
-        public ProjectGanttViewModel(IProjectService projectService)
+        public ProjectGanttViewModel(
+            IProjectService projectService,
+            IServiceProvider serviceProvider,
+            IProjectTaskService taskService,
+            IDialogService dialogService)
         {
             _projectService = projectService;
+            _serviceProvider = serviceProvider;
+            _taskService = taskService;
+            _dialogService = dialogService;
         }
 
         public override void Dispose()
@@ -137,6 +186,94 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         #endregion
 
         #region Commands
+
+        [RelayCommand]
+        private async Task NewTask()
+        {
+            var toastService = _serviceProvider.GetRequiredService<IToastService>();
+            try
+            {
+                var vm = _serviceProvider.GetRequiredService<TaskDetailViewModel>();
+                await vm.InitializeForCreation(_projectId);
+                vm.CloseFinished += (s, e) => CurrentTaskDetail = null;
+                CurrentTaskDetail = vm;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError("Error", "Could not initialize new task: " + ex.Message);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(IsTaskSelected))]
+        private async Task CreateSubtask()
+        {
+            if (SelectedTaskWrapper == null) return;
+            var toastService = _serviceProvider.GetRequiredService<IToastService>();
+            try
+            {
+                var vm = _serviceProvider.GetRequiredService<TaskDetailViewModel>();
+                await vm.InitializeForCreation(_projectId, SelectedTaskWrapper.Task.Id);
+                vm.CloseFinished += (s, e) => CurrentTaskDetail = null;
+                CurrentTaskDetail = vm;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError("Error", "Could not initialize sub-task: " + ex.Message);
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(IsTaskSelected))]
+        private async Task EditTask()
+        {
+            if (SelectedTaskWrapper == null) return;
+            var toastService = _serviceProvider.GetRequiredService<IToastService>();
+            try
+            {
+                var vm = _serviceProvider.GetRequiredService<TaskDetailViewModel>();
+                vm.CloseFinished += (s, e) => CurrentTaskDetail = null;
+                CurrentTaskDetail = vm; // Show drawer immediately
+                
+                await vm.LoadTaskById(SelectedTaskWrapper.Task.Id); // Load data in background
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError("Error", "Could not load task details: " + ex.Message);
+                CurrentTaskDetail = null;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(IsTaskSelected))]
+        private async Task DeleteTask()
+        {
+            if (SelectedTaskWrapper == null) return;
+
+            var confirm = await _dialogService.ShowConfirmationAsync(
+                "Delete Task", 
+                $"Are you sure you want to delete task '{SelectedTaskWrapper.Task.Name}'?\n\nThis action cannot be undone.");
+
+            if (!confirm) return;
+
+            var toastService = _serviceProvider.GetRequiredService<IToastService>();
+            try
+            {
+                IsBusy = true;
+                BusyText = "Deleting task...";
+                await _taskService.DeleteTaskAsync(SelectedTaskWrapper.Task.Id);
+                
+                // Publish TaskUpdatedMessage to trigger UI reload across view models (including parent and task list)
+                WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(SelectedTaskWrapper.Task.Id));
+                
+                SelectedTaskWrapper = null;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError("Error", "Failed to delete task: " + ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         /// <summary>
         /// Toggles the expansion state of a specific task and refreshes the view.
@@ -191,9 +328,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     await Task.Delay(10);
                 }
 
+                _projectId = projectId;
+
                 // Expand all by default to avoid large white space at bottom (User Workaround)
                 foreach (var t in tasks) t.IsExpanded = true;
                 
+                _allTasksFlat = tasks;
                 CalculateSmartStats(tasks);
 
                 // 1. Build Hierarchy
@@ -201,6 +341,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 
                 // 2. Refresh Visuals
                 RefreshGanttView();
+                HasPendingCascadeChanges = false;
             }
             finally
             {
@@ -316,6 +457,219 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void ToggleFilterPopup() => IsFilterPopupOpen = !IsFilterPopupOpen;
 
+        /// <summary>Toggles the visibility of dependency connector lines on the chart.</summary>
+        [RelayCommand]
+        private void ToggleDependencyLines() => ShowDependencyLines = !ShowDependencyLines;
+
+        /// <summary>
+        /// Topologically sorts the flat task list and cascades start/finish dates based on
+        /// Finish-to-Start (FS) predecessor relationships. Updates the Gantt visuals immediately.
+        /// The user must then click Save to persist changes.
+        /// </summary>
+        [RelayCommand]
+        private void ApplyPredecessorCascade()
+        {
+            if (_allTasksFlat.Count == 0) return;
+
+            var lookup = _allTasksFlat.ToDictionary(t => t.Id.ToString());
+
+            // Topological sort using Kahn's algorithm
+            var inDegree = _allTasksFlat.ToDictionary(t => t.Id.ToString(), _ => 0);
+            var dependents = new Dictionary<string, List<string>>();
+
+            foreach (var task in _allTasksFlat)
+            {
+                string taskKey = task.Id.ToString();
+                foreach (var predStr in task.Predecessors)
+                {
+                    var info = ParsePredecessor(predStr);
+                    if (lookup.ContainsKey(info.PredecessorId))
+                    {
+                        inDegree[taskKey]++;
+                        if (!dependents.ContainsKey(info.PredecessorId)) dependents[info.PredecessorId] = new List<string>();
+                        dependents[info.PredecessorId].Add(taskKey);
+                    }
+                }
+            }
+
+            var queue = new Queue<string>(_allTasksFlat
+                .Where(t => inDegree[t.Id.ToString()] == 0)
+                .Select(t => t.Id.ToString()));
+
+            var ordered = new List<ProjectTask>();
+            while (queue.Count > 0)
+            {
+                var id = queue.Dequeue();
+                if (!lookup.TryGetValue(id, out var task)) continue;
+                ordered.Add(task);
+                if (dependents.TryGetValue(id, out var deps))
+                    foreach (var dep in deps)
+                    {
+                        if (--inDegree[dep] == 0) queue.Enqueue(dep);
+                    }
+            }
+
+            // Cascade dates in topological order supporting FS, SS, FF, SF relationships with LagDays
+            bool anyChanged = false;
+            foreach (var task in ordered)
+            {
+                if (task.Predecessors.Count == 0) continue;
+
+                DateTime earliestAllowedStart = DateTime.MinValue;
+                foreach (var predStr in task.Predecessors)
+                {
+                    var info = ParsePredecessor(predStr);
+                    if (lookup.TryGetValue(info.PredecessorId, out var pred))
+                    {
+                        DateTime candidateStart = DateTime.MinValue;
+                        var duration = task.FinishDate - task.StartDate;
+
+                        switch (info.Type)
+                        {
+                            case "FS":
+                                candidateStart = pred.FinishDate.AddDays(info.LagDays);
+                                break;
+                            case "SS":
+                                candidateStart = pred.StartDate.AddDays(info.LagDays);
+                                break;
+                            case "FF":
+                                candidateStart = pred.FinishDate.AddDays(info.LagDays) - duration;
+                                break;
+                            case "SF":
+                                candidateStart = pred.StartDate.AddDays(info.LagDays) - duration;
+                                break;
+                        }
+
+                        if (candidateStart > earliestAllowedStart)
+                        {
+                            earliestAllowedStart = candidateStart;
+                        }
+                    }
+                }
+
+                if (earliestAllowedStart > DateTime.MinValue && task.StartDate < earliestAllowedStart)
+                {
+                    var duration = task.FinishDate - task.StartDate;
+                    task.StartDate = earliestAllowedStart;
+                    task.FinishDate = earliestAllowedStart + duration;
+                    anyChanged = true;
+                }
+            }
+
+            if (anyChanged)
+            {
+                HasPendingCascadeChanges = true;
+                _rootTasks = _projectService.BuildTaskHierarchy(_allTasksFlat);
+                RefreshGanttView();
+            }
+        }
+
+        /// <summary>Saves the predecessor-cascaded task dates to the API.</summary>
+        [RelayCommand]
+        private async Task SaveCascadeChanges()
+        {
+            if (!HasPendingCascadeChanges || _projectId == Guid.Empty) return;
+            try
+            {
+                IsBusy = true;
+                BusyText = "Saving schedule changes...";
+                await _projectService.UpdateProjectTasksAsync(_projectId, _allTasksFlat);
+                HasPendingCascadeChanges = false;
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Failed to save: {ex.Message}", "Save Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        #endregion
+
+        #region Public API for View
+
+        /// <summary>
+        /// Called by the view code-behind when the user finishes editing the PRED cell for a task.
+        /// Parses comma-separated row numbers back to task IDs and updates the task's predecessor list.
+        /// </summary>
+        public void UpdateTaskPredecessors(string taskIdStr, string newPredText)
+        {
+            var task = _allTasksFlat.FirstOrDefault(t => t.Id.ToString() == taskIdStr);
+            if (task == null) return;
+
+            task.Predecessors.Clear();
+            var parts = newPredText.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(part.Trim(), @"^\s*(?<row>\d+)\s*(?<type>FS|SS|FF|SF)?\s*(?:(?<sign>[+-])\s*(?<lagValue>\d+(?:\.\d+)?)\s*(?:day|days|d|hour|hours|h)?)?\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    int rowNum = int.Parse(match.Groups["row"].Value);
+                    if (_rowNumberToTaskId.TryGetValue(rowNum, out var predId))
+                    {
+                        string type = "FS";
+                        if (match.Groups["type"].Success)
+                        {
+                            type = match.Groups["type"].Value.ToUpper();
+                        }
+                        
+                        double lagDays = 0;
+                        if (match.Groups["lagValue"].Success)
+                        {
+                            double.TryParse(match.Groups["lagValue"].Value, out var val);
+                            string sign = match.Groups["sign"].Value;
+                            if (sign == "-") val = -val;
+                            lagDays = val;
+                        }
+                        
+                        task.Predecessors.Add($"{predId}|{type}|{lagDays}");
+                    }
+                }
+            }
+
+            HasPendingCascadeChanges = true;
+
+            // Update display text on the wrapper
+            var wrapper = GanttTasks.FirstOrDefault(w => w.Task.Id.ToString() == taskIdStr);
+            if (wrapper != null)
+            {
+                var displayParts = new List<string>();
+                foreach (var predStr in task.Predecessors)
+                {
+                    var info = ParsePredecessor(predStr);
+                    if (_taskIdToRowNumber.TryGetValue(info.PredecessorId, out var rowNum))
+                    {
+                        string part = rowNum.ToString();
+                        if (info.Type != "FS" || info.LagDays != 0)
+                        {
+                            part += info.Type;
+                            if (info.LagDays > 0)
+                            {
+                                part += $"+{info.LagDays} day" + (info.LagDays == 1 ? "" : "s");
+                            }
+                            else if (info.LagDays < 0)
+                            {
+                                part += $"{info.LagDays} day" + (info.LagDays == -1 ? "" : "s");
+                            }
+                        }
+                        displayParts.Add(part);
+                    }
+                }
+                wrapper.PredecessorText = string.Join(", ", displayParts);
+            }
+
+            // Update column width based on the edited text lengths
+            double maxCharsAfterEdit = GanttTasks.Any() ? GanttTasks.Max(w => w.PredecessorText?.Length ?? 0) : 0;
+            PredColumnWidth = Math.Max(70, maxCharsAfterEdit * 7.5 + 25);
+
+            // Refresh dependency lines immediately
+            var map = GanttTasks.ToDictionary(w => w.Task.Id.ToString());
+            Dependencies.Clear();
+            GenerateDependencies(map);
+        }
+
         #endregion
 
         #region Helper Methods
@@ -359,10 +713,16 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             double topPadding = 4.0; 
             
             var idToWrapperMap = new Dictionary<string, GanttTaskWrapper>();
+
+            // Build row-number maps (used for PRED column display and editing)
+            _taskIdToRowNumber = taskList
+                .Select((t, i) => new { Key = t.Id.ToString(), Row = i + 1 })
+                .ToDictionary(x => x.Key, x => x.Row);
+            _rowNumberToTaskId = _taskIdToRowNumber.ToDictionary(kv => kv.Value, kv => kv.Key);
             
             foreach (var task in taskList)
             {
-                var wrapper = new GanttTaskWrapper(task, ProjectStartDate, PixelsPerDay, index, topPadding, RowHeight);
+                var wrapper = new GanttTaskWrapper(task, ProjectStartDate, PixelsPerDay, index, topPadding, RowHeight, _taskIdToRowNumber);
                 wrapper.ToggleCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => ToggleExpand(task));
                 
                 GanttTasks.Add(wrapper);
@@ -371,6 +731,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             
             CanvasHeight = Math.Max(600, index * RowHeight + 100);
+
+            // Calculate auto width for the PRED column based on content length to prevent clipping
+            double maxChars = GanttTasks.Any() ? GanttTasks.Max(w => w.PredecessorText?.Length ?? 0) : 0;
+            PredColumnWidth = Math.Max(70, maxChars * 7.5 + 25);
 
             GenerateDependencies(idToWrapperMap);
             HarmonizeVisualDates(GanttTasks.ToList());
@@ -434,14 +798,10 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 foreach (var predString in wrapper.Task.Predecessors)
                 {
-                    var parts = predString.Split('|');
-                    var predId = parts[0];
-                    int type = 1; // Default FS
-                    if (parts.Length > 1 && int.TryParse(parts[1], out var t)) type = t;
-
-                    if (map.TryGetValue(predId, out var predWrapper))
+                    var info = ParsePredecessor(predString);
+                    if (map.TryGetValue(info.PredecessorId, out var predWrapper))
                     {
-                        Dependencies.Add(new GanttDependencyLine(predWrapper, wrapper, type));
+                        Dependencies.Add(new GanttDependencyLine(predWrapper, wrapper, info.Type));
                     }
                 }
             }
@@ -471,54 +831,158 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
         }
 
+        /// <summary>
+        /// Parses a predecessor storage string ("guid|type|lag") into structured PredecessorInfo.
+        /// Handles legacy formats ("guid|1" or just "guid").
+        /// </summary>
+        public static PredecessorInfo ParsePredecessor(string predStr)
+        {
+            var info = new PredecessorInfo();
+            if (string.IsNullOrEmpty(predStr)) return info;
+
+            var parts = predStr.Split('|');
+            info.PredecessorId = parts[0];
+
+            if (parts.Length > 1)
+            {
+                var typePart = parts[1].Trim().ToUpper();
+                if (typePart == "0" || typePart == "FF") info.Type = "FF";
+                else if (typePart == "1" || typePart == "FS") info.Type = "FS";
+                else if (typePart == "2" || typePart == "SS") info.Type = "SS";
+                else if (typePart == "3" || typePart == "SF") info.Type = "SF";
+                else info.Type = "FS";
+            }
+
+            if (parts.Length > 2)
+            {
+                if (double.TryParse(parts[2], out var lag))
+                {
+                    info.LagDays = lag;
+                }
+            }
+
+            return info;
+        }
+
         #endregion
     }
 
     /// <summary>
-    /// Represents a dependency line (arrow) between two tasks in the Gantt chart.
+    /// Represents a dependency connector line between two Gantt tasks, using MS Project-style routing:
+    /// Supports FS, SS, FF, SF relationships with custom alignments and directional arrowheads.
     /// </summary>
     public class GanttDependencyLine
     {
         public System.Windows.Media.StreamGeometry PathGeometry { get; private set; }
         public System.Windows.Media.StreamGeometry ArrowGeometry { get; private set; }
 
-        public GanttDependencyLine(GanttTaskWrapper predecessor, GanttTaskWrapper successor, int type)
+        private const double HStub = 8.0;   // horizontal stub length leaving/entering a bar
+        private const double ArrowSize = 6.0;
+
+        public GanttDependencyLine(GanttTaskWrapper predecessor, GanttTaskWrapper successor, string typeStr)
         {
-            var start = new System.Windows.Point(predecessor.Left + predecessor.Width, predecessor.Top + (predecessor.Height / 2));
-            var end = new System.Windows.Point(successor.Left, successor.Top + (successor.Height / 2));
+            double predLeft = predecessor.Left;
+            double predRight = predecessor.Left + predecessor.Width;
+            double predMidY  = predecessor.Top + predecessor.Height / 2.0;
+
+            double succLeft  = successor.Left;
+            double succRight = successor.Left + successor.Width;
+            double succMidY  = successor.Top + successor.Height / 2.0;
+
+            // Determine origin and destination based on relationship type
+            double startX = predRight;
+            double endX = succLeft;
+            bool enterFromLeft = true; 
+            bool exitToRight = true;
+
+            switch (typeStr)
+            {
+                case "SS":
+                    startX = predLeft;
+                    endX = succLeft;
+                    exitToRight = false;
+                    enterFromLeft = true;
+                    break;
+                case "FF":
+                    startX = predRight;
+                    endX = succRight;
+                    exitToRight = true;
+                    enterFromLeft = false;
+                    break;
+                case "SF":
+                    startX = predLeft;
+                    endX = succRight;
+                    exitToRight = false;
+                    enterFromLeft = false;
+                    break;
+                case "FS":
+                default:
+                    startX = predRight;
+                    endX = succLeft;
+                    exitToRight = true;
+                    enterFromLeft = true;
+                    break;
+            }
 
             var geometry = new System.Windows.Media.StreamGeometry();
-            using (var context = geometry.Open())
+            using (var ctx = geometry.Open())
             {
-                context.BeginFigure(start, false, false);
+                var p1 = new System.Windows.Point(startX, predMidY);
+                double stub1 = exitToRight ? HStub : -HStub;
+                double stub2 = enterFromLeft ? -HStub : HStub;
 
-                if (end.X > start.X + 20)
+                var p2 = new System.Windows.Point(startX + stub1, predMidY);
+                var p4 = new System.Windows.Point(endX + stub2, succMidY);
+                var p5 = new System.Windows.Point(endX, succMidY);
+
+                ctx.BeginFigure(p1, false, false);
+
+                if ((exitToRight && enterFromLeft && (endX + stub2 >= startX + stub1)) ||
+                    (!exitToRight && !enterFromLeft && (endX + stub2 <= startX + stub1)))
                 {
-                    double midX = start.X + (end.X - start.X) / 2;
-                    context.LineTo(new System.Windows.Point(midX, start.Y), true, false);
-                    context.LineTo(new System.Windows.Point(midX, end.Y), true, false);
-                    context.LineTo(end, true, false);
+                    // Clean path with enough clearance between stubs
+                    var p3 = new System.Windows.Point(startX + stub1, succMidY);
+                    ctx.LineTo(p2, true, false);
+                    ctx.LineTo(p3, true, false);
+                    ctx.LineTo(p4, true, false);
+                    ctx.LineTo(p5, true, false);
                 }
                 else
                 {
-                    double midY = (start.Y + end.Y) / 2;
-                    if (Math.Abs(start.Y - end.Y) < 10) midY = start.Y + 15;
-                    context.LineTo(new System.Windows.Point(start.X + 10, start.Y), true, false);
-                    context.LineTo(new System.Windows.Point(start.X + 10, midY), true, false);
-                    context.LineTo(new System.Windows.Point(end.X - 10, midY), true, false);
-                    context.LineTo(new System.Windows.Point(end.X - 10, end.Y), true, false);
-                    context.LineTo(end, true, false);
+                    // Bypass path when there's an overlap or opposite direction
+                    double midY = (predMidY + succMidY) / 2.0;
+                    if (Math.Abs(predMidY - succMidY) < 4) midY = predMidY + predecessor.Height;
+                    
+                    ctx.LineTo(p2, true, false);
+                    ctx.LineTo(new System.Windows.Point(startX + stub1, midY), true, false);
+                    ctx.LineTo(new System.Windows.Point(endX + stub2, midY), true, false);
+                    ctx.LineTo(p4, true, false);
+                    ctx.LineTo(p5, true, false);
                 }
             }
+            geometry.Freeze();
             PathGeometry = geometry;
 
             var arrow = new System.Windows.Media.StreamGeometry();
             using (var ctx = arrow.Open())
             {
-                ctx.BeginFigure(end, true, true);
-                ctx.LineTo(new System.Windows.Point(end.X - 6, end.Y - 3), true, false);
-                ctx.LineTo(new System.Windows.Point(end.X - 6, end.Y + 3), true, false);
+                var tip = new System.Windows.Point(endX, succMidY);
+                System.Windows.Point topPt, botPt;
+                if (enterFromLeft)
+                {
+                    topPt = new System.Windows.Point(endX - ArrowSize, succMidY - ArrowSize * 0.5);
+                    botPt = new System.Windows.Point(endX - ArrowSize, succMidY + ArrowSize * 0.5);
+                }
+                else
+                {
+                    topPt = new System.Windows.Point(endX + ArrowSize, succMidY - ArrowSize * 0.5);
+                    botPt = new System.Windows.Point(endX + ArrowSize, succMidY + ArrowSize * 0.5);
+                }
+                ctx.BeginFigure(tip, true, true);
+                ctx.LineTo(topPt, true, false);
+                ctx.LineTo(botPt, true, false);
             }
+            arrow.Freeze();
             ArrowGeometry = arrow;
         }
     }
@@ -575,8 +1039,20 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public bool HasChildren { get; }
         public List<GanttTaskWrapper> ChildrenWrappers { get; } = new();
 
-        public GanttTaskWrapper(ProjectTask task, DateTime projectStart, double pixelsPerDay, int index, double topOffset, double rowHeight)
+        /// <summary>Display text for the Predecessors column (row numbers, comma-separated). Observable so edits reflect immediately.</summary>
+        private string _predecessorText = string.Empty;
+        public string PredecessorText
         {
+            get => _predecessorText;
+            set => SetProperty(ref _predecessorText, value);
+        }
+
+        public int RowNumber { get; }
+
+        public GanttTaskWrapper(ProjectTask task, DateTime projectStart, double pixelsPerDay, int index, double topOffset, double rowHeight,
+            Dictionary<string, int>? taskIdToRowNumber = null)
+        {
+            RowNumber = index + 1;
             Task = task;
             IsSummary = task.IsGroup;
             HasChildren = task.Children.Any();
@@ -585,6 +1061,34 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             
             string resources = string.Join(", ", task.Assignments?.Select(a => a.AssigneeName) ?? Enumerable.Empty<string>());
             LabelText = $"{task.Name}  {task.PercentComplete}%  {resources}";
+
+            // Build predecessor text using row numbers and types/lags (like MS Project)
+            if (taskIdToRowNumber != null && task.Predecessors.Count > 0)
+            {
+                var displayParts = new List<string>();
+                foreach (var predStr in task.Predecessors)
+                {
+                    var info = ProjectGanttViewModel.ParsePredecessor(predStr);
+                    if (taskIdToRowNumber.TryGetValue(info.PredecessorId, out var rowNum))
+                    {
+                        string part = rowNum.ToString();
+                        if (info.Type != "FS" || info.LagDays != 0)
+                        {
+                            part += info.Type;
+                            if (info.LagDays > 0)
+                            {
+                                part += $"+{info.LagDays} day" + (info.LagDays == 1 ? "" : "s");
+                            }
+                            else if (info.LagDays < 0)
+                            {
+                                part += $"{info.LagDays} day" + (info.LagDays == -1 ? "" : "s");
+                            }
+                        }
+                        displayParts.Add(part);
+                    }
+                }
+                PredecessorText = string.Join(", ", displayParts);
+            }
             
             var startOffset = (task.StartDate - projectStart).TotalDays;
             if (startOffset < 0) startOffset = 0;
@@ -600,5 +1104,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             RowTop = index * rowHeight;
             Top = RowTop + topOffset; 
         }
+    }
+
+    /// <summary>
+    /// Holds parsed predecessor link information.
+    /// </summary>
+    public class PredecessorInfo
+    {
+        public string PredecessorId { get; set; } = string.Empty;
+        public string Type { get; set; } = "FS"; // FS, SS, FF, SF
+        public double LagDays { get; set; } = 0;
     }
 }

@@ -316,5 +316,26 @@ namespace OCC.WpfClient.Services
                 throw;
             }
         }
+
+        /// <summary>
+        /// Persists updated task dates (e.g. after predecessor cascade scheduling) back to the API.
+        /// Reuses the import-tasks endpoint which performs an upsert.
+        /// </summary>
+        public async Task UpdateProjectTasksAsync(Guid projectId, List<ProjectTask> tasks)
+        {
+            var client = _httpClientFactory.CreateClient();
+            EnsureAuthorization(client);
+            var url = GetFullUrl($"api/Projects/{projectId}/import-tasks");
+            try
+            {
+                var response = await client.PostAsJsonAsync(url, tasks);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating tasks for project {Id} at {Url}", projectId, url);
+                throw;
+            }
+        }
     }
 }

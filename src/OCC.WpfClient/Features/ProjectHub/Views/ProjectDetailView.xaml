@@ -17,7 +17,7 @@
     </UserControl.Resources>
     <Grid Background="{StaticResource BackgroundDarker}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="180"/>
             <!-- Project Sub-Sidebar (Expanded for readability) -->
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>

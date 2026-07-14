@@ -71,14 +71,34 @@
             </Grid.RowDefinitions>
             
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" MinWidth="200"/>
+                <ColumnDefinition Width="370" MinWidth="200"/>
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*" MinWidth="150"/>
             </Grid.ColumnDefinitions>
 
             <!-- Row 0: Headers -->
             <Border Grid.Row="0" Grid.Column="0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,1,1" Background="{StaticResource GlassBackgroundSubtle}" Height="35">
-                <TextBlock Text="TASK NAME" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" Margin="15,0"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="*"/>
+                        <!-- Draggable resize handle for PRED column -->
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="{Binding DataContext.PredColumnWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Row number header -->
+                    <Border Grid.Column="0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,1,0" Background="Transparent">
+                        <TextBlock Text="#" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="TASK NAME" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" Margin="15,0"/>
+                    <!-- Drag this splitter to resize the PRED column -->
+                    <GridSplitter Grid.Column="2" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeWE"
+                                  DragDelta="PredColumnSplitter_DragDelta"/>
+                    <Border Grid.Column="3" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1,0,0,0">
+                        <TextBlock Text="PRED" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   ToolTip="Predecessors — type row numbers (e.g. '3' or '3,5') and press Enter or click away"/>
+                    </Border>
+                </Grid>
             </Border>
             
             <!-- Date Headers ScrollViewer -->
@@ -106,65 +126,116 @@
 
             <!-- Row 1: Content -->
             <!-- Task List (Left) -->
-            <ScrollViewer Grid.Row="1" Grid.Column="0" Name="TaskListScrollViewer" HorizontalScrollBarVisibility="Auto" Padding="10,0,15,0"  Margin="0,0,10,0">
-                <ItemsControl ItemsSource="{Binding GanttTasks}">
-                    <ItemsControl.ItemsPanel>
+            <ScrollViewer Grid.Row="1" Grid.Column="0" Name="TaskListScrollViewer" HorizontalScrollBarVisibility="Auto" Padding="10,0,15,0" Margin="0,0,10,0">
+                <ListBox ItemsSource="{Binding GanttTasks}" SelectedItem="{Binding SelectedTaskWrapper, Mode=TwoWay}"
+                         Background="Transparent" BorderThickness="0" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <Canvas Height="{Binding DataContext.CanvasHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                         </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemContainerStyle>
-                        <Style TargetType="ContentPresenter">
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
                             <Setter Property="Canvas.Top" Value="{Binding RowTop}"/>
                             <Setter Property="Width" Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="ItemBorder" Background="{TemplateBinding Background}">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#30FFFFFF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#15FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
-                    </ItemsControl.ItemContainerStyle>
-                    <ItemsControl.ItemTemplate>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:GanttTaskWrapper}">
                             <Border x:Name="TaskRowBorder" Height="{Binding RowHeight}" BorderBrush="{StaticResource GlassBorderUltraLight}" 
-                                    BorderThickness="0,0,0,1" Background="Transparent">
-                                <StackPanel Orientation="Horizontal" Margin="{Binding IndentMargin}">
-                                    <!-- Expander Button -->
-                                    <Button Style="{StaticResource ToolbarIconButton}" 
-                                            Command="{Binding ToggleCommand}" 
-                                            Width="20" Height="20" 
-                                            Margin="5,0,5,0"
-                                            Visibility="{Binding HasChildren, Converter={StaticResource VisibilityConverter}}">
-                                        <Grid>
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Opacity="0.5"
-                                                       Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}}"/>
-                                            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Opacity="0.5"
-                                                       Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
-                                        </Grid>
-                                    </Button>
-                                    <!-- Spacer if no children -->
-                                    <Border Width="30" Visibility="{Binding HasChildren, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
-                                    
-                                    <TextBlock Text="{Binding Task.Name}" 
-                                               VerticalAlignment="Center"
-                                               Foreground="White"
-                                               FontSize="12">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsSummary}" Value="True">
-                                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                                        <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </StackPanel>
+                                    BorderThickness="0,0,0,1" Background="Transparent" PreviewMouseDown="TaskRow_PreviewMouseDown">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="30"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <!-- Spacer matching the header splitter -->
+                                        <ColumnDefinition Width="4"/>
+                                        <ColumnDefinition Width="{Binding DataContext.PredColumnWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Row Number -->
+                                    <Border Grid.Column="0" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,1,0" Background="Transparent">
+                                        <TextBlock Text="{Binding RowNumber}" 
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                   Foreground="{StaticResource TextSub}" FontSize="10" Opacity="0.7"/>
+                                    </Border>
+                                    <!-- Task Name + Expander -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="{Binding IndentMargin}">
+                                        <!-- Expander Button -->
+                                        <Button Style="{StaticResource ToolbarIconButton}" 
+                                                Command="{Binding ToggleCommand}" 
+                                                Width="20" Height="20" 
+                                                Margin="5,0,5,0"
+                                                Visibility="{Binding HasChildren, Converter={StaticResource VisibilityConverter}}">
+                                            <Grid>
+                                                <TextBlock Text="&#xE972;" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Opacity="0.5"
+                                                           Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}}"/>
+                                                <TextBlock Text="&#xE974;" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="10" Opacity="0.5"
+                                                           Visibility="{Binding Task.IsExpanded, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
+                                            </Grid>
+                                        </Button>
+                                        <!-- Spacer if no children -->
+                                        <Border Width="30" Visibility="{Binding HasChildren, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"/>
+                                        
+                                        <TextBlock Text="{Binding Task.Name}" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="White"
+                                                   FontSize="12">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSummary}" Value="True">
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <!-- Predecessors Column -->
+                                    <Border Grid.Column="3" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1,0,0,0">
+                                        <TextBox x:Name="PredTextBox"
+                                                 Text="{Binding PredecessorText, UpdateSourceTrigger=Explicit}"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 Foreground="{StaticResource TextSub}"
+                                                 FontSize="10"
+                                                 VerticalAlignment="Center"
+                                                 HorizontalAlignment="Stretch"
+                                                 HorizontalContentAlignment="Center"
+                                                 Padding="2"
+                                                 CaretBrush="{StaticResource OrangeBrush}"
+                                                 SelectionBrush="{StaticResource OrangeBrush}"
+                                                 ToolTip="Type row number(s) separated by commas, e.g. '3' or '3,5'. Press Enter or click away."
+                                                 LostFocus="PredTextBox_LostFocus"
+                                                 KeyDown="PredTextBox_KeyDown"/>
+                                    </Border>
+                                </Grid>
                             </Border>
-                            <DataTemplate.Triggers>
-                                <Trigger SourceName="TaskRowBorder" Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="TaskRowBorder" Property="Background" Value="{StaticResource GlassBackgroundHover}"/>
-                                </Trigger>
-                            </DataTemplate.Triggers>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </ScrollViewer>
             
             <GridSplitter Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Background="{StaticResource GlassBorderUltraLight}"/>
@@ -210,8 +281,9 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     
-                    <!-- Layer 3: Dependencies -->
-                    <ItemsControl ItemsSource="{Binding Dependencies}">
+                    <!-- Layer 3: Dependencies (visibility toggled by ShowDependencyLines) -->
+                    <ItemsControl ItemsSource="{Binding Dependencies}"
+                                  Visibility="{Binding DataContext.ShowDependencyLines, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Canvas Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}" />
@@ -221,9 +293,9 @@
                             <DataTemplate DataType="{x:Type vm:GanttDependencyLine}">
                                 <Canvas>
                                     <!-- Connector Line -->
-                                    <Path Data="{Binding PathGeometry}" Stroke="#999999" StrokeThickness="2" />
+                                    <Path Data="{Binding PathGeometry}" Stroke="#C0614040" StrokeThickness="1.5" StrokeLineJoin="Round"/>
                                     <!-- Arrowhead -->
-                                    <Path Data="{Binding ArrowGeometry}" Fill="#999999" StrokeThickness="0" />
+                                    <Path Data="{Binding ArrowGeometry}" Fill="#C0614040" StrokeThickness="0" />
                                 </Canvas>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -244,7 +316,8 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:GanttTaskWrapper}">
-                                <StackPanel Orientation="Horizontal" Height="{Binding Height}">
+                                <StackPanel Orientation="Horizontal" Height="{Binding Height}" Background="Transparent"
+                                            PreviewMouseDown="TaskRow_PreviewMouseDown">
                                     <Border Width="{Binding Width}">
                                         <Border.Style>
                                             <Style TargetType="Border" BasedOn="{StaticResource LeafBarStyle}">
@@ -294,5 +367,8 @@
                 </Grid>
             </ScrollViewer>
         </Grid>
+        
+        <!-- Task Detail Drawer (Overlay handled by TaskDetailView itself) -->
+        <ContentControl Content="{Binding CurrentTaskDetail}"/>
     </Grid>
 </UserControl>
