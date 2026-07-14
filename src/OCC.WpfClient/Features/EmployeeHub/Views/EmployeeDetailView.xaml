@@ -223,6 +223,13 @@
                                 <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding Employee.Branch}" Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
 
+                            <CheckBox Content="BIBC" 
+                                      IsChecked="{Binding Employee.IsBibc, Mode=TwoWay}" 
+                                      Style="{StaticResource ModernCheckBox}" 
+                                      Foreground="White"
+                                      Margin="0,5,0,12"
+                                      Visibility="{Binding IsBibcOptionVisible, Converter={StaticResource VisibilityConverter}}"/>
+
                             <CheckBox Content="Override Branch Shift Times" 
                                       IsChecked="{Binding IsShiftOverrideEnabled}" 
                                       Style="{StaticResource ModernToggleSwitch}" 

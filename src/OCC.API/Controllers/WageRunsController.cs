@@ -20,11 +20,13 @@ namespace OCC.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IWageCalculationService _wageCalc;
+        private readonly IConfiguration _configuration;
 
-        public WageRunsController(AppDbContext context, IWageCalculationService wageCalc)
+        public WageRunsController(AppDbContext context, IWageCalculationService wageCalc, IConfiguration configuration)
         {
             _context  = context;
             _wageCalc = wageCalc;
+            _configuration = configuration;
         }
 
         // GET: api/WageRuns
@@ -102,6 +104,14 @@ namespace OCC.API.Controllers
             }
 
             var employees = await employeesQuery.ToListAsync();
+
+            // Load BIBC Rate from settings
+            decimal bibcRate = 28.75m;
+            var bibcSetting = await _context.AppSettings.FirstOrDefaultAsync(s => s.Key == "BibcRate");
+            if (bibcSetting != null && decimal.TryParse(bibcSetting.Value, out var parsedRate))
+            {
+                bibcRate = parsedRate;
+            }
             
             // Calculate gas split
             var housedEmployees = employees.Where(e => e.LivesInCompanyHousing).ToList();
@@ -179,7 +189,8 @@ namespace OCC.API.Controllers
                     IsSupervisor = (emp.Role == EmployeeRole.Supervisor || emp.Role == EmployeeRole.SiteManager ||
                                     emp.Role == EmployeeRole.BuildingSupervisor || emp.Role == EmployeeRole.PlasterSupervisor ||
                                     emp.Role == EmployeeRole.ShopfittingSupervisor || emp.Role == EmployeeRole.PaintingSupervisor ||
-                                    emp.Role == EmployeeRole.LabourSupervisor)
+                                    emp.Role == EmployeeRole.LabourSupervisor),
+                    IsBibc = emp.IsBibc
                 };
 
                 // Supervisor Incentive: try to reuse the fee from the previous finalized run first
@@ -339,10 +350,12 @@ namespace OCC.API.Controllers
                 line.DaysWorkedWeek3 = distinctDaysW2.Count; // W3 (Week 2 actual worked)
                 line.TotalDaysWorked = distinctDaysW1.Count + distinctDaysW2.Count;
 
-                // B. Calculate Projected Hours (Thursday Week 2 to Friday Week 2)
+                // B. Calculate Projected Hours (Thursday to Friday of the run period)
                 var projectedStart = DateTime.MinValue;
                 var projectedEnd = DateTime.MinValue;
-                for (int i = 7; i <= 13; i++)
+                int startOffset = request.Branch == "Cape Town" ? 0 : 7;
+                int endOffset = request.Branch == "Cape Town" ? 6 : 13;
+                for (int i = startOffset; i <= endOffset; i++)
                 {
                     var date = request.StartDate.AddDays(i).Date;
                     if (date.DayOfWeek == DayOfWeek.Thursday)
@@ -487,6 +500,16 @@ namespace OCC.API.Controllers
                 // Recalculate TotalDaysWorked to include the deducted days offset (Week 1)
                 line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
+                // Calculate BIBC Amount
+                if (emp.IsBibc && emp.Branch == "Cape Town")
+                {
+                    line.BibcAmount = bibcRate * (decimal)line.TotalDaysWorked;
+                }
+                else
+                {
+                    line.BibcAmount = 0m;
+                }
+
                 // D. Total Wage
                 // Formula: ((Normal + Projected + Variance) * Rate) + (OT15 * Rate * 1.5) + (OT20 * Rate * 2.0)
                 
@@ -542,11 +565,43 @@ namespace OCC.API.Controllers
             return Ok(draftRun);
         }
 
+        private async Task PerformPreFinalizationBackupAsync()
+        {
+            try
+            {
+                var dbConnection = _context.Database.GetDbConnection();
+                var dbName = dbConnection.Database;
+                if (string.IsNullOrEmpty(dbName))
+                {
+                    var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(dbConnection.ConnectionString);
+                    dbName = builder.InitialCatalog;
+                }
+
+                var backupPath = _configuration.GetValue<string>("Backup:Path") ?? @"C:\OCCBackups";
+                if (!System.IO.Directory.Exists(backupPath))
+                {
+                    System.IO.Directory.CreateDirectory(backupPath);
+                }
+
+                var backupFileName = System.IO.Path.Combine(backupPath, $"{dbName}_PreFinalize_{DateTime.Now:yyyyMMdd_HHmmss}.bak");
+                
+                await _context.Database.ExecuteSqlRawAsync(
+                    $"BACKUP DATABASE [{dbName}] TO DISK = {{0}} WITH FORMAT, NAME = {{1}};", 
+                    backupFileName, "Pre-Finalization Backup");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Pre-finalization backup failed: {ex.Message}");
+            }
+        }
+
         // POST: api/WageRuns/finalize
         [HttpPost("finalize")]
         public async Task<ActionResult<WageRun>> FinalizeRun([FromBody] WageRun run)
         {
             if (run == null) return BadRequest("Invalid Wage Run data.");
+
+            await PerformPreFinalizationBackupAsync();
 
             var existing = await _context.WageRuns.Include(w => w.Lines).FirstOrDefaultAsync(w => w.Id == run.Id);
             if (existing != null)

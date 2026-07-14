@@ -23,6 +23,23 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private bool _isEditMode;
 
         public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack" };
+        public ObservableCollection<ItemType> ItemTypes { get; } = new(Enum.GetValues<ItemType>());
+
+        public ItemType SelectedType
+        {
+            get => Item.Type;
+            set
+            {
+                if (Item.Type != value)
+                {
+                    Item.Type = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsStockLevelVisible));
+                }
+            }
+        }
+
+        public bool IsStockLevelVisible => Item.Type == ItemType.StockPart;
 
         public InventoryDetailViewModel(
             IInventoryService inventoryService,
@@ -40,6 +57,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             Item = item;
             IsEditMode = true;
             Title = $"Edit {item.Sku}";
+            OnPropertyChanged(nameof(SelectedType));
+            OnPropertyChanged(nameof(IsStockLevelVisible));
         }
 
         [RelayCommand]

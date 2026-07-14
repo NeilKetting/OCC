@@ -1765,7 +1765,18 @@ namespace OCC.WpfClient.Services
                 col.Item().Row(row =>
                 {
                     row.RelativeItem().Text("ORANGE CIRCLE CONSTRUCTION Ltd").FontSize(8).ExtraBold();
-                    row.RelativeItem().AlignCenter().Text("STAFF WAGES (OCC)").FontSize(8).SemiBold();
+                    string headerTitle = "STAFF WAGES (OCC)";
+                    if (string.Equals(wageRun.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(wageRun.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        headerTitle = "CAPE TOWN WAGE RUN";
+                    }
+                    else if (string.Equals(wageRun.Branch, "Johannesburg", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(wageRun.Branch, "JHB", StringComparison.OrdinalIgnoreCase))
+                    {
+                        headerTitle = "JOHANNESBURG WAGE RUN";
+                    }
+                    row.RelativeItem().AlignCenter().Text(headerTitle).FontSize(8).SemiBold();
                     row.RelativeItem().AlignRight().Text(t =>
                     {
                         t.Span("Date: ").SemiBold().FontSize(8);
@@ -1785,13 +1796,13 @@ namespace OCC.WpfClient.Services
                 if (permLines.Any())
                 {
                     col.Item().PaddingTop(5).Text("PERMANENT STAFF").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments, hideDecColumns, visibleColumns));
+                    col.Item().Element(c => ComposeWageTable(c, permLines, hideAfterComments, hideDecColumns, visibleColumns, wageRun.Branch));
                 }
 
                 if (casualLines.Any())
                 {
                     col.Item().PaddingTop(10).Text("CONTRACT / CASUAL STAFF").FontSize(6).ExtraBold();
-                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments, hideDecColumns, visibleColumns));
+                    col.Item().Element(c => ComposeWageTable(c, casualLines, hideAfterComments, hideDecColumns, visibleColumns, wageRun.Branch));
                 }
 
                 // Summary tables at the bottom
@@ -1803,7 +1814,7 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns)
+        private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns, string branch)
         {
             bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
 
@@ -1813,6 +1824,11 @@ namespace OCC.WpfClient.Services
                 if (hideAfterComments && (key == "TotalRem" || key == "Days")) return false;
                 if (hideDecColumns && key == "DecColumns") return false;
 
+                bool isCpt = string.Equals(branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || 
+                             string.Equals(branch, "CPT", StringComparison.OrdinalIgnoreCase);
+                if (key == "Deductions" && isCpt) return false;
+                if (key == "OccToBibc" && !isCpt) return false;
+
                 bool standardDefault = key switch
                 {
                     "OtRates" => false,
@@ -1821,6 +1837,7 @@ namespace OCC.WpfClient.Services
                     "Notes" => false,
                     "TotalRem" => false,
                     "Days" => false,
+                    "OccToBibc" => isCpt,
                     _ => true
                 };
 
@@ -1838,6 +1855,7 @@ namespace OCC.WpfClient.Services
             if (IsColVisible("DecColumns")) visibleColCountBeforeNett += 3;
             if (IsColVisible("OtHours")) visibleColCountBeforeNett += 3;
             if (IsColVisible("Deductions")) visibleColCountBeforeNett += 4;
+            if (IsColVisible("OccToBibc")) visibleColCountBeforeNett++;
             
             int visibleColCountAfterNett = 0;
             if (IsColVisible("Bank")) visibleColCountAfterNett++;
@@ -1881,6 +1899,7 @@ namespace OCC.WpfClient.Services
                         columns.RelativeColumn(0.9f); // GAS
                         columns.RelativeColumn(0.9f); // OTHER
                     }
+                    if (IsColVisible("OccToBibc")) columns.RelativeColumn(1.1f); // OCC to BIBC
                     if (IsColVisible("TotalNett")) columns.RelativeColumn(1.2f);
                     if (IsColVisible("Bank")) columns.RelativeColumn(1.1f);
                     if (IsColVisible("BankAccount")) columns.RelativeColumn(1.6f);
@@ -1929,6 +1948,7 @@ namespace OCC.WpfClient.Services
                         header.Cell().Element(WageHeaderStyle).Text("GAS");
                         header.Cell().Element(WageHeaderStyle).Text("OTHER");
                     }
+                    if (IsColVisible("OccToBibc")) header.Cell().Element(WageHeaderStyle).Text("OCC to\nBIBC");
                     if (IsColVisible("TotalNett")) header.Cell().Element(WageHeaderStyle).Text("TOTAL\nNETT");
                     if (IsColVisible("Bank")) header.Cell().Element(WageHeaderStyle).Text("BANK");
                     if (IsColVisible("BankAccount")) header.Cell().Element(WageHeaderStyle).Text("ACCOUNT\nNUMBER");
@@ -1988,6 +2008,10 @@ namespace OCC.WpfClient.Services
                         table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionGas.ToString("F2"));
                         decimal otherTotal = line.DeductionOther + line.DeductionPPE;
                         table.Cell().Element(WageCellStyle).AlignRight().Text(otherTotal.ToString("F2"));
+                    }
+                    if (IsColVisible("OccToBibc"))
+                    {
+                        table.Cell().Element(WageCellStyle).AlignRight().Text(line.BibcAmount.ToString("F2"));
                     }
                     if (IsColVisible("TotalNett")) table.Cell().Element(WageCellStyle).AlignRight().Text(line.NetPay.ToString("F2")).SemiBold();
                     if (IsColVisible("Bank")) table.Cell().Element(WageCellStyle).Text(line.BankName ?? "");
@@ -2050,6 +2074,9 @@ namespace OCC.WpfClient.Services
 
         private void ComposeWageTotalsTable(IContainer container, WageRun wageRun)
         {
+            bool isCpt = string.Equals(wageRun.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || 
+                         string.Equals(wageRun.Branch, "CPT", StringComparison.OrdinalIgnoreCase);
+
             container.Column(col =>
             {
                 col.Item().Table(table =>
@@ -2070,7 +2097,7 @@ namespace OCC.WpfClient.Services
                         header.Cell().Element(WageTotStyle).Text("LOANS");
                         header.Cell().Element(WageTotStyle).Text("WASHING");
                         header.Cell().Element(WageTotStyle).Text("GAS");
-                        header.Cell().Element(WageTotStyle).Text("LIVING OUT");
+                        header.Cell().Element(WageTotStyle).Text(isCpt ? "BIBC" : "LIVING OUT");
                         header.Cell().Element(WageTotStyle).Text("TOTAL");
 
                         static IContainer WageTotStyle(IContainer c) =>
@@ -2080,25 +2107,25 @@ namespace OCC.WpfClient.Services
                     var permLines   = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").ToList();
                     var casualLines = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").ToList();
 
-                    AddWageTotalRow(table, "Permanent Staff", permLines);
-                    AddWageTotalRow(table, "Casual Staff",    casualLines);
+                    AddWageTotalRow(table, "Permanent Staff", permLines, isCpt);
+                    AddWageTotalRow(table, "Casual Staff",    casualLines, isCpt);
 
                     // Grand Total
                     table.Cell().Element(WageTotLineStyle).Text("Total").Bold();
-                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionLoan).ToString("F2")).Bold();
-                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionWashing).ToString("F2")).Bold();
-                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionGas).ToString("F2")).Bold();
-                    table.Cell().Element(WageTotLineStyle).AlignRight().Text("0.00").Bold();
+                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? "0.00" : wageRun.Lines.Sum(x => x.DeductionLoan).ToString("F2")).Bold();
+                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? "0.00" : wageRun.Lines.Sum(x => x.DeductionWashing).ToString("F2")).Bold();
+                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? "0.00" : wageRun.Lines.Sum(x => x.DeductionGas).ToString("F2")).Bold();
+                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? wageRun.Lines.Sum(x => x.BibcAmount).ToString("F2") : "0.00").Bold();
                     table.Cell().Element(WageTotLineStyle).AlignRight()
                         .Text(wageRun.Lines.Sum(x => x.NetPay).ToString("F2")).Bold();
 
-                    static void AddWageTotalRow(TableDescriptor t, string label, List<WageRunLine> ls)
+                    static void AddWageTotalRow(TableDescriptor t, string label, List<WageRunLine> ls, bool isCpt)
                     {
                         t.Cell().Element(WageTotLineStyle).Text(label);
-                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionLoan).ToString("F2"));
-                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionWashing).ToString("F2"));
-                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionGas).ToString("F2"));
-                        t.Cell().Element(WageTotLineStyle).AlignRight().Text("0.00");
+                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? "0.00" : ls.Sum(x => x.DeductionLoan).ToString("F2"));
+                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? "0.00" : ls.Sum(x => x.DeductionWashing).ToString("F2"));
+                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? "0.00" : ls.Sum(x => x.DeductionGas).ToString("F2"));
+                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? ls.Sum(x => x.BibcAmount).ToString("F2") : "0.00");
                         t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.NetPay).ToString("F2"));
                     }
 
@@ -2125,8 +2152,8 @@ namespace OCC.WpfClient.Services
                     table.Cell().Element(RowStyle).Text("Casual / Temp Staff").Bold();
                     table.Cell().Element(RowStyle).AlignRight().Text(casualNet.ToString("R #,##0.00"));
 
-                    table.Cell().Element(RowStyle).Text("Loans").Bold();
-                    table.Cell().Element(RowStyle).AlignRight().Text(loansTotal.ToString("R #,##0.00"));
+                    table.Cell().Element(RowStyle).Text(isCpt ? "BIBC" : "Loans").Bold();
+                    table.Cell().Element(RowStyle).AlignRight().Text(isCpt ? wageRun.Lines.Sum(x => x.BibcAmount).ToString("R #,##0.00") : loansTotal.ToString("R #,##0.00"));
 
                     table.Cell().Element(RowStyle).Text("Total of Wage Run").Bold();
                     table.Cell().Element(RowStyle).AlignRight().Text(grandTotal.ToString("R #,##0.00")).Bold();

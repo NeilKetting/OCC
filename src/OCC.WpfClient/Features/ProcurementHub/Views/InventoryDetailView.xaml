@@ -4,8 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="500">
+             d:DesignHeight="800" d:DesignWidth="500"
+             d:DataContext="{d:DesignInstance vm:InventoryDetailViewModel}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter"/>
+    </UserControl.Resources>
 
     <Grid Margin="30">
         <Grid.RowDefinitions>
@@ -23,6 +30,18 @@
         <!-- Form -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-5,0" Padding="0,0,0,0">
             <StackPanel Margin="0,0,20,0">
+                <TextBlock Text="ITEM TYPE" Style="{StaticResource FormLabelText}"/>
+                <ComboBox ItemsSource="{Binding ItemTypes}" 
+                          SelectedItem="{Binding SelectedType}" 
+                          Style="{StaticResource ModernComboBox}" 
+                          Margin="0,0,0,20" Height="36">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
                 <TextBlock Text="SKU / PART NUMBER" Style="{StaticResource FormLabelText}"/>
                 <TextBox Text="{Binding Item.Sku}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
 
@@ -47,41 +66,43 @@
                 <TextBlock Text="WAREHOUSE LOCATION" Style="{StaticResource FormLabelText}"/>
                 <TextBox Text="{Binding Item.Location}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
 
-                <Border Height="1" Background="{StaticResource GlassBorder}" Margin="0,10,0,25"/>
+                <StackPanel Visibility="{Binding IsStockLevelVisible, Converter={StaticResource BoolToVis}}">
+                    <Border Height="1" Background="{StaticResource GlassBorder}" Margin="0,10,0,25"/>
 
-                <TextBlock Text="STOCK LEVELS" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,15"/>
+                    <TextBlock Text="STOCK LEVELS" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,15"/>
 
-                <Grid Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                        <TextBlock Text="JHB QUANTITY" Style="{StaticResource FormLabelText}"/>
-                        <TextBox Text="{Binding Item.JhbQuantity}" Style="{StaticResource ModernInput}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                        <TextBlock Text="JHB REORDER POINT" Style="{StaticResource FormLabelText}"/>
-                        <TextBox Text="{Binding Item.JhbReorderPoint}" Style="{StaticResource ModernInput}"/>
-                    </StackPanel>
-                </Grid>
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="JHB QUANTITY" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Item.JhbQuantity}" Style="{StaticResource ModernInput}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="JHB REORDER POINT" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Item.JhbReorderPoint}" Style="{StaticResource ModernInput}"/>
+                        </StackPanel>
+                    </Grid>
 
-                <Grid Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                        <TextBlock Text="CPT QUANTITY" Style="{StaticResource FormLabelText}"/>
-                        <TextBox Text="{Binding Item.CptQuantity}" Style="{StaticResource ModernInput}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                        <TextBlock Text="CPT REORDER POINT" Style="{StaticResource FormLabelText}"/>
-                        <TextBox Text="{Binding Item.CptReorderPoint}" Style="{StaticResource ModernInput}"/>
-                    </StackPanel>
-                </Grid>
-                
-                <CheckBox Content="Track Low Stock Alerts" IsChecked="{Binding Item.TrackLowStock}" Style="{StaticResource ModernCheckBox}" Margin="0,10,0,0"/>
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="CPT QUANTITY" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Item.CptQuantity}" Style="{StaticResource ModernInput}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="CPT REORDER POINT" Style="{StaticResource FormLabelText}"/>
+                            <TextBox Text="{Binding Item.CptReorderPoint}" Style="{StaticResource ModernInput}"/>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <CheckBox Content="Track Low Stock Alerts" IsChecked="{Binding Item.TrackLowStock}" Style="{StaticResource ModernCheckBox}" Margin="0,10,0,0"/>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
 

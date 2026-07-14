@@ -105,7 +105,7 @@ namespace OCC.Shared.Models
         /// <summary> 
         /// Final payout amount: TotalWage + Incentives - Deductions. 
         /// </summary>
-        public decimal NetPay => Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE));
+        public decimal NetPay => Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + BibcAmount));
 
         /// <summary> Snapshot of worked days in the first week of the cycle. </summary>
         public double DaysWorkedWeek1 { get; set; }
@@ -126,6 +126,12 @@ namespace OCC.Shared.Models
         /// <summary> Flag indicating if the employee is in a supervisor role. </summary>
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool IsSupervisor { get; set; }
+
+        /// <summary> Flag indicating if the employee is registered with BIBC. </summary>
+        public bool IsBibc { get; set; }
+
+        /// <summary> The calculated BIBC contribution amount. </summary>
+        public decimal BibcAmount { get; set; }
 
         // IEntity Implementation - Replaced by BaseEntity
 

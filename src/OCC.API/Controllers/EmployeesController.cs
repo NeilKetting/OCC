@@ -58,7 +58,8 @@ namespace OCC.API.Controllers
                         EmploymentDate = e.EmploymentDate,
                         DoB = e.DoB,
                         IdType = e.IdType,
-                        PassportStampDate = e.PassportStampDate
+                        PassportStampDate = e.PassportStampDate,
+                        IsBibc = e.IsBibc
                     })
                     .ToListAsync();
 
@@ -318,7 +319,8 @@ namespace OCC.API.Controllers
                 EmploymentDate = employee.EmploymentDate,
                 DoB = employee.DoB,
                 IdType = employee.IdType,
-                PassportStampDate = employee.PassportStampDate
+                PassportStampDate = employee.PassportStampDate,
+                IsBibc = employee.IsBibc
             };
         }
 
@@ -346,6 +348,7 @@ namespace OCC.API.Controllers
                 EmploymentDate = employee.EmploymentDate,
                 Branch = employee.Branch,
                 LivesInCompanyHousing = employee.LivesInCompanyHousing,
+                IsBibc = employee.IsBibc,
                 ShiftStartTime = employee.ShiftStartTime,
                 ShiftEndTime = employee.ShiftEndTime,
                 RateType = employee.RateType,

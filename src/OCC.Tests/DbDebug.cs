@@ -211,7 +211,7 @@ namespace OCC.Tests
 
             // Build the WageCalculationService
             var wageCalc = new WageCalculationService(new WageCalculationOptions());
-            var controller = new WageRunsController(context, wageCalc);
+            var controller = new WageRunsController(context, wageCalc, null!);
 
             // Generate the draft request
             var draftReq = new WageRun

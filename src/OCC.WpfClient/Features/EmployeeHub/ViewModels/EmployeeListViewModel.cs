@@ -504,5 +504,45 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             PermanentCount = result.Count(e => e.EmploymentType == EmploymentType.Permanent);
             ContractCount = result.Count(e => e.EmploymentType == EmploymentType.Contract);
         }
+
+        [RelayCommand]
+        public async Task PrintForeignNationalsAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating Foreign Nationals Passport Report...";
+                
+                if (_pdfService == null)
+                {
+                    NotifyError("Print Error", "The PDF generation service is currently unavailable.");
+                    return;
+                }
+
+                var foreignNationals = Items.Where(e => e.IdType == IdType.Passport).ToList();
+
+                var cols = new List<ReportColumnDefinition>
+                {
+                    new() { Header = "Emp #", PropertyName = "EmployeeNumber", Width = 1.0 },
+                    new() { Header = "Name", PropertyName = "DisplayName", Width = 2.5 },
+                    new() { Header = "Passport Number", PropertyName = "IdNumber", Width = 2.0 },
+                    new() { Header = "Passport Stamp Date", PropertyName = "PassportStampDate", Width = 2.0 },
+                    new() { Header = "Branch", PropertyName = "Branch", Width = 1.5 },
+                    new() { Header = "Type", PropertyName = "EmploymentType", Width = 1.5 }
+                };
+
+                var path = await _pdfService.GenerateListReportPdfAsync("Foreign Nationals Passport Report", foreignNationals, cols, false);
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error printing foreign nationals report");
+                NotifyError("Print Error", "An error occurred while generating the PDF report.");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
     }
 }

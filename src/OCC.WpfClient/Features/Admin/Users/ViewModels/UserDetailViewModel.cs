@@ -39,6 +39,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _hasInventoryAccess;
         [ObservableProperty] private bool _hasPurchaseOrderAccess;
         [ObservableProperty] private bool _hasCalendarAccess;
+        [ObservableProperty] private bool _hasDashboardAccess;
         [ObservableProperty] private bool _hasTodoAccess;
 
         // Additional Hubs
@@ -60,6 +61,10 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
         [ObservableProperty] private bool _hasCompanyProfileAccess;
         [ObservableProperty] private bool _hasSettingsAccess;
         [ObservableProperty] private bool _hasAuditLogAccess;
+
+        // Wage / Payroll Features
+        [ObservableProperty] private bool _hasJhbWagesAccess;
+        [ObservableProperty] private bool _hasCptWagesAccess;
 
         [ObservableProperty] private bool _showModuleAccess;
         [ObservableProperty] private bool _showCompanyName;
@@ -122,7 +127,10 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 HasSettingsAccess = true;
                 HasAuditLogAccess = true;
                 HasCalendarAccess = true;
+                HasDashboardAccess = true;
                 HasTodoAccess = true;
+                HasJhbWagesAccess = true;
+                HasCptWagesAccess = true;
             }
             else if (value == UserRole.HSEQ)
             {
@@ -148,6 +156,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             HasInventoryAccess = current.Contains(NavigationRoutes.Inventory, StringComparer.OrdinalIgnoreCase);
             HasPurchaseOrderAccess = current.Contains(NavigationRoutes.PurchaseOrder, StringComparer.OrdinalIgnoreCase);
             HasCalendarAccess = current.Contains(NavigationRoutes.Calendar, StringComparer.OrdinalIgnoreCase);
+            HasDashboardAccess = current.Contains(NavigationRoutes.Home, StringComparer.OrdinalIgnoreCase);
             HasTodoAccess = current.Contains(NavigationRoutes.TodoHub, StringComparer.OrdinalIgnoreCase);
 
             HasCustomerAccess = current.Contains(NavigationRoutes.Customers, StringComparer.OrdinalIgnoreCase);
@@ -166,6 +175,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             HasCompanyProfileAccess = current.Contains(NavigationRoutes.CompanyProfile, StringComparer.OrdinalIgnoreCase);
             HasSettingsAccess = current.Contains(NavigationRoutes.CompanySettings, StringComparer.OrdinalIgnoreCase);
             HasAuditLogAccess = current.Contains(NavigationRoutes.AuditLog, StringComparer.OrdinalIgnoreCase);
+
+            HasJhbWagesAccess = current.Contains(NavigationRoutes.Feature_WagesJhb, StringComparer.OrdinalIgnoreCase);
+            HasCptWagesAccess = current.Contains(NavigationRoutes.Feature_WagesCpt, StringComparer.OrdinalIgnoreCase);
         }
 
         private string GetPermissionsString()
@@ -178,6 +190,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             if (HasInventoryAccess) selected.Add(NavigationRoutes.Inventory);
             if (HasPurchaseOrderAccess) selected.Add(NavigationRoutes.PurchaseOrder);
             if (HasCalendarAccess) selected.Add(NavigationRoutes.Calendar);
+            if (HasDashboardAccess) selected.Add(NavigationRoutes.Home);
             if (HasTodoAccess) selected.Add(NavigationRoutes.TodoHub);
 
             if (HasCustomerAccess) selected.Add(NavigationRoutes.Customers);
@@ -196,6 +209,9 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
             if (HasCompanyProfileAccess) selected.Add(NavigationRoutes.CompanyProfile);
             if (HasSettingsAccess) selected.Add(NavigationRoutes.CompanySettings);
             if (HasAuditLogAccess) selected.Add(NavigationRoutes.AuditLog);
+
+            if (HasJhbWagesAccess) selected.Add(NavigationRoutes.Feature_WagesJhb);
+            if (HasCptWagesAccess) selected.Add(NavigationRoutes.Feature_WagesCpt);
             
             return string.Join(",", selected);
         }

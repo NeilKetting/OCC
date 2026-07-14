@@ -180,7 +180,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _allPossibleWidgets = new List<WidgetViewModelBase>
             {
                 new BirthdayWidgetViewModel(_employeeService, _authService),
-                new AlertsWidgetViewModel(_employeeService),
+                new AlertsWidgetViewModel(_employeeService, _permissionService),
                 new TasksWidgetViewModel(_taskService),
                 new TodosWidgetViewModel(_todoService),
                 new UsersWidgetViewModel(_userService),

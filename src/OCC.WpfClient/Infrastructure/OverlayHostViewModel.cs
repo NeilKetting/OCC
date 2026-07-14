@@ -46,8 +46,8 @@ namespace OCC.WpfClient.Infrastructure
             void OnClose(object? sender, object? result)
             {
                 viewModel.CloseRequested -= OnClose;
-                // Directly close the overlay visually since the VM has already requested and confirmed closure.
                 IsOverlayVisible = false;
+                OverlayViewModel = null;
                 callback?.Invoke(result);
             }
 
@@ -70,6 +70,7 @@ namespace OCC.WpfClient.Infrastructure
             else
             {
                 IsOverlayVisible = false;
+                OverlayViewModel = null;
             }
         }
 

@@ -8,5 +8,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<CompanyDetails> GetCompanyDetailsAsync();
         Task SaveCompanyDetailsAsync(CompanyDetails details);
         Task<string?> GetGoogleMapsKeyAsync();
+        Task<decimal> GetBibcRateAsync();
+        Task SaveBibcRateAsync(decimal rate);
     }
 }

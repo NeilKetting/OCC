@@ -58,6 +58,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         public bool IsPassportVisible => Employee.IdType == IdType.RSAId;
         public bool IsPassportFieldsVisible => Employee.IdType == IdType.Passport;
         public bool IsContractVisible => Employee.EmploymentType == EmploymentType.Contract;
+        public bool IsBibcOptionVisible => string.Equals(Employee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase);
 
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
@@ -130,6 +131,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                     else if (e.PropertyName == nameof(EmployeeModel.Branch))
                     {
                         UpdateShiftTimes();
+                        OnPropertyChanged(nameof(IsBibcOptionVisible));
                     }
                     else if (e.PropertyName == nameof(EmployeeModel.Role))
                     {

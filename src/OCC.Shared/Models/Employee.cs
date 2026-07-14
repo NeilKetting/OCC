@@ -195,6 +195,11 @@ namespace OCC.Shared.Models
         /// </summary>
         public bool LivesInCompanyHousing { get; set; }
 
+        /// <summary>
+        /// Indicates if the employee is registered with BIBC (Building Industry Bargaining Council).
+        /// </summary>
+        public bool IsBibc { get; set; }
+
         // Emergency & Next of Kin
         
         /// <summary> Name of the next of kin. </summary>

@@ -93,6 +93,25 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // ─── Editable Properties (trigger recalc) ─────────────────────────────
 
+        public static decimal BibcRate { get; set; } = 28.75m;
+
+        public bool IsBibc
+        {
+            get => Model.IsBibc;
+            set
+            {
+                if (Model.IsBibc != value)
+                {
+                    Model.IsBibc = value;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(BibcAmount));
+                }
+            }
+        }
+
+        public decimal BibcAmount => Model.BibcAmount;
+
         /// <summary>Normal weekday hours within shift. Recalculates TotalWage/NetPay.</summary>
         public double NormalHours
         {
@@ -216,9 +235,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         ///                 + (OT15Hours × HourlyRate × 1.5)
         ///                 + (OT20Hours × HourlyRate × 2.0)
         /// </summary>
+        public void Recalculate()
+        {
+            RecalculateAndNotify();
+        }
+
         private void RecalculateAndNotify()
         {
             if (Model == null) return;
+
+            // Recalculate BIBC Amount if applicable
+            if (Model.IsBibc && (string.Equals(Model.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(Model.Branch, "CPT", StringComparison.OrdinalIgnoreCase)))
+            {
+                Model.BibcAmount = BibcRate * (decimal)Model.TotalDaysWorked;
+            }
+            else
+            {
+                Model.BibcAmount = 0m;
+            }
 
             // Recalculate TotalWage on the model (NetPay is derived from it)
             Model.TotalWage =
@@ -231,6 +265,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             OnPropertyChanged(nameof(TotalRem));
             OnPropertyChanged(nameof(TotalWage));
             OnPropertyChanged(nameof(StdHoursDisplay));
+            OnPropertyChanged(nameof(BibcAmount));
         }
 
         private void PromptReason(string hoursType, double oldValue, double newValue)

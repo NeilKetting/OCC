@@ -95,11 +95,17 @@
                             <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
                             <!-- Print Button -->
-                            <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding PrintCommand}" ToolTip="Print Report">
+                            <Button x:Name="PrintBtn" Style="{StaticResource QuickBooksToolbarButtonStyle}" Click="PrintButton_Click" ToolTip="Print Report">
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                     <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
                                 </StackPanel>
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                        <MenuItem Header="Standard Employee Report" Command="{Binding PrintCommand}" Style="{StaticResource ModernMenuItem}"/>
+                                        <MenuItem Header="Foreign Nationals Passport Report" Command="{Binding PrintForeignNationalsCommand}" Style="{StaticResource ModernMenuItem}"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
                             </Button>
 
                             <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>

@@ -250,9 +250,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     EmployeeName = GetEmployeeName(r.EmployeeId),
                     ProjectName  = GetProjectName(r)
                 })
-                .OrderByDescending(r => r.Record.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.Record.EmployeeId.Value, out var type) && type == "Permanent")
+                .OrderByDescending(r => r.Record.Date)
+                .ThenByDescending(r => r.Record.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.Record.EmployeeId.Value, out var type) && type == "Permanent")
                 .ThenBy(r => r.EmployeeName)
-                .ThenByDescending(r => r.Record.Date)
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
             TotalCount = result.Count;

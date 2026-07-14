@@ -93,6 +93,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         // Metadata
         [ObservableProperty] private string _taxNumber = string.Empty;
         [ObservableProperty] private bool _livesInCompanyHousing;
+        [ObservableProperty] private bool _isBibc;
 
         // Next of Kin / Emergency
         [ObservableProperty] private string? _nextOfKinName;
@@ -158,6 +159,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
             LeaveCycleStartDate = dto.LeaveCycleStartDate;
             TaxNumber = dto.TaxNumber;
             LivesInCompanyHousing = dto.LivesInCompanyHousing;
+            IsBibc = dto.IsBibc;
             NextOfKinName = dto.NextOfKinName;
             NextOfKinRelation = dto.NextOfKinRelation;
             NextOfKinPhone = dto.NextOfKinPhone;
@@ -204,6 +206,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
                 LeaveCycleStartDate = LeaveCycleStartDate,
                 TaxNumber = TaxNumber,
                 LivesInCompanyHousing = LivesInCompanyHousing,
+                IsBibc = IsBibc,
                 NextOfKinName = NextOfKinName,
                 NextOfKinRelation = NextOfKinRelation,
                 NextOfKinPhone = NextOfKinPhone,

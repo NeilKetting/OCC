@@ -9,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
 {
-    public partial class NewItemViewModel : ViewModelBase
+    public partial class NewItemViewModel : OverlayViewModel
     {
         private readonly IInventoryService _inventoryService;
+        private System.Collections.Generic.List<InventoryItem> _existingItems = new();
 
         [ObservableProperty]
         private ItemType _type = ItemType.StockPart;
@@ -31,23 +32,72 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
         [ObservableProperty]
         private string _account = "Sales";
 
+        [ObservableProperty]
+        private bool _isSubitem;
+
+        [ObservableProperty]
+        private string? _parentItem;
+
+        [ObservableProperty]
+        private bool _isInactive;
+
         public event Action<InventoryItem?>? Completed;
 
         public ObservableCollection<ItemType> ItemTypes { get; } = new(Enum.GetValues<ItemType>());
+        public ObservableCollection<string> ParentItems { get; } = new();
 
         public NewItemViewModel(string initialSku, IInventoryService inventoryService)
         {
             Sku = initialSku;
             _inventoryService = inventoryService;
             Title = "New Item";
+            _ = LoadExistingItemsAsync();
+        }
+
+        private async Task LoadExistingItemsAsync()
+        {
+            try
+            {
+                var items = await _inventoryService.GetInventoryAsync();
+                if (items != null)
+                {
+                    _existingItems = new System.Collections.Generic.List<InventoryItem>(items);
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        ParentItems.Clear();
+                        foreach (var item in _existingItems)
+                        {
+                            ParentItems.Add(item.Sku);
+                        }
+                    });
+                }
+            }
+            catch
+            {
+                // Safe ignore or log
+            }
         }
 
         [RelayCommand]
         private async Task SaveAsync()
         {
+            if (string.IsNullOrWhiteSpace(Sku))
+            {
+                ErrorMessage = "SKU/Item Code is required.";
+                return;
+            }
+
+            // Enforce duplicate SKU validation
+            if (_existingItems.Exists(i => string.Equals(i.Sku, Sku, StringComparison.OrdinalIgnoreCase)))
+            {
+                ErrorMessage = $"An item with SKU/Item Code '{Sku}' already exists.";
+                return;
+            }
+
             try
             {
                 IsBusy = true;
+                ErrorMessage = null;
                 var newItem = new InventoryItem
                 {
                     Id = Guid.NewGuid(),
@@ -61,6 +111,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
                 // Save immediately as requested
                 var createdItem = await _inventoryService.CreateItemAsync(newItem);
                 Completed?.Invoke(createdItem);
+                Close(createdItem);
             }
             catch (Exception ex)
             {
@@ -74,9 +125,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
         }
 
         [RelayCommand]
-        private void Cancel()
+        private new void Cancel()
         {
             Completed?.Invoke(null);
+            Close();
         }
     }
 }

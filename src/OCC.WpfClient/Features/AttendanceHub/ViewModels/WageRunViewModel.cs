@@ -26,6 +26,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly IDialogService _dialogService;
         private readonly ILogger<WageRunViewModel> _logger;
         private readonly OCC.WpfClient.Services.Infrastructure.LocalSettingsService _localSettings;
+        private readonly IPermissionService _permissionService;
         private bool _isInitializingColumns;
 
         private WageRun? _currentDraft;
@@ -43,8 +44,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
-                // Fortnight cycle: StartDate + 13 days = 14-day run
-                EndDate = value.AddDays(13);
+                int days = SelectedBranch == "Cape Town" ? 6 : 13;
+                EndDate = value.AddDays(days);
                 IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
             }
             finally
@@ -59,8 +60,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
-                // Fortnight cycle: EndDate - 13 days = 14-day run
-                StartDate = value.AddDays(-13);
+                int days = SelectedBranch == "Cape Town" ? 6 : 13;
+                StartDate = value.AddDays(-days);
                 IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
             }
             finally
@@ -166,6 +167,19 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (obj is not WageRunLineViewModel line) return false;
 
+            // Extra safety permission check inside FilterLines
+            bool hasJhb = _permissionService.CanAccess(NavigationRoutes.Feature_WagesJhb);
+            bool hasCpt = _permissionService.CanAccess(NavigationRoutes.Feature_WagesCpt);
+            if (!hasJhb || !hasCpt)
+            {
+                if (hasJhb && !(string.Equals(line.Branch, "Johannesburg", StringComparison.OrdinalIgnoreCase) || string.Equals(line.Branch, "JHB", StringComparison.OrdinalIgnoreCase)))
+                    return false;
+                if (hasCpt && !(string.Equals(line.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(line.Branch, "CPT", StringComparison.OrdinalIgnoreCase)))
+                    return false;
+                if (!hasJhb && !hasCpt)
+                    return false;
+            }
+
             // Client-side PayType filter matching UI selection
             if (_currentDraft != null && !string.IsNullOrEmpty(_currentDraft.PayType) &&
                 !string.Equals(_currentDraft.PayType, SelectedPayType, StringComparison.OrdinalIgnoreCase))
@@ -190,10 +204,29 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             LinesView.Refresh();
             UpdateGrandTotal();
         }
+        public bool IsBibcColumnVisible => SelectedBranch == "Cape Town";
+        public bool IsBibcRateVisible => IsAdminUser && SelectedBranch == "Cape Town";
+
         partial void OnSelectedBranchChanged(string value)
         {
             LinesView?.Refresh();
             UpdateGrandTotal();
+
+            _isUpdatingDates = true;
+            try
+            {
+                int days = value == "Cape Town" ? 6 : 13;
+                EndDate = StartDate.AddDays(days);
+            }
+            finally
+            {
+                _isUpdatingDates = false;
+            }
+
+            IsDeductionsButtonVisible = value != "Cape Town";
+            IsDeductionsVisible = value != "Cape Town";
+            OnPropertyChanged(nameof(IsBibcColumnVisible));
+            OnPropertyChanged(nameof(IsBibcRateVisible));
         }
         partial void OnSelectedPayTypeChanged(string value)
         {
@@ -214,10 +247,33 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             get
             {
                 var filtered = PastRuns.AsEnumerable();
-                if (SelectedBranch != "All")
+                
+                bool hasJhb = _permissionService.CanAccess(NavigationRoutes.Feature_WagesJhb);
+                bool hasCpt = _permissionService.CanAccess(NavigationRoutes.Feature_WagesCpt);
+
+                if (!hasJhb || !hasCpt)
                 {
-                    filtered = filtered.Where(r => r.Branch == SelectedBranch || r.Branch == "All");
+                    if (hasJhb)
+                    {
+                        filtered = filtered.Where(r => r.Branch == "Johannesburg" || r.Branch == "JHB");
+                    }
+                    else if (hasCpt)
+                    {
+                        filtered = filtered.Where(r => r.Branch == "Cape Town" || r.Branch == "CPT");
+                    }
+                    else
+                    {
+                        return Enumerable.Empty<WageRun>();
+                    }
                 }
+                else
+                {
+                    if (SelectedBranch != "All")
+                    {
+                        filtered = filtered.Where(r => r.Branch == SelectedBranch || r.Branch == (SelectedBranch == "Johannesburg" ? "JHB" : "CPT"));
+                    }
+                }
+
                 if (!string.IsNullOrEmpty(SelectedPayType))
                 {
                     filtered = filtered.Where(r => r.PayType == SelectedPayType);
@@ -228,13 +284,55 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // ─── Constructor ─────────────────────────────────────────────────────
 
+        private readonly ISettingsService _settingsService;
+        private readonly IAuthService _authService;
+
+        [ObservableProperty] private decimal _bibcRate = 28.75m;
+        [ObservableProperty] private bool _isAdminUser;
+        [ObservableProperty] private bool _isDeductionsButtonVisible = true;
+
+        private async Task LoadBibcRateAsync()
+        {
+            try
+            {
+                BibcRate = await _settingsService.GetBibcRateAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading BIBC rate");
+            }
+        }
+
+        partial void OnBibcRateChanged(decimal value)
+        {
+            if (IsAdminUser)
+            {
+                _ = SaveBibcRateAsync(value);
+            }
+        }
+
+        private async Task SaveBibcRateAsync(decimal value)
+        {
+            try
+            {
+                await _settingsService.SaveBibcRateAsync(value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving BIBC rate");
+            }
+        }
+
         public WageRunViewModel(
             IWageService wageService,
             IPdfService pdfService,
             IExportService exportService,
             IDialogService dialogService,
             ILogger<WageRunViewModel> logger,
-            OCC.WpfClient.Services.Infrastructure.LocalSettingsService localSettings)
+            OCC.WpfClient.Services.Infrastructure.LocalSettingsService localSettings,
+            IPermissionService permissionService,
+            ISettingsService settingsService,
+            IAuthService authService)
         {
             _wageService = wageService;
             _pdfService = pdfService;
@@ -242,13 +340,49 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _dialogService = dialogService;
             _logger = logger;
             _localSettings = localSettings;
+            _permissionService = permissionService;
+            _settingsService = settingsService;
+            _authService = authService;
             Title = "Wage Run";
+
+            IsAdminUser = authService.CurrentUser?.UserRole == UserRole.Admin;
+            _ = LoadBibcRateAsync();
 
             // Default: Saturday of previous fortnight (runs are typically generated on Wednesday of Week 2)
             var today = DateTime.Today;
             int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
             StartDate = today.AddDays(-diff).AddDays(-7).Date;
             IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+
+            // Dynamically set branch options based on permissions
+            BranchOptions.Clear();
+            bool hasJhb = permissionService.CanAccess(NavigationRoutes.Feature_WagesJhb);
+            bool hasCpt = permissionService.CanAccess(NavigationRoutes.Feature_WagesCpt);
+
+            if (hasJhb && hasCpt)
+            {
+                BranchOptions.Add("All");
+                BranchOptions.Add("Johannesburg");
+                BranchOptions.Add("Cape Town");
+                _selectedBranch = "All";
+            }
+            else if (hasJhb)
+            {
+                BranchOptions.Add("Johannesburg");
+                _selectedBranch = "Johannesburg";
+            }
+            else if (hasCpt)
+            {
+                BranchOptions.Add("Cape Town");
+                _selectedBranch = "Cape Town";
+            }
+            else
+            {
+                BranchOptions.Add("All");
+                BranchOptions.Add("Johannesburg");
+                BranchOptions.Add("Cape Town");
+                _selectedBranch = "All";
+            }
 
             LoadColumnVisibilities();
         }
@@ -279,6 +413,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 IsBusy = true;
                 BusyText = "Generating draft run...";
+
+                WageRunLineViewModel.BibcRate = BibcRate;
 
                 // Preserve manual edits before regenerating
                 var existingEdits = new Dictionary<Guid, (decimal Washing, decimal SupFee)>();
@@ -332,6 +468,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     }
 
                     var vm = new WageRunLineViewModel(line, _dialogService) { IndexNum = index++ };
+                    vm.Recalculate();
                     vm.PropertyChanged += (s, e) =>
                     {
                         if (e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||
@@ -359,11 +496,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (_currentDraftId == null || _currentDraft == null) return;
 
-            var result = System.Windows.MessageBox.Show(
-                "Are you sure you want to finalize this wage run?\n\nThis will lock attendance variances for future runs.",
-                "Finalize Wage Run", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Finalize Wage Run",
+                "Are you sure you want to finalize this wage run?\n\nThis will lock attendance variances for future runs. An automatic database backup will be performed before finalizing.");
 
-            if (result != System.Windows.MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             try
             {

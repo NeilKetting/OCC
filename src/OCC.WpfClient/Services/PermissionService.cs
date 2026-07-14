@@ -36,6 +36,16 @@ namespace OCC.WpfClient.Services
             if (IsDev || user.UserRole == UserRole.Admin || user.UserRole == UserRole.SiteManager) 
                 return true;
 
+            // 1.5 Special overrides
+            if (route == NavigationRoutes.AttendanceLive)
+            {
+                if (HasPermission(user, NavigationRoutes.Feature_WagesJhb) || 
+                    HasPermission(user, NavigationRoutes.Feature_WagesCpt))
+                {
+                    return true;
+                }
+            }
+
             // 2. Global Deny (Critical Security Restrictions)
             var restricted = new[] 
             { 
@@ -53,8 +63,6 @@ namespace OCC.WpfClient.Services
             // 3. Global Allow (Basic Dashboard/Utility access)
             var basic = new[] 
             { 
-                NavigationRoutes.Home, 
-                NavigationRoutes.Calendar, 
                 NavigationRoutes.Notifications, 
                 NavigationRoutes.UserPreferences, 
                 NavigationRoutes.Feature_BugReports, 

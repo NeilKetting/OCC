@@ -5,8 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=vm:NewItemViewModel}">
+    
+    <UserControl.Resources>
+        <conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter" />
+    </UserControl.Resources>
     
     <Grid Background="#7F000000">
         <Border Style="{StaticResource DetailViewModalBorder}" 
@@ -18,19 +23,19 @@
                     <RowDefinition Height="*"/>    <!-- Content -->
                     <RowDefinition Height="Auto"/> <!-- Footer -->
                 </Grid.RowDefinitions>
-
+ 
                 <!-- Header -->
                 <Border Style="{StaticResource DetailViewHeader}">
                     <TextBlock Text="New Item" Style="{StaticResource SectionHeaderText}"/>
                 </Border>
-
+ 
                 <!-- Content -->
                 <Grid Grid.Row="1" Margin="25">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="150"/>
                     </Grid.ColumnDefinitions>
-
+ 
                     <StackPanel Grid.Column="0">
                         <!-- Type Section -->
                         <GroupBox Header="TYPE" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,15">
@@ -43,14 +48,20 @@
                                     <ComboBox ItemsSource="{Binding ItemTypes}" 
                                               SelectedItem="{Binding Type}"
                                               Style="{StaticResource ModernComboBox}"
-                                              Width="200" HorizontalAlignment="Left" Grid.Column="0"/>
+                                              Width="200" HorizontalAlignment="Left" Grid.Column="0">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
                                     <TextBlock Grid.Column="1" Margin="15,0,0,0" 
                                                Text="Use for services you charge for or purchase, like specialised labour, consulting hours, or professional fees."
                                                Foreground="{StaticResource TextSub}" TextWrapping="Wrap" FontSize="11" VerticalAlignment="Center"/>
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
-
+ 
                         <Grid Margin="0,10,0,15">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.5*"/>
@@ -58,14 +69,14 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,15,0">
                                 <TextBlock Text="Item Name/Number" Style="{StaticResource FormLabelText}"/>
-                                <TextBox Text="{Binding Sku}" Style="{StaticResource ModernInput}"/>
+                                <TextBox x:Name="SkuTextBox" Text="{Binding Sku}" Style="{StaticResource ModernInput}" SpellCheck.IsEnabled="True"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <CheckBox Content="Subitem of" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,5"/>
-                                <ComboBox Style="{StaticResource ModernComboBox}" IsEnabled="False"/>
+                                <CheckBox x:Name="SubitemCheckBox" IsChecked="{Binding IsSubitem}" Content="Subitem of" Style="{StaticResource ModernCheckBox}" Margin="0,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding ParentItems}" SelectedItem="{Binding ParentItem}" Style="{StaticResource ModernComboBox}" IsEnabled="{Binding IsChecked, ElementName=SubitemCheckBox}"/>
                             </StackPanel>
                         </Grid>
-
+ 
                         <!-- Description & Rate -->
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -74,29 +85,29 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,15,0">
                                 <TextBlock Text="Description" Style="{StaticResource FormLabelText}"/>
-                                <TextBox Text="{Binding Description}" Style="{StaticResource ModernInput}" Height="80" 
-                                         AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="10"/>
+                                <TextBox x:Name="DescTextBox" Text="{Binding Description}" Style="{StaticResource ModernInput}" Height="80" 
+                                         AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="10" SpellCheck.IsEnabled="True"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Text="Rate" Style="{StaticResource FormLabelText}"/>
                                 <TextBox Text="{Binding Rate}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="0.00"/>
                                 
                                 <TextBlock Text="Sales VAT Code" Style="{StaticResource FormLabelText}" Margin="0,10,0,5"/>
-                                <ComboBox SelectedIndex="0" Style="{StaticResource ModernComboBox}">
-                                    <ComboBoxItem Content="S (Standard 15%)"/>
-                                    <ComboBoxItem Content="Z (Zero Rated)"/>
-                                    <ComboBoxItem Content="E (Exempt)"/>
+                                <ComboBox SelectedValue="{Binding VatCode}" SelectedValuePath="Tag" Style="{StaticResource ModernComboBox}">
+                                    <ComboBoxItem Content="S (Standard 15%)" Tag="S"/>
+                                    <ComboBoxItem Content="Z (Zero Rated)" Tag="Z"/>
+                                    <ComboBoxItem Content="E (Exempt)" Tag="E"/>
                                 </ComboBox>
                                 
                                 <TextBlock Text="Account" Style="{StaticResource FormLabelText}" Margin="0,10,0,5"/>
-                                <ComboBox Style="{StaticResource ModernComboBox}" SelectedIndex="0">
-                                    <ComboBoxItem Content="Sales"/>
-                                    <ComboBoxItem Content="Income"/>
+                                <ComboBox SelectedValue="{Binding Account}" SelectedValuePath="Tag" Style="{StaticResource ModernComboBox}">
+                                    <ComboBoxItem Content="Sales" Tag="Sales"/>
+                                    <ComboBoxItem Content="Income" Tag="Income"/>
                                 </ComboBox>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
-
+ 
                     <!-- Right Column Actions -->
                     <StackPanel Grid.Column="1" Margin="20,0,0,0">
                         <Button Content="OK" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,0,10"/>
@@ -104,15 +115,13 @@
                         
                         <Separator Background="{StaticResource GlassBorder}" Margin="0,5,0,15"/>
                         
-                        <Button Content="Notes" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
-                        <Button Content="Custom Fields" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
-                        <Button Content="Spelling" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
+                        <Button Content="Spelling" Click="SpellingButton_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,0,5" FontSize="11"/>
                     </StackPanel>
                 </Grid>
-
+ 
                 <!-- Footer -->
                 <Border Grid.Row="2" Style="{StaticResource DetailViewFooter}">
-                    <CheckBox Content="Item is inactive" Style="{StaticResource ModernCheckBox}" HorizontalAlignment="Right"/>
+                    <CheckBox IsChecked="{Binding IsInactive}" Content="Item is inactive" Style="{StaticResource ModernCheckBox}" HorizontalAlignment="Right"/>
                 </Border>
             </Grid>
         </Border>

@@ -79,9 +79,10 @@
 
                     <!-- Wages -->
                     <RadioButton Style="{StaticResource SidebarNavItem}"
-                                 GroupName="AttendanceTabs"
-                                 IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Wages', Mode=TwoWay}"
-                                 Command="{Binding SetActiveTabCommand}" CommandParameter="Wages">
+                                  GroupName="AttendanceTabs"
+                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='Wages', Mode=TwoWay}"
+                                  Command="{Binding SetActiveTabCommand}" CommandParameter="Wages"
+                                  Visibility="{Binding CanAccessWages, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="15,0">
                             <TextBlock Text="&#xE7C0;" Style="{StaticResource SymbolIcon}"
                                        Foreground="#FB923C"

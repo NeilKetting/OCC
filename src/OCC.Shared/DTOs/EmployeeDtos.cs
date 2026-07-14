@@ -31,6 +31,7 @@ namespace OCC.Shared.DTOs
         public IdType IdType { get; set; }
         public DateTime? PassportStampDate { get; set; }
         public bool IsPassportStampExpired => IdType == IdType.Passport && (!PassportStampDate.HasValue || (DateTime.Today - PassportStampDate.Value.Date).TotalDays >= 75);
+        public bool IsBibc { get; set; }
     }
 
     public class EmployeeDto
@@ -55,6 +56,7 @@ namespace OCC.Shared.DTOs
         public DateTime EmploymentDate { get; set; }
         public string Branch { get; set; } = "Johannesburg";
         public bool LivesInCompanyHousing { get; set; }
+        public bool IsBibc { get; set; }
         public TimeSpan? ShiftStartTime { get; set; }
         public TimeSpan? ShiftEndTime { get; set; }
         

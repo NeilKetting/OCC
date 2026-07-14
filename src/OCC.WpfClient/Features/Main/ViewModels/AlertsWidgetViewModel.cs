@@ -37,15 +37,17 @@ namespace OCC.WpfClient.Features.Main.ViewModels;
     public partial class AlertsWidgetViewModel : WidgetViewModelBase
     {
         private readonly IEmployeeService _employeeService;
+        private readonly IPermissionService _permissionService;
 
         public ObservableCollection<SystemAlertItem> Alerts { get; } = new();
 
         [ObservableProperty]
         private int _alertCount;
 
-        public AlertsWidgetViewModel(IEmployeeService employeeService)
+        public AlertsWidgetViewModel(IEmployeeService employeeService, IPermissionService permissionService)
         {
             _employeeService = employeeService;
+            _permissionService = permissionService;
             WidgetId = "Alerts";
             Title = "Action Center";
         }
@@ -53,6 +55,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels;
         [RelayCommand]
         private void ResolveAlert(SystemAlertItem alert)
         {
+            if (!_permissionService.CanAccess(NavigationRoutes.StaffManagement))
+            {
+                NotifyError("Access Denied", "You do not have permission to view Staff Management.");
+                return;
+            }
             WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.StaffManagement));
         }
 
