@@ -7,6 +7,9 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="500"
              d:DataContext="{d:DesignInstance vm:DocumentDetailViewModel}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
     <Grid Margin="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,8 +25,8 @@
             <TextBlock Text="Add new health &amp; safety documentation." FontSize="14" Foreground="{StaticResource TextSub}"/>
         </StackPanel>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
-            <StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,10,0">
                 <TextBlock Text="DOCUMENT TITLE" Style="{StaticResource FormLabelText}"/>
                 <TextBox Text="{Binding NewDocTitle}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
 
@@ -35,6 +38,31 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+
+                <!-- Associated Employee Selection -->
+                <StackPanel Visibility="{Binding IsEmployeeSelectionVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,20">
+                    <TextBlock Text="ASSOCIATED EMPLOYEE" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding AvailableEmployees}" SelectedItem="{Binding SelectedEmployee}" DisplayMemberPath="DisplayName" Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Issue & Expiry Dates -->
+                <StackPanel Visibility="{Binding IsDateSelectionVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="ISSUE DATE" Style="{StaticResource FormLabelText}"/>
+                            <DatePicker SelectedDate="{Binding IssueDate}" Style="{StaticResource ModernDatePicker}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="EXPIRY DATE" Style="{StaticResource FormLabelText}"/>
+                            <DatePicker SelectedDate="{Binding ExpiryDate}" Style="{StaticResource ModernDatePicker}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
 
                 <TextBlock Text="ASSOCIATED PROJECT (OPTIONAL)" Style="{StaticResource FormLabelText}"/>
                 <ComboBox ItemsSource="{Binding AvailableProjects}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20" IsEnabled="{Binding IsProjectSelectionEnabled}"/>

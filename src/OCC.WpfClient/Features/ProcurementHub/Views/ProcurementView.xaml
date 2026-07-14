@@ -252,8 +252,8 @@
                         <DataGridTextColumn Header="ORDER #" Binding="{Binding OrderNumber}" Width="Auto"/>
                         <DataGridTextColumn Header="DATE" Binding="{Binding OrderDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="Auto"/>
                         <DataGridTextColumn Header="DESTINATION" Binding="{Binding DestinationDisplay}" Width="Auto"/>
-                        <DataGridTextColumn Header="SUPPLIER" Binding="{Binding SupplierName}" Width="*"/>
-                        <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="*"/>
+                        <DataGridTextColumn Header="SUPPLIER" Binding="{Binding SupplierName}" Width="Auto"/>
+                        <DataGridTextColumn Header="PROJECT" Binding="{Binding ProjectName}" Width="Auto"/>
                         <DataGridTextColumn Header="TOTAL" Binding="{Binding TotalAmount, StringFormat='R {0:N2}'}" Width="Auto"/>
 
                         <!-- Status badge -->

@@ -39,7 +39,17 @@ namespace OCC.Shared.Models
 
         /// <summary> Display-friendly file size (e.g. "2.5 MB"). </summary>
         public string FileSize { get; set; } = "0 KB";
+        
+        /// <summary> Optional link to an employee (used for ID and Medicals). </summary>
+        public Guid? EmployeeId { get; set; }
 
+        /// <summary> Navigation property to the employee. </summary>
+        public virtual Employee? Employee { get; set; }
 
+        /// <summary> Issue date of the document (especially for Medicals). </summary>
+        public DateTime? IssueDate { get; set; }
+
+        /// <summary> Expiry date of the document (especially for Medicals). </summary>
+        public DateTime? ExpiryDate { get; set; }
     }
 }

@@ -31,6 +31,15 @@ namespace OCC.WpfClient.Infrastructure
         [ObservableProperty]
         private bool _isActiveHub;
 
+        partial void OnIsActiveHubChanged(bool value)
+        {
+            OnActiveHubChanged(value);
+        }
+
+        protected virtual void OnActiveHubChanged(bool isActive)
+        {
+        }
+
         protected void NotifySuccess(string title, string message)
         {
             WeakReferenceMessenger.Default.Send(new ToastNotificationMessage(new ToastMessage

@@ -381,7 +381,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     }
 
                     var expiringPassports = employees
-                        .Where(e => e.Status == EmployeeStatus.Active && e.IsPassportStampExpired)
+                        .Where(e => e.Status == EmployeeStatus.Active && e.IdType == IdType.Passport &&
+                                    (!e.PassportStampDate.HasValue || (e.PassportStampDate.Value.Date.AddDays(90) - today).TotalDays <= 60))
                         .ToList();
 
                     foreach (var emp in expiringPassports)
@@ -392,9 +393,23 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                                 ? (int)(90 - (today - emp.PassportStampDate.Value.Date).TotalDays)
                                 : 0;
 
-                            string message = emp.PassportStampDate.HasValue
-                                ? $"{emp.DisplayName}'s passport stamp expires in {remainingDays} days (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd})."
-                                : $"{emp.DisplayName} has no passport stamp date set!";
+                            string message;
+                            if (!emp.PassportStampDate.HasValue)
+                            {
+                                message = $"{emp.DisplayName} has no passport stamp date set!";
+                            }
+                            else if (remainingDays < 0)
+                            {
+                                message = $"{emp.DisplayName}'s passport stamp expired {-remainingDays} days ago (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                            }
+                            else if (remainingDays == 0)
+                            {
+                                message = $"{emp.DisplayName}'s passport stamp expires today (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                            }
+                            else
+                            {
+                                message = $"{emp.DisplayName}'s passport stamp expires in {remainingDays} days (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                            }
 
                             _toastService.ShowWarning("Passport Stamp Expiry Warning", message);
                             _shownPassportEmployeeIds.Add(emp.Id);

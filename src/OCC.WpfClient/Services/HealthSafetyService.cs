@@ -301,6 +301,23 @@ namespace OCC.WpfClient.Services
             content.Add(new StringContent(metadata.UploadedBy ?? ""), nameof(HseqDocument.UploadedBy));
             content.Add(new StringContent(metadata.Version ?? "1.0"), nameof(HseqDocument.Version));
 
+            if (metadata.ProjectId.HasValue)
+            {
+                content.Add(new StringContent(metadata.ProjectId.Value.ToString()), nameof(HseqDocument.ProjectId));
+            }
+            if (metadata.EmployeeId.HasValue)
+            {
+                content.Add(new StringContent(metadata.EmployeeId.Value.ToString()), nameof(HseqDocument.EmployeeId));
+            }
+            if (metadata.IssueDate.HasValue)
+            {
+                content.Add(new StringContent(metadata.IssueDate.Value.ToString("yyyy-MM-dd")), nameof(HseqDocument.IssueDate));
+            }
+            if (metadata.ExpiryDate.HasValue)
+            {
+                content.Add(new StringContent(metadata.ExpiryDate.Value.ToString("yyyy-MM-dd")), nameof(HseqDocument.ExpiryDate));
+            }
+
             if (fileStream.CanSeek) fileStream.Position = 0;
             using var streamContent = new StreamContent(fileStream);
             content.Add(streamContent, "file", fileName);

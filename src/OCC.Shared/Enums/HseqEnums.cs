@@ -99,6 +99,10 @@ namespace OCC.Shared.Enums
         /// <summary> Generated output or statistical analysis. </summary>
         Report,
         /// <summary> Uncategorized files. </summary>
-        Other
+        Other,
+        /// <summary> Employee Identification (e.g. ID, Passport). </summary>
+        ID,
+        /// <summary> Employee Medical certificates. </summary>
+        Medicals
     }
 }

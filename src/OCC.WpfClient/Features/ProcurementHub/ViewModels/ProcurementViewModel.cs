@@ -70,6 +70,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _ = LoadDashboardDataAsync();
         }
 
+        protected override void OnActiveHubChanged(bool isActive)
+        {
+            if (isActive)
+            {
+                _ = LoadDashboardDataAsync();
+            }
+        }
+
         [RelayCommand]
         public async Task LoadDashboardDataAsync()
         {

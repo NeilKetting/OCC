@@ -284,21 +284,23 @@ namespace OCC.WpfClient.Services
                 Template = order.Template,
                 Terms = order.Terms,
                 ReferenceNo = order.ReferenceNo,
-                Lines = order.Lines.Select(l => new OrderLineDto
-                {
-                    Id = l.Id,
-                    InventoryItemId = l.InventoryItemId,
-                    ItemCode = l.ItemCode,
-                    Description = l.Description,
-                    Category = l.Category,
-                    QuantityOrdered = l.QuantityOrdered,
-                    QuantityReceived = l.QuantityReceived,
-                    UnitOfMeasure = l.UnitOfMeasure,
-                    UnitPrice = l.UnitPrice,
-                    VatAmount = l.VatAmount,
-                    LineTotal = l.LineTotal,
-                    Remarks = l.Remarks
-                }).ToList()
+                Lines = order.Lines
+                    .Where(l => l.InventoryItemId.HasValue && l.InventoryItemId.Value != Guid.Empty && l.QuantityOrdered > 0)
+                    .Select(l => new OrderLineDto
+                    {
+                        Id = l.Id,
+                        InventoryItemId = l.InventoryItemId,
+                        ItemCode = l.ItemCode,
+                        Description = l.Description,
+                        Category = l.Category,
+                        QuantityOrdered = l.QuantityOrdered,
+                        QuantityReceived = l.QuantityReceived,
+                        UnitOfMeasure = l.UnitOfMeasure,
+                        UnitPrice = l.UnitPrice,
+                        VatAmount = l.VatAmount,
+                        LineTotal = l.LineTotal,
+                        Remarks = l.Remarks
+                    }).ToList()
             };
         }
     }

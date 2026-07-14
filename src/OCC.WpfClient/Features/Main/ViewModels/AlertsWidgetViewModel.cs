@@ -10,8 +10,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 
-namespace OCC.WpfClient.Features.Main.ViewModels
-{
+namespace OCC.WpfClient.Features.Main.ViewModels;
+
+    public enum AlertSeverity
+    {
+        Critical,
+        Warning
+    }
+
     public class SystemAlertItem
     {
         public string Title { get; set; } = string.Empty;
@@ -19,6 +25,13 @@ namespace OCC.WpfClient.Features.Main.ViewModels
         public string Icon { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty; // e.g. Passport, Medical, Certificate
         public string ActionParameter { get; set; } = string.Empty;
+        public AlertSeverity Severity { get; set; } = AlertSeverity.Critical;
+
+        public string BorderBrushColor => Severity == AlertSeverity.Critical ? "#30E81123" : "#30F97316";
+        public string BackgroundColor => Severity == AlertSeverity.Critical ? "#1AE81123" : "#1AF97316";
+        public string HoverBorderColor => Severity == AlertSeverity.Critical ? "#E81123" : "#F97316";
+        public string HoverBackgroundColor => Severity == AlertSeverity.Critical ? "#33E81123" : "#33F97316";
+        public string IconColor => Severity == AlertSeverity.Critical ? "#EF4444" : "#F97316";
     }
 
     public partial class AlertsWidgetViewModel : WidgetViewModelBase
@@ -51,7 +64,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 var employees = await _employeeService.GetEmployeesAsync();
 
                 var expiringPassports = employees
-                    .Where(e => e.Status == EmployeeStatus.Active && e.IsPassportStampExpired)
+                    .Where(e => e.Status == EmployeeStatus.Active && e.IdType == IdType.Passport &&
+                                (!e.PassportStampDate.HasValue || (e.PassportStampDate.Value.Date.AddDays(90) - today).TotalDays <= 60))
                     .ToList();
 
                 App.Current.Dispatcher.Invoke(() =>
@@ -64,9 +78,29 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                             ? (int)(90 - (today - emp.PassportStampDate.Value.Date).TotalDays)
                             : 0;
 
-                        string msg = emp.PassportStampDate.HasValue
-                            ? $"Passport stamp expires in {remainingDays} days (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd})."
-                            : "Passport stamp date is not set!";
+                        string msg;
+                        AlertSeverity severity = AlertSeverity.Critical;
+
+                        if (!emp.PassportStampDate.HasValue)
+                        {
+                            msg = "Passport stamp date is not set!";
+                            severity = AlertSeverity.Critical;
+                        }
+                        else if (remainingDays < 0)
+                        {
+                            msg = $"Passport stamp expired {-remainingDays} days ago (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                            severity = AlertSeverity.Critical;
+                        }
+                        else if (remainingDays == 0)
+                        {
+                            msg = $"Passport stamp expires today (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                            severity = AlertSeverity.Critical;
+                        }
+                        else
+                        {
+                            msg = $"Passport stamp expires in {remainingDays} days (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                            severity = AlertSeverity.Warning;
+                        }
 
                         Alerts.Add(new SystemAlertItem
                         {
@@ -74,7 +108,8 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                             Message = msg,
                             Icon = "\uE7BA", // warning icon
                             Type = "Passport",
-                            ActionParameter = emp.Id.ToString()
+                            ActionParameter = emp.Id.ToString(),
+                            Severity = severity
                         });
                     }
 
@@ -86,4 +121,3 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             catch { }
         }
     }
-}

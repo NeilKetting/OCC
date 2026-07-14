@@ -967,7 +967,14 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             var status = await _databaseStatusService.CheckAsync(cancellationToken);
             IsDbConnected = status.IsConnected;
             DbStatusText = status.StatusText;
-            DatabaseName = status.DatabaseName;
+            var envSuffix = _connectionSettings.SelectedEnvironment switch
+            {
+                ConnectionSettings.AppEnvironment.Local => " (LOCAL)",
+                ConnectionSettings.AppEnvironment.Test => " (TEST)",
+                ConnectionSettings.AppEnvironment.Live => " (LIVE)",
+                _ => string.Empty
+            };
+            DatabaseName = $"{status.DatabaseName}{envSuffix}".ToUpperInvariant();
 
             if (!IsDbConnected)
             {
