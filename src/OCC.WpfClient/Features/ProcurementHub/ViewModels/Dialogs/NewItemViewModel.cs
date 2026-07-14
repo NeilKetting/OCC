@@ -62,10 +62,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs
                 var createdItem = await _inventoryService.CreateItemAsync(newItem);
                 Completed?.Invoke(createdItem);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => 
-                    ErrorMessage = "Failed to save the new item. Please check the details.");
+                    ErrorMessage = ex.Message);
             }
             finally
             {

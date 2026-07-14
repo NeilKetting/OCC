@@ -66,7 +66,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving inventory item");
-                _toastService.ShowError("Error", "Failed to save inventory item.");
+                _toastService.ShowError("Error", ex.Message);
             }
             finally
             {

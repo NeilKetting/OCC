@@ -62,7 +62,8 @@ namespace OCC.WpfClient.Services
                     Status = s.Status,
                     SupplierId = s.SupplierId,
                     OrderType = s.OrderType,
-                    Branch = (Branch)Enum.Parse(typeof(Branch), s.Branch)
+                    Branch = (Branch)Enum.Parse(typeof(Branch), s.Branch),
+                    TotalAmount = s.TotalAmount
                 }) ?? new List<Order>();
             }
             catch (Exception ex)

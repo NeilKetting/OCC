@@ -106,6 +106,15 @@ namespace OCC.API.Controllers
             {
                 if (item == null) return BadRequest("Item data is null.");
 
+                if (!string.IsNullOrWhiteSpace(item.Sku))
+                {
+                    var skuExists = await _context.InventoryItems.AnyAsync(i => i.Sku.ToLower() == item.Sku.ToLower());
+                    if (skuExists)
+                    {
+                        return BadRequest($"An inventory item with SKU '{item.Sku}' already exists.");
+                    }
+                }
+
                 item.Id = Guid.NewGuid();
                 item.QuantityOnHand = item.JhbQuantity + item.CptQuantity;
 
@@ -131,6 +140,15 @@ namespace OCC.API.Controllers
         {
             if (id != item.Id)
                 return BadRequest();
+
+            if (!string.IsNullOrWhiteSpace(item.Sku))
+            {
+                var skuExists = await _context.InventoryItems.AnyAsync(i => i.Id != id && i.Sku.ToLower() == item.Sku.ToLower());
+                if (skuExists)
+                {
+                    return BadRequest($"An inventory item with SKU '{item.Sku}' already exists.");
+                }
+            }
 
             var existingItem = await _context.InventoryItems.FindAsync(id);
             if (existingItem == null)

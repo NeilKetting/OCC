@@ -82,7 +82,11 @@ namespace OCC.WpfClient.Services
             try
             {
                 var response = await client.PostAsJsonAsync(url, item);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException(!string.IsNullOrWhiteSpace(errorMsg) ? errorMsg : $"Server returned {response.StatusCode}");
+                }
                 return await response.Content.ReadFromJsonAsync<InventoryItem>() ?? item;
             }
             catch (Exception ex)
@@ -100,7 +104,11 @@ namespace OCC.WpfClient.Services
             try
             {
                 var response = await client.PutAsJsonAsync(url, item);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException(!string.IsNullOrWhiteSpace(errorMsg) ? errorMsg : $"Server returned {response.StatusCode}");
+                }
             }
             catch (Exception ex)
             {
