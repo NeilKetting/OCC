@@ -188,7 +188,7 @@ namespace OCC.Client.Services
                 }
 
                 // Add Summary Tables at the bottom (Totals only, Loans description removed)
-                col.Item().PaddingTop(20).Row(row =>
+                col.Item().ShowEntire().PaddingTop(20).Row(row =>
                 {
                     row.RelativeItem();
                     row.ConstantItem(380).Element(c => ComposeWageTotalsTable(c, wageRun));
@@ -415,7 +415,7 @@ namespace OCC.Client.Services
                     table.Cell().Element(TotalStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionWashing).ToString("F2")).Bold();
                     table.Cell().Element(TotalStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionGas).ToString("F2")).Bold();
                     table.Cell().Element(TotalStyle).AlignRight().Text("0.00").Bold();
-                    table.Cell().Element(TotalStyle).Background(Colors.Grey.Lighten3).AlignRight().Text(wageRun.Lines.Sum(x => x.NetPay).ToString("F2")).Bold();
+                    table.Cell().Element(TotalStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.NetPay).ToString("F2")).Bold();
 
                     static void AddTotalRow(TableDescriptor table, string label, List<WageRunLine> lines)
                     {
@@ -452,8 +452,8 @@ namespace OCC.Client.Services
                     table.Cell().Element(RowStyle).Text("Loans").Bold();
                     table.Cell().Element(RowStyle).AlignRight().Text(loansTotal.ToString("R #,##0.00"));
 
-                    table.Cell().Element(RowStyle).Background(Colors.Grey.Lighten3).Text("Total of Wage Run").Bold().FontColor(Colors.Red.Medium);
-                    table.Cell().Element(RowStyle).Background(Colors.Grey.Lighten3).AlignRight().Text(grandTotal.ToString("R #,##0.00")).Bold().FontColor(Colors.Red.Medium);
+                    table.Cell().Element(RowStyle).Text("Total of Wage Run").Bold();
+                    table.Cell().Element(RowStyle).AlignRight().Text(grandTotal.ToString("R #,##0.00")).Bold();
 
                     static IContainer RowStyle(IContainer c) =>
                         c.Border(0.5f).Padding(2).AlignMiddle().DefaultTextStyle(x => x.FontSize(7.5f));
