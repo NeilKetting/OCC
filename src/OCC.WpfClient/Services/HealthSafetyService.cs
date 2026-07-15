@@ -136,10 +136,15 @@ namespace OCC.WpfClient.Services
         }
 
         // --- Audits ---
-        public async Task<IEnumerable<AuditSummaryDto>> GetAuditsAsync()
+        public async Task<IEnumerable<AuditSummaryDto>> GetAuditsAsync(Guid? projectId = null)
         {
             EnsureAuthorization();
-            return await _httpClient.GetFromJsonAsync<IEnumerable<AuditSummaryDto>>(GetFullUrl("api/HseqAudits"), _options) ?? new List<AuditSummaryDto>();
+            var url = "api/HseqAudits";
+            if (projectId.HasValue)
+            {
+                url += $"?projectId={projectId.Value}";
+            }
+            return await _httpClient.GetFromJsonAsync<IEnumerable<AuditSummaryDto>>(GetFullUrl(url), _options) ?? new List<AuditSummaryDto>();
         }
 
         public async Task<AuditDto?> GetAuditAsync(Guid id)
@@ -355,6 +360,19 @@ namespace OCC.WpfClient.Services
         {
             EnsureAuthorization();
             return await _httpClient.GetFromJsonAsync<IEnumerable<HseqSafeHourRecord>>(GetFullUrl($"api/HseqStats/history/{year}"), _options) ?? new List<HseqSafeHourRecord>();
+        }
+
+        public async Task<ProjectHseqDashboardStatsDto?> GetProjectDashboardStatsAsync(Guid projectId)
+        {
+            EnsureAuthorization();
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<ProjectHseqDashboardStatsDto>(GetFullUrl($"api/HseqStats/project-dashboard/{projectId}"), _options);
+            }
+            catch
+            {
+                return new ProjectHseqDashboardStatsDto();
+            }
         }
     }
 }

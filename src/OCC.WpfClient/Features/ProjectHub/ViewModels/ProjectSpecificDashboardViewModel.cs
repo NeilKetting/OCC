@@ -382,7 +382,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [RelayCommand]
         private void NavigateToSafety()
         {
-            WeakReferenceMessenger.Default.Send(new ProjectDashboardNavigationMessage("Safety"));
+            WeakReferenceMessenger.Default.Send(new ProjectDashboardNavigationMessage("HSEQ"));
         }
 
         [RelayCommand]

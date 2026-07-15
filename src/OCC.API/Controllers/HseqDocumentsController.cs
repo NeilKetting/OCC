@@ -28,8 +28,11 @@ namespace OCC.API.Controllers
 
             if (projectId.HasValue)
             {
-                // Return Global documents (ProjectId is null) OR documents for this specific project
-                query = query.Where(d => d.ProjectId == null || d.ProjectId == projectId.Value);
+                query = query.Where(d => d.ProjectId == projectId.Value);
+            }
+            else
+            {
+                query = query.Where(d => d.ProjectId == null);
             }
 
             return await query.ToListAsync();

@@ -20,7 +20,7 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<bool> DeleteIncidentDocumentAsync(Guid id);
 
         // Audits
-        Task<IEnumerable<AuditSummaryDto>> GetAuditsAsync();
+        Task<IEnumerable<AuditSummaryDto>> GetAuditsAsync(Guid? projectId = null);
         Task<AuditDto?> GetAuditAsync(Guid id);
         Task<AuditDto?> CreateAuditAsync(AuditDto audit);
         Task<bool> UpdateAuditAsync(AuditDto audit);
@@ -47,6 +47,7 @@ namespace OCC.WpfClient.Services.Interfaces
         // Stats
         Task<HseqDashboardStats?> GetDashboardStatsAsync();
         Task<IEnumerable<HseqSafeHourRecord>> GetPerformanceHistoryAsync(int? year = null);
+        Task<ProjectHseqDashboardStatsDto?> GetProjectDashboardStatsAsync(Guid projectId);
     }
 
     public class HseqDashboardStats

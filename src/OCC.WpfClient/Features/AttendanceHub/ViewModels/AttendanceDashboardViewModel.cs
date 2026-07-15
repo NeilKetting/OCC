@@ -379,6 +379,6 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         public string CheckInDisplay => (Status == AttendanceStatus.Absent || !CheckInTime.HasValue) ? "--:--" : CheckInTime.Value.ToString("HH:mm");
         public string CheckOutDisplay => (Status == AttendanceStatus.Absent || !CheckOutTime.HasValue) ? (IsClocked ? "Active" : "--:--") : CheckOutTime.Value.ToString("HH:mm");
-        public string HoursDisplay => HoursWorked > 0 ? $"{HoursWorked:F1}h" : IsClocked ? "Active" : "-";
+        public string HoursDisplay => HoursWorked > 0 ? $"{HoursWorked:0.##}h" : IsClocked ? "Active" : "-";
     }
 }

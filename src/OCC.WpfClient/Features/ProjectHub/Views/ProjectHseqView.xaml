@@ -41,12 +41,12 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Foreground" Value="White"/>
+                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Foreground" Value="White"/>
-                                    <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
-                                    <Setter TargetName="border" Property="BorderBrush" Value="#15FFFFFF"/>
+                                     <Setter Property="Foreground" Value="White"/>
+                                     <Setter TargetName="border" Property="Background" Value="#1500FFFF"/>
+                                     <Setter TargetName="border" Property="BorderBrush" Value="#8000FFFF"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -72,14 +72,20 @@
 
                 <!-- Left: Modern Segmented Tab Buttons -->
                 <Border Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
-                        Background="#10FFFFFF" CornerRadius="8" Padding="3" BorderThickness="1" BorderBrush="#15FFFFFF">
+                        Background="#10FFFFFF" CornerRadius="8" Padding="3" BorderThickness="1" BorderBrush="#3500FFFF">
                     <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource SegmentedTabButton}" Content="Dashboard" GroupName="ProjectHseqTabs"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Dashboard, Mode=TwoWay}"
+                                     Command="{Binding ShowDashboardCommand}"/>
                         <RadioButton Style="{StaticResource SegmentedTabButton}" Content="Documents" GroupName="ProjectHseqTabs"
                                      IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Documents, Mode=TwoWay}"
                                      Command="{Binding ShowDocumentsCommand}"/>
                         <RadioButton Style="{StaticResource SegmentedTabButton}" Content="Incidents" GroupName="ProjectHseqTabs"
                                      IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Incidents, Mode=TwoWay}"
                                      Command="{Binding ShowIncidentsCommand}"/>
+                        <RadioButton Style="{StaticResource SegmentedTabButton}" Content="Audits" GroupName="ProjectHseqTabs"
+                                     IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter=Audits, Mode=TwoWay}"
+                                     Command="{Binding ShowAuditsCommand}"/>
                     </StackPanel>
                 </Border>
 

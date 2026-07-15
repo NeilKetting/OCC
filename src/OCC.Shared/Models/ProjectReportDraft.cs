@@ -26,5 +26,6 @@ namespace OCC.Shared.Models
 
         public string OverdueMilestoneReasons { get; set; } = string.Empty;
         public string PhotoUrls { get; set; } = string.Empty;
+        public string ManualVendorDataJson { get; set; } = string.Empty;
     }
 }

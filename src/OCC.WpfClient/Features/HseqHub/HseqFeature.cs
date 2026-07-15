@@ -25,6 +25,7 @@ namespace OCC.WpfClient.Features.HseqHub
             services.AddTransient<TrainingDetailViewModel>();
             services.AddTransient<AuditListViewModel>();
             services.AddTransient<AuditDetailViewModel>();
+            services.AddTransient<AuditPdfMappingViewModel>();
             services.AddTransient<DeviationDetailViewModel>();
             services.AddTransient<PerformanceMonitoringListViewModel>();
             services.AddTransient<DocumentsListViewModel>();

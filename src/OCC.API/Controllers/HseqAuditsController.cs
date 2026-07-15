@@ -21,10 +21,24 @@ namespace OCC.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AuditSummaryDto>>> GetAudits()
+        public async Task<ActionResult<IEnumerable<AuditSummaryDto>>> GetAudits([FromQuery] Guid? projectId = null)
         {
-            var audits = await _context.HseqAudits
-                .AsNoTracking()
+            var query = _context.HseqAudits.AsNoTracking();
+            if (projectId.HasValue)
+            {
+                var project = await _context.Projects.FindAsync(projectId.Value);
+                if (project != null)
+                {
+                    var projName = project.Name;
+                    query = query.Where(a => a.ProjectId == projectId.Value || (a.SiteName != null && a.SiteName.Contains(projName)));
+                }
+                else
+                {
+                    query = query.Where(a => a.ProjectId == projectId.Value);
+                }
+            }
+            
+            var audits = await query
                 .OrderByDescending(a => a.Date)
                 .ToListAsync();
             
@@ -58,6 +72,7 @@ namespace OCC.API.Controllers
             var audit = new HseqAudit
             {
                 Id = auditDto.Id != Guid.Empty ? auditDto.Id : Guid.NewGuid(),
+                ProjectId = auditDto.ProjectId,
                 Date = auditDto.Date,
                 SiteName = auditDto.SiteName,
                 ScopeOfWorks = auditDto.ScopeOfWorks,
@@ -258,6 +273,7 @@ namespace OCC.API.Controllers
             await _context.Entry(existingAudit).ReloadAsync();
 
             // Apply values from DTO to re-synched entity
+            existingAudit.ProjectId = auditDto.ProjectId;
             existingAudit.Date = auditDto.Date;
             existingAudit.SiteName = auditDto.SiteName;
             existingAudit.SiteManager = auditDto.SiteManager;
@@ -331,6 +347,7 @@ namespace OCC.API.Controllers
             return new AuditSummaryDto
             {
                 Id = audit.Id,
+                ProjectId = audit.ProjectId,
                 Date = audit.Date,
                 SiteName = audit.SiteName,
                 AuditNumber = audit.AuditNumber,
@@ -346,6 +363,7 @@ namespace OCC.API.Controllers
             return new AuditDto
             {
                 Id = audit.Id,
+                ProjectId = audit.ProjectId,
                 Date = audit.Date,
                 SiteName = audit.SiteName,
                 ScopeOfWorks = audit.ScopeOfWorks,

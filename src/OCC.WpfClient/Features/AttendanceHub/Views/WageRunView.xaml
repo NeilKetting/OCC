@@ -54,7 +54,7 @@
                     <!-- Print Options Dropdown -->
                     <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" Click="PrintButton_Click" ToolTip="Print Options"
                             Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Content="Print">
+                            Content="Print" ContextMenuService.IsEnabled="False">
                         <Button.ContextMenu>
                             <ContextMenu Style="{StaticResource ModernContextMenu}">
                                 <MenuItem Header="Standard Wage Run PDF" Command="{Binding PrintPdfCommand}" Style="{StaticResource ModernMenuItem}"/>

@@ -7,6 +7,7 @@ namespace OCC.Shared.DTOs
     public class AuditSummaryDto
     {
         public Guid Id { get; set; }
+        public Guid? ProjectId { get; set; }
         public DateTime Date { get; set; }
         public string SiteName { get; set; } = string.Empty;
         public string AuditNumber { get; set; } = string.Empty;
@@ -19,6 +20,7 @@ namespace OCC.Shared.DTOs
     public class AuditDto
     {
         public Guid Id { get; set; }
+        public Guid? ProjectId { get; set; }
         public DateTime Date { get; set; }
         public string SiteName { get; set; } = string.Empty;
         public string ScopeOfWorks { get; set; } = string.Empty;
@@ -68,5 +70,30 @@ namespace OCC.Shared.DTOs
         public string FileSize { get; set; } = string.Empty;
         public string UploadedBy { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; }
+    }
+
+    public class ProjectHseqDashboardStatsDto
+    {
+        public double TotalSafeHours { get; set; }
+        public int IncidentsTotal { get; set; }
+        public int NearMisses { get; set; }
+        public int Injuries { get; set; }
+        public int Environmentals { get; set; }
+        public int AuditsTotal { get; set; }
+        public decimal AverageAuditScore { get; set; }
+        public List<ProjectAuditScoreDto> RecentAuditScores { get; set; } = new();
+        public List<ProjectCategoryStatDto> CategoryStats { get; set; } = new();
+    }
+
+    public class ProjectAuditScoreDto
+    {
+        public string Date { get; set; } = string.Empty;
+        public decimal ActualScore { get; set; }
+    }
+
+    public class ProjectCategoryStatDto
+    {
+        public string CategoryName { get; set; } = string.Empty;
+        public decimal AveragePercentage { get; set; }
     }
 }

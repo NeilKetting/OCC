@@ -31,6 +31,7 @@ namespace OCC.WpfClient.Features.ProjectHub
             services.AddTransient<ProjectVariationOrderListViewModel>();
             services.AddTransient<ProjectVariationOrderDetailViewModel>();
             services.AddTransient<ProjectHseqViewModel>();
+            services.AddTransient<ProjectHseqDashboardViewModel>();
             services.AddTransient<CrewDeploymentListViewModel>();
             services.AddTransient<CrewBuilderViewModel>();
             services.AddTransient<DailyCrewBuilderViewModel>();

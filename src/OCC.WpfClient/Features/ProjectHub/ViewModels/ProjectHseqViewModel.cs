@@ -18,39 +18,51 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
     /// </summary>
     public partial class ProjectHseqViewModel : ViewModelBase
     {
+        private readonly ProjectHseqDashboardViewModel _dashboardVm;
         private readonly DocumentsListViewModel _documentsVm;
         private readonly IncidentListViewModel _incidentsVm;
+        private readonly AuditListViewModel _auditsVm;
         private readonly IAttendanceService _attendanceService;
 
         [ObservableProperty] private ViewModelBase _currentView;
-        [ObservableProperty] private string _activeTab = "Documents";
+        [ObservableProperty] private string _activeTab = "Dashboard";
         [ObservableProperty] private Guid _projectId;
+        [ObservableProperty] private string _projectName = string.Empty;
         [ObservableProperty] private double _safeWorkingHours;
 
+        public ProjectHseqDashboardViewModel DashboardVm => _dashboardVm;
         public DocumentsListViewModel DocumentsVm => _documentsVm;
         public IncidentListViewModel IncidentsVm => _incidentsVm;
+        public AuditListViewModel AuditsVm => _auditsVm;
 
         public ProjectHseqViewModel(
+            ProjectHseqDashboardViewModel dashboardVm,
             DocumentsListViewModel documentsVm,
             IncidentListViewModel incidentsVm,
+            AuditListViewModel auditsVm,
             IAttendanceService attendanceService)
         {
+            _dashboardVm = dashboardVm;
             _documentsVm = documentsVm;
             _incidentsVm = incidentsVm;
+            _auditsVm = auditsVm;
             _attendanceService = attendanceService;
-            _currentView = _documentsVm;
-            Title = "Project Safety";
+            _currentView = _dashboardVm;
+            Title = "Project HSEQ";
         }
 
         /// <summary>
         /// Called by ProjectDetailViewModel when a project is loaded.
         /// Filters all HSEQ data to this project.
         /// </summary>
-        public void Initialize(Guid projectId, bool silent = false)
+        public void Initialize(Guid projectId, string projectName, string? siteManagerName, bool silent = false)
         {
             ProjectId = projectId;
-            // Reload documents filtered to this project
+            ProjectName = projectName;
+            _dashboardVm.Initialize(projectId, projectName);
+            // Reload documents and audits filtered to this project
             _ = _documentsVm.LoadDocumentsInternal(projectId, silent);
+            _auditsVm.Initialize(projectId, projectName, siteManagerName, silent);
             _ = LoadSafeWorkingHoursAsync();
         }
 
@@ -67,6 +79,14 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         }
 
         [RelayCommand]
+        private void ShowDashboard()
+        {
+            ActiveTab = "Dashboard";
+            CurrentView = _dashboardVm;
+            _ = _dashboardVm.LoadDataAsync();
+        }
+
+        [RelayCommand]
         private void ShowDocuments()
         {
             ActiveTab = "Documents";
@@ -78,6 +98,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         {
             ActiveTab = "Incidents";
             CurrentView = _incidentsVm;
+        }
+
+        [RelayCommand]
+        private void ShowAudits()
+        {
+            ActiveTab = "Audits";
+            CurrentView = _auditsVm;
         }
     }
 }

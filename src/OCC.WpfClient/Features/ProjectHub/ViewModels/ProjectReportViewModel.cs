@@ -65,6 +65,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _hasPhotos;
 
         private List<ProjectTask> _loadedTasks = new();
+        private ProjectReportDraft? _currentDraft;
 
         public ProjectReportViewModel(
             IProjectService projectService,
@@ -138,6 +139,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 // Load report draft details from API
                 var draft = await _projectReportService.GetDraftAsync(projectId);
+                _currentDraft = draft;
                 if (draft != null)
                 {
                     StatusSummary = draft.StatusSummary;
@@ -151,6 +153,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 }
                 else
                 {
+                    _currentDraft = null;
                     // Defaults
                     StatusSummary = Project?.Description ?? string.Empty;
                     GeneralWasteTon = "0";
@@ -421,9 +424,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 SubContractorRows.Clear();
 
                 // 1. Load project audits to match scores
-                var allAudits = await _healthSafetyService.GetAuditsAsync();
+                var allAudits = await _healthSafetyService.GetAuditsAsync(ProjectId);
                 var projectAudits = allAudits
-                    .Where(a => a.SiteName != null && Project != null && a.SiteName.Contains(Project.Name, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(a => a.Date)
                     .ToList();
 
@@ -442,6 +444,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     Audit2 = audit2,
                     Audit3 = audit3
                 };
+                ApplyManualOverrideIfPresent(occRow);
                 VendorReportRows.Add(occRow);
                 PrimaryContractorRows.Add(occRow);
 
@@ -483,13 +486,38 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         Audit2 = "-",
                         Audit3 = "-"
                     };
+                    ApplyManualOverrideIfPresent(subRow);
                     VendorReportRows.Add(subRow);
                     SubContractorRows.Add(subRow);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to build vendor report details.");
+                _logger.LogError(ex, "Error building vendor report");
+            }
+        }
+
+        private void ApplyManualOverrideIfPresent(VendorReportRow row)
+        {
+            if (_currentDraft != null && !string.IsNullOrEmpty(_currentDraft.ManualVendorDataJson))
+            {
+                try
+                {
+                    var manualEntries = JsonSerializer.Deserialize<List<VendorReportRow>>(_currentDraft.ManualVendorDataJson);
+                    var matched = manualEntries?.FirstOrDefault(e => e.VendorName.Equals(row.VendorName, StringComparison.OrdinalIgnoreCase));
+                    if (matched != null)
+                    {
+                        row.SafetyApproved = matched.SafetyApproved;
+                        row.AppScore = matched.AppScore;
+                        row.Audit1 = matched.Audit1;
+                        row.Audit2 = matched.Audit2;
+                        row.Audit3 = matched.Audit3;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize manual vendor entry overrides.");
+                }
             }
         }
 
@@ -618,6 +646,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     }
                 }
 
+                var manualVendorJson = JsonSerializer.Serialize(VendorReportRows.ToList());
+
                 var draft = new ProjectReportDraft
                 {
                     ProjectId = ProjectId,
@@ -629,10 +659,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     PowPercentRequired = PowPercentRequired,
                     DelayDays = DelayDays,
                     OverdueMilestoneReasons = overdueMilestoneReasonsJson,
-                    PhotoUrls = string.Join(";", relativeUrls)
+                    PhotoUrls = string.Join(";", relativeUrls),
+                    ManualVendorDataJson = manualVendorJson
                 };
 
                 await _projectReportService.SaveDraftAsync(ProjectId, draft);
+                _currentDraft = draft;
             }
             catch (Exception ex)
             {

@@ -120,7 +120,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     _ = _historyVM.LoadHistoryAsync(ProjectId, silent);
                     await _reportVM.LoadReportDataAsync(ProjectId, autoGenerate: true, silent: silent);
                     await _variationOrdersVM.LoadProjectAsync(ProjectId, silent);
-                    _projectHseqVM.Initialize(ProjectId, silent);
+                    _projectHseqVM.Initialize(ProjectId, Project.Name, Project.SiteManager?.DisplayName, silent);
                     _crewDeploymentVM.Initialize(ProjectId, Project.Name);
                     if (!silent) UpdateStatus("Ready");
                 }
@@ -210,7 +210,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     _tasksVM.ApplyFilters("All Stages", "All Tasks");
                 }
             }
-            else if (message.TargetView == "Safety")
+            else if (message.TargetView == "Safety" || message.TargetView == "HSEQ")
             {
                 ShowProjectHseq();
             }

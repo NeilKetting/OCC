@@ -434,9 +434,9 @@
                                       AlternatingRowBackground="#05FFFFFF"
                                       HeadersVisibility="Column">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="VENDOR NAME" Binding="{Binding VendorName}" Width="2*"/>
-                                    <DataGridTextColumn Header="SCOPE" Binding="{Binding Scope}" Width="1.5*"/>
-                                    <DataGridTextColumn Header="SAFETY APPROVED" Binding="{Binding SafetyApproved}" Width="1.2*">
+                                    <DataGridTextColumn Header="VENDOR NAME" Binding="{Binding VendorName}" IsReadOnly="True" Width="2*"/>
+                                    <DataGridTextColumn Header="SCOPE" Binding="{Binding Scope}" IsReadOnly="True" Width="1.5*"/>
+                                    <DataGridTextColumn Header="SAFETY APPROVED" Binding="{Binding SafetyApproved, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="1.2*">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -444,28 +444,28 @@
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="APP SCORE" Binding="{Binding AppScore}" Width="1*">
+                                    <DataGridTextColumn Header="APP SCORE" Binding="{Binding AppScore, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="1*">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="AU 1" Binding="{Binding Audit1}" Width="0.8*">
+                                    <DataGridTextColumn Header="AU 1" Binding="{Binding Audit1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="0.8*">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="AU 2" Binding="{Binding Audit2}" Width="0.8*">
+                                    <DataGridTextColumn Header="AU 2" Binding="{Binding Audit2, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="0.8*">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="AU 3" Binding="{Binding Audit3}" Width="0.8*">
+                                    <DataGridTextColumn Header="AU 3" Binding="{Binding Audit3, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="0.8*">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -587,9 +587,9 @@
                                           HeadersVisibility="None"
                                           Margin="0,5,0,0">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="VENDOR NAME" Binding="{Binding VendorName}" Width="2*"/>
-                                        <DataGridTextColumn Header="SCOPE" Binding="{Binding Scope}" Width="1.5*"/>
-                                        <DataGridTextColumn Header="SAFETY APPROVED" Binding="{Binding SafetyApproved}" Width="1.2*">
+                                        <DataGridTextColumn Header="VENDOR NAME" Binding="{Binding VendorName}" IsReadOnly="True" Width="2*"/>
+                                        <DataGridTextColumn Header="SCOPE" Binding="{Binding Scope}" IsReadOnly="True" Width="1.5*"/>
+                                        <DataGridTextColumn Header="SAFETY APPROVED" Binding="{Binding SafetyApproved, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="1.2*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -597,28 +597,28 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="APP SCORE" Binding="{Binding AppScore}" Width="1*">
+                                        <DataGridTextColumn Header="APP SCORE" Binding="{Binding AppScore, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="1*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="AU 1" Binding="{Binding Audit1}" Width="0.8*">
+                                        <DataGridTextColumn Header="AU 1" Binding="{Binding Audit1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="0.8*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="AU 2" Binding="{Binding Audit2}" Width="0.8*">
+                                        <DataGridTextColumn Header="AU 2" Binding="{Binding Audit2, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="0.8*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="AU 3" Binding="{Binding Audit3}" Width="0.8*">
+                                        <DataGridTextColumn Header="AU 3" Binding="{Binding Audit3, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" Width="0.8*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="HorizontalAlignment" Value="Center"/>

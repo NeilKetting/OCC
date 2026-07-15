@@ -13,7 +13,7 @@
 		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
 		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
 		<AssemblyName>OCC-ERP</AssemblyName>
-		<Version>1.1.14</Version>
+		<Version>1.1.15</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
 	</PropertyGroup>
 
@@ -29,6 +29,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
 		<PackageReference Include="QuestPDF" />
+		<PackageReference Include="PdfPig" />
 		<PackageReference Include="Velopack" />
 		<PackageReference Include="Microsoft.Office.Interop.Outlook" />
 	</ItemGroup>

@@ -32,17 +32,25 @@ namespace OCC.API.Controllers
                 .FirstOrDefaultAsync();
 
             double totalHours = 0;
+            var recordsQuery = _context.AttendanceRecords.AsNoTracking();
             if (lastIncidentDate.HasValue)
             {
-                totalHours = await _context.AttendanceRecords
-                    .Where(a => a.Date > lastIncidentDate.Value)
-                    .SumAsync(a => a.HoursWorked);
+                recordsQuery = recordsQuery.Where(a => a.Date > lastIncidentDate.Value);
             }
-            else
+
+            var records = await recordsQuery
+                .Select(a => new { a.HoursWorked, a.CheckInTime, a.CheckOutTime })
+                .ToListAsync();
+
+            totalHours = records.Sum(a => 
             {
-                totalHours = await _context.AttendanceRecords
-                    .SumAsync(a => a.HoursWorked);
-            }
+                if (a.CheckInTime.HasValue && a.CheckOutTime.HasValue)
+                {
+                    var duration = (a.CheckOutTime.Value - a.CheckInTime.Value).TotalHours;
+                    return duration > 0 ? Math.Round(duration, 2) : 0;
+                }
+                return a.HoursWorked;
+            });
 
             // 2. Incident Counts
             var incidents = await _context.Incidents
@@ -84,25 +92,31 @@ namespace OCC.API.Controllers
                 .FirstOrDefaultAsync();
 
             double totalHours = 0;
+            var recordsQuery = _context.AttendanceRecords
+                .AsNoTracking()
+                .Where(a => a.ProjectId == projectId &&
+                           (a.Status == OCC.Shared.Models.AttendanceStatus.Present || 
+                            a.Status == OCC.Shared.Models.AttendanceStatus.Late || 
+                            a.Status == OCC.Shared.Models.AttendanceStatus.LeaveEarly));
+
             if (lastIncidentDate.HasValue)
             {
-                totalHours = await _context.AttendanceRecords
-                    .Where(a => a.ProjectId == projectId && 
-                               a.Date > lastIncidentDate.Value &&
-                               (a.Status == OCC.Shared.Models.AttendanceStatus.Present || 
-                                a.Status == OCC.Shared.Models.AttendanceStatus.Late || 
-                                a.Status == OCC.Shared.Models.AttendanceStatus.LeaveEarly))
-                    .SumAsync(a => a.HoursWorked);
+                recordsQuery = recordsQuery.Where(a => a.Date > lastIncidentDate.Value);
             }
-            else
+
+            var records = await recordsQuery
+                .Select(a => new { a.HoursWorked, a.CheckInTime, a.CheckOutTime })
+                .ToListAsync();
+
+            totalHours = records.Sum(a => 
             {
-                totalHours = await _context.AttendanceRecords
-                    .Where(a => a.ProjectId == projectId &&
-                               (a.Status == OCC.Shared.Models.AttendanceStatus.Present || 
-                                a.Status == OCC.Shared.Models.AttendanceStatus.Late || 
-                                a.Status == OCC.Shared.Models.AttendanceStatus.LeaveEarly))
-                    .SumAsync(a => a.HoursWorked);
-            }
+                if (a.CheckInTime.HasValue && a.CheckOutTime.HasValue)
+                {
+                    var duration = (a.CheckOutTime.Value - a.CheckInTime.Value).TotalHours;
+                    return duration > 0 ? Math.Round(duration, 2) : 0;
+                }
+                return a.HoursWorked;
+            });
 
             return Ok(totalHours);
         }
@@ -113,11 +127,26 @@ namespace OCC.API.Controllers
             var targetYear = year ?? DateTime.Now.Year;
             
             // 1. Get Monthly Hours
-            var monthlyHours = await _context.AttendanceRecords
+            var records = await _context.AttendanceRecords
+                .AsNoTracking()
                 .Where(a => a.Date.Year == targetYear)
-                .GroupBy(a => a.Date.Month)
-                .Select(g => new { Month = g.Key, TotalHours = g.Sum(x => x.HoursWorked) })
-                .ToDictionaryAsync(k => k.Month, v => v.TotalHours);
+                .Select(a => new { a.Date.Month, a.CheckInTime, a.CheckOutTime, a.HoursWorked })
+                .ToListAsync();
+
+            var monthlyHours = records
+                .GroupBy(a => a.Month)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(a => 
+                    {
+                        if (a.CheckInTime.HasValue && a.CheckOutTime.HasValue)
+                        {
+                            var duration = (a.CheckOutTime.Value - a.CheckInTime.Value).TotalHours;
+                            return duration > 0 ? Math.Round(duration, 2) : 0;
+                        }
+                        return a.HoursWorked;
+                    })
+                );
 
             // 2. Get Incidents
             var incidents = await _context.Incidents
@@ -209,6 +238,92 @@ namespace OCC.API.Controllers
             }
 
             return Ok(new { Message = $"Recalculated hours for {records.Count} records. {updatedCount} records were updated.", UpdatedCount = updatedCount });
+        }
+
+        [HttpGet("project-dashboard/{projectId}")]
+        public async Task<ActionResult<object>> GetProjectDashboardStats(Guid projectId)
+        {
+            var lastIncidentDate = await _context.Incidents
+                .Where(i => i.ProjectId == projectId && 
+                           (i.Severity == OCC.Shared.Enums.IncidentSeverity.High || 
+                            i.Severity == OCC.Shared.Enums.IncidentSeverity.Critical || 
+                            i.Severity == OCC.Shared.Enums.IncidentSeverity.Fatality))
+                .OrderByDescending(i => i.Date)
+                .Select(i => (DateTime?)i.Date)
+                .FirstOrDefaultAsync();
+
+            double totalHours = 0;
+            var recordsQuery = _context.AttendanceRecords
+                .AsNoTracking()
+                .Where(a => a.ProjectId == projectId &&
+                           (a.Status == OCC.Shared.Models.AttendanceStatus.Present || 
+                            a.Status == OCC.Shared.Models.AttendanceStatus.Late || 
+                            a.Status == OCC.Shared.Models.AttendanceStatus.LeaveEarly));
+
+            if (lastIncidentDate.HasValue)
+            {
+                recordsQuery = recordsQuery.Where(a => a.Date > lastIncidentDate.Value);
+            }
+
+            var records = await recordsQuery
+                .Select(a => new { a.HoursWorked, a.CheckInTime, a.CheckOutTime })
+                .ToListAsync();
+
+            totalHours = records.Sum(a => 
+            {
+                if (a.CheckInTime.HasValue && a.CheckOutTime.HasValue)
+                {
+                    var duration = (a.CheckOutTime.Value - a.CheckInTime.Value).TotalHours;
+                    return duration > 0 ? Math.Round(duration, 2) : 0;
+                }
+                return a.HoursWorked;
+            });
+
+            var incidents = await _context.Incidents
+                .Where(i => i.ProjectId == projectId)
+                .ToListAsync();
+
+            var incidentsCount = incidents.Count;
+            var nearMisses = incidents.Count(i => i.Type == Shared.Enums.IncidentType.NearMiss);
+            var injuries = incidents.Count(i => i.Type == Shared.Enums.IncidentType.Injury);
+            var environmentals = incidents.Count(i => i.Type == Shared.Enums.IncidentType.Environmental);
+
+            var audits = await _context.HseqAudits
+                .Where(a => a.ProjectId == projectId)
+                .Include(a => a.Sections)
+                .OrderBy(a => a.Date)
+                .ToListAsync();
+
+            var auditsCount = audits.Count;
+            var averageAuditScore = auditsCount > 0 ? audits.Average(a => a.ActualScore) : 0;
+
+            var recentAuditScores = audits
+                .Select(a => new { Date = a.Date.ToString("yyyy-MM-dd"), ActualScore = a.ActualScore })
+                .ToList();
+
+            var categoryStats = audits
+                .SelectMany(a => a.Sections ?? new List<HseqAuditSection>())
+                .Where(s => s.PossibleScore > 0)
+                .GroupBy(s => s.Name)
+                .Select(g => new
+                {
+                    CategoryName = g.Key,
+                    AveragePercentage = Math.Round((g.Sum(s => s.ActualScore) / g.Sum(s => s.PossibleScore)) * 100m, 2)
+                })
+                .ToList();
+
+            return Ok(new 
+            {
+                TotalSafeHours = totalHours, 
+                IncidentsTotal = incidentsCount,
+                NearMisses = nearMisses,
+                Injuries = injuries,
+                Environmentals = environmentals,
+                AuditsTotal = auditsCount,
+                AverageAuditScore = Math.Round(averageAuditScore, 2),
+                RecentAuditScores = recentAuditScores,
+                CategoryStats = categoryStats
+            });
         }
     }
 }

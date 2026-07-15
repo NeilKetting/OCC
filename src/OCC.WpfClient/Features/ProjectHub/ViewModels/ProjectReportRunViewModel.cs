@@ -345,9 +345,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var rows = new List<VendorReportRow>();
             try
             {
-                var allAudits = await _healthSafetyService.GetAuditsAsync();
+                var allAudits = await _healthSafetyService.GetAuditsAsync(projectId);
                 var projectAudits = allAudits
-                    .Where(a => a.SiteName != null && a.SiteName.Contains(projectName, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(a => a.Date)
                     .ToList();
 
@@ -355,7 +354,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 string audit2 = projectAudits.Count > 1 ? $"{projectAudits[1].ActualScore}%" : "-";
                 string audit3 = projectAudits.Count > 2 ? $"{projectAudits[2].ActualScore}%" : "-";
 
-                rows.Add(new VendorReportRow
+                var occRow = new VendorReportRow
                 {
                     VendorName = "Orange Circle Construction",
                     Scope = "Primary Contractor",
@@ -364,7 +363,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     Audit1 = audit1,
                     Audit2 = audit2,
                     Audit3 = audit3
-                });
+                };
+                rows.Add(occRow);
 
                 var subbies = nonGroupTasks
                     .SelectMany(t => t.Assignments ?? new List<TaskAssignment>())
@@ -397,6 +397,35 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         Audit2 = audit2,
                         Audit3 = audit3
                     });
+                }
+
+                // Apply manual overrides from draft if present
+                try
+                {
+                    var draft = await _projectReportService.GetDraftAsync(projectId);
+                    if (draft != null && !string.IsNullOrEmpty(draft.ManualVendorDataJson))
+                    {
+                        var manualEntries = JsonSerializer.Deserialize<List<VendorReportRow>>(draft.ManualVendorDataJson);
+                        if (manualEntries != null)
+                        {
+                            foreach (var manualEntry in manualEntries)
+                            {
+                                var matched = rows.FirstOrDefault(r => r.VendorName.Equals(manualEntry.VendorName, StringComparison.OrdinalIgnoreCase));
+                                if (matched != null)
+                                {
+                                    matched.SafetyApproved = manualEntry.SafetyApproved;
+                                    matched.AppScore = manualEntry.AppScore;
+                                    matched.Audit1 = manualEntry.Audit1;
+                                    matched.Audit2 = manualEntry.Audit2;
+                                    matched.Audit3 = manualEntry.Audit3;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to load/apply manual vendor overrides in report run for project {ProjectId}.", projectId);
                 }
             }
             catch (Exception ex)

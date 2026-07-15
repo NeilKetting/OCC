@@ -38,7 +38,7 @@
                 </Grid>
 
                 <TextBlock Text="SITE NAME" Style="{StaticResource FormLabelText}"/>
-                <TextBox Text="{Binding CurrentAudit.SiteName}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
+                <TextBox Text="{Binding CurrentAudit.SiteName}" Style="{StaticResource ModernInput}" IsReadOnly="{Binding IsSiteNameReadOnly}" Margin="0,0,0,20"/>
 
                 <TextBlock Text="SCOPE OF WORKS" Style="{StaticResource FormLabelText}"/>
                 <TextBox Text="{Binding CurrentAudit.ScopeOfWorks}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>

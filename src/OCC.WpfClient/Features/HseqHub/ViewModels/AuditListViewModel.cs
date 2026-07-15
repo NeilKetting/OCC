@@ -4,6 +4,7 @@ using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Infrastructure;
 using OCC.Shared.Models;
 using OCC.Shared.DTOs;
+using OCC.WpfClient.Features.HseqHub.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -20,6 +21,18 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
         [ObservableProperty]
         private bool _isStatusVisible = true;
+
+        [ObservableProperty] private Guid? _projectId;
+        [ObservableProperty] private string? _projectName;
+        [ObservableProperty] private string? _siteManagerName;
+
+        public void Initialize(Guid projectId, string projectName, string? siteManagerName, bool silent = false)
+        {
+            ProjectId = projectId;
+            ProjectName = projectName;
+            SiteManagerName = siteManagerName;
+            _ = LoadDataAsync();
+        }
 
         private List<AuditSummaryDto> _allAudits = new();
 
@@ -54,7 +67,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 IsBusy = true;
                 BusyText = "Loading audits...";
                 
-                var data = await _hseqService.GetAuditsAsync();
+                var data = await _hseqService.GetAuditsAsync(ProjectId);
                 if (data != null)
                 {
                     _allAudits = data.OrderByDescending(a => a.Date).ToList();
@@ -105,8 +118,57 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         public void CreateNewAudit()
         {
             var vm = _serviceProvider.GetRequiredService<AuditDetailViewModel>();
-            vm.InitializeForNew();
+            vm.InitializeForNew(ProjectId, ProjectName);
+            if (!string.IsNullOrEmpty(SiteManagerName))
+            {
+                vm.CurrentAudit.SiteManager = SiteManagerName;
+            }
             OpenOverlay(vm, (res) => _ = LoadDataAsync());
+        }
+
+        [RelayCommand]
+        public void ImportAuditFromPdf()
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "PDF Files (*.pdf)|*.pdf",
+                Title = "Select Audit PDF Document to Import"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var filePath = openFileDialog.FileName;
+                try
+                {
+                    var mappingVm = _serviceProvider.GetRequiredService<AuditPdfMappingViewModel>();
+                    mappingVm.Initialize(filePath, ProjectId, ProjectName);
+                    
+                    OpenOverlay(mappingVm, (res) =>
+                    {
+                        if (res is HseqAudit mappedAudit)
+                        {
+                            var detailVm = _serviceProvider.GetRequiredService<AuditDetailViewModel>();
+                            detailVm.CurrentAudit = mappedAudit;
+                            if (!string.IsNullOrEmpty(SiteManagerName))
+                            {
+                                detailVm.CurrentAudit.SiteManager = SiteManagerName;
+                            }
+                            detailVm.IsSiteNameReadOnly = ProjectId.HasValue;
+                            detailVm.Title = "Preview Imported Audit";
+                            detailVm.ImportedPdfFilePath = filePath;
+
+                            detailVm.Findings.Clear();
+                            detailVm.Attachments.Clear();
+                            
+                            OpenOverlay(detailVm, (detailRes) => _ = LoadDataAsync());
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    NotifyError("Error", $"Failed to import audit from document: {ex.Message}");
+                }
+            }
         }
 
         [RelayCommand]

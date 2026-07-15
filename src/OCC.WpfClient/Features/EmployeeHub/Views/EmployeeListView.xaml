@@ -95,7 +95,7 @@
                             <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
                             <!-- Print Button -->
-                            <Button x:Name="PrintBtn" Style="{StaticResource QuickBooksToolbarButtonStyle}" Click="PrintButton_Click" ToolTip="Print Report">
+                            <Button x:Name="PrintBtn" Style="{StaticResource QuickBooksToolbarButtonStyle}" Click="PrintButton_Click" ToolTip="Print Report" ContextMenuService.IsEnabled="False">
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                     <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="Print" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>

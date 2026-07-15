@@ -70,7 +70,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="Audit Score Trends" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
-                            <lvc:CartesianChart Grid.Row="1" 
+                            <lvc:CartesianChart Grid.Row="1" Background="Transparent"
                                                  Series="{Binding AuditScoreSeries}" 
                                                  XAxes="{Binding AuditXAxes}"
                                                  YAxes="{Binding AuditYAxes}"/>
@@ -85,10 +85,10 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="Incident Types" Style="{StaticResource TitleText}" Margin="0,0,0,16"/>
-                            <lvc:CartesianChart Grid.Row="1" 
-                                                Series="{Binding IncidentSeries}" 
-                                                XAxes="{Binding IncidentXAxes}"
-                                                YAxes="{Binding IncidentYAxes}"/>
+                            <lvc:CartesianChart Grid.Row="1" Background="Transparent"
+                                                 Series="{Binding IncidentSeries}" 
+                                                 XAxes="{Binding IncidentXAxes}"
+                                                 YAxes="{Binding IncidentYAxes}"/>
                         </Grid>
                     </Border>
                 </UniformGrid>

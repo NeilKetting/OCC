@@ -134,7 +134,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="&#xEA18;" Style="{StaticResource SymbolIcon}" Foreground="#00FFFF" FontSize="16" Opacity="0.85" HorizontalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Safety" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                            <TextBlock Grid.Column="1" Text="HSEQ" VerticalAlignment="Center" Margin="5,0,0,0"/>
                         </Grid>
                     </RadioButton>
 

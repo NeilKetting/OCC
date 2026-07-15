@@ -29,6 +29,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         public ObservableCollection<Axis> IncidentXAxes { get; set; } = new();
         public ObservableCollection<Axis> IncidentYAxes { get; set; } = new();
 
+        public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColors.LightGray);
+
         // 3. Stats Cards
         [ObservableProperty]
         private double _totalSafeHours;
@@ -46,11 +48,39 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             Title = "HSEQ Dashboard";
             
             // Initial Axis Setup
-            AuditXAxes.Add(new Axis { LabelsRotation = 0, Labels = new List<string>() });
-            AuditYAxes.Add(new Axis { MinLimit = 0, MaxLimit = 100, Labeler = v => $"{v}%" });
+            AuditXAxes.Add(new Axis 
+            { 
+                LabelsRotation = 0, 
+                Labels = new List<string>(),
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),
+                MinStep = 1
+            });
+            AuditYAxes.Add(new Axis 
+            { 
+                MinLimit = 0, 
+                MaxLimit = 100, 
+                Labeler = v => $"{v}%",
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),
+                MinStep = 20,
+                ForceStepToMin = true
+            });
 
-            IncidentXAxes.Add(new Axis { Labels = new[] { "Incidents", "Near Misses", "Injuries" } });
-            IncidentYAxes.Add(new Axis { MinLimit = 0, MinStep = 1 });
+            IncidentXAxes.Add(new Axis 
+            { 
+                Labels = new[] { "Incidents", "Near Misses", "Injuries" },
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),
+                MinStep = 1
+            });
+            IncidentYAxes.Add(new Axis 
+            { 
+                MinLimit = 0, 
+                MinStep = 1,
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30))
+            });
         }
 
         // Design-time

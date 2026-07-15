@@ -5,6 +5,7 @@ using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Infrastructure;
 using OCC.Shared.DTOs;
 using OCC.Shared.Models;
+using OCC.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,6 +23,11 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         private HseqAudit _currentAudit = new();
 
         [ObservableProperty]
+        private bool _isSiteNameReadOnly;
+
+        public string? ImportedPdfFilePath { get; set; }
+
+        [ObservableProperty]
         private ObservableCollection<HseqAuditNonComplianceItemWrapper> _findings = new();
 
         [ObservableProperty]
@@ -33,15 +39,18 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             Title = "Audit Details";
         }
 
-        public void InitializeForNew()
+        public void InitializeForNew(Guid? projectId = null, string? siteName = null)
         {
             Title = "New Audit";
             Findings.Clear();
             Attachments.Clear();
+            IsSiteNameReadOnly = projectId.HasValue;
 
             var newAudit = new HseqAudit
             {
                 Id = Guid.Empty,
+                ProjectId = projectId,
+                SiteName = siteName ?? string.Empty,
                 Date = DateTime.Today,
                 Status = OCC.Shared.Enums.AuditStatus.InProgress,
                 TargetScore = 100
@@ -106,6 +115,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 }
 
                 CurrentAudit = loadedAudit;
+                IsSiteNameReadOnly = loadedAudit.ProjectId.HasValue || !string.IsNullOrEmpty(loadedAudit.SiteName);
                 Attachments = new ObservableCollection<AuditAttachmentDto>(loadedAudit.Attachments.Select(ToAttachmentDto));
                 
                 Findings.Clear();
@@ -134,6 +144,12 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         [RelayCommand]
         public async Task Save()
         {
+            if (string.IsNullOrWhiteSpace(CurrentAudit.SiteManager))
+            {
+                NotifyError("Validation Error", "Site Manager is required.");
+                return;
+            }
+
             foreach(var f in Findings) f.CommitToModel();
 
             if (CurrentAudit.Sections != null && CurrentAudit.Sections.Any())
@@ -165,16 +181,54 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             {
                 if (CurrentAudit.Id == Guid.Empty)
                 {
-                     var createdDto = await _hseqService.CreateAuditAsync(ToDto(CurrentAudit));
-                     if (createdDto != null)
-                     {
-                          NotifySuccess("Created", "New audit created.");
-                          Close(createdDto);
-                     }
-                     else
-                     {
-                          NotifyError("Error", "Failed to create audit.");
-                     }
+                      var createdDto = await _hseqService.CreateAuditAsync(ToDto(CurrentAudit));
+                      if (createdDto != null)
+                      {
+                           // Upload the imported PDF as a project specific document & audit attachment
+                           if (!string.IsNullOrEmpty(ImportedPdfFilePath) && File.Exists(ImportedPdfFilePath))
+                           {
+                               try
+                               {
+                                   // 1. Upload HseqDocument (project documents list)
+                                   var hseqDoc = new HseqDocument
+                                   {
+                                       ProjectId = CurrentAudit.ProjectId,
+                                       Title = Path.GetFileNameWithoutExtension(ImportedPdfFilePath),
+                                       Category = DocumentCategory.Report,
+                                       UploadedBy = "AI Import",
+                                       UploadDate = DateTime.UtcNow
+                                   };
+                                   using (var fs = File.OpenRead(ImportedPdfFilePath))
+                                   {
+                                       await _hseqService.UploadDocumentAsync(hseqDoc, fs, Path.GetFileName(ImportedPdfFilePath));
+                                   }
+
+                                   // 2. Also attach it directly to the Audit as an attachment
+                                   var attachment = new HseqAuditAttachment
+                                   {
+                                       AuditId = createdDto.Id,
+                                       FileName = Path.GetFileName(ImportedPdfFilePath),
+                                       UploadedBy = "AI Import",
+                                       UploadedAt = DateTime.UtcNow
+                                   };
+                                   using (var fs = File.OpenRead(ImportedPdfFilePath))
+                                   {
+                                       await _hseqService.UploadAuditAttachmentAsync(attachment, fs, Path.GetFileName(ImportedPdfFilePath));
+                                   }
+                               }
+                               catch (Exception ex)
+                               {
+                                   System.Diagnostics.Debug.WriteLine($"Failed to upload imported PDF: {ex}");
+                               }
+                           }
+
+                           NotifySuccess("Created", "New audit created.");
+                           Close(createdDto);
+                      }
+                      else
+                      {
+                           NotifyError("Error", "Failed to create audit.");
+                      }
                 }
                 else
                 {
@@ -236,6 +290,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
              return new HseqAudit
             {
                 Id = dto.Id,
+                ProjectId = dto.ProjectId,
                 Date = dto.Date,
                 SiteName = dto.SiteName,
                 ScopeOfWorks = dto.ScopeOfWorks,
@@ -306,6 +361,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             return new AuditDto
             {
                 Id = entity.Id,
+                ProjectId = entity.ProjectId,
                 Date = entity.Date,
                 SiteName = entity.SiteName,
                 ScopeOfWorks = entity.ScopeOfWorks,

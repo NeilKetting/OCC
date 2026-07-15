@@ -590,6 +590,33 @@ namespace OCC.Tests
         }
 
         [Fact]
+        public void TestPdfParserRows()
+        {
+            string pdfPath = @"C:\Users\Neil\Documents\OCC Report Runs\audit_01kx34zdvw8gpf8a3m971jddj0_20260709_124054.pdf";
+            
+            string text = "";
+            using (var document = UglyToad.PdfPig.PdfDocument.Open(pdfPath))
+            {
+                var pagesText = new List<string>();
+                for (int i = 1; i <= document.NumberOfPages; i++)
+                {
+                    pagesText.Add(document.GetPage(i).Text);
+                }
+                text = string.Join("\n", pagesText);
+            }
+            
+            var rows = OCC.WpfClient.Features.HseqHub.Services.AuditPdfParser.ExtractRowsFromPdf(pdfPath);
+            var dumpLines = new List<string>();
+            dumpLines.Add($"Rows Count: {rows.Count}");
+            foreach (var r in rows)
+            {
+                dumpLines.Add($"Row: Name='{r.PdfCategoryName}', Possible={r.PossibleScore}, Achieved={r.AchievedScore}");
+            }
+            File.WriteAllLines(@"c:\Users\Neil\source\repos\OCC\matches_dump.txt", dumpLines);
+            Assert.NotEmpty(rows);
+        }
+
+        [Fact]
         public async Task PortSuppliers()
         {
             string oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
