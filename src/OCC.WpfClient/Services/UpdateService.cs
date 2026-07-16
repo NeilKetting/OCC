@@ -85,8 +85,8 @@ namespace OCC.WpfClient.Services
                 var localVersionStr = CurrentVersion;
                 var remoteVersionStr = updateInfo.TargetFullRelease.Version.ToString();
 
-                var cleanLocal = localVersionStr.Split('-')[0];
-                var cleanRemote = remoteVersionStr.Split('-')[0];
+                var cleanLocal = localVersionStr.TrimStart('v', 'V').Split('-')[0];
+                var cleanRemote = remoteVersionStr.TrimStart('v', 'V').Split('-')[0];
 
                 if (System.Version.TryParse(cleanLocal, out var localParsed) && 
                     System.Version.TryParse(cleanRemote, out var remoteParsed))
