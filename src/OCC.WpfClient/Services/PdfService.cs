@@ -847,6 +847,7 @@ namespace OCC.WpfClient.Services
             });
         }
 
+
         private void ComposeGenericDetailContent<T>(IContainer container, T item)
         {
             if (item == null) return;
@@ -2698,8 +2699,24 @@ namespace OCC.WpfClient.Services
                 });
 
                 // Rows
+                bool printedPermanentHeader = false;
+                bool printedCasualHeader = false;
+
                 foreach (var emp in employees)
                 {
+                    if (emp.EmploymentType != "Contract" && !printedPermanentHeader)
+                    {
+                        printedPermanentHeader = true;
+                        table.Cell().ColumnSpan(29).Background(Colors.Grey.Lighten3).Padding(2).AlignLeft().AlignMiddle()
+                            .Text("  PERMANENT EMPLOYEES").FontSize(6.5f).Bold().FontColor(ColorPrimary);
+                    }
+                    else if (emp.EmploymentType == "Contract" && !printedCasualHeader)
+                    {
+                        printedCasualHeader = true;
+                        table.Cell().ColumnSpan(29).Background(Colors.Grey.Lighten3).Padding(2).AlignLeft().AlignMiddle()
+                            .Text("  CASUAL / CONTRACT EMPLOYEES").FontSize(6.5f).Bold().FontColor(ColorPrimary);
+                    }
+
                     static IContainer NameStyle(IContainer c) =>
                         c.Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(2).AlignLeft().AlignMiddle();
 

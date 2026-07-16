@@ -111,8 +111,8 @@ namespace OCC.Client.ModelWrappers
             decimal price = UnitPrice;
 
             decimal sub = qty * price;
-            VatAmount = sub * taxRate;
-            LineTotal = sub; 
+            LineTotal = Math.Round(sub, 2, MidpointRounding.AwayFromZero);
+            VatAmount = Math.Round(LineTotal * taxRate, 2, MidpointRounding.AwayFromZero); 
         }
 
         private void CalculateTotal() => CalculateTotal(0.15m);

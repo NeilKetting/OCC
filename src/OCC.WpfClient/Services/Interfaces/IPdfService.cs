@@ -73,6 +73,7 @@ namespace OCC.WpfClient.Services.Interfaces
     public class WeeklyAttendancePrintModel
     {
         public string EmployeeName { get; set; } = string.Empty;
+        public string EmploymentType { get; set; } = string.Empty;
         public DailyAttendancePrintModel[] Days { get; set; } = new DailyAttendancePrintModel[7];
     }
 

@@ -530,7 +530,7 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="UNIT PRICE" Width="Auto" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
+                        <DataGridTextColumn Header="UNIT PRICE" Width="Auto" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='#,##0.00####'}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="HorizontalAlignment" Value="Right"/>

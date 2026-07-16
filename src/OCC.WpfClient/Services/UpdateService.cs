@@ -81,17 +81,24 @@ namespace OCC.WpfClient.Services
                 
                 if (updateInfo == null || updateInfo.TargetFullRelease == null) return null;
 
-                // Robust version comparison
-                var localVersion = _mgr.CurrentVersion;
-                var remoteVersion = updateInfo.TargetFullRelease.Version;
+                // Robust version comparison using fallback-aware CurrentVersion
+                var localVersionStr = CurrentVersion;
+                var remoteVersionStr = updateInfo.TargetFullRelease.Version.ToString();
 
-                if (localVersion != null && remoteVersion <= localVersion)
+                var cleanLocal = localVersionStr.Split('-')[0];
+                var cleanRemote = remoteVersionStr.Split('-')[0];
+
+                if (System.Version.TryParse(cleanLocal, out var localParsed) && 
+                    System.Version.TryParse(cleanRemote, out var remoteParsed))
                 {
-                    _logger.LogInformation($"No new updates. Local: {localVersion}, Remote: {remoteVersion}");
-                    return null;
+                    if (remoteParsed <= localParsed)
+                    {
+                        _logger.LogInformation($"No new updates. Local: {localVersionStr}, Remote: {remoteVersionStr}");
+                        return null;
+                    }
                 }
 
-                _logger.LogInformation($"New update found! Local: {localVersion}, Remote: {remoteVersion}");
+                _logger.LogInformation($"New update found! Local: {localVersionStr}, Remote: {remoteVersionStr}");
                 return updateInfo;
             }
             catch (Exception ex)

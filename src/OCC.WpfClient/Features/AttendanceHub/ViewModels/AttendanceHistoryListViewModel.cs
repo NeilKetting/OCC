@@ -73,6 +73,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private Dictionary<Guid, string> _employeeNameMap = new();
         private Dictionary<Guid, RateType> _employeeRateTypeMap = new();
         private Dictionary<Guid, string> _employeeEmploymentTypeMap = new();
+        private Dictionary<Guid, IdType> _employeeIdTypeMap = new();
         private Dictionary<Guid, string> _projectNameMap = new();
 
         public AttendanceHistoryListViewModel(
@@ -103,6 +104,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 _employeeNameMap = employees.ToDictionary(e => e.Id, e => $"{e.FirstName} {e.LastName}");
                 _employeeRateTypeMap = employees.ToDictionary(e => e.Id, e => e.RateType);
                 _employeeEmploymentTypeMap = employees.ToDictionary(e => e.Id, e => e.EmploymentType.ToString());
+                _employeeIdTypeMap = employees.ToDictionary(e => e.Id, e => e.IdType);
 
                 // Build project name map for display
                 var projects = await _projectService.GetProjectSummariesAsync(includeDeleted: true);
@@ -246,12 +248,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             var result = filtered
                 .Select(r => new AttendanceHistoryRow
                 {
-                    Record       = r,
-                    EmployeeName = GetEmployeeName(r.EmployeeId),
-                    ProjectName  = GetProjectName(r)
+                    Record         = r,
+                    EmployeeName   = GetEmployeeName(r.EmployeeId),
+                    ProjectName    = GetProjectName(r),
+                    EmploymentType = r.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.EmployeeId.Value, out var type) ? type : "Permanent"
                 })
                 .OrderByDescending(r => r.Record.Date)
-                .ThenByDescending(r => r.Record.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.Record.EmployeeId.Value, out var type) && type == "Permanent")
+                .ThenBy(r => r.EmploymentType == "Contract")
                 .ThenBy(r => r.EmployeeName)
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
@@ -730,8 +733,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         }
                     }
 
-                    // Sort the combined list alphabetically
-                    allWeekEmployees = allWeekEmployees.OrderBy(name => name).ToList();
+                    // Sort: Permanent first (alphabetically), Contract (Casuals) last (alphabetically)
+                    var empTypeMap = allEmployees.ToDictionary(
+                        e => $"{e.FirstName} {e.LastName}".Trim(), 
+                        e => e.EmploymentType.ToString(), 
+                        StringComparer.OrdinalIgnoreCase);
+
+                    allWeekEmployees = allWeekEmployees
+                        .OrderBy(name => empTypeMap.TryGetValue(name, out var type) && type == "Contract")
+                        .ThenBy(name => name)
+                        .ToList();
 
                     foreach (var empName in allWeekEmployees)
                     {
@@ -739,7 +750,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                         var empModel = new WeeklyAttendancePrintModel
                         {
-                            EmployeeName = empName
+                            EmployeeName = empName,
+                            EmploymentType = empTypeMap.TryGetValue(empName, out var type) ? type : "Permanent"
                         };
 
                         // Populate 7 days Saturday (0) to Friday (6)
@@ -906,6 +918,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         // Resolved project name (filled by the VM from _projectNameMap)
         public string ProjectName { get; set; } = string.Empty;
+        
+        // Resolved employment type (filled by the VM from _employeeEmploymentTypeMap)
+        public string EmploymentType { get; set; } = string.Empty;
 
         // Forwarded record properties — keeps XAML bindings intact
         public DateTime        Date          => Record.Date;

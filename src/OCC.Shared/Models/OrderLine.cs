@@ -128,8 +128,8 @@ namespace OCC.Shared.Models
             decimal price = UnitPrice;
             
             decimal sub = qty * price;
-            VatAmount = sub * taxRate;
-            LineTotal = sub; 
+            LineTotal = Math.Round(sub, 2, MidpointRounding.AwayFromZero);
+            VatAmount = Math.Round(LineTotal * taxRate, 2, MidpointRounding.AwayFromZero); 
         }
     }
 }
