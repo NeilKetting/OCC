@@ -24,6 +24,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly ISupplierService _supplierService;
         private readonly IInventoryService _inventoryService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IDialogService _dialogService;
         private List<Order> _allOrders = new();
 
         [ObservableProperty]
@@ -56,7 +57,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             IOrderService orderService,
             ISupplierService supplierService,
             IInventoryService inventoryService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IDialogService dialogService)
         {
             _logger = logger;
             _navigationService = navigationService;
@@ -64,6 +66,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _supplierService = supplierService;
             _inventoryService = inventoryService;
             _serviceProvider = serviceProvider;
+            _dialogService = dialogService;
             Title = "Procurement Overview";
             
             _logger.LogInformation("ProcurementViewModel initialized");
@@ -253,6 +256,36 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 await LoadDashboardDataAsync();
             };
             OpenOverlay(receiveVm);
+        }
+
+        [RelayCommand]
+        private async Task DeleteOrderAsync(Order order)
+        {
+            if (order == null) return;
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Confirm Delete",
+                $"Are you sure you want to delete order {order.OrderNumber}?");
+
+            if (confirmed)
+            {
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Deleting order...";
+                    await _orderService.DeleteOrderAsync(order.Id);
+                    await LoadDashboardDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting order {OrderId}", order.Id);
+                    NotifyError("Error", "Could not delete order.");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
         }
     }
 }

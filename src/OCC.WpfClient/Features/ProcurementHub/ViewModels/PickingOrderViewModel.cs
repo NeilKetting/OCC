@@ -42,6 +42,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private List<Guid> _allOrderIds = new();
         private int _currentIndex = -1;
+        private bool _isNewOrder = true;
+
+        [ObservableProperty]
+        private Guid? _orderId;
 
         public PickingOrderViewModel(
             IOrderService orderService,
@@ -70,10 +74,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task LoadDataAsync()
         {
+            if (IsBusy) return;
             try
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
 
+                // 1. Load lookups sequentially
                 if (!Projects.Any() || !InventoryItems.Any())
                 {
                     var projectsTask = _projectService.GetProjectsAsync();
@@ -105,46 +111,71 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     });
                 }
 
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                // 2. Fetch all existing picking order IDs for cycling (newest first)
+                if (_allOrderIds == null || !_allOrderIds.Any())
                 {
-                    if (CurrentOrder == null)
+                    var allOrders = await _orderService.GetOrdersAsync();
+                    _allOrderIds = allOrders.Where(o => o.OrderType == OrderType.PickingOrder)
+                                            .OrderByDescending(o => o.OrderDate)
+                                            .Select(o => o.Id)
+                                            .ToList();
+                }
+
+                // 3. Populate or create order
+                if (OrderId.HasValue && OrderId.Value != Guid.Empty)
+                {
+                    // Load existing order
+                    var order = await _orderService.GetOrderAsync(OrderId.Value);
+                    if (order != null)
                     {
-                        // Fetch all existing picking order IDs for cycling (newest first)
-                        var allOrders = await _orderService.GetOrdersAsync();
-                        _allOrderIds = allOrders.Where(o => o.OrderType == OrderType.PickingOrder)
-                                                .OrderByDescending(o => o.OrderDate)
-                                                .Select(o => o.Id)
-                                                .ToList();
-
-                        var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PickingOrder);
-                        order.DestinationType = OrderDestinationType.Site;
-                        if (_authService.CurrentUser?.Branch != null)
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            order.Branch = _authService.CurrentUser.Branch.Value;
-                        }
+                            CurrentOrder = new OrderWrapper(order);
+                            SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
+                            _currentIndex = _allOrderIds.IndexOf(order.Id);
+                            _isNewOrder = false;
+                        });
+                    }
+                }
+                else if (CurrentOrder == null)
+                {
+                    // Create new order template
+                    var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PickingOrder);
+                    order.DestinationType = OrderDestinationType.Site;
+                    if (_authService.CurrentUser?.Branch != null)
+                    {
+                        order.Branch = _authService.CurrentUser.Branch.Value;
+                    }
 
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
                         CurrentOrder = new OrderWrapper(order);
                         _currentIndex = -1; // -1 represents "New Order"
+                        _isNewOrder = true;
 
                         // Pre-fill with 10 empty rows
                         for (int i = 0; i < 10; i++)
                         {
                             AddLine();
                         }
-                    }
-                    else
+                    });
+                }
+                else
+                {
+                    // If CurrentOrder is already present, synchronize dropdowns
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         if (SelectedProject == null && CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty)
                         {
                             SelectedProject = Projects.FirstOrDefault(p => p.Id == CurrentOrder.ProjectId.Value);
                         }
-                    }
-                });
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load picking order data");
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                _logger.LogError(ex, "Error loading picking order details data");
+                System.Windows.Application.Current.Dispatcher.Invoke(() => 
                     ErrorMessage = "Failed to load required data. Please try again.");
             }
             finally
@@ -217,14 +248,22 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     CurrentOrder.Model.Lines.Add(line.Model);
                 }
 
-                var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
-                _toastService.ShowSuccess("Success", "Picking order created successfully.");
-
-                // Update cycling list
-                if (_currentIndex == -1)
+                if (_isNewOrder)
                 {
-                    _allOrderIds.Insert(0, savedOrder.Id);
-                    _currentIndex = 0;
+                    var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
+                    _toastService.ShowSuccess("Success", "Picking order created successfully.");
+
+                    // Update cycling list
+                    if (_currentIndex == -1)
+                    {
+                        _allOrderIds.Insert(0, savedOrder.Id);
+                        _currentIndex = 0;
+                    }
+                }
+                else
+                {
+                    await _orderService.UpdateOrderAsync(CurrentOrder.Model);
+                    _toastService.ShowSuccess("Success", "Picking order updated successfully.");
                 }
 
                 WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
@@ -233,7 +272,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving picking order");
-                ErrorMessage = "Failed to save the picking order.";
+                ErrorMessage = ex.Message;
             }
             finally
             {
@@ -257,6 +296,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 CurrentOrder = new OrderWrapper(order);
                 SelectedProject = null;
                 _currentIndex = -1;
+                _isNewOrder = true;
                 for (int i = 0; i < 10; i++) AddLine();
             }
             finally
@@ -356,51 +396,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         public async Task LoadOrderAsync(Guid id)
         {
-            try
-            {
-                IsBusy = true;
-
-                if (!Projects.Any())
-                {
-                    var projects = await _projectService.GetProjectsAsync();
-                    var inventory = await _inventoryService.GetInventoryAsync();
-
-                    Projects.Clear();
-                    foreach (var p in projects) Projects.Add(p);
-
-                    var branch = _authService.CurrentUser?.Branch ?? Branch.JHB;
-                    var filteredInventory = inventory.Where(i =>
-                        (branch == Branch.JHB && i.JhbQuantity > 0) ||
-                        (branch == Branch.CPT && i.CptQuantity > 0))
-                        .ToList();
-
-                    InventoryItems.Clear();
-                    foreach (var i in filteredInventory) InventoryItems.Add(i);
-
-                    var allOrders = await _orderService.GetOrdersAsync();
-                    _allOrderIds = allOrders.Where(o => o.OrderType == OrderType.PickingOrder)
-                                            .OrderByDescending(o => o.OrderDate)
-                                            .Select(o => o.Id)
-                                            .ToList();
-                }
-
-                var order = await _orderService.GetOrderAsync(id);
-                if (order != null)
-                {
-                    CurrentOrder = new OrderWrapper(order);
-                    SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
-                    _currentIndex = _allOrderIds.IndexOf(order.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading picking order {Id}", id);
-                ErrorMessage = "Failed to load picking order details.";
-            }
-            finally
-            {
-                IsBusy = false;
-            }
+            OrderId = id;
+            await LoadDataAsync();
         }
 
         private async Task LoadOrderByIdAsync(Guid id)
@@ -413,11 +410,13 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     CurrentOrder = new OrderWrapper(order);
                     SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
+                    _isNewOrder = false;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading picking order {Id}", id);
+                ErrorMessage = "Failed to load picking order.";
             }
             finally
             {
@@ -435,6 +434,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 CurrentOrder = new OrderWrapper(order);
                 SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
                 _currentIndex = _allOrderIds.IndexOf(order.Id);
+                _isNewOrder = false;
                 CloseOverlay();
             };
             OpenOverlay(dialog);

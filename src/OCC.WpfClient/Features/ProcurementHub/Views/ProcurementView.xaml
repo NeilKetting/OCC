@@ -291,6 +291,14 @@
                                                 Foreground="{StaticResource SuccessGreen}" Margin="5">
                                             <TextBlock Text="&#xE8F4;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
                                         </Button>
+                                        <!-- Delete Order -->
+                                        <Button Style="{StaticResource ToolbarIconButton}"
+                                                ToolTip="Delete Order"
+                                                Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Foreground="{StaticResource ErrorRed}" Margin="5">
+                                            <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -299,6 +307,35 @@
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="View / Edit Order" 
+                                                  Command="{Binding PlacementTarget.Tag.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource AccentBlue}"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Receive Stock" 
+                                                  Command="{Binding PlacementTarget.Tag.ReceiveOrderStockCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Text="&#xE8F4;" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource SuccessGreen}"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator/>
+                                        <MenuItem Header="Delete Order" 
+                                                  Command="{Binding PlacementTarget.Tag.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="{StaticResource ErrorRed}"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </DataGrid.RowStyle>
                 </DataGrid>

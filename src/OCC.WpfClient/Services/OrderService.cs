@@ -99,7 +99,11 @@ namespace OCC.WpfClient.Services
             {
                 var dto = ToDto(order);
                 var response = await client.PostAsJsonAsync(url, dto);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(errorMsg) ? $"Request failed with status {response.StatusCode}" : errorMsg);
+                }
                 var resultDto = await response.Content.ReadFromJsonAsync<OrderDto>();
                 return resultDto != null ? ToEntity(resultDto) : order;
             }
@@ -119,7 +123,11 @@ namespace OCC.WpfClient.Services
             {
                 var dto = ToDto(order);
                 var response = await client.PutAsJsonAsync(url, dto);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(errorMsg) ? $"Request failed with status {response.StatusCode}" : errorMsg);
+                }
             }
             catch (Exception ex)
             {

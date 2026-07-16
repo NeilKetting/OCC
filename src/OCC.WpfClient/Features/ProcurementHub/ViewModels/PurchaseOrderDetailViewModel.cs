@@ -47,6 +47,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private List<Guid> _allOrderIds = new();
         private int _currentIndex = -1;
+        private bool _isNewOrder = true;
+
+        [ObservableProperty]
+        private Guid? _orderId;
 
         public PurchaseOrderDetailViewModel(
             IOrderService orderService,
@@ -73,10 +77,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private async Task LoadDataAsync()
         {
+            if (IsBusy) return;
             try
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
                 
+                // 1. Load lookups sequentially
                 if (!Suppliers.Any() || !Projects.Any() || !InventoryItems.Any())
                 {
                     var suppliersTask = _supplierService.GetSuppliersAsync();
@@ -109,27 +115,52 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     });
                 }
 
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                // 2. Fetch all existing order IDs for cycling (newest first)
+                if (_allOrderIds == null || !_allOrderIds.Any())
                 {
-                    if (CurrentOrder == null)
+                    var allOrders = await _orderService.GetOrdersAsync();
+                    _allOrderIds = allOrders.OrderByDescending(o => o.OrderDate).Select(o => o.Id).ToList();
+                }
+
+                // 3. Populate or create order
+                if (OrderId.HasValue && OrderId.Value != Guid.Empty)
+                {
+                    // Load existing order
+                    var order = await _orderService.GetOrderAsync(OrderId.Value);
+                    if (order != null)
                     {
-                        // Fetch all existing order IDs for cycling (newest first)
-                        var allOrders = await _orderService.GetOrdersAsync();
-                        _allOrderIds = allOrders.OrderByDescending(o => o.OrderDate).Select(o => o.Id).ToList();
-                        
-                        var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentOrder = new OrderWrapper(order);
+                            SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                            SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
+                            _currentIndex = _allOrderIds.IndexOf(order.Id);
+                            _isNewOrder = false;
+                        });
+                    }
+                }
+                else if (CurrentOrder == null)
+                {
+                    // Create new order template
+                    var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
                         CurrentOrder = new OrderWrapper(order);
                         _currentIndex = -1; // -1 represents "New Order"
+                        _isNewOrder = true;
                         
                         // QuickBooks style: Pre-fill with 10 empty rows
                         for (int i = 0; i < 10; i++)
                         {
                             AddLine();
                         }
-                    }
-                    else
+                    });
+                }
+                else
+                {
+                    // If CurrentOrder is already present, synchronize dropdowns
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        // If CurrentOrder is not null, ensure SelectedSupplier and SelectedProject match the wrapper fields
                         if (SelectedSupplier == null && CurrentOrder.SupplierId != Guid.Empty)
                         {
                             SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
@@ -138,12 +169,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         {
                             SelectedProject = Projects.FirstOrDefault(p => p.Id == CurrentOrder.ProjectId.Value);
                         }
-                    }
-                });
+                    });
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError("Error creating new item");
+                _logger.LogError(ex, "Error loading purchase order details data");
                 System.Windows.Application.Current.Dispatcher.Invoke(() => 
                     ErrorMessage = "Failed to load required data. Please try again.");
             }
@@ -204,13 +235,21 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             try
             {
                 IsBusy = true;
-                var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
                 
-                // Update cycling list
-                if (_currentIndex == -1)
+                if (_isNewOrder)
                 {
-                    _allOrderIds.Insert(0, savedOrder.Id);
-                    _currentIndex = 0;
+                    var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
+                    
+                    // Update cycling list
+                    if (_currentIndex == -1)
+                    {
+                        _allOrderIds.Insert(0, savedOrder.Id);
+                        _currentIndex = 0;
+                    }
+                }
+                else
+                {
+                    await _orderService.UpdateOrderAsync(CurrentOrder.Model);
                 }
                 
                 WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
@@ -219,7 +258,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving order");
-                ErrorMessage = "Failed to save the order.";
+                ErrorMessage = ex.Message;
             }
             finally
             {
@@ -234,12 +273,20 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             try
             {
                 IsBusy = true;
-                var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
                 
-                // Update cycling list for next time (even though we are resetting, it keeps the cache fresh)
-                if (_currentIndex == -1)
+                if (_isNewOrder)
                 {
-                    _allOrderIds.Insert(0, savedOrder.Id);
+                    var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
+                    
+                    // Update cycling list for next time (even though we are resetting, it keeps the cache fresh)
+                    if (_currentIndex == -1)
+                    {
+                        _allOrderIds.Insert(0, savedOrder.Id);
+                    }
+                }
+                else
+                {
+                    await _orderService.UpdateOrderAsync(CurrentOrder.Model);
                 }
 
                 // Reset to new template
@@ -248,13 +295,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 SelectedSupplier = null;
                 SelectedProject = null;
                 _currentIndex = -1; // Ready for another new order
+                _isNewOrder = true;
                 
                 for (int i = 0; i < 10; i++) AddLine();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving order");
-                ErrorMessage = "Failed to save the order.";
+                ErrorMessage = ex.Message;
             }
             finally
             {
@@ -273,6 +321,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 SelectedSupplier = null;
                 SelectedProject = null;
                 _currentIndex = -1;
+                _isNewOrder = true;
                 for (int i = 0; i < 10; i++) AddLine();
             }
             finally
@@ -390,48 +439,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         public async Task LoadOrderAsync(Guid id)
         {
-            try
-            {
-                IsBusy = true;
-                
-                // Ensure lookups are loaded first
-                if (!Suppliers.Any() || !Projects.Any())
-                {
-                    var suppliers = await _supplierService.GetSuppliersAsync();
-                    var projects = await _projectService.GetProjectsAsync();
-                    var inventory = await _inventoryService.GetInventoryAsync();
-
-                    Suppliers.Clear();
-                    foreach (var s in suppliers) Suppliers.Add(s);
-
-                    Projects.Clear();
-                    foreach (var p in projects) Projects.Add(p);
-
-                    InventoryItems.Clear();
-                    foreach (var i in inventory) InventoryItems.Add(i);
-                    
-                    var allOrders = await _orderService.GetOrdersAsync();
-                    _allOrderIds = allOrders.OrderByDescending(o => o.OrderDate).Select(o => o.Id).ToList();
-                }
-
-                var order = await _orderService.GetOrderAsync(id);
-                if (order != null)
-                {
-                    CurrentOrder = new OrderWrapper(order);
-                    SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
-                    SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
-                    _currentIndex = _allOrderIds.IndexOf(order.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading order {Id} in detail view", id);
-                ErrorMessage = "Failed to load order details.";
-            }
-            finally
-            {
-                IsBusy = false;
-            }
+            OrderId = id;
+            await LoadDataAsync();
         }
 
         private async Task LoadOrderByIdAsync(Guid id)
@@ -445,6 +454,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     CurrentOrder = new OrderWrapper(order);
                     SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
                     SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
+                    _isNewOrder = false;
                 }
             }
             catch (Exception ex)
@@ -470,6 +480,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 
                 // Update index for cycling
                 _currentIndex = _allOrderIds.IndexOf(order.Id);
+                _isNewOrder = false;
                 
                 CloseOverlay();
             };

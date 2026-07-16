@@ -585,9 +585,11 @@ namespace OCC.API.Controllers
 
                 var backupFileName = System.IO.Path.Combine(backupPath, $"{dbName}_PreFinalize_{DateTime.Now:yyyyMMdd_HHmmss}.bak");
                 
+#pragma warning disable EF1002
                 await _context.Database.ExecuteSqlRawAsync(
                     $"BACKUP DATABASE [{dbName}] TO DISK = {{0}} WITH FORMAT, NAME = {{1}};", 
                     backupFileName, "Pre-Finalization Backup");
+#pragma warning restore EF1002
             }
             catch (Exception ex)
             {

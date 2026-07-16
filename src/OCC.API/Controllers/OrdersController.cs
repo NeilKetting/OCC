@@ -99,6 +99,11 @@ namespace OCC.API.Controllers
                 if (orderDto.ExpectedDeliveryDate.HasValue && orderDto.ExpectedDeliveryDate.Value.Date < DateTime.Today)
                     return BadRequest("Expected delivery date (ETA) cannot be in the past.");
 
+                // Check for duplicate order number
+                var exists = await _context.Orders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber);
+                if (exists)
+                    return BadRequest($"Order number '{orderDto.OrderNumber}' is already in use.");
+
                 var order = ToEntity(orderDto);
 
                 // Set server-side properties (safety)
@@ -178,6 +183,11 @@ namespace OCC.API.Controllers
 
             try
             {
+                // Check for duplicate order number
+                var exists = await _context.Orders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber && o.Id != id);
+                if (exists)
+                    return BadRequest($"Order number '{orderDto.OrderNumber}' is already in use.");
+
                 // 1. Load existing WITH lines
                 var existingOrder = await _context.Orders
                                             .Include(o => o.Lines)
@@ -262,7 +272,8 @@ namespace OCC.API.Controllers
                             QuantityOrdered = lineDto.QuantityOrdered,
                             QuantityReceived = lineDto.QuantityReceived,
                             LineTotal = lineDto.LineTotal,
-                            VatAmount = lineDto.VatAmount
+                            VatAmount = lineDto.VatAmount,
+                            Remarks = lineDto.Remarks
                         };
 
                         // Handle Stock for New Lines
@@ -275,7 +286,7 @@ namespace OCC.API.Controllers
                             }
                         }
 
-                        _context.OrderLines.Add(newLine);
+                        existingOrder.Lines.Add(newLine);
                     }
                 }
 

@@ -761,12 +761,25 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 return;
             }
 
-            hub.Dispose();
-            OpenHubs.Remove(hub);
             if (ActiveHub == hub)
             {
-                ActiveHub = OpenHubs.LastOrDefault();
+                var index = OpenHubs.IndexOf(hub);
+                if (index > 0)
+                {
+                    ActiveHub = OpenHubs[index - 1];
+                }
+                else if (OpenHubs.Count > 1)
+                {
+                    ActiveHub = OpenHubs[1];
+                }
+                else
+                {
+                    ActiveHub = null;
+                }
             }
+
+            hub.Dispose();
+            OpenHubs.Remove(hub);
         }
 
         /// <summary>
