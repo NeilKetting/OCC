@@ -744,7 +744,9 @@ namespace OCC.API.Controllers
             // Mark all processed attendance records as paid by this wage run
             var runDateFinal = run.RunDate != default ? run.RunDate : DateTime.Now.Date;
             var cutoffDateFinal = DateTime.MinValue;
-            for (int i = 7; i <= 13; i++)
+            int startOffset = run.Branch == "Cape Town" ? 0 : 7;
+            int endOffset = run.Branch == "Cape Town" ? 6 : 13;
+            for (int i = startOffset; i <= endOffset; i++)
             {
                 var date = run.StartDate.AddDays(i).Date;
                 if (date.DayOfWeek == DayOfWeek.Wednesday)
