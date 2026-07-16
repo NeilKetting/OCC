@@ -389,7 +389,16 @@ namespace OCC.API.Controllers
                 }
 
                 int projectedDays = dailyHours > 0 ? (int)Math.Round(line.ProjectedHours / dailyHours) : 0;
-                line.DaysWorkedWeek3 = distinctDaysW2.Count + projectedDays;
+                if (request.Branch == "Cape Town")
+                {
+                    line.DaysWorkedWeek2 = distinctDaysW1.Count + projectedDays;
+                    line.DaysWorkedWeek3 = distinctDaysW2.Count;
+                }
+                else
+                {
+                    line.DaysWorkedWeek2 = distinctDaysW1.Count;
+                    line.DaysWorkedWeek3 = distinctDaysW2.Count + projectedDays;
+                }
                 line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
                 // C. Variance Calculation (Previous Run)
@@ -757,8 +766,12 @@ namespace OCC.API.Controllers
             }
             var attendanceEndFinal = cutoffDateFinal > runDateFinal ? runDateFinal : cutoffDateFinal;
 
+            var employeeIds = run.Lines.Select(l => l.EmployeeId).ToList();
+
             var attendanceRecordsToFinalize = await _context.AttendanceRecords
                 .Where(a => a.PaidWageRunId == null && 
+                            a.EmployeeId != null &&
+                            employeeIds.Contains(a.EmployeeId.Value) &&
                             ((a.Date >= run.StartDate && a.Date <= attendanceEndFinal) ||
                              (a.Date < run.StartDate && 
                               (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
