@@ -61,6 +61,8 @@ namespace OCC.API.Controllers
         {
             // Request contains StartDate, EndDate. RunDate is Now.
             var runDate = DateTime.Now.Date; // "Today"
+            var branchEnum = request.Branch.ToBranchEnum();
+            bool isCapeTown = branchEnum == Branch.CPT;
 
             // 1. DUPLICATION CHECK: Prevent generating if a FINALIZED run already exists
             var existingRun = await _context.WageRuns
@@ -308,8 +310,13 @@ namespace OCC.API.Controllers
 
                             if (!hasUnpaidLeave)
                             {
-                                if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
-                                else distinctDaysW2.Add(record.Date.Date);
+                                bool isWeekend = record.Date.DayOfWeek == DayOfWeek.Saturday || record.Date.DayOfWeek == DayOfWeek.Sunday;
+                                bool isEmpCapeTown = emp.Branch?.Contains("Cape", StringComparison.OrdinalIgnoreCase) == true;
+                                if (!isEmpCapeTown || !isWeekend)
+                                {
+                                    if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
+                                    else distinctDaysW2.Add(record.Date.Date);
+                                }
                             }
                         }
 
@@ -345,8 +352,6 @@ namespace OCC.API.Controllers
                         }
                     }
                 }
-                var branchEnum = request.Branch.ToBranchEnum();
-                bool isCapeTown = branchEnum == Branch.CPT;
 
                 line.DaysWorkedWeek1 = 0; // W1 (deducted days offset)
                 line.DaysWorkedWeek2 = distinctDaysW1.Count; // W2 (Week 1 actual worked)

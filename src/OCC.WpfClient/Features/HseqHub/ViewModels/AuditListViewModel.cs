@@ -18,6 +18,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
     {
         private readonly IHealthSafetyService _hseqService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private bool _isStatusVisible = true;
@@ -49,10 +50,12 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         public AuditListViewModel(
             IHealthSafetyService hseqService, 
             IServiceProvider serviceProvider,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            IDialogService dialogService) : base(pdfService)
         {
             _hseqService = hseqService;
             _serviceProvider = serviceProvider;
+            _dialogService = dialogService;
             Title = "Audits";
 
             _ = LoadDataAsync();
@@ -185,6 +188,11 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         public async Task DeleteAudit(AuditSummaryDto audit)
         {
             if (audit == null) return;
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Delete Audit",
+                $"Are you sure you want to delete '{audit.AuditNumber}'? This action cannot be undone.");
+            if (!confirmed) return;
 
             try
             {

@@ -1873,7 +1873,7 @@ namespace OCC.WpfClient.Services
             if (IsColVisible("Comments")) visibleColCountAfterNett++;
             if (IsColVisible("Notes")) visibleColCountAfterNett++;
             if (IsColVisible("TotalRem")) visibleColCountAfterNett++;
-            if (IsColVisible("Days")) visibleColCountAfterNett += isCpt ? 2 : 5;
+            if (IsColVisible("Days")) visibleColCountAfterNett += 5;
 
             container.Table(table =>
             {
@@ -1916,12 +1916,9 @@ namespace OCC.WpfClient.Services
                     if (IsColVisible("Days"))
                     {
                         columns.RelativeColumn(1.0f); // RATE P/DAY
-                        if (!isCpt)
-                        {
-                            columns.RelativeColumn(0.5f); // W1
-                            columns.RelativeColumn(0.5f); // W2
-                            columns.RelativeColumn(0.5f); // W3
-                        }
+                        columns.RelativeColumn(0.5f); // W1
+                        columns.RelativeColumn(0.5f); // W2
+                        columns.RelativeColumn(0.5f); // W3
                         columns.RelativeColumn(0.7f); // TOT D
                     }
                 });
@@ -1965,12 +1962,9 @@ namespace OCC.WpfClient.Services
                     if (IsColVisible("Days"))
                     {
                         header.Cell().Element(WageHeaderStyle).Text("RATE\nP/DAY");
-                        if (!isCpt)
-                        {
-                            header.Cell().Element(WageHeaderStyle).Text("WEEK 1");
-                            header.Cell().Element(WageHeaderStyle).Text("WEEK 2");
-                            header.Cell().Element(WageHeaderStyle).Text("WEEK 3");
-                        }
+                        header.Cell().Element(WageHeaderStyle).Text("WEEK 1");
+                        header.Cell().Element(WageHeaderStyle).Text("WEEK 2");
+                        header.Cell().Element(WageHeaderStyle).Text("WEEK 3");
                         header.Cell().Element(WageHeaderStyle).Text("TOTAL\nDAYS");
                     }
 
@@ -2032,12 +2026,9 @@ namespace OCC.WpfClient.Services
                     if (IsColVisible("Days"))
                     {
                         table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 8.75m).ToString("F2"));
-                        if (!isCpt)
-                        {
-                            table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek1.ToString("0.#"));
-                            table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek2.ToString("0"));
-                            table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek3.ToString("0"));
-                        }
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek1.ToString("0.#"));
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek2.ToString("0"));
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek3.ToString("0"));
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.TotalDaysWorked.ToString("0"));
                     }
 
@@ -2082,6 +2073,7 @@ namespace OCC.WpfClient.Services
                 });
             });
         }
+
 
 
 
