@@ -1818,15 +1818,13 @@ namespace OCC.WpfClient.Services
         private void ComposeWageTable(IContainer container, List<WageRunLine> lines, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns, string branch)
         {
             bool hasComments = lines.Any(l => !string.IsNullOrWhiteSpace(l.Comments));
+            bool isCpt = branch.ToBranchEnum() == Branch.CPT;
 
             // Helper to check if a column is visible
             bool IsColVisible(string key)
             {
                 if (hideAfterComments && (key == "TotalRem" || key == "Days")) return false;
                 if (hideDecColumns && key == "DecColumns") return false;
-
-                bool isCpt = string.Equals(branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || 
-                             string.Equals(branch, "CPT", StringComparison.OrdinalIgnoreCase);
 
                 if (key == "Loans") return true;
                 if (key == "Other") return true;
@@ -1875,7 +1873,7 @@ namespace OCC.WpfClient.Services
             if (IsColVisible("Comments")) visibleColCountAfterNett++;
             if (IsColVisible("Notes")) visibleColCountAfterNett++;
             if (IsColVisible("TotalRem")) visibleColCountAfterNett++;
-            if (IsColVisible("Days")) visibleColCountAfterNett += 5;
+            if (IsColVisible("Days")) visibleColCountAfterNett += isCpt ? 2 : 5;
 
             container.Table(table =>
             {
@@ -1918,9 +1916,12 @@ namespace OCC.WpfClient.Services
                     if (IsColVisible("Days"))
                     {
                         columns.RelativeColumn(1.0f); // RATE P/DAY
-                        columns.RelativeColumn(0.5f); // W1
-                        columns.RelativeColumn(0.5f); // W2
-                        columns.RelativeColumn(0.5f); // W3
+                        if (!isCpt)
+                        {
+                            columns.RelativeColumn(0.5f); // W1
+                            columns.RelativeColumn(0.5f); // W2
+                            columns.RelativeColumn(0.5f); // W3
+                        }
                         columns.RelativeColumn(0.7f); // TOT D
                     }
                 });
@@ -1964,9 +1965,12 @@ namespace OCC.WpfClient.Services
                     if (IsColVisible("Days"))
                     {
                         header.Cell().Element(WageHeaderStyle).Text("RATE\nP/DAY");
-                        header.Cell().Element(WageHeaderStyle).Text("WEEK 1");
-                        header.Cell().Element(WageHeaderStyle).Text("WEEK 2");
-                        header.Cell().Element(WageHeaderStyle).Text("WEEK 3");
+                        if (!isCpt)
+                        {
+                            header.Cell().Element(WageHeaderStyle).Text("WEEK 1");
+                            header.Cell().Element(WageHeaderStyle).Text("WEEK 2");
+                            header.Cell().Element(WageHeaderStyle).Text("WEEK 3");
+                        }
                         header.Cell().Element(WageHeaderStyle).Text("TOTAL\nDAYS");
                     }
 
@@ -2028,9 +2032,12 @@ namespace OCC.WpfClient.Services
                     if (IsColVisible("Days"))
                     {
                         table.Cell().Element(WageCellStyle).AlignRight().Text((line.HourlyRate * 8.75m).ToString("F2"));
-                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek1.ToString("0.#"));
-                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek2.ToString("0"));
-                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek3.ToString("0"));
+                        if (!isCpt)
+                        {
+                            table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek1.ToString("0.#"));
+                            table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek2.ToString("0"));
+                            table.Cell().Element(WageCellStyle).AlignCenter().Text(line.DaysWorkedWeek3.ToString("0"));
+                        }
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.TotalDaysWorked.ToString("0"));
                     }
 
@@ -2080,8 +2087,7 @@ namespace OCC.WpfClient.Services
 
         private void ComposeWageTotalsTable(IContainer container, WageRun wageRun)
         {
-            bool isCpt = string.Equals(wageRun.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || 
-                         string.Equals(wageRun.Branch, "CPT", StringComparison.OrdinalIgnoreCase);
+            bool isCpt = wageRun.Branch.ToBranchEnum() == Branch.CPT;
 
             container.Column(col =>
             {

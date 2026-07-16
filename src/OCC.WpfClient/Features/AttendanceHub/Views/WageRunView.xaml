@@ -535,19 +535,19 @@
                         </DataGridTextColumn>
                         <!-- W1, W2, W3, TOT D -->
                         <DataGridTextColumn Header="WEEK 1" Binding="{Binding DaysWeek1Display, StringFormat='0.#'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                            Visibility="{Binding Data.IsWeekBreakdownVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="WEEK 2" Binding="{Binding DaysWeek2Display}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                            Visibility="{Binding Data.IsWeekBreakdownVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="WEEK 3" Binding="{Binding DaysWeek3Display}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                                            Visibility="{Binding Data.IsWeekBreakdownVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>

@@ -345,6 +345,9 @@ namespace OCC.API.Controllers
                         }
                     }
                 }
+                var branchEnum = request.Branch.ToBranchEnum();
+                bool isCapeTown = branchEnum == Branch.CPT;
+
                 line.DaysWorkedWeek1 = 0; // W1 (deducted days offset)
                 line.DaysWorkedWeek2 = distinctDaysW1.Count; // W2 (Week 1 actual worked)
                 line.DaysWorkedWeek3 = distinctDaysW2.Count; // W3 (Week 2 actual worked)
@@ -353,8 +356,8 @@ namespace OCC.API.Controllers
                 // B. Calculate Projected Hours (Thursday to Friday of the run period)
                 var projectedStart = DateTime.MinValue;
                 var projectedEnd = DateTime.MinValue;
-                int startOffset = request.Branch == "Cape Town" ? 0 : 7;
-                int endOffset = request.Branch == "Cape Town" ? 6 : 13;
+                int startOffset = isCapeTown ? 0 : 7;
+                int endOffset = isCapeTown ? 6 : 13;
                 for (int i = startOffset; i <= endOffset; i++)
                 {
                     var date = request.StartDate.AddDays(i).Date;
@@ -389,7 +392,7 @@ namespace OCC.API.Controllers
                 }
 
                 int projectedDays = dailyHours > 0 ? (int)Math.Round(line.ProjectedHours / dailyHours) : 0;
-                if (request.Branch == "Cape Town")
+                if (isCapeTown)
                 {
                     line.DaysWorkedWeek2 = distinctDaysW1.Count + projectedDays;
                     line.DaysWorkedWeek3 = distinctDaysW2.Count;
@@ -413,8 +416,9 @@ namespace OCC.API.Controllers
                 // Find the previous run line to determine what projected hours were actually paid in advance
                 var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
                 double maxProjectedHoursToDeduct = (priorLine != null) ? (double)priorLine.ProjectedHours : 0;
+                double remainingProjectedHours = maxProjectedHoursToDeduct;
 
-                for (var d = prepaidStart; d <= prepaidEnd; d = d.AddDays(1))
+                for (var d = prepaidEnd; d >= prepaidStart; d = d.AddDays(-1))
                 {
                     // Skip weekends and public holidays
                     if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
@@ -422,62 +426,62 @@ namespace OCC.API.Controllers
 
                     prepaidWorkingDays++;
 
-                    var isAbsent = empLeaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
-                        (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+                    double dayHours = 8.75;
+                    TimeSpan? startTime = emp.ShiftStartTime;
+                    TimeSpan? endTime = emp.ShiftEndTime;
 
-                    if (!isAbsent)
+                    if (startTime == null || endTime == null)
                     {
-                        var attendanceRecord = empAttendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
-                        if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
-                        {
-                            isAbsent = true;
-                        }
-                    }
-
-                    if (isAbsent)
-                    {
-                        leaveDeductionDays++;
+                        var bEnum = emp.Branch.ToBranchEnum() ?? Branch.JHB;
                         
-                        double dayHours = 8.75;
-                        TimeSpan? startTime = emp.ShiftStartTime;
-                        TimeSpan? endTime = emp.ShiftEndTime;
-
-                        if (startTime == null || endTime == null)
+                        if (companyDetails != null && companyDetails.Branches != null && companyDetails.Branches.TryGetValue(bEnum, out var branchDetails))
                         {
-                            var bEnum = Branch.JHB;
-                            if (string.Equals(emp.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || 
-                                string.Equals(emp.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
-                            {
-                                bEnum = Branch.CPT;
-                            }
-                            
-                            if (companyDetails != null && companyDetails.Branches != null && companyDetails.Branches.TryGetValue(bEnum, out var branchDetails))
-                            {
-                                startTime = branchDetails.ShiftStartTime;
-                                endTime = branchDetails.ShiftEndTime;
-                            }
+                            startTime = branchDetails.ShiftStartTime;
+                            endTime = branchDetails.ShiftEndTime;
                         }
-
-                        if (startTime != null && endTime != null)
-                        {
-                            var duration = endTime.Value - startTime.Value;
-                            double rawHours = duration.TotalHours;
-                            if (rawHours > 0)
-                            {
-                                double lunch = 1.0;
-                                var dow = d.DayOfWeek;
-                                bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
-                                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d);
-                                if (isWeekend || isHoliday)
-                                {
-                                    lunch = 0;
-                                }
-                                dayHours = Math.Max(0, rawHours - lunch);
-                            }
-                        }
-                        leaveDeductionHours += dayHours;
                     }
 
+                    if (startTime != null && endTime != null)
+                    {
+                        var duration = endTime.Value - startTime.Value;
+                        double rawHours = duration.TotalHours;
+                        if (rawHours > 0)
+                        {
+                            double lunch = 1.0;
+                            var dow = d.DayOfWeek;
+                            bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                            bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d);
+                            if (isWeekend || isHoliday)
+                            {
+                                lunch = 0;
+                            }
+                            dayHours = Math.Max(0, rawHours - lunch);
+                        }
+                    }
+
+                    // Only deduct if this day was paid as projected in the previous run
+                    if (remainingProjectedHours >= dayHours - 0.01)
+                    {
+                        remainingProjectedHours -= dayHours;
+
+                        var isAbsent = empLeaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
+                            (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+
+                        if (!isAbsent)
+                        {
+                            var attendanceRecord = empAttendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
+                            if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
+                            {
+                                isAbsent = true;
+                            }
+                        }
+
+                        if (isAbsent)
+                        {
+                            leaveDeductionDays++;
+                            leaveDeductionHours += dayHours;
+                        }
+                    }
                 }
 
                 // If they were absent on all working days in the prepaid window (e.g. 2 out of 2),
@@ -490,10 +494,6 @@ namespace OCC.API.Controllers
 
                 if (leaveDeductionDays > 0 && maxProjectedHoursToDeduct > 0)
                 {
-                    // Clamp deductions to the projected hours that were actually paid to the employee in the previous run
-                    leaveDeductionHours = Math.Min(leaveDeductionHours, maxProjectedHoursToDeduct);
-                    leaveDeductionDays = Math.Min(leaveDeductionDays, dailyHours > 0 ? maxProjectedHoursToDeduct / dailyHours : 0);
-
                     line.VarianceHours = -leaveDeductionHours;
                     if (lastRun != null)
                     {
@@ -510,7 +510,7 @@ namespace OCC.API.Controllers
                 line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
                 // Calculate BIBC Amount
-                if (emp.IsBibc && emp.Branch == "Cape Town")
+                if (emp.IsBibc && emp.Branch.ToBranchEnum() == Branch.CPT)
                 {
                     line.BibcAmount = bibcRate * (decimal)line.TotalDaysWorked;
                 }

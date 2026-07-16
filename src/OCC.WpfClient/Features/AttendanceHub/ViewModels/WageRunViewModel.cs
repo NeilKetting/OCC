@@ -41,10 +41,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnStartDateChanged(DateTime value)
         {
             if (_isUpdatingDates) return;
+            if (SelectedBranch.ToBranchEnum() == Branch.CPT)
+            {
+                IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
+                return;
+            }
             _isUpdatingDates = true;
             try
             {
-                int days = SelectedBranch == "Cape Town" ? 6 : 13;
+                int days = 13;
                 EndDate = value.AddDays(days);
                 IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
             }
@@ -57,10 +62,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnEndDateChanged(DateTime value)
         {
             if (_isUpdatingDates) return;
+            if (SelectedBranch.ToBranchEnum() == Branch.CPT)
+            {
+                IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+                return;
+            }
             _isUpdatingDates = true;
             try
             {
-                int days = SelectedBranch == "Cape Town" ? 6 : 13;
+                int days = 13;
                 StartDate = value.AddDays(-days);
                 IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
             }
@@ -204,31 +214,38 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             LinesView.Refresh();
             UpdateGrandTotal();
         }
-        public bool IsBibcColumnVisible => SelectedBranch == "Cape Town";
-        public bool IsBibcRateVisible => IsAdminUser && SelectedBranch == "Cape Town";
-        public bool IsWashingGasVisible => SelectedBranch != "Cape Town";
+        public bool IsBibcColumnVisible => SelectedBranch.ToBranchEnum() == Branch.CPT;
+        public bool IsBibcRateVisible => IsAdminUser && SelectedBranch.ToBranchEnum() == Branch.CPT;
+        public bool IsWashingGasVisible => SelectedBranch.ToBranchEnum() != Branch.CPT;
+        public bool IsWeekBreakdownVisible => SelectedBranch.ToBranchEnum() != Branch.CPT;
 
         partial void OnSelectedBranchChanged(string value)
         {
             LinesView?.Refresh();
             UpdateGrandTotal();
 
-            _isUpdatingDates = true;
-            try
+            var branchEnum = value.ToBranchEnum();
+
+            if (branchEnum != Branch.CPT)
             {
-                int days = value == "Cape Town" ? 6 : 13;
-                EndDate = StartDate.AddDays(days);
-            }
-            finally
-            {
-                _isUpdatingDates = false;
+                _isUpdatingDates = true;
+                try
+                {
+                    int days = 13;
+                    EndDate = StartDate.AddDays(days);
+                }
+                finally
+                {
+                    _isUpdatingDates = false;
+                }
             }
 
-            IsDeductionsButtonVisible = value != "Cape Town";
+            IsDeductionsButtonVisible = branchEnum != Branch.CPT;
             IsDeductionsVisible = true;
             OnPropertyChanged(nameof(IsBibcColumnVisible));
             OnPropertyChanged(nameof(IsBibcRateVisible));
             OnPropertyChanged(nameof(IsWashingGasVisible));
+            OnPropertyChanged(nameof(IsWeekBreakdownVisible));
         }
         partial void OnSelectedPayTypeChanged(string value)
         {

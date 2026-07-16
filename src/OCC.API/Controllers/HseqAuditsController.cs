@@ -466,6 +466,36 @@ namespace OCC.API.Controllers
             return Ok(attachment);
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAudit(Guid id)
+        {
+            var audit = await _context.HseqAudits.FindAsync(id);
+            if (audit == null) return NotFound();
+
+            // Delete physical files for attachments
+            var attachments = await _context.HseqAuditAttachments.Where(a => a.AuditId == id).ToListAsync();
+            foreach (var attachment in attachments)
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", attachment.FilePath.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to delete physical file {FilePath}", filePath);
+                    }
+                }
+            }
+
+            _context.HseqAudits.Remove(audit);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         [HttpDelete("attachments/{id}")]
         public async Task<IActionResult> DeleteAttachment(Guid id)
         {
