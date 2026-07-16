@@ -77,25 +77,40 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
                 
-                var suppliersTask = _supplierService.GetSuppliersAsync();
-                var projectsTask = _projectService.GetProjectsAsync();
-                var inventoryTask = _inventoryService.GetInventoryAsync();
+                if (!Suppliers.Any() || !Projects.Any() || !InventoryItems.Any())
+                {
+                    var suppliersTask = _supplierService.GetSuppliersAsync();
+                    var projectsTask = _projectService.GetProjectsAsync();
+                    var inventoryTask = _inventoryService.GetInventoryAsync();
 
-                var suppliers = await suppliersTask;
-                var projects = await projectsTask;
-                var inventory = await inventoryTask;
+                    var suppliers = await suppliersTask;
+                    var projects = await projectsTask;
+                    var inventory = await inventoryTask;
+
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (!Suppliers.Any())
+                        {
+                            Suppliers.Clear();
+                            foreach (var s in suppliers) Suppliers.Add(s);
+                        }
+
+                        if (!Projects.Any())
+                        {
+                            Projects.Clear();
+                            foreach (var p in projects) Projects.Add(p);
+                        }
+
+                        if (!InventoryItems.Any())
+                        {
+                            InventoryItems.Clear();
+                            foreach (var i in inventory) InventoryItems.Add(i);
+                        }
+                    });
+                }
 
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
-                    Suppliers.Clear();
-                    foreach (var s in suppliers) Suppliers.Add(s);
-
-                    Projects.Clear();
-                    foreach (var p in projects) Projects.Add(p);
-
-                    InventoryItems.Clear();
-                    foreach (var i in inventory) InventoryItems.Add(i);
-
                     if (CurrentOrder == null)
                     {
                         // Fetch all existing order IDs for cycling (newest first)
@@ -110,6 +125,18 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         for (int i = 0; i < 10; i++)
                         {
                             AddLine();
+                        }
+                    }
+                    else
+                    {
+                        // If CurrentOrder is not null, ensure SelectedSupplier and SelectedProject match the wrapper fields
+                        if (SelectedSupplier == null && CurrentOrder.SupplierId != Guid.Empty)
+                        {
+                            SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
+                        }
+                        if (SelectedProject == null && CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty)
+                        {
+                            SelectedProject = Projects.FirstOrDefault(p => p.Id == CurrentOrder.ProjectId.Value);
                         }
                     }
                 });

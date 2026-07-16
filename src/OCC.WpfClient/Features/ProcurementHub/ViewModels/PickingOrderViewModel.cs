@@ -74,27 +74,39 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
 
-                var projectsTask = _projectService.GetProjectsAsync();
-                var inventoryTask = _inventoryService.GetInventoryAsync();
+                if (!Projects.Any() || !InventoryItems.Any())
+                {
+                    var projectsTask = _projectService.GetProjectsAsync();
+                    var inventoryTask = _inventoryService.GetInventoryAsync();
 
-                var projects = await projectsTask;
-                var inventory = await inventoryTask;
+                    var projects = await projectsTask;
+                    var inventory = await inventoryTask;
+
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (!Projects.Any())
+                        {
+                            Projects.Clear();
+                            foreach (var p in projects) Projects.Add(p);
+                        }
+
+                        if (!InventoryItems.Any())
+                        {
+                            // Filter inventory by branch stock
+                            var branch = _authService.CurrentUser?.Branch ?? Branch.JHB;
+                            var filteredInventory = inventory.Where(i =>
+                                (branch == Branch.JHB && i.JhbQuantity > 0) ||
+                                (branch == Branch.CPT && i.CptQuantity > 0))
+                                .ToList();
+
+                            InventoryItems.Clear();
+                            foreach (var i in filteredInventory) InventoryItems.Add(i);
+                        }
+                    });
+                }
 
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
-                    Projects.Clear();
-                    foreach (var p in projects) Projects.Add(p);
-
-                    // Filter inventory by branch stock
-                    var branch = _authService.CurrentUser?.Branch ?? Branch.JHB;
-                    var filteredInventory = inventory.Where(i =>
-                        (branch == Branch.JHB && i.JhbQuantity > 0) ||
-                        (branch == Branch.CPT && i.CptQuantity > 0))
-                        .ToList();
-
-                    InventoryItems.Clear();
-                    foreach (var i in filteredInventory) InventoryItems.Add(i);
-
                     if (CurrentOrder == null)
                     {
                         // Fetch all existing picking order IDs for cycling (newest first)
@@ -118,6 +130,13 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         for (int i = 0; i < 10; i++)
                         {
                             AddLine();
+                        }
+                    }
+                    else
+                    {
+                        if (SelectedProject == null && CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty)
+                        {
+                            SelectedProject = Projects.FirstOrDefault(p => p.Id == CurrentOrder.ProjectId.Value);
                         }
                     }
                 });

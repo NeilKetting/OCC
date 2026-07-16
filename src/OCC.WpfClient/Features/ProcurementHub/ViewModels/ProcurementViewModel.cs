@@ -174,11 +174,29 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
         [RelayCommand]
-        private void ReceiveOrderStock(Order order)
+        private async Task ReceiveOrderStock(Order order)
         {
             if (order != null)
             {
-                ShowReceiveStockDialog(order);
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Loading order details...";
+                    var fullOrder = await _orderService.GetOrderAsync(order.Id);
+                    if (fullOrder != null)
+                    {
+                        ShowReceiveStockDialog(fullOrder);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error fetching order for receipt");
+                    NotifyError("Error", "Could not load full order details.");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
         }
 
@@ -199,10 +217,28 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         {
             var findOrderVm = new FindOrderViewModel(_orderService, _supplierService);
             findOrderVm.CloseRequested += CloseOverlay;
-            findOrderVm.OrderSelected += (order) =>
+            findOrderVm.OrderSelected += async (order) =>
             {
                 CloseOverlay();
-                ShowReceiveStockDialog(order);
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Loading order details...";
+                    var fullOrder = await _orderService.GetOrderAsync(order.Id);
+                    if (fullOrder != null)
+                    {
+                        ShowReceiveStockDialog(fullOrder);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error fetching order for receipt");
+                    NotifyError("Error", "Could not load full order details.");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             };
             OpenOverlay(findOrderVm);
         }

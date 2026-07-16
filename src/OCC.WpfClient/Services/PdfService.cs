@@ -1326,7 +1326,7 @@ namespace OCC.WpfClient.Services
                 var validPhotos = model.IncidentPhotoPaths.Where(File.Exists).ToList();
                 if (validPhotos.Any())
                 {
-                    col.Item().PaddingTop(10).Column(photoCol =>
+                    col.Item().ShowEntire().PaddingTop(10).Column(photoCol =>
                     {
                         photoCol.Item().Text("REPORT & PROGRESS PHOTOS").FontSize(9).ExtraBold().FontColor(ColorSecondary);
 

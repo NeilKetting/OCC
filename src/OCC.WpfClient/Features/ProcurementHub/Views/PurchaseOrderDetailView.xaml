@@ -103,6 +103,7 @@
 
                             <TextBox x:Name="PART_EditableTextBox"
                                      Grid.Column="0"
+                                     Style="{x:Null}"
                                      Margin="{TemplateBinding Padding}"
                                      HorizontalAlignment="Stretch"
                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
@@ -110,8 +111,8 @@
                                      Visibility="Collapsed"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Foreground="{TemplateBinding Foreground}"
-                                     CaretBrush="{TemplateBinding Foreground}">
+                                     Foreground="White"
+                                     CaretBrush="White">
                                 <TextBox.Template>
                                     <ControlTemplate TargetType="TextBox">
                                         <Border x:Name="border" Background="Transparent">
