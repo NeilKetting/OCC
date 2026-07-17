@@ -55,16 +55,17 @@
     </UserControl.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Menu Bar -->
-        <local:GanttMenuBarView Grid.Row="0"/>
+            <!-- Menu Bar -->
+            <local:GanttMenuBarView Grid.Row="0"/>
 
-        <!-- Main Content Layout -->
-        <Grid Grid.Row="1">
+            <!-- Main Content Layout -->
+            <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/> <!-- Date Header -->
                 <RowDefinition Height="*"/>    <!-- Content -->
@@ -96,7 +97,7 @@
                                   DragDelta="PredColumnSplitter_DragDelta"/>
                     <Border Grid.Column="3" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1,0,0,0">
                         <TextBlock Text="PRED" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextSub}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                   ToolTip="Predecessors — type row numbers (e.g. '3' or '3,5') and press Enter or click away"/>
+                                   ToolTip="Predecessors â€” type row numbers (e.g. '3' or '3,5') and press Enter or click away"/>
                     </Border>
                 </Grid>
             </Border>
@@ -367,8 +368,19 @@
                 </Grid>
             </ScrollViewer>
         </Grid>
-        
-        <!-- Task Detail Drawer (Overlay handled by TaskDetailView itself) -->
-        <ContentControl Content="{Binding CurrentTaskDetail}"/>
     </Grid>
+        
+    <!-- Task Detail Drawer (Overlay handled by TaskDetailView itself) -->
+    <ContentControl Content="{Binding CurrentTaskDetail}"/>
+
+    <!-- Busy Overlay -->
+    <Border Background="#88000000" Visibility="{Binding IsBusy, Converter={StaticResource VisibilityConverter}}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <ProgressBar IsIndeterminate="True" Width="200" Height="4"
+                         Foreground="{StaticResource AccentBlue}" BorderThickness="0"/>
+            <TextBlock Text="{Binding BusyText}" Foreground="White" FontSize="13"
+                       HorizontalAlignment="Center" Margin="0,12,0,0"/>
+        </StackPanel>
+    </Border>
+</Grid>
 </UserControl>

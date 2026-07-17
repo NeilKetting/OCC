@@ -60,6 +60,15 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ObservableCollection<ReminderFrequency> ReminderFrequencies { get; } = new(Enum.GetValues<ReminderFrequency>());
         public List<string> AvailableStatuses { get; } = new() { "Not Started", "Started", "Halfway", "Almost Done", "Completed", "On Hold" };
 
+        private List<ProjectTask> _allProjectTasks = new();
+        public ObservableCollection<PredecessorItemViewModel> TaskPredecessors { get; } = new();
+        public ObservableCollection<ProjectTask> AvailablePredecessorOptions { get; } = new();
+        public List<string> PredecessorTypes { get; } = new() { "FS", "SS", "FF", "SF" };
+
+        [ObservableProperty] private ProjectTask? _selectedNewPredecessor;
+        [ObservableProperty] private string _selectedPredecessorType = "FS";
+        [ObservableProperty] private double _newPredecessorLag = 0;
+
         [ObservableProperty] private string _assigneeSearchText = string.Empty;
         public ObservableCollection<AssigneeSelectionViewModel> AllPotentialAssignees { get; } = new();
         public ObservableCollection<AssigneeSelectionViewModel> FilteredAssignees { get; } = new();
@@ -248,14 +257,40 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             // 4b. Process Subtasks
             Subtasks.Clear();
+            TaskPredecessors.Clear();
+            _allProjectTasks.Clear();
+
             if (tasksTask != null)
             {
-                var allTasks = await tasksTask;
+                var allTasks = (await tasksTask).ToList();
+                _allProjectTasks = allTasks;
+
                 var childTasks = allTasks.Where(t => t.ParentId == _currentTaskId).OrderBy(t => t.OrderIndex);
                 foreach (var child in childTasks) Subtasks.Add(child);
+
+                var tasksMap = allTasks.ToDictionary(t => t.Id);
+                if (Task?.Model?.Predecessors != null)
+                {
+                    foreach (var predStr in Task.Model.Predecessors)
+                    {
+                        var info = ProjectGanttViewModel.ParsePredecessor(predStr);
+                        if (Guid.TryParse(info.PredecessorId, out var predGuid) && tasksMap.TryGetValue(predGuid, out var predTask))
+                        {
+                            TaskPredecessors.Add(new PredecessorItemViewModel
+                            {
+                                PredecessorId = predGuid,
+                                Name = predTask.Name,
+                                Type = info.Type,
+                                LagDays = info.LagDays
+                            });
+                        }
+                    }
+                }
             }
             OnPropertyChanged(nameof(SubtaskCount));
             OnPropertyChanged(nameof(IsManualProgressEnabled));
+
+            UpdateAvailablePredecessorOptions();
 
             // 5. Process Assignments
             Assignments.Clear();
@@ -447,6 +482,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             {
                 UpdateStatus("Saving changes...");
                 Task.CommitToModel();
+                SyncPredecessorsToModel();
                 await _projectTaskService.UpdateTaskAsync(Task.Model);
                 WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(_currentTaskId));
                 UpdateStatus("Ready");
@@ -543,6 +579,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             Task.Model.Type = TaskType.Task;
             if (SelectedProject != null) Task.Model.ProjectId = SelectedProject.Id;
 
+            // Sync Predecessors to Model
+            SyncPredecessorsToModel();
+
             // Sync AssignedTo legacy string
             Task.Model.AssignedTo = string.Join(", ", Assignments.Select(a => a.AssigneeName));
 
@@ -558,6 +597,90 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             NotifySuccess("Task Created", $"Task '{Task.Name}' has been created successfully.");
             WeakReferenceMessenger.Default.Send(new TaskUpdatedMessage(Task.Model.Id));
             RequestClose();
+        }
+
+        [RelayCommand]
+        private void AddPredecessor()
+        {
+            if (SelectedNewPredecessor == null || Task == null) return;
+
+            var predId = SelectedNewPredecessor.Id;
+            var type = SelectedPredecessorType;
+            var lag = NewPredecessorLag;
+
+            // Check if already added
+            if (TaskPredecessors.Any(p => p.PredecessorId == predId))
+            {
+                NotifyError("Error", "This task is already a predecessor.");
+                return;
+            }
+
+            // Add VM
+            var item = new PredecessorItemViewModel
+            {
+                PredecessorId = predId,
+                Name = SelectedNewPredecessor.Name,
+                Type = type,
+                LagDays = lag
+            };
+            TaskPredecessors.Add(item);
+
+            // Update underlying list of strings
+            SyncPredecessorsToModel();
+
+            // Clear inputs
+            SelectedNewPredecessor = null;
+            NewPredecessorLag = 0;
+            SelectedPredecessorType = "FS";
+
+            // Refresh available options
+            UpdateAvailablePredecessorOptions();
+        }
+
+        [RelayCommand]
+        private void RemovePredecessor(PredecessorItemViewModel predecessor)
+        {
+            if (predecessor == null) return;
+            TaskPredecessors.Remove(predecessor);
+            SyncPredecessorsToModel();
+            UpdateAvailablePredecessorOptions();
+        }
+
+        private void SyncPredecessorsToModel()
+        {
+            if (Task == null) return;
+            Task.Model.Predecessors = TaskPredecessors
+                .Select(p => $"{p.PredecessorId}|{p.Type}|{p.LagDays}")
+                .ToList();
+        }
+
+        private void UpdateAvailablePredecessorOptions()
+        {
+            AvailablePredecessorOptions.Clear();
+            foreach (var t in _allProjectTasks)
+            {
+                // Exclude current task
+                if (t.Id == _currentTaskId) continue;
+
+                // Exclude already added predecessors
+                if (TaskPredecessors.Any(p => p.PredecessorId == t.Id)) continue;
+
+                // Optionally exclude child/descendant tasks to prevent circular dependencies
+                if (IsDescendantOf(t.Id, _currentTaskId)) continue;
+
+                AvailablePredecessorOptions.Add(t);
+            }
+        }
+
+        private bool IsDescendantOf(Guid taskId, Guid possibleAncestorId)
+        {
+            var task = _allProjectTasks.FirstOrDefault(t => t.Id == taskId);
+            while (task != null && task.ParentId.HasValue && task.ParentId.Value != Guid.Empty)
+            {
+                if (task.ParentId.Value == possibleAncestorId) return true;
+                task = _allProjectTasks.FirstOrDefault(t => t.Id == task.ParentId.Value);
+            }
+            return false;
         }
     }
 }

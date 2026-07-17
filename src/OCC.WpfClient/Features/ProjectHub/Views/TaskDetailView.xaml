@@ -243,6 +243,91 @@
                                     </StackPanel>
                                 </UniformGrid>
 
+                                <!-- Predecessors Section -->
+                                <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,20,0,0" Margin="0,0,0,20">
+                                    <StackPanel>
+                                        <TextBlock Text="PREDECESSORS" Style="{StaticResource LabelText}" Margin="0,0,0,10"/>
+                                        
+                                        <!-- List of current predecessors -->
+                                        <ItemsControl ItemsSource="{Binding TaskPredecessors}" Margin="0,0,0,10">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#0DFFFFFF" CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            
+                                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                                    <TextBlock Text="Type: " Foreground="{StaticResource TextSub}" FontSize="11"/>
+                                                                    <TextBlock Text="{Binding Type}" Foreground="{StaticResource AccentBlue}" FontSize="11" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                                                                    <TextBlock Text="Lag: " Foreground="{StaticResource TextSub}" FontSize="11"/>
+                                                                    <TextBlock Text="{Binding LagDays, StringFormat='{}{0}d'}" Foreground="{StaticResource SecondaryGold}" FontSize="11" FontWeight="SemiBold"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                            
+                                                            <Button Grid.Column="2" Style="{StaticResource IconButtonSmall}" 
+                                                                    Command="{Binding DataContext.RemovePredecessorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                                    CommandParameter="{Binding}" ToolTip="Remove Predecessor" VerticalAlignment="Center">
+                                                                <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="12" Foreground="#FF4B4B"/>
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- Form to add predecessor -->
+                                        <Border Background="#05FFFFFF" CornerRadius="8" Padding="10" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock Text="Add Predecessor" Foreground="{StaticResource AccentBlue}" FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="2*"/>
+                                                        <ColumnDefinition Width="1*"/>
+                                                        <ColumnDefinition Width="1*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <!-- Predecessor Task ComboBox -->
+                                                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                                        <TextBlock Text="TASK" Style="{StaticResource LabelText}" FontSize="9" Margin="0,0,0,2"/>
+                                                        <ComboBox ItemsSource="{Binding AvailablePredecessorOptions}" 
+                                                                  SelectedItem="{Binding SelectedNewPredecessor}" 
+                                                                  DisplayMemberPath="Name" 
+                                                                  Style="{StaticResource ModernComboBox}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Type ComboBox -->
+                                                    <StackPanel Grid.Column="1" Margin="6,0,6,0">
+                                                        <TextBlock Text="TYPE" Style="{StaticResource LabelText}" FontSize="9" Margin="0,0,0,2"/>
+                                                        <ComboBox ItemsSource="{Binding PredecessorTypes}" 
+                                                                  SelectedItem="{Binding SelectedPredecessorType}" 
+                                                                  Style="{StaticResource ModernComboBox}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Lag Input -->
+                                                    <StackPanel Grid.Column="2" Margin="6,0,6,0">
+                                                        <TextBlock Text="LAG (DAYS)" Style="{StaticResource LabelText}" FontSize="9" Margin="0,0,0,2"/>
+                                                        <TextBox Text="{Binding NewPredecessorLag, UpdateSourceTrigger=PropertyChanged}" 
+                                                                 Style="{StaticResource ModernInput}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Add Button -->
+                                                    <Button Grid.Column="3" Content="Add" 
+                                                            Command="{Binding AddPredecessorCommand}" 
+                                                            Style="{StaticResource ActionButtonPrimary}" 
+                                                            VerticalAlignment="Bottom" Height="30" Margin="6,0,0,0"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- Subtasks Section -->
                                 <Border BorderBrush="{StaticResource GlassBorderLight}" BorderThickness="0,1,0,0" Padding="0,20,0,0" Visibility="{Binding IsParentTask, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,20">
                                     <StackPanel>

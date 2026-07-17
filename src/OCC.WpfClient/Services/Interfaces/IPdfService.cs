@@ -12,6 +12,7 @@ namespace OCC.WpfClient.Services.Interfaces
         /// Generates a branded list report from a collection of items.
         /// </summary>
         Task<string> GenerateListReportPdfAsync<T>(string title, IEnumerable<T> items, List<ReportColumnDefinition> columns, bool isLandscape = false);
+        Task<string> GenerateGanttReportPdfAsync(string title, IEnumerable<GanttTaskPrintModel> items, System.DateTime minDate, System.DateTime maxDate);
         
         /// <summary>
         /// Generates a branded profile/detail report for a single entity.
@@ -101,6 +102,24 @@ namespace OCC.WpfClient.Services.Interfaces
         public string Status { get; set; } = string.Empty;
         public string Reason { get; set; } = string.Empty;
         public bool IsComplete { get; set; }
+    }
+
+    public class GanttTaskPrintModel
+    {
+        public int Row { get; set; }
+        public string TaskName { get; set; } = string.Empty;
+        public string Predecessors { get; set; } = string.Empty;
+        public string StartDate { get; set; } = string.Empty;
+        public string FinishDate { get; set; } = string.Empty;
+        public string Progress { get; set; } = string.Empty;
+        public string AssignedTo { get; set; } = string.Empty;
+
+        // Raw values for drawing Gantt bars
+        public System.DateTime StartDateRaw { get; set; }
+        public System.DateTime FinishDateRaw { get; set; }
+        public double PercentComplete { get; set; }
+        public bool IsSummary { get; set; }
+        public int IndentLevel { get; set; }
     }
 
     public class ProjectReportPrintModel

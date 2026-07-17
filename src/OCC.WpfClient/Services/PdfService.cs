@@ -758,6 +758,143 @@ namespace OCC.WpfClient.Services
             });
         }
 
+        public async Task<string> GenerateGanttReportPdfAsync(string title, IEnumerable<GanttTaskPrintModel> items, DateTime minDate, DateTime maxDate)
+        {
+            var company = new CompanyDetails();
+            var totalDays = (maxDate - minDate).TotalDays;
+            if (totalDays <= 0) totalDays = 30;
+
+            var interval = totalDays / 4.0;
+
+            return await Task.Run(() =>
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+                        page.Size(PageSizes.A4.Landscape());
+                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
+
+                        page.Header().Element(c => ComposeGenericHeader(c, title, company));
+                        
+                        page.Content().PaddingVertical(15).Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.ConstantColumn(25);  // #
+                                cols.RelativeColumn(3f); // Task Name
+                                cols.ConstantColumn(60);  // Start
+                                cols.ConstantColumn(60);  // Finish
+                                cols.ConstantColumn(35);  // Prog
+                                cols.RelativeColumn(4f); // Gantt Chart Area
+                            });
+
+                            table.Header(header =>
+                            {
+                                var headerBg = ColorPrimary;
+                                
+                                header.Cell().Background(headerBg).Padding(5).Text("#").SemiBold().FontColor(Colors.White).AlignCenter();
+                                header.Cell().Background(headerBg).Padding(5).Text("Task Name").SemiBold().FontColor(Colors.White);
+                                header.Cell().Background(headerBg).Padding(5).Text("Start").SemiBold().FontColor(Colors.White).AlignCenter();
+                                header.Cell().Background(headerBg).Padding(5).Text("Finish").SemiBold().FontColor(Colors.White).AlignCenter();
+                                header.Cell().Background(headerBg).Padding(5).Text("Prog").SemiBold().FontColor(Colors.White).AlignCenter();
+                                
+                                header.Cell().Background(headerBg).PaddingVertical(5).PaddingHorizontal(2).Row(row =>
+                                {
+                                    row.RelativeItem().Text(minDate.ToString("dd MMM")).FontSize(7).SemiBold().FontColor(Colors.White);
+                                    row.RelativeItem().AlignRight().Text(minDate.AddDays(interval).ToString("dd MMM")).FontSize(7).SemiBold().FontColor(Colors.White);
+                                    row.RelativeItem().AlignRight().Text(minDate.AddDays(interval * 2).ToString("dd MMM")).FontSize(7).SemiBold().FontColor(Colors.White);
+                                    row.RelativeItem().AlignRight().Text(minDate.AddDays(interval * 3).ToString("dd MMM")).FontSize(7).SemiBold().FontColor(Colors.White);
+                                    row.RelativeItem().AlignRight().Text(maxDate.ToString("dd MMM")).FontSize(7).SemiBold().FontColor(Colors.White);
+                                });
+                            });
+
+                            foreach (var item in items)
+                            {
+                                var taskStart = item.StartDateRaw < minDate ? minDate : item.StartDateRaw;
+                                var taskFinish = item.FinishDateRaw > maxDate ? maxDate : item.FinishDateRaw;
+                                
+                                var startOffset = (taskStart - minDate).TotalDays;
+                                if (startOffset < 0) startOffset = 0;
+
+                                var duration = (taskFinish - taskStart).TotalDays;
+                                if (duration < 0.5) duration = 0.5;
+
+                                var endOffset = totalDays - (startOffset + duration);
+                                if (endOffset < 0) endOffset = 0;
+
+                                var isOdd = item.Row % 2 != 0;
+                                var rowBg = isOdd ? "#FAFAFA" : "#FFFFFF";
+
+                                table.Cell().Background(rowBg).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(item.Row.ToString()).FontSize(8);
+                                
+                                table.Cell().Background(rowBg).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).PaddingLeft(4 + (float)item.IndentLevel * 10).Element(el => 
+                                {
+                                    var text = el.Text(item.TaskName.TrimStart()).FontSize(8);
+                                    if (item.IsSummary)
+                                    {
+                                        text.Bold().FontColor(ColorPrimary);
+                                    }
+                                    else
+                                    {
+                                        text.FontColor(Colors.Black);
+                                    }
+                                });
+
+                                table.Cell().Background(rowBg).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(item.StartDate).FontSize(8);
+                                table.Cell().Background(rowBg).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(item.FinishDate).FontSize(8);
+                                table.Cell().Background(rowBg).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).AlignCenter().Text(item.Progress).FontSize(8);
+
+                                 table.Cell().Background(rowBg).BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingVertical(4).PaddingHorizontal(2).AlignMiddle().Row(row =>
+                                {
+                                    if (startOffset > 0)
+                                    {
+                                        row.RelativeItem((float)startOffset);
+                                    }
+
+                                    var bar = row.RelativeItem((float)duration);
+                                    if (item.IsSummary)
+                                    {
+                                        bar.Height(5).Background("#0D47A1").CornerRadius(1);
+                                    }
+                                    else
+                                    {
+                                        bar.Height(8).Background(Colors.Grey.Lighten3).Border(0.5f, Colors.Grey.Lighten1).CornerRadius(2).Element(barContainer =>
+                                        {
+                                            if (item.PercentComplete >= 100)
+                                            {
+                                                barContainer.Background("#1E80D6");
+                                            }
+                                            else if (item.PercentComplete > 0)
+                                            {
+                                                barContainer.Row(progRow =>
+                                                {
+                                                    progRow.RelativeItem((float)item.PercentComplete).Background("#1E80D6");
+                                                    progRow.RelativeItem(100 - (float)item.PercentComplete);
+                                                });
+                                            }
+                                        });
+                                    }
+
+                                    if (endOffset > 0)
+                                    {
+                                        row.RelativeItem((float)endOffset);
+                                    }
+                                });
+                            }
+                        });
+
+                        page.Footer().Element(c => ComposeGenericFooter(c, company));
+                    });
+                });
+
+                string fullPath = Path.Combine(Path.GetTempPath(), $"{title.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                doc.GeneratePdf(fullPath);
+                return fullPath;
+            });
+        }
+
         public async Task<string> GenerateDetailReportPdfAsync<T>(string title, T item)
         {
             var company = new CompanyDetails();

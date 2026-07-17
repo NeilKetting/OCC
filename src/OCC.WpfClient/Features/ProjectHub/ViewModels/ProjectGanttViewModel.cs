@@ -306,6 +306,66 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             WeakReferenceMessenger.Default.Send<OCC.WpfClient.Infrastructure.Messages.GanttScrollToDateMessage>(new OCC.WpfClient.Infrastructure.Messages.GanttScrollToDateMessage(DateTime.Now));
         }
 
+        [RelayCommand]
+        public async Task PrintAsync()
+        {
+            var pdfService = _serviceProvider.GetService<IPdfService>();
+            if (pdfService == null)
+            {
+                await _dialogService.ShowAlertAsync("Print Error", "The PDF generation service is currently unavailable.");
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Generating print report...";
+
+                string projectTitle = "Project Gantt Tasks Report";
+                if (_projectId != Guid.Empty)
+                {
+                    var project = await _projectService.GetProjectAsync(_projectId);
+                    if (project != null && !string.IsNullOrWhiteSpace(project.Name))
+                    {
+                        projectTitle = $"Gantt Tasks Report - {project.Name}";
+                    }
+                }
+
+                var printItems = GanttTasks.Select(gt => new GanttTaskPrintModel
+                {
+                    Row = gt.RowNumber,
+                    TaskName = gt.Task.Name,
+                    Predecessors = gt.PredecessorText,
+                    StartDate = gt.Task.StartDate == DateTime.MinValue ? "None" : gt.Task.StartDate.ToShortDateString(),
+                    FinishDate = gt.Task.FinishDate == DateTime.MinValue ? "None" : gt.Task.FinishDate.ToShortDateString(),
+                    Progress = $"{gt.Task.PercentComplete}%",
+                    AssignedTo = gt.Task.AssignedTo,
+                    
+                    StartDateRaw = gt.Task.StartDate,
+                    FinishDateRaw = gt.Task.FinishDate,
+                    PercentComplete = gt.Task.PercentComplete,
+                    IsSummary = gt.IsSummary,
+                    IndentLevel = gt.Task.IndentLevel
+                }).ToList();
+
+                var validTasks = GanttTasks.Where(gt => gt.Task.StartDate != DateTime.MinValue && gt.Task.FinishDate != DateTime.MinValue).ToList();
+                var minDate = validTasks.Any() ? validTasks.Min(gt => gt.Task.StartDate) : DateTime.Today;
+                var maxDate = validTasks.Any() ? validTasks.Max(gt => gt.Task.FinishDate) : DateTime.Today.AddDays(30);
+
+                var path = await pdfService.GenerateGanttReportPdfAsync(projectTitle, printItems, minDate, maxDate);
+                
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowAlertAsync("Print Error", $"Failed to generate print report: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -1115,4 +1175,5 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public string Type { get; set; } = "FS"; // FS, SS, FF, SF
         public double LagDays { get; set; } = 0;
     }
+
 }

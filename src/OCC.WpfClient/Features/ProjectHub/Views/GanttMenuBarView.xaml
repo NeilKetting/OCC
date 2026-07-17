@@ -99,6 +99,14 @@
                         <TextBlock Text="Delete" VerticalAlignment="Center" Foreground="{StaticResource ErrorRed}"/>
                     </StackPanel>
                 </Button>
+
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
+
+                <!-- Print -->
+                <Button Style="{StaticResource PrintButton}" 
+                        Command="{Binding PrintCommand}" 
+                        VerticalAlignment="Center"
+                        ToolTip="Print the Gantt tasks report"/>
             </StackPanel>
 
             <!-- Right Controls: Show Links Toggle + Zoom + Date Navigation -->
