@@ -155,6 +155,22 @@
                 </Border>
             </UniformGrid>
 
+            <!-- Latest Status Summary Card -->
+            <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="LATEST STATUS SUMMARY" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Weekly status and progress update auto-generated from active task data" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <TextBlock Grid.Row="1" Text="{Binding ReportStatusSummary}" Foreground="White" FontSize="14" TextWrapping="Wrap" LineHeight="20"/>
+                </Grid>
+            </Border>
+
             <!-- Active Sub-Contractors Section -->
             <Border Style="{StaticResource GlassCard}" Margin="0,0,0,20" Padding="20">
                 <Grid>

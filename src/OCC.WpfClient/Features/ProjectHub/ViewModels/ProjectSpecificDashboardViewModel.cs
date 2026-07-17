@@ -24,6 +24,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private readonly Services.Interfaces.ISnagService _snagService;
         private readonly Services.Interfaces.IAttendanceService _attendanceService;
         private readonly Services.Interfaces.IProjectVariationOrderService _voService;
+        private readonly Services.Interfaces.IProjectReportService _projectReportService;
         private List<ProjectTask> _allTasks = new();
         private Project? _project;
 
@@ -44,6 +45,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         [ObservableProperty] private bool _isLate;
         [ObservableProperty] private double _safeWorkingHours;
         [ObservableProperty] private int _activeVoCount;
+        [ObservableProperty] private string _reportStatusSummary = "No report summary generated yet.";
         
         [ObservableProperty] private ObservableCollection<ProjectTask> _upcomingMilestones = new();
         [ObservableProperty] private int _upcomingMilestonesCount;
@@ -70,11 +72,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public ProjectSpecificDashboardViewModel(
             Services.Interfaces.ISnagService snagService,
             Services.Interfaces.IAttendanceService attendanceService,
-            Services.Interfaces.IProjectVariationOrderService voService)
+            Services.Interfaces.IProjectVariationOrderService voService,
+            Services.Interfaces.IProjectReportService projectReportService)
         {
             _snagService = snagService;
             _attendanceService = attendanceService;
             _voService = voService;
+            _projectReportService = projectReportService;
             Title = "Stats";
         }
 
@@ -109,6 +113,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     
                     _ = FetchSnagData();
                     _ = FetchProjectSpecificHseqData();
+                    _ = FetchProjectReportDraftData();
                 }
             });
         }
@@ -135,6 +140,21 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch
             {
                 ActiveVoCount = 0;
+            }
+        }
+
+        private async Task FetchProjectReportDraftData()
+        {
+            if (_project == null) return;
+            var projectId = _project.Id;
+            try
+            {
+                var draft = await _projectReportService.GetDraftAsync(projectId);
+                ReportStatusSummary = draft?.StatusSummary ?? "No report summary generated yet.";
+            }
+            catch
+            {
+                ReportStatusSummary = "Failed to load status summary.";
             }
         }
 

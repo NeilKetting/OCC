@@ -9,6 +9,51 @@
              d:DesignHeight="50" d:DesignWidth="800"
              d:DataContext="{d:DesignInstance Type=vm:ProjectGanttViewModel}">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="VerticalGanttButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="2,4"/>
+                <Setter Property="Margin" Value="1,0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Width" Value="80"/>
+                <Setter Property="Height" Value="52"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" 
+                                    Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                    CornerRadius="6">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#15FFFFFF"/>
+                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource GlassBorderUltraLight}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#25FFFFFF"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.3"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1" Padding="10,5">
         <Grid>
             <Grid.ColumnDefinitions>
@@ -21,92 +66,82 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Gantt Chart" Style="{StaticResource HeaderText}" VerticalAlignment="Center"/>
 
-                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="12,5" Height="32" VerticalAlignment="Center"/>
 
                 <!-- Apply Predecessor Scheduling -->
                 <Button Command="{Binding ApplyPredecessorCascadeCommand}" 
-                        Style="{StaticResource SecondaryButton}" 
-                        VerticalAlignment="Center"
+                        Style="{StaticResource VerticalGanttButton}" 
                         ToolTip="Recalculate task dates based on predecessor (Finish-to-Start) relationships">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8F1;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock Text="Apply Scheduling" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE8F1;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Scheduling" FontSize="10" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Save Schedule (only visible when pending changes exist) -->
                 <Button Command="{Binding SaveCascadeChangesCommand}"
                         Visibility="{Binding HasPendingCascadeChanges, Converter={StaticResource BooleanToVisibilityConverter}}"
-                        Margin="6,0,0,0"
-                        VerticalAlignment="Center"
+                        Style="{StaticResource VerticalGanttButton}" 
                         ToolTip="Save cascaded date changes to the database">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
-                            <Setter Property="Background" Value="#CC2E7D32"/>
-                        </Style>
-                    </Button.Style>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74E;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock Text="Save Schedule" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE74E;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Save Changes" FontSize="10" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="12,5" Height="32" VerticalAlignment="Center"/>
 
                 <!-- Add Task -->
                 <Button Command="{Binding NewTaskCommand}" 
-                        Style="{StaticResource PrimaryButton}" 
-                        VerticalAlignment="Center"
+                        Style="{StaticResource VerticalGanttButton}" 
                         ToolTip="Create a new top-level task for the project">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock Text="Add Task" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Add Task" FontSize="10" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Add Subtask -->
                 <Button Command="{Binding CreateSubtaskCommand}" 
-                        Style="{StaticResource SecondaryButton}" 
-                        VerticalAlignment="Center"
-                        Margin="6,0,0,0"
+                        Style="{StaticResource VerticalGanttButton}" 
                         ToolTip="Create a child subtask under the selected task">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8A7;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock Text="Add Subtask" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE8A7;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="#C084FC" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Add Subtask" FontSize="10" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Edit -->
                 <Button Command="{Binding EditTaskCommand}" 
-                        Style="{StaticResource SecondaryButton}" 
-                        VerticalAlignment="Center"
-                        Margin="6,0,0,0"
+                        Style="{StaticResource VerticalGanttButton}" 
                         ToolTip="Edit details of the selected task">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock Text="Edit" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource OrangeBrush}" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Edit Task" FontSize="10" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Delete -->
                 <Button Command="{Binding DeleteTaskCommand}" 
-                        Style="{StaticResource SecondaryButton}" 
-                        VerticalAlignment="Center"
-                        Margin="6,0,0,0"
+                        Style="{StaticResource VerticalGanttButton}" 
                         ToolTip="Delete the selected task">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="10" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{StaticResource ErrorRed}"/>
-                        <TextBlock Text="Delete" VerticalAlignment="Center" Foreground="{StaticResource ErrorRed}"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource ErrorRed}" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Delete" FontSize="10" Foreground="{StaticResource ErrorRed}" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="15,5" Height="20" VerticalAlignment="Center"/>
+                <Border Width="1" Background="{StaticResource GlassBorderUltraLight}" Margin="12,5" Height="32" VerticalAlignment="Center"/>
 
                 <!-- Print -->
-                <Button Style="{StaticResource PrintButton}" 
-                        Command="{Binding PrintCommand}" 
-                        VerticalAlignment="Center"
-                        ToolTip="Print the Gantt tasks report"/>
+                <Button Command="{Binding PrintCommand}" 
+                        Style="{StaticResource VerticalGanttButton}" 
+                        ToolTip="Print the Gantt tasks report">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="&#xE749;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SecondaryGold}" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                        <TextBlock Text="Print" FontSize="10" Foreground="{StaticResource TextSub}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <!-- Right Controls: Show Links Toggle + Zoom + Date Navigation -->

@@ -16,6 +16,8 @@ using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Features.ProjectHub.Models;
+using CommunityToolkit.Mvvm.Messaging;
+using OCC.WpfClient.Infrastructure.Messages;
 
 namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 {
@@ -695,11 +697,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         protected override async Task ExecuteSaveAsync()
         {
             await SaveLocalReportDataAsync();
-            if (Project != null && StatusSummary != Project.Description)
-            {
-                Project.Description = StatusSummary;
-                await _projectService.UpdateProjectAsync(Project);
-            }
+            WeakReferenceMessenger.Default.Send(new ProjectUpdatedMessage(ProjectId));
             NotifySuccess("Report Saved", "Project report fields have been saved successfully.");
         }
 
