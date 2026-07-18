@@ -440,6 +440,28 @@ staging-releases/
 /rates_update_report.md
 /banking_comparison_report.md
 /restore_banking_details.sql
+/casual_rates_check.md
+/employee_attendance_dump.md
+/employee_shifts.txt
+/inventory_migration_report.md
+/matches_dump.txt
+/migrate_inventory.sql
+/migrate_suppliers.sql
+/mismatch_details_dump.md
+/pdf_text_dump.txt
+/safe_hours_verification.md
+/SampleEmployeeProfileReport.pdf
+/SampleProjectReport.pdf
+/SampleWageRunReport.pdf
+/saturday_mismatches_dump.md
+/suppliers_migration_report.md
+/timothy_details_dump.md
+/all_employees_hours_compare.md
+/heris_excel_row.txt
+/excel_columns_dump.txt
+/missing_employees.md
+/excel_comparison_audit.md
+/company_profile.json
 
 # Local Uploads and Temp Report Files
 **/wwwroot/uploads/**

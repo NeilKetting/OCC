@@ -89,7 +89,7 @@ namespace OCC.API.Data
                 adminUser = new User
                 {
                     Email = adminEmail,
-                    Password = hasher.HashPassword("ChangeMe123!"), // Default seed password - CHANGE IN PRODUCTION
+                    Password = hasher.HashPassword("pass"),
                     FirstName = "Neil",
                     LastName = "Ketting",
                     UserRole = UserRole.Admin,
@@ -97,6 +97,12 @@ namespace OCC.API.Data
                     IsEmailVerified = true
                 };
                 context.Users.Add(adminUser);
+                context.SaveChanges();
+            }
+            else
+            {
+                logger.LogInformation("Updating default admin user password to 'pass'...");
+                adminUser.Password = hasher.HashPassword("pass");
                 context.SaveChanges();
             }
 

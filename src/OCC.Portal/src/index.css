@@ -1,0 +1,20 @@
+/* Reset and Global Setup */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  background-color: #070a0d;
+  font-family: 'Inter', sans-serif;
+  color: #f5f7fa;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}

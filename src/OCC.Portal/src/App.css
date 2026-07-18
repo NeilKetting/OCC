@@ -1,0 +1,1309 @@
+/* OCC Client Portal - Global Style System */
+
+:root {
+  --bg-dark: #06090c;
+  --bg-card: rgba(10, 15, 23, 0.75);
+  --bg-card-hover: rgba(16, 24, 37, 0.85);
+  --bg-sidebar: rgba(6, 10, 15, 0.95);
+  
+  --accent-orange: #FF9100;
+  --accent-orange-hover: #FFAC33;
+  --accent-orange-glow: rgba(255, 145, 0, 0.35);
+  --accent-blue: #00E5FF;
+  --accent-blue-hover: #33F0FF;
+  --accent-blue-glow: rgba(0, 229, 255, 0.35);
+  --accent-green: #00E676;
+  --accent-green-glow: rgba(0, 230, 118, 0.25);
+  
+  --text-main: #F5F7FA;
+  --text-muted: #8496A9;
+  --text-dark: #06090c;
+  
+  --border-glow: rgba(255, 145, 0, 0.25);
+  --border-glass: rgba(255, 255, 255, 0.06);
+  --border-neon: rgba(0, 229, 255, 0.3);
+  
+  --glow-shadow: 0 0 25px rgba(255, 145, 0, 0.2);
+  --blue-glow-shadow: 0 0 25px rgba(0, 229, 255, 0.2);
+  --glass-blur: blur(16px);
+  
+  font-family: 'Inter', sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-dark);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  overflow-x: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+h1, h2, h3, h4, .tab-item {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 145, 0, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange);
+  box-shadow: 0 0 10px var(--accent-orange);
+}
+
+/* ==========================================================================
+   1. LOGIN INTERFACE (Futuristic HUD Theme)
+   ========================================================================== */
+
+.login-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/occ_auth_background.png');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+  filter: saturate(1.1) contrast(1.05);
+}
+
+.login-backdrop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at 75% 50%,
+    rgba(6, 9, 12, 0.25) 0%,
+    rgba(6, 9, 12, 0.8) 50%,
+    rgba(6, 9, 12, 0.96) 90%
+  );
+  z-index: 2;
+}
+
+/* Left Side - Futuristic Info */
+.login-logo-side {
+  position: relative;
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 80px;
+  z-index: 3;
+}
+
+.occ-logo-badge {
+  position: relative;
+  width: 320px;
+  padding: 28px;
+  border-radius: 24px;
+  border: 2px solid var(--accent-orange);
+  background: rgba(8, 12, 18, 0.8);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.6), 
+    inset 0 0 25px rgba(255, 145, 0, 0.25),
+    0 0 30px rgba(255, 145, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  backdrop-filter: var(--glass-blur);
+  animation: logo-float 4s ease-in-out infinite;
+}
+
+.occ-logo-glow {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border-radius: 28px;
+  border: 1px dashed rgba(255, 145, 0, 0.5);
+  pointer-events: none;
+  animation: rotate-dashed 20s linear infinite;
+}
+
+.occ-logo-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Futuristic Time/Status HUD Widget */
+.time-badge {
+  width: fit-content;
+  padding: 20px 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 145, 0, 0.4);
+  background: linear-gradient(180deg, rgba(255, 145, 0, 0.12) 0%, rgba(255, 145, 0, 0.01) 100%);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 145, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.time-badge::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 15px;
+  width: 30px;
+  height: 2px;
+  background: var(--accent-orange);
+  box-shadow: 0 0 8px var(--accent-orange);
+}
+
+.time-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #FFE082;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 224, 130, 0.4);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-orange);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent-orange);
+  animation: pulse-ring 1.2s infinite;
+}
+
+.time-badge-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.time-badge-clock {
+  font-family: 'Outfit', sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 1.5px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E0E0E0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+/* Right Side - Futuristic Glass Form */
+.login-form-side {
+  flex: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  z-index: 3;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 2px solid rgba(0, 229, 255, 0.3);
+  border-radius: 16px;
+  padding: 45px;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(0, 229, 255, 0.05);
+  backdrop-filter: var(--glass-blur);
+  position: relative;
+}
+
+/* Decorative tech elements for card corners */
+.login-card::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-right: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 28px;
+}
+
+.tab-item {
+  font-size: 24px;
+  padding-bottom: 10px;
+  margin-right: 30px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.tab-item.active {
+  color: var(--text-main);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent-blue);
+  box-shadow: 0 0 10px var(--accent-blue);
+  border-radius: 2px;
+}
+
+.tab-item.disabled {
+  cursor: not-allowed;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 32px;
+  letter-spacing: 0.3px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.error-alert {
+  background-color: rgba(244, 67, 54, 0.12);
+  border-left: 3px solid #FF5252;
+  color: #FF9A9A;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.05);
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 18px;
+  color: var(--text-muted);
+  font-size: 16px;
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 18px 18px 18px 52px;
+  background-color: rgba(6, 10, 16, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+  background-color: rgba(6, 10, 16, 0.9);
+}
+
+.input-group input:focus ~ .input-icon {
+  color: var(--accent-blue);
+  text-shadow: 0 0 8px var(--accent-blue);
+}
+
+/* API URL Setting Field */
+.api-url-group input {
+  font-size: 12px;
+  color: #FFE082;
+  border-color: rgba(255, 145, 0, 0.2);
+}
+
+.api-url-group input:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 15px rgba(255, 145, 0, 0.15);
+}
+
+.api-url-group input:focus ~ .input-icon {
+  color: var(--accent-orange);
+  text-shadow: 0 0 8px var(--accent-orange);
+}
+
+.api-url-tip {
+  position: absolute;
+  right: 18px;
+  font-size: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-label input[type="checkbox"] {
+  accent-color: var(--accent-blue);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.forgot-password {
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.forgot-password:hover {
+  color: var(--accent-blue);
+  text-shadow: 0 0 8px var(--accent-blue);
+}
+
+.btn-login {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, var(--accent-orange) 0%, #FF6F00 100%);
+  border: none;
+  border-radius: 8px;
+  color: var(--text-dark);
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 6px 20px rgba(255, 145, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-login::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  transition: all 0.6s ease;
+}
+
+.btn-login:hover::before {
+  left: 100%;
+}
+
+.btn-login:hover {
+  box-shadow: 
+    0 8px 30px rgba(255, 145, 0, 0.5),
+    0 0 15px rgba(255, 145, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-login:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.register-footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.register-link {
+  color: var(--accent-blue);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.register-link:hover {
+  color: var(--accent-blue-hover);
+  text-shadow: 0 0 8px var(--accent-blue);
+  text-decoration: none;
+}
+
+/* Animations */
+@keyframes logo-float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes rotate-dashed {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 145, 0, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 145, 0, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 145, 0, 0); }
+}
+
+/* ==========================================================================
+   2. DASHBOARD CONTAINER LAYOUT
+   ========================================================================== */
+
+.portal-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-dark);
+}
+
+.portal-header {
+  height: 76px;
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  z-index: 10;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.portal-logo {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-title {
+  font-size: 17px;
+  letter-spacing: 1.5px;
+  color: var(--text-main);
+  background: linear-gradient(90deg, #FFFFFF 0%, #A0B0C0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.portal-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  background-color: rgba(0, 229, 255, 0.08);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  font-size: 20px;
+  background: rgba(0, 229, 255, 0.05);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.05);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.user-email {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.btn-logout {
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.5px;
+}
+
+.btn-logout:hover {
+  border-color: #FF5252;
+  color: #FF8A80;
+  background: rgba(255, 82, 82, 0.08);
+  box-shadow: 0 0 15px rgba(255, 82, 82, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Layout Main Split */
+.portal-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar Styling - HUD Left Column */
+.projects-sidebar {
+  width: 360px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-header h2 {
+  font-size: 19px;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+.btn-icon-reload {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-reload:hover {
+  opacity: 1;
+  transform: rotate(180deg);
+}
+
+.sidebar-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  gap: 14px;
+  flex: 1;
+}
+
+.sidebar-state.empty {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.projects-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Project Card HUD Aesthetics */
+.project-card {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.project-card:hover {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(0, 229, 255, 0.2);
+  border-left-color: var(--accent-blue);
+  transform: translateX(4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.project-card.active {
+  background: rgba(0, 229, 255, 0.025);
+  border-color: rgba(0, 229, 255, 0.3);
+  border-left-color: var(--accent-blue);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.4), 
+    0 0 15px rgba(0, 229, 255, 0.08);
+}
+
+.project-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.project-card-header h3 {
+  font-size: 15px;
+  color: var(--text-main);
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.project-card-location {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.project-card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.progress-bar-container {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-orange) 0%, #FFB300 100%);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.project-card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  align-items: center;
+}
+
+.status-label {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   3. DETAILS VIEW AREA (Futuristic Grid)
+   ========================================================================== */
+
+.project-details-container {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--bg-dark);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.details-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.details-state.welcome {
+  position: relative;
+  max-width: 600px;
+  margin: auto;
+}
+
+.welcome-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.05) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.details-state h2 {
+  font-size: 28px;
+  color: var(--text-main);
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+
+.details-state p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.project-details {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Hero Section / HUD Panel */
+.details-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 2px solid rgba(0, 229, 255, 0.4);
+  border-radius: 12px;
+  padding: 35px;
+  gap: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.hero-info {
+  flex: 1;
+}
+
+.hero-status-pill {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+  display: inline-block;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.02);
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.hero-info h2 {
+  font-size: 32px;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+.hero-address {
+  font-size: 13px;
+  color: var(--text-muted);
+  border-top: 1px dashed rgba(255,255,255,0.06);
+  padding-top: 14px;
+  display: inline-block;
+}
+
+.hero-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(6, 10, 16, 0.5);
+  border-radius: 10px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.4);
+}
+
+.stat-circle {
+  width: 90px;
+  height: 90px;
+}
+
+.circular-chart {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 2.8;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s ease;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.percentage {
+  fill: var(--text-main);
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  text-anchor: middle;
+  font-weight: 700;
+}
+
+.stat-text h4 {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.stat-text p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.stat-text strong {
+  color: var(--text-main);
+}
+
+/* Sections */
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.details-section h3 {
+  font-size: 19px;
+  color: var(--text-main);
+  border-left: 3px solid var(--accent-orange);
+  padding-left: 14px;
+  letter-spacing: 0.5px;
+}
+
+.section-empty {
+  background: rgba(255, 255, 255, 0.005);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   4. DYNAMIC GANTT CHART (High-Tech HUD styling)
+   ========================================================================== */
+
+.gantt-chart {
+  background: rgba(6, 10, 16, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+
+.gantt-header-row {
+  display: flex;
+  background: rgba(255, 255, 255, 0.015);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gantt-task-name-header {
+  width: 220px;
+  padding: 16px 20px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
+.gantt-timeline-header {
+  flex: 1;
+  position: relative;
+  height: 48px;
+  overflow: hidden;
+}
+
+.gantt-marker-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  top: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.gantt-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.025);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Tick markings on grid lines for technical HUD feel */
+.gantt-grid-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 145, 0, 0.15);
+}
+
+.gantt-row {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  z-index: 2;
+  transition: background-color 0.2s ease;
+}
+
+.gantt-row:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.gantt-task-info {
+  width: 220px;
+  padding: 16px 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.gantt-task-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-task-dates {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.gantt-timeline-track {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  min-height: 58px;
+}
+
+/* Gantt Bar HUD design */
+.gantt-task-bar {
+  position: absolute;
+  height: 26px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 2px solid rgba(255,255,255,0.4);
+  cursor: pointer;
+}
+
+.gantt-task-bar:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 15px currentColor;
+  transform: scaleY(1.05);
+}
+
+.gantt-bar-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.gantt-bar-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-dark);
+  z-index: 3;
+  text-shadow: 0 0 4px rgba(255,255,255,0.3);
+}
+
+/* ==========================================================================
+   5. DETAILED TASKS GRID (HUD Table)
+   ========================================================================== */
+
+.tasks-table-wrapper {
+  background: rgba(6, 10, 16, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.tasks-table th {
+  background: rgba(255, 255, 255, 0.015);
+  padding: 18px 24px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tasks-table td {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  color: var(--text-main);
+  transition: background-color 0.2s ease;
+}
+
+.tasks-table tr:hover td {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.task-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 600;
+}
+
+.task-check {
+  font-size: 15px;
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.task-check.checked {
+  color: var(--accent-green);
+  text-shadow: 0 0 8px var(--accent-green);
+}
+
+.task-status-pill {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 5px rgba(255,255,255,0.02);
+}
+
+/* ==========================================================================
+   6. UTILITIES & LOADERS
+   ========================================================================== */
+
+.simple-loader {
+  border: 2px solid rgba(0, 229, 255, 0.05);
+  border-top: 2px solid var(--accent-blue);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  animation: spin 0.8s linear infinite;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.1);
+}
+
+.simple-loader.large {
+  width: 42px;
+  height: 42px;
+  border-width: 3px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+}
+
+.btn-retry {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.btn-retry:hover {
+  background: var(--accent-blue);
+  color: var(--text-dark);
+  box-shadow: 0 0 15px var(--accent-blue-glow);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  animation: pulse-ring 1.2s infinite alternate;
+}

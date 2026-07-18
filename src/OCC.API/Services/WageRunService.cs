@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using OCC.API.Data;
-using OCC.API.Services;
 using OCC.Shared.Models;
 using OCC.Shared.DTOs;
 using System;
@@ -11,53 +9,22 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace OCC.API.Controllers
+namespace OCC.API.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class WageRunsController : ControllerBase
+    public class WageRunService : IWageRunService
     {
         private readonly AppDbContext _context;
         private readonly IWageCalculationService _wageCalc;
         private readonly IConfiguration _configuration;
 
-        public WageRunsController(AppDbContext context, IWageCalculationService wageCalc, IConfiguration configuration)
+        public WageRunService(AppDbContext context, IWageCalculationService wageCalc, IConfiguration configuration)
         {
-            _context  = context;
+            _context = context;
             _wageCalc = wageCalc;
             _configuration = configuration;
         }
 
-        // GET: api/WageRuns
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<WageRun>>> GetWageRuns()
-        {
-            return await _context.WageRuns
-                .Include(w => w.Lines)
-                .OrderByDescending(w => w.StartDate)
-                .ToListAsync();
-        }
-
-        // GET: api/WageRuns/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<WageRun>> GetWageRun(Guid id)
-        {
-            var wageRun = await _context.WageRuns
-                .Include(w => w.Lines)
-                .FirstOrDefaultAsync(w => w.Id == id);
-
-            if (wageRun == null)
-            {
-                return NotFound();
-            }
-
-            return wageRun;
-        }
-
-        // POST: api/WageRuns/draft
-        [HttpPost("draft")]
-        public async Task<ActionResult<WageRun>> GenerateDraft([FromBody] WageRun request)
+        public async Task<WageRun> GenerateDraftAsync(WageRun request)
         {
             // Request contains StartDate, EndDate. RunDate is Now.
             var runDate = DateTime.Now.Date; // "Today"
@@ -74,7 +41,7 @@ namespace OCC.API.Controllers
             
             if (existingRun)
             {
-                return BadRequest($"A Finalized Wage Run already exists for {request.Branch} ({request.PayType}) between {request.StartDate:yyyy-MM-dd} and {request.EndDate:yyyy-MM-dd}. Please delete the finalized run first if you need to regenerate.");
+                throw new ArgumentException($"A Finalized Wage Run already exists for {request.Branch} ({request.PayType}) between {request.StartDate:yyyy-MM-dd} and {request.EndDate:yyyy-MM-dd}. Please delete the finalized run first if you need to regenerate.");
             }
             
             // 2. Create the Shell
@@ -525,8 +492,6 @@ namespace OCC.API.Controllers
                 }
 
                 // D. Total Wage
-                // Formula: ((Normal + Projected + Variance) * Rate) + (OT15 * Rate * 1.5) + (OT20 * Rate * 2.0)
-                
                 var calculatedWage = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours) * line.HourlyRate +
                                      (decimal)(line.Overtime15Hours + line.SaturdayOvertimeHours) * line.HourlyRate * 1.5m +
                                      (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
@@ -537,7 +502,6 @@ namespace OCC.API.Controllers
                 decimal totalLoanDeduction = 0;
                 foreach (var loan in empLoans)
                 {
-                    // Parse frequency from Notes
                     string frequency = "";
                     if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
                     {
@@ -553,13 +517,11 @@ namespace OCC.API.Controllers
                         }
                     }
 
-                    // Fallback to legacy matching if not specified
                     if (string.IsNullOrEmpty(frequency))
                     {
                         frequency = emp.RateType == RateType.Hourly ? "Fortnightly" : "Monthly";
                     }
 
-                    // Only deduct if the frequency matches the wage run type
                     bool matchesRun = (rateType == RateType.Hourly && frequency == "Fortnightly") ||
                                       (rateType == RateType.MonthlySalary && frequency == "Monthly");
 
@@ -575,8 +537,7 @@ namespace OCC.API.Controllers
                 draftRun.Lines.Add(line);
             }
 
-            // DO NOT SAVE to DB yet. Return the in-memory calculations for review.
-            return Ok(draftRun);
+            return draftRun;
         }
 
         private async Task PerformPreFinalizationBackupAsync()
@@ -611,12 +572,8 @@ namespace OCC.API.Controllers
             }
         }
 
-        // POST: api/WageRuns/finalize
-        [HttpPost("finalize")]
-        public async Task<ActionResult<WageRun>> FinalizeRun([FromBody] WageRun run)
+        public async Task<WageRun> FinalizeRunAsync(WageRun run)
         {
-            if (run == null) return BadRequest("Invalid Wage Run data.");
-
             await PerformPreFinalizationBackupAsync();
 
             var existing = await _context.WageRuns.Include(w => w.Lines).FirstOrDefaultAsync(w => w.Id == run.Id);
@@ -683,20 +640,17 @@ namespace OCC.API.Controllers
             {
                 if (line.DeductionLoan > 0)
                 {
-                    // Determine rateType of the finalized wage run
                     var rateType = RateType.Hourly; // Default
                     if (!string.IsNullOrEmpty(run.PayType) && Enum.TryParse<RateType>(run.PayType, out var parsedType))
                     {
                         rateType = parsedType;
                     }
 
-                    // Find active loans for this employee
                     var activeLoans = await _context.EmployeeLoans
                         .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0)
                         .OrderBy(l => l.StartDate)
                         .ToListAsync();
 
-                    // Filter loans by frequency matching this wage run
                     var matchingLoans = new List<EmployeeLoan>();
                     foreach (var loan in activeLoans)
                     {
@@ -788,118 +742,7 @@ namespace OCC.API.Controllers
             }
 
             await _context.SaveChangesAsync();
-            
-            return CreatedAtAction("GetWageRun", new { id = run.Id }, run);
+            return run;
         }
-
-        // PUT: api/WageRuns/draft/{id}/lines
-        [HttpPut("draft/{id}/lines")]
-        public async Task<IActionResult> UpdateDraftLines(Guid id, [FromBody] List<WageRunLine> updatedLines)
-        {
-            var run = await _context.WageRuns.Include(w => w.Lines).FirstOrDefaultAsync(w => w.Id == id);
-            if (run == null || run.Status != WageRunStatus.Draft) return BadRequest("Run not found or not in Draft state.");
-
-            foreach (var existingLine in run.Lines)
-            {
-                var update = updatedLines.FirstOrDefault(l => l.Id == existingLine.Id);
-                if (update != null)
-                {
-                    existingLine.DeductionWashing = update.DeductionWashing;
-                    existingLine.IncentiveSupervisor = update.IncentiveSupervisor;
-                    // DeductionGas is set from the initial total generation, so we won't allow edits here unless requested.
-                }
-            }
-
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        // GET: api/WageRuns/{id}/bank-export
-        [HttpGet("{id}/bank-export")]
-        public async Task<ActionResult<IEnumerable<BankPaymentDto>>> GetBankExportData(Guid id)
-        {
-            var run = await _context.WageRuns
-                .Include(w => w.Lines)
-                .FirstOrDefaultAsync(w => w.Id == id);
-
-            if (run == null)
-            {
-                return NotFound("Wage run not found.");
-            }
-
-            var payments = new List<BankPaymentDto>();
-
-            foreach (var line in run.Lines)
-            {
-                if (line.NetPay <= 0) continue; // Skip zero/negative payments
-
-                // Fetch the employee to get current BranchCode and AccountType
-                var employee = await _context.Employees.FindAsync(line.EmployeeId);
-
-                payments.Add(new BankPaymentDto
-                {
-                    EmployeeName = line.EmployeeName,
-                    EmployeeNumber = line.EmployeeNumber,
-                    BankName = line.BankName ?? employee?.BankName ?? string.Empty,
-                    AccountNumber = line.BankAccountNumber ?? employee?.AccountNumber ?? string.Empty,
-                    BranchCode = employee?.BranchCode ?? string.Empty,
-                    AccountType = employee?.AccountType ?? string.Empty,
-                    Amount = line.NetPay,
-                    Reference = $"Wage {run.EndDate:yyyyMMdd}"
-                });
-            }
-
-            return payments;
-        }
-
-        // POST: api/WageRuns/bank-export-preview
-        [HttpPost("bank-export-preview")]
-        public async Task<ActionResult<IEnumerable<BankPaymentDto>>> GetBankExportPreview([FromBody] WageRun run)
-        {
-            if (run == null)
-            {
-                return BadRequest("Invalid Wage Run data.");
-            }
-
-            var payments = new List<BankPaymentDto>();
-
-            foreach (var line in run.Lines)
-            {
-                if (line.NetPay <= 0) continue; // Skip zero/negative payments
-
-                // Fetch the employee to get current BranchCode and AccountType
-                var employee = await _context.Employees.FindAsync(line.EmployeeId);
-
-                payments.Add(new BankPaymentDto
-                {
-                    EmployeeName = line.EmployeeName,
-                    EmployeeNumber = line.EmployeeNumber,
-                    BankName = line.BankName ?? employee?.BankName ?? string.Empty,
-                    AccountNumber = line.BankAccountNumber ?? employee?.AccountNumber ?? string.Empty,
-                    BranchCode = employee?.BranchCode ?? string.Empty,
-                    AccountType = employee?.AccountType ?? string.Empty,
-                    Amount = line.NetPay,
-                    Reference = $"Wage {run.EndDate:yyyyMMdd}"
-                });
-            }
-
-            return payments;
-        }
-
-        // POST: api/WageRuns/delete/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRun(Guid id)
-        {
-             var run = await _context.WageRuns.FindAsync(id);
-             if (run == null) return NotFound();
-             
-             if (run.Status == WageRunStatus.Finalized) 
-                 return BadRequest("Cannot delete a finalized run.");
-                 
-             _context.WageRuns.Remove(run);
-             await _context.SaveChangesAsync();
-             return NoContent();
-        }
-
     }
 }

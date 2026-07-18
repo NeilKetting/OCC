@@ -25,6 +25,17 @@ Console.WriteLine($"[STARTUP] ------------------------------------------------")
 // Always load appsettings.secrets.json if it exists (for local secrets or production overrides)
 builder.Configuration.AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
 
+// Add CORS Policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Add services to the container.
 // Add services to the container.
 builder.Services.AddControllers(options =>
@@ -120,6 +131,7 @@ builder.Services.AddHostedService<OCC.API.Services.AuditLogCleanupService>();
 builder.Services.Configure<OCC.API.Services.WageCalculationOptions>(
     builder.Configuration.GetSection("WageCalculation"));
 builder.Services.AddScoped<OCC.API.Services.IWageCalculationService, OCC.API.Services.WageCalculationService>();
+builder.Services.AddScoped<OCC.API.Services.IWageRunService, OCC.API.Services.WageRunService>();
 
 // OpenAPI (Built-in .NET 10)
 builder.Services.AddOpenApi();
@@ -199,6 +211,8 @@ app.UseStaticFiles();
 app.UseSerilogRequestLogging();
 
 app.UseHttpMethodOverride();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
