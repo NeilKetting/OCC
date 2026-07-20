@@ -214,15 +214,16 @@
 
                         <TextBox x:Name="PART_EditableTextBox"
                                  Grid.Column="0"
+                                 Style="{x:Null}"
                                  Margin="{TemplateBinding Padding}"
-                                 HorizontalAlignment="Left"
+                                 HorizontalAlignment="Stretch"
                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                  IsReadOnly="{TemplateBinding IsReadOnly}"
                                  Visibility="Collapsed"
                                  Background="Transparent"
                                  BorderThickness="0"
-                                 Foreground="{TemplateBinding Foreground}"
-                                 CaretBrush="{TemplateBinding Foreground}">
+                                 Foreground="White"
+                                 CaretBrush="White">
                             <TextBox.Template>
                                 <ControlTemplate TargetType="TextBox">
                                     <Border x:Name="border" Background="Transparent">

@@ -94,6 +94,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.Models
             set { Model.DeliveryInstructions = value; OnPropertyChanged(); }
         }
 
+        public string DeliveryAddress
+        {
+            get => Model.Notes;
+            set { Model.Notes = value; OnPropertyChanged(); }
+        }
+
         public string Attention
         {
             get => Model.Attention;
@@ -127,6 +133,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.Models
                 OnPropertyChanged(); 
                 OnPropertyChanged(nameof(IsSiteSelected));
                 OnPropertyChanged(nameof(IsOfficeSelected));
+                OnPropertyChanged(nameof(IsOtherSelected));
             }
         }
 
@@ -140,6 +147,20 @@ namespace OCC.WpfClient.Features.ProcurementHub.Models
         {
             get => DestinationType == OrderDestinationType.Stock;
             set { if (value) DestinationType = OrderDestinationType.Stock; }
+        }
+
+        public bool IsOtherSelected
+        {
+            get => DestinationType == OrderDestinationType.Other;
+            set 
+            { 
+                if (value) 
+                {
+                    DestinationType = OrderDestinationType.Other;
+                    ProjectId = null;
+                    ProjectName = null;
+                } 
+            }
         }
 
         public decimal TaxRate

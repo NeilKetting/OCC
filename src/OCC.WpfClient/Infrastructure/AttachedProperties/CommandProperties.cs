@@ -105,6 +105,32 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                     bool isUpdating = false;
                     comboBox.IsSynchronizedWithCurrentItem = false;
 
+                    comboBox.SelectionChanged += (s, ev) =>
+                    {
+                        comboBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
+                        {
+                            var textBox = comboBox.Template.FindName("PART_EditableTextBox", comboBox) as System.Windows.Controls.TextBox;
+                            if (textBox != null)
+                            {
+                                textBox.SelectionStart = textBox.Text.Length;
+                                textBox.SelectionLength = 0;
+                            }
+                        }));
+                    };
+
+                    comboBox.DropDownClosed += (s, ev) =>
+                    {
+                        comboBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
+                        {
+                            var textBox = comboBox.Template.FindName("PART_EditableTextBox", comboBox) as System.Windows.Controls.TextBox;
+                            if (textBox != null)
+                            {
+                                textBox.SelectionStart = textBox.Text.Length;
+                                textBox.SelectionLength = 0;
+                            }
+                        }));
+                    };
+
                     comboBox.Loaded += (s, ev) =>
                     {
                         var textBox = comboBox.Template.FindName("PART_EditableTextBox", comboBox) as System.Windows.Controls.TextBox;
@@ -145,11 +171,29 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                         view.Filter = item =>
                                         {
                                             if (string.IsNullOrEmpty(filterText)) return true;
+                                            
+                                            // Explicit type checks
                                             if (item is OCC.Shared.Models.InventoryItem inv)
                                             {
                                                 return inv.Sku.Contains(filterText, System.StringComparison.OrdinalIgnoreCase) ||
                                                        (inv.Description != null && inv.Description.Contains(filterText, System.StringComparison.OrdinalIgnoreCase));
                                             }
+                                            if (item is OCC.Shared.DTOs.SupplierSummaryDto supp)
+                                            {
+                                                return supp.Name.Contains(filterText, System.StringComparison.OrdinalIgnoreCase);
+                                            }
+                                            
+                                            // Generic fallback based on DisplayMemberPath
+                                            if (!string.IsNullOrEmpty(comboBox.DisplayMemberPath))
+                                            {
+                                                var prop = item.GetType().GetProperty(comboBox.DisplayMemberPath);
+                                                if (prop != null)
+                                                {
+                                                    var val = prop.GetValue(item)?.ToString();
+                                                    return val != null && val.Contains(filterText, System.StringComparison.OrdinalIgnoreCase);
+                                                }
+                                            }
+                                            
                                             return true;
                                         };
                                         view.Refresh();

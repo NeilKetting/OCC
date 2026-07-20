@@ -30,23 +30,25 @@
             <RowDefinition Height="Auto"/>  <!-- Footer grand total -->
         </Grid.RowDefinitions>
 
-        <!-- ══════════════════ TOOLBAR ══════════════════ -->
-        <Border Grid.Row="0" Padding="16,10" Background="#06FFFFFF"
-                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+        <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+        <Border Grid.Row="0" Margin="16,12,16,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="WAGE RUN" Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="0" Text="&#xE7C0;" Style="{StaticResource SymbolIcon}" 
+                           Foreground="#FB923C" FontSize="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="WAGES" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
                     <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
                         <Run Text="{Binding StartDate, StringFormat='dd MMM yyyy'}"/>
                         <Run Text=" — "/>
                         <Run Text="{Binding EndDate, StringFormat='dd MMM yyyy'}"/>
                     </TextBlock>
                 </StackPanel>
-                <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
+                <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
                     <!-- Refresh / Load history -->
                     <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh history" Margin="0,2,0,2">
                         <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
@@ -87,8 +89,7 @@
         </Border>
 
         <!-- ══════════════════ CONFIG BAR ══════════════════ -->
-        <Border Grid.Row="1" Padding="16,10" Background="#04FFFFFF"
-                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="16,10" Margin="16,6,16,10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -241,18 +242,19 @@
         </Border>
 
         <!-- ══════════════════ MAIN CONTENT AREA ══════════════════ -->
-        <Grid Grid.Row="2">
-            <!-- If no lines generated yet, show history -->
-            <Grid Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
-                <!-- Wage Run Spreadsheet DataGrid -->
-                <DataGrid ItemsSource="{Binding LinesView}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          Style="{StaticResource ModernDataGrid}"
-                          VirtualizingPanel.IsVirtualizing="True"
-                          VirtualizingPanel.VirtualizationMode="Recycling"
-                          ScrollViewer.IsDeferredScrollingEnabled="False"
-                          FontSize="11" Margin="0,0,15,0">
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1" CornerRadius="0">
+            <Grid>
+                <!-- If no lines generated yet, show history -->
+                <Grid Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
+                    <!-- Wage Run Spreadsheet DataGrid -->
+                    <DataGrid ItemsSource="{Binding LinesView}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              Style="{StaticResource ModernDataGrid}"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.IsDeferredScrollingEnabled="False"
+                              FontSize="11" Margin="0">
 
                     <DataGrid.Columns>
                         <!-- # -->
@@ -643,6 +645,7 @@
                 </DataGrid>
             </Grid>
         </Grid>
+    </Border>
 
         <!-- ══════════════════ GRAND TOTAL FOOTER ══════════════════ -->
         <Border Grid.Row="3" Padding="16,10" Background="#0AFFFFFF"

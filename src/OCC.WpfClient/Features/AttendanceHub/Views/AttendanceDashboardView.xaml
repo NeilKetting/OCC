@@ -28,30 +28,32 @@
             <RowDefinition Height="*"/>     <!-- Roll-call grid -->
         </Grid.RowDefinitions>
 
-        <!-- ══════════════════ HEADER ══════════════════ -->
-        <Border Grid.Row="0" Padding="20,12" Background="#06FFFFFF" 
-                BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,0,0,1">
+        <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+        <Border Grid.Row="0" Margin="16,12,16,4">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="TODAY'S ROLL CALL" Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="0" Text="&#xE9D9;" Style="{StaticResource SymbolIcon}" 
+                           Foreground="#38BDF8" FontSize="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="DASHBOARD" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
                     <TextBlock Text="{Binding TodayDate}" Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource GhostButton}"
                             Command="{Binding LoadDashboardDataCommand}"
                             ToolTip="Refresh" Margin="8,0,0,0">
-                            <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" Margin="0,0,8,0"/>
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ══════════════════ STATS CARDS ══════════════════ -->
-        <UniformGrid Grid.Row="1" Rows="1" Margin="16,14,16,0">
+        <UniformGrid Grid.Row="1" Rows="1" Margin="16,6,16,0">
             <!-- Present -->
             <Border Margin="0,0,8,0" Padding="16,14" Cursor="Hand">
                 <Border.Style>
@@ -151,7 +153,7 @@
         </UniformGrid>
 
         <!-- ══════════════════ FILTER TOOLBAR ══════════════════ -->
-        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,12,16,0">
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,10,16,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -204,7 +206,7 @@
         </Border>
 
         <!-- ══════════════════ ROLL CALL GRID ══════════════════ -->
-        <Border Grid.Row="3" Margin="16,12,16,16" Style="{StaticResource GlassCard}" Padding="0">
+        <Border Grid.Row="3" Margin="16,10,16,16" Style="{StaticResource GlassCard}" Padding="0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

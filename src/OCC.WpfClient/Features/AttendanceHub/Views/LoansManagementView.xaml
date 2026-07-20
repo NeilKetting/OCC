@@ -169,25 +169,24 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="10">
+        <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+        <Border Grid.Row="0" Margin="16,12,16,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="&#xE14A;" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="#7FFFD4" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
-                <TextBlock Grid.Column="1" Grid.Row="0" Text="Loans Hub" Style="{StaticResource HeaderText}" />
-                <TextBlock Grid.Column="1" Grid.Row="1" Text="Manage staff loans and repayment schedules." Style="{StaticResource LabelText}"/>
+                <TextBlock Grid.Column="0" Text="&#xE1D0;" Style="{StaticResource SymbolIcon}" 
+                           Foreground="#2DD4BF" FontSize="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="LOANS" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
+                    <TextBlock Text="Manage staff loans and repayment schedules." Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0"/>
+                </StackPanel>
             </Grid>
-        </Grid>
+        </Border>
 
         <!-- Stats & Search Line (Redesigned as QuickBooks Toolbar Card) -->
-        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,10,16,10">
+        <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,6,16,10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -328,14 +327,14 @@
         </Border>
 
         <!-- Loans DataGrid -->
-         <DataGrid Grid.Row="2"
-                   ItemsSource="{Binding LoansView}"
-                   SelectedItem="{Binding SelectedLoan}"
-                   AutoGenerateColumns="False"
-                   IsReadOnly="True"
-                   Style="{StaticResource ModernDataGrid}"
-                   VirtualizingPanel.IsVirtualizing="True"
-                   VirtualizingPanel.VirtualizationMode="Recycling">
+        <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1" CornerRadius="0">
+            <DataGrid ItemsSource="{Binding LoansView}"
+                      SelectedItem="{Binding SelectedLoan}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      Style="{StaticResource ModernDataGrid}"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling">
              <DataGrid.RowStyle>
                  <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                      <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
@@ -470,7 +469,8 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
-        </DataGrid>
+            </DataGrid>
+        </Border>
 
         <!-- Busy Overlay -->
         <Border Grid.RowSpan="3" Background="#88000000"

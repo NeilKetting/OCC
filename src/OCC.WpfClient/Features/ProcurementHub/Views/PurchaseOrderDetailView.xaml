@@ -377,6 +377,9 @@
                                   SelectedItem="{Binding SelectedSupplier}"
                                   DisplayMemberPath="Name"
                                   Style="{StaticResource CompactComboBox}"
+                                  IsEditable="True"
+                                  IsTextSearchEnabled="True"
+                                  ap:CommandProperties.IsFiltered="True"
                                   ap:WatermarkProperties.Watermark="Select Supplier..."/>
                         
                         <TextBlock Text="SCOPE OF WORK (SOW)" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
@@ -386,10 +389,11 @@
                     <!-- Col 2: Project / Reference -->
                     <StackPanel Grid.Column="1" Margin="0,0,15,0">
                         <Grid>
-                            <TextBlock Text="PROJECT CODE / REF" Style="{StaticResource CompactLabel}" Foreground="{StaticResource AccentBlue}"/>
+                            <TextBlock Text="DELIVERY ADDRESS" Style="{StaticResource CompactLabel}" Foreground="{StaticResource AccentBlue}"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                 <RadioButton Content="Office" IsChecked="{Binding CurrentOrder.IsOfficeSelected}" Foreground="White" FontSize="10" Margin="0,0,10,0"/>
-                                <RadioButton Content="Site" IsChecked="{Binding CurrentOrder.IsSiteSelected}" Foreground="White" FontSize="10"/>
+                                <RadioButton Content="Site" IsChecked="{Binding CurrentOrder.IsSiteSelected}" Foreground="White" FontSize="10" Margin="0,0,10,0"/>
+                                <RadioButton Content="Other" IsChecked="{Binding CurrentOrder.IsOtherSelected}" Foreground="White" FontSize="10"/>
                             </StackPanel>
                         </Grid>
                         <ComboBox ItemsSource="{Binding Projects}" 
@@ -400,6 +404,27 @@
                                   Visibility="{Binding CurrentOrder.IsSiteSelected, Converter={StaticResource VisibilityConverter}}"/>
                         <TextBox Style="{StaticResource CompactTextBox}" IsEnabled="False" Text="N/A (Office / Stock)" 
                                  Visibility="{Binding CurrentOrder.IsOfficeSelected, Converter={StaticResource VisibilityConverter}}"/>
+                        <Grid Visibility="{Binding CurrentOrder.IsOtherSelected, Converter={StaticResource VisibilityConverter}}">
+                            <TextBox x:Name="ManualAddressBox" 
+                                     Text="{Binding CurrentOrder.DeliveryAddress, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource CompactTextBox}" 
+                                     ap:WatermarkProperties.Watermark="Enter manual delivery address..."
+                                     ap:FocusProperties.IsFocused="{Binding IsAddressFocused, Mode=TwoWay}"/>
+                            <Popup IsOpen="{Binding AddressSuggestions.Count, Converter={StaticResource CollectionToBooleanConverter}, Mode=OneWay}" 
+                                   PlacementTarget="{Binding ElementName=ManualAddressBox}" 
+                                   StaysOpen="False" 
+                                   AllowsTransparency="True">
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="4" Width="300" MaxHeight="200">
+                                    <ListBox ItemsSource="{Binding AddressSuggestions}" SelectedItem="{Binding SelectedAddressSuggestion}" Background="Transparent" BorderThickness="0">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Description}" Foreground="White" Padding="8,6" FontSize="11" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+                            </Popup>
+                        </Grid>
 
                         <TextBlock Text="ATTENTION / CONTACT" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
                         <TextBox Text="{Binding CurrentOrder.Attention}" Style="{StaticResource CompactTextBox}" ap:WatermarkProperties.Watermark="Recipient name..."/>
@@ -414,17 +439,14 @@
                         <DatePicker SelectedDate="{Binding CurrentOrder.ExpectedDeliveryDate}" Style="{StaticResource CompactDatePicker}"/>
                     </StackPanel>
 
-                    <!-- Col 4: Template & PO No -->
+                    <!-- Col 4: PO No -->
                     <StackPanel Grid.Column="3">
                         <TextBlock Text="P.O. NUMBER" Style="{StaticResource CompactLabel}"/>
-                        <TextBox Text="{Binding CurrentOrder.OrderNumber}" Style="{StaticResource CompactTextBox}" IsReadOnly="True" FontWeight="Bold" Foreground="{StaticResource AccentBlue}"/>
-
-                        <TextBlock Text="P.O. TEMPLATE" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
-                        <ComboBox SelectedValue="{Binding CurrentOrder.Template}" Style="{StaticResource CompactComboBox}">
-                            <ComboBoxItem Content="Standard Purchase Order"/>
-                            <ComboBoxItem Content="Materials Only Order"/>
-                            <ComboBoxItem Content="Subcontractor Order"/>
-                        </ComboBox>
+                        <TextBox Text="{Binding CurrentOrder.OrderNumber}" 
+                                 Style="{StaticResource CompactTextBox}" 
+                                 IsReadOnly="{Binding IsNewOrder, Converter={StaticResource InverseBooleanConverter}}" 
+                                 FontWeight="Bold" 
+                                 Foreground="{StaticResource AccentBlue}"/>
                     </StackPanel>
                 </Grid>
             </Border>

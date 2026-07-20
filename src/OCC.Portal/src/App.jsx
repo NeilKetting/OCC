@@ -9,6 +9,9 @@ function App() {
   const [user, setUser] = useState(
     localStorage.getItem('occ_portal_user') ? JSON.parse(localStorage.getItem('occ_portal_user')) : null
   );
+  
+  // Responsive navigation state for mobile devices
+  const [activeMobileSection, setActiveMobileSection] = useState('list'); // 'list' or 'details'
 
   // Connection settings
   const [apiUrl, setApiUrl] = useState(
@@ -21,6 +24,20 @@ function App() {
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Registration form state
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [regFirstName, setRegFirstName] = useState('');
+  const [regLastName, setRegLastName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regCompanyName, setRegCompanyName] = useState('');
+  const [regLocation, setRegLocation] = useState('');
+  const [regError, setRegError] = useState('');
+  const [regSuccess, setRegSuccess] = useState('');
+  const [regLoading, setRegLoading] = useState(false);
 
   // Projects state
   const [projects, setProjects] = useState([]);
@@ -103,6 +120,67 @@ function App() {
     }
   };
 
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!regFirstName || !regLastName || !regEmail || !regPassword || !regConfirmPassword) {
+      setRegError('Please fill in all required fields.');
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setRegError('Passwords do not match.');
+      return;
+    }
+
+    setRegLoading(true);
+    setRegError('');
+    setRegSuccess('');
+
+    try {
+      const response = await fetch(`${apiUrl}/api/Auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: regFirstName,
+          lastName: regLastName,
+          email: regEmail,
+          password: regPassword,
+          phone: regPhone || null,
+          companyName: regCompanyName || null,
+          location: regLocation || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Registration failed.');
+      }
+
+      setRegSuccess('Registration submitted successfully! Please wait for admin approval.');
+      // Clear fields
+      setRegFirstName('');
+      setRegLastName('');
+      setRegEmail('');
+      setRegPassword('');
+      setRegConfirmPassword('');
+      setRegPhone('');
+      setRegCompanyName('');
+      setRegLocation('');
+      
+      // Auto-switch to login tab after 3 seconds
+      setTimeout(() => {
+        setAuthMode('login');
+        setRegSuccess('');
+      }, 4000);
+    } catch (err) {
+      setRegError(err.message || 'An error occurred during registration.');
+    } finally {
+      setRegLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('occ_portal_token');
     localStorage.removeItem('occ_portal_user');
@@ -112,6 +190,7 @@ function App() {
     setProjects([]);
     setProjectDetails(null);
     setSelectedProjectId(null);
+    setActiveMobileSection('list');
   };
 
   const fetchProjects = async () => {
@@ -318,79 +397,216 @@ function App() {
           </div>
         </div>
 
-        {/* Right Side: Login Form with Glassmorphism */}
+        {/* Right Side: Auth Card with Glassmorphism */}
         <div className="login-form-side">
           <div className="login-card">
             <div className="login-tabs">
-              <span className="tab-item active">Login</span>
-              <span className="tab-item disabled">Register</span>
+              <span 
+                className={`tab-item ${authMode === 'login' ? 'active' : ''}`}
+                onClick={() => { setAuthMode('login'); setRegError(''); setRegSuccess(''); setLoginError(''); }}
+              >
+                Login
+              </span>
+              <span 
+                className={`tab-item ${authMode === 'register' ? 'active' : ''}`}
+                onClick={() => { setAuthMode('register'); setRegError(''); setRegSuccess(''); setLoginError(''); }}
+              >
+                Register
+              </span>
             </div>
 
-            <p className="login-subtitle">Welcome back! Please login to your account</p>
+            {authMode === 'login' ? (
+              <>
+                <p className="login-subtitle">Welcome back! Please login to your account</p>
 
-            <form onSubmit={handleLogin} className="login-form">
-              {loginError && <div className="error-alert">{loginError}</div>}
+                <form onSubmit={handleLogin} className="login-form">
+                  {loginError && <div className="error-alert">{loginError}</div>}
 
-              <div className="input-group">
-                <span className="input-icon">✉</span>
-                <input
-                  type="email"
-                  placeholder="name@company.co.za"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+                  <div className="input-group">
+                    <span className="input-icon">✉</span>
+                    <input
+                      type="email"
+                      placeholder="name@company.co.za"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
 
-              <div className="input-group">
-                <span className="input-icon">🔒</span>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+                  <div className="input-group">
+                    <span className="input-icon">🔒</span>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
 
-              <div className="input-group api-url-group">
-                <span className="input-icon">🌐</span>
-                <input
-                  type="text"
-                  placeholder="Server API URL"
-                  value={apiUrl}
-                  onChange={(e) => setApiUrl(e.target.value)}
-                  required
-                />
-                <span className="api-url-tip">API host server environment</span>
-              </div>
+                  <div className="input-group api-url-group">
+                    <span className="input-icon">🌐</span>
+                    <input
+                      type="text"
+                      placeholder="Server API URL"
+                      value={apiUrl}
+                      onChange={(e) => setApiUrl(e.target.value)}
+                      required
+                    />
+                    <span className="api-url-tip">API host server environment</span>
+                  </div>
 
-              <div className="form-options">
-                <label className="remember-label">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  Remember Me
-                </label>
-                <span className="forgot-password">Forget Password?</span>
-              </div>
+                  <div className="form-options">
+                    <label className="remember-label">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                      Remember Me
+                    </label>
+                    <span className="forgot-password">Forget Password?</span>
+                  </div>
 
-              <button type="submit" className="btn-login" disabled={loginLoading}>
-                {loginLoading ? (
-                  <span className="spinner">Connecting...</span>
-                ) : (
-                  <>
-                    <span className="btn-icon">🔒</span> Login
-                  </>
-                )}
-              </button>
+                  <button type="submit" className="btn-login" disabled={loginLoading}>
+                    {loginLoading ? (
+                      <span className="spinner">Connecting...</span>
+                    ) : (
+                      <>
+                        <span className="btn-icon">🔒</span> Login
+                      </>
+                    )}
+                  </button>
 
-              <div className="register-footer">
-                Don't have an account? <span className="register-link">Register</span>
-              </div>
-            </form>
+                  <div className="register-footer">
+                    Don't have an account?{' '}
+                    <span 
+                      className="register-link" 
+                      onClick={() => { setAuthMode('register'); setRegError(''); setRegSuccess(''); setLoginError(''); }}
+                    >
+                      Register
+                    </span>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="login-subtitle">Request access to the OCC Client Portal</p>
+
+                <form onSubmit={handleRegister} className="login-form">
+                  {regError && <div className="error-alert">{regError}</div>}
+                  {regSuccess && <div className="success-alert">{regSuccess}</div>}
+
+                  <div className="input-row">
+                    <div className="input-group">
+                      <span className="input-icon">👤</span>
+                      <input
+                        type="text"
+                        placeholder="First Name *"
+                        value={regFirstName}
+                        onChange={(e) => setRegFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="input-group">
+                      <span className="input-icon">👤</span>
+                      <input
+                        type="text"
+                        placeholder="Last Name *"
+                        value={regLastName}
+                        onChange={(e) => setRegLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <span className="input-icon">✉</span>
+                    <input
+                      type="email"
+                      placeholder="Email Address *"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="input-row">
+                    <div className="input-group">
+                      <span className="input-icon">🔒</span>
+                      <input
+                        type="password"
+                        placeholder="Password *"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="input-group">
+                      <span className="input-icon">🔒</span>
+                      <input
+                        type="password"
+                        placeholder="Confirm Password *"
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <span className="input-icon">📞</span>
+                    <input
+                      type="tel"
+                      placeholder="Phone Number (Optional)"
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="input-row">
+                    <div className="input-group">
+                      <span className="input-icon">🏢</span>
+                      <input
+                        type="text"
+                        placeholder="Company Name (Optional)"
+                        value={regCompanyName}
+                        onChange={(e) => setRegCompanyName(e.target.value)}
+                      />
+                    </div>
+                    <div className="input-group">
+                      <span className="input-icon">📍</span>
+                      <input
+                        type="text"
+                        placeholder="Location/City (Optional)"
+                        value={regLocation}
+                        onChange={(e) => setRegLocation(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="btn-login" disabled={regLoading}>
+                    {regLoading ? (
+                      <span className="spinner">Submitting...</span>
+                    ) : (
+                      <>
+                        <span className="btn-icon">📝</span> Submit Request
+                      </>
+                    )}
+                  </button>
+
+                  <div className="register-footer">
+                    Already have an account?{' '}
+                    <span 
+                      className="register-link" 
+                      onClick={() => { setAuthMode('login'); setRegError(''); setRegSuccess(''); setLoginError(''); }}
+                    >
+                      Login
+                    </span>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -424,7 +640,7 @@ function App() {
       {/* Main Dashboard Area */}
       <main className="portal-main">
         {/* Sidebar Project List */}
-        <aside className="projects-sidebar">
+        <aside className={`projects-sidebar ${activeMobileSection === 'list' ? 'mobile-active' : 'mobile-hidden'}`}>
           <div className="sidebar-header">
             <h2>Your Projects</h2>
             <button className="btn-icon-reload" onClick={fetchProjects} title="Reload Projects" disabled={projectsLoading}>
@@ -457,7 +673,10 @@ function App() {
               <div
                 key={proj.Id}
                 className={`project-card ${selectedProjectId === proj.Id ? 'active' : ''}`}
-                onClick={() => setSelectedProjectId(proj.Id)}
+                onClick={() => {
+                  setSelectedProjectId(proj.Id);
+                  setActiveMobileSection('details');
+                }}
               >
                 <div className="project-card-header">
                   <h3>{proj.Name}</h3>
@@ -486,7 +705,17 @@ function App() {
         </aside>
 
         {/* Project Details Panel */}
-        <section className="project-details-container">
+        <section className={`project-details-container ${activeMobileSection === 'details' ? 'mobile-active' : 'mobile-hidden'}`}>
+          {activeMobileSection === 'details' && (
+            <div className="mobile-back-bar">
+              <button 
+                className="btn-back-mobile" 
+                onClick={() => setActiveMobileSection('list')}
+              >
+                ← Back to Projects
+              </button>
+            </div>
+          )}
           {detailsLoading && (
             <div className="details-state">
               <div className="simple-loader large"></div>

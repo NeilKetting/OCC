@@ -176,25 +176,24 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <Grid Grid.Row="0" Margin="10">
+            <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+            <Border Grid.Row="0" Margin="16,12,16,4">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="&#xE776;" Style="{StaticResource SymbolIcon}" FontSize="36" Foreground="#7FFFD4" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
-                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Team Management" Style="{StaticResource HeaderText}" />
-                    <TextBlock Grid.Column="1" Grid.Row="1" Text="Configure teams and assign members." Style="{StaticResource LabelText}"/>
+                    <TextBlock Grid.Column="0" Text="&#xE902;" Style="{StaticResource SymbolIcon}" 
+                               Foreground="#34D399" FontSize="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="TEAM MANAGEMENT" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
+                        <TextBlock Text="Configure teams and assign members." Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0"/>
+                    </StackPanel>
                 </Grid>
-            </Grid>
+            </Border>
 
             <!-- Stats & Search Line (Redesigned as QuickBooks Toolbar Card) -->
-            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="10,0,10,10">
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="15,10" Margin="16,6,16,10">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -235,61 +234,62 @@
             </Border>
 
             <!-- Teams DataGrid -->
-            <DataGrid Grid.Row="2"
-                      ItemsSource="{Binding Items}"
-                      SelectedItem="{Binding SelectedItem}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      SelectionMode="Single"
-                      RowBackground="Transparent"
-                      AlternatingRowBackground="#06FFFFFF"
-                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      VirtualizingPanel.IsVirtualizing="True"
-                      VirtualizingPanel.ScrollUnit="Pixel"
-                      Style="{StaticResource ModernDataGrid}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="TEAM NAME" Binding="{Binding Name}" Width="Auto"/>
-                    <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="Auto"/>
-                    <DataGridTemplateColumn Header="MEMBERS" Width="Auto">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border Background="{StaticResource AccentBlue}" CornerRadius="10"
-                                        Padding="10,3" HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding Members.Count}" Foreground="White" FontWeight="Bold" FontSize="12"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <!-- Actions -->
-                    <DataGridTemplateColumn Header="ACTIONS" Width="Auto">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Button Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open / Edit Team"
-                                            Command="{Binding DataContext.OpenTeamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" Foreground="{StaticResource AccentBlue}">
-                                        <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                    </Button>
-                                    <Button Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete Team"
-                                            Command="{Binding DataContext.DeleteTeamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}">
-                                        <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
-                                    </Button>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                        <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenTeamCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                        <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
-                    </Style>
-                </DataGrid.RowStyle>
-            </DataGrid>
+            <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1" CornerRadius="0">
+                <DataGrid ItemsSource="{Binding Items}"
+                          SelectedItem="{Binding SelectedItem}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          SelectionMode="Single"
+                          RowBackground="Transparent"
+                          AlternatingRowBackground="#06FFFFFF"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.ScrollUnit="Pixel"
+                          Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="TEAM NAME" Binding="{Binding Name}" Width="Auto"/>
+                        <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="Auto"/>
+                        <DataGridTemplateColumn Header="MEMBERS" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource AccentBlue}" CornerRadius="10"
+                                            Padding="10,3" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding Members.Count}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- Actions -->
+                        <DataGridTemplateColumn Header="ACTIONS" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Open / Edit Team"
+                                                Command="{Binding DataContext.OpenTeamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Foreground="{StaticResource AccentBlue}">
+                                            <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
+                                        <Button Style="{StaticResource ToolbarIconButton}" Margin="5" ToolTip="Delete Team"
+                                                Command="{Binding DataContext.DeleteTeamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}">
+                                            <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="14"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                            <Setter Property="ap:CommandProperties.DoubleClickCommand" Value="{Binding DataContext.OpenTeamCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ap:CommandProperties.CommandParameter" Value="{Binding}"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
+            </Border>
         </Grid>
     </Grid>
 </local:TeamManagementListViewBase>

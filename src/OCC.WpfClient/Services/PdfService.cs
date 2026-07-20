@@ -3,6 +3,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using OCC.Shared.Models;
 using OCC.WpfClient.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -25,8 +26,13 @@ namespace OCC.WpfClient.Services
         private static readonly string ColorSecondary = "#374151"; // Dark Slate
         private static readonly string ColorLightOrange = "#FFF3E0";
 
-        public PdfService()
+        private readonly IProjectService? _projectService;
+        private readonly ILogger<PdfService>? _logger;
+
+        public PdfService(IProjectService? projectService = null, ILogger<PdfService>? logger = null)
         {
+            _projectService = projectService;
+            _logger = logger;
             // Initializing QuestPDF with the Community License
             QuestPDF.Settings.License = LicenseType.Community;
         }
@@ -36,6 +42,19 @@ namespace OCC.WpfClient.Services
             // Use hardcoded CompanyDetails for now to match legacy behavior
             var company = new CompanyDetails();
 
+            Project? project = null;
+            if (order.DestinationType == OrderDestinationType.Site && order.ProjectId.HasValue && _projectService != null)
+            {
+                try
+                {
+                    project = await _projectService.GetProjectAsync(order.ProjectId.Value);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to load project details for PDF generation.");
+                }
+            }
+
             // Path to save the PDF
             var fileName = $"Order_{order.OrderNumber}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
@@ -44,7 +63,7 @@ namespace OCC.WpfClient.Services
             {
                 Document.Create(container =>
                 {
-                    ComposePremium(container, order, company, isPrintVersion);
+                    ComposePremium(container, order, company, project, isPrintVersion);
                 }).GeneratePdf(filePath);
             });
 
@@ -53,7 +72,7 @@ namespace OCC.WpfClient.Services
 
         #region Premium Design (Legacy)
 
-        private void ComposePremium(IDocumentContainer container, Order order, CompanyDetails company, bool isPrint)
+        private void ComposePremium(IDocumentContainer container, Order order, CompanyDetails company, Project? project, bool isPrint)
         {
             // Effective Colors
             var effectivePrimary = isPrint ? "#000000" : ColorPrimary;
@@ -66,7 +85,7 @@ namespace OCC.WpfClient.Services
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontColor(ColorSecondary));
 
                 page.Header().Element(c => ComposePremiumHeader(c, order, company, isPrint));
-                page.Content().PaddingHorizontal(20).PaddingVertical(20).Element(c => ComposePremiumContent(c, order, company, isPrint));
+                page.Content().PaddingHorizontal(20).PaddingVertical(20).Element(c => ComposePremiumContent(c, order, company, project, isPrint));
                 page.Footer().PaddingHorizontal(40).PaddingBottom(20).Element(c => ComposePremiumFooter(c, company));
             });
         }
@@ -143,7 +162,7 @@ namespace OCC.WpfClient.Services
             return null;
         }
 
-        private void ComposePremiumContent(IContainer container, Order order, CompanyDetails company, bool isPrint)
+        private void ComposePremiumContent(IContainer container, Order order, CompanyDetails company, Project? project, bool isPrint)
         {
             var branchDetails = company.Branches.ContainsKey(order.Branch)
                 ? company.Branches[order.Branch]
@@ -179,11 +198,46 @@ namespace OCC.WpfClient.Services
                             box.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text("Ship To / Delivery").SemiBold();
                             box.Item().Padding(5).Column(details =>
                             {
-                                details.Item().Text(company.CompanyName).SemiBold();
-                                details.Item().Text(branchDetails.AddressLine1);
-                                if (!string.IsNullOrEmpty(branchDetails.AddressLine2))
-                                    details.Item().Text(branchDetails.AddressLine2);
-                                details.Item().Text($"{branchDetails.City}, {branchDetails.PostalCode}");
+                                if (order.DestinationType == OrderDestinationType.Site && project != null)
+                                {
+                                    details.Item().Text(project.Name).Bold();
+                                    if (!string.IsNullOrEmpty(project.StreetLine1))
+                                        details.Item().Text(project.StreetLine1);
+                                    if (!string.IsNullOrEmpty(project.StreetLine2))
+                                        details.Item().Text(project.StreetLine2);
+                                    
+                                    var cityPostal = "";
+                                    if (!string.IsNullOrEmpty(project.City))
+                                        cityPostal += project.City;
+                                    if (!string.IsNullOrEmpty(project.PostalCode))
+                                        cityPostal += (string.IsNullOrEmpty(cityPostal) ? "" : ", ") + project.PostalCode;
+                                        
+                                    if (!string.IsNullOrEmpty(cityPostal))
+                                        details.Item().Text(cityPostal);
+                                }
+                                else if (order.DestinationType == OrderDestinationType.Other)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(order.Notes))
+                                    {
+                                        var lines = order.Notes.Split(new[] { "\r\n", "\r", "\n", ", " }, StringSplitOptions.RemoveEmptyEntries);
+                                        foreach (var line in lines)
+                                        {
+                                            details.Item().Text(line.Trim());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        details.Item().Text("Manual Delivery Address");
+                                    }
+                                }
+                                else
+                                {
+                                    details.Item().Text(company.CompanyName).SemiBold();
+                                    details.Item().Text(branchDetails.AddressLine1);
+                                    if (!string.IsNullOrEmpty(branchDetails.AddressLine2))
+                                        details.Item().Text(branchDetails.AddressLine2);
+                                    details.Item().Text($"{branchDetails.City}, {branchDetails.PostalCode}");
+                                }
                             });
                         });
                     });

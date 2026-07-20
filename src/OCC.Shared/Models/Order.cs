@@ -88,7 +88,8 @@ namespace OCC.Shared.Models
     public enum OrderDestinationType
     {
         Stock,
-        Site
+        Site,
+        Other
     }
 
     public enum OrderStatus

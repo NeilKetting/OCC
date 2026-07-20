@@ -155,8 +155,6 @@ namespace OCC.WpfClient.Services
 
         public async Task<Order> CreateNewOrderTemplateAsync(OrderType type)
         {
-            // For now, generate locally to avoid extra API roundtrip if not strictly needed
-            // In a real app, this might call an API to reserve a number
             string prefix = type switch
             {
                 OrderType.PurchaseOrder => "PO",
@@ -165,16 +163,89 @@ namespace OCC.WpfClient.Services
                 _ => "ORD"
             };
 
+            string orderNumber = $"{prefix}-{DateTime.Now:yyMM}-{new Random().Next(1000, 9999)}";
+            try
+            {
+                var orders = await GetOrdersAsync();
+                orderNumber = GenerateNextOrderNumber(orders, type);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch existing orders for auto-incrementing number, using fallback.");
+            }
+
             return new Order
             {
                 Id = Guid.NewGuid(),
                 OrderDate = DateTime.Now,
-                OrderNumber = $"{prefix}-{DateTime.Now:yyMM}-{new Random().Next(1000, 9999)}",
+                OrderNumber = orderNumber,
                 OrderType = type,
                 TaxRate = 0.15m,
                 DestinationType = OrderDestinationType.Stock,
                 Status = OrderStatus.Draft
             };
+        }
+
+        private string GenerateNextOrderNumber(IEnumerable<Order> orders, OrderType type)
+        {
+            string prefix = type switch
+            {
+                OrderType.PurchaseOrder => "PO",
+                OrderType.PickingOrder => "PK",
+                OrderType.ReturnToInventory => "RET",
+                _ => "ORD"
+            };
+
+            var relevantOrders = orders
+                .Where(o => o.OrderType == type && !string.IsNullOrWhiteSpace(o.OrderNumber))
+                .ToList();
+
+            if (!relevantOrders.Any())
+            {
+                return $"{prefix}-1000";
+            }
+
+            long maxNumericVal = 0;
+            string? matchedPattern = null;
+
+            foreach (var order in relevantOrders)
+            {
+                var numStr = new string(order.OrderNumber.Where(char.IsDigit).ToArray());
+                if (long.TryParse(numStr, out long parsedVal))
+                {
+                    if (parsedVal > maxNumericVal)
+                    {
+                        maxNumericVal = parsedVal;
+                        matchedPattern = order.OrderNumber;
+                    }
+                }
+            }
+
+            if (maxNumericVal > 0 && matchedPattern != null)
+            {
+                long nextVal = maxNumericVal + 1;
+
+                if (matchedPattern.All(char.IsDigit))
+                {
+                    return nextVal.ToString();
+                }
+
+                var match = System.Text.RegularExpressions.Regex.Match(matchedPattern, @"^(.*?)(\d+)$");
+                if (match.Success)
+                {
+                    string basePart = match.Groups[1].Value;
+                    string numPart = match.Groups[2].Value;
+                    
+                    if (long.TryParse(numPart, out long lastNum))
+                    {
+                        long nextLastNum = lastNum + 1;
+                        string nextNumStr = nextLastNum.ToString().PadLeft(numPart.Length, '0');
+                        return basePart + nextNumStr;
+                    }
+                }
+            }
+
+            return $"{prefix}-{DateTime.Now:yyMM}-{new Random().Next(1000, 9999)}";
         }
 
         public async Task<Order?> ReceiveOrderAsync(Guid orderId, List<OrderLine> updatedLines)

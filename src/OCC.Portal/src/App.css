@@ -87,11 +87,66 @@ h1, h2, h3, h4, .tab-item {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/occ_auth_background.png');
-  background-size: cover;
-  background-position: center;
   z-index: 1;
-  filter: saturate(1.1) contrast(1.05);
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(circle at 80% 20%, rgba(0, 229, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(255, 145, 0, 0.08) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  background-position: center;
+  overflow: hidden;
+}
+
+/* Ambient glow and scanline animations for technical HUD feel */
+.login-background::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle at center, rgba(255, 145, 0, 0.02) 0%, transparent 40%);
+  animation: float-ambient 25s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.login-background::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 229, 255, 0.04) 50.5%,
+    transparent 51%
+  );
+  background-size: 100% 200%;
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+@keyframes float-ambient {
+  0% {
+    transform: translate(-10%, -10%) rotate(0deg);
+  }
+  100% {
+    transform: translate(10%, 10%) rotate(180deg);
+  }
+}
+
+@keyframes scanline {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
 }
 
 .login-backdrop-overlay {
@@ -1306,4 +1361,366 @@ h1, h2, h3, h4, .tab-item {
 .spinner {
   display: inline-block;
   animation: pulse-ring 1.2s infinite alternate;
+}
+
+/* Mobile Back Navigation Bar */
+.mobile-back-bar {
+  display: none;
+  padding: 16px 24px 0 24px;
+  background-color: var(--bg-dark);
+}
+
+.btn-back-mobile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid var(--accent-orange);
+  color: var(--text-main);
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-back-mobile:hover {
+  background: rgba(255, 145, 0, 0.05);
+  border-color: rgba(255, 145, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(255, 145, 0, 0.08);
+}
+
+/* ==========================================================================
+   7. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+/* Tablet & Landscape Mobile (<= 1024px) */
+@media (max-width: 1024px) {
+  .portal-header {
+    padding: 0 24px;
+  }
+  
+  .projects-sidebar {
+    width: 300px;
+  }
+  
+  .details-hero {
+    padding: 24px;
+    gap: 20px;
+  }
+  
+  .hero-info h2 {
+    font-size: 26px;
+  }
+  
+  .hero-stat-card {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+/* Landscape Phone & Small Heights (max-height: 620px) */
+@media (max-height: 620px) {
+  .login-container {
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+  }
+  
+  .login-logo-side {
+    flex: none;
+    padding: 20px;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .occ-logo-badge {
+    width: 150px;
+    padding: 10px;
+    margin-top: 0;
+  }
+  
+  .time-badge {
+    display: none; /* Hide time status card on low height landscape */
+  }
+  
+  .login-form-side {
+    flex: none;
+    padding: 10px 20px 20px 20px;
+    width: 100%;
+  }
+  
+  .login-card {
+    padding: 20px;
+    max-width: 440px;
+    border-left: none;
+    border-top: 2px solid rgba(0, 229, 255, 0.3);
+    border-radius: 12px;
+  }
+  
+  .tab-item {
+    font-size: 18px;
+    padding-bottom: 6px;
+    margin-right: 20px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 15px;
+    font-size: 12px;
+  }
+
+  .login-form {
+    gap: 14px;
+  }
+
+  .input-group input {
+    padding: 10px 16px 10px 40px;
+    font-size: 13px;
+  }
+
+  .input-icon {
+    left: 14px;
+    font-size: 13px;
+  }
+
+  .btn-login {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+/* Small Screens & Mobile Phones (<= 768px) */
+@media (max-width: 768px) {
+  /* 1. Login Page Mobile */
+  .login-container {
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+  }
+  
+  .login-logo-side {
+    flex: none;
+    padding: 30px 20px 10px 20px;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .occ-logo-badge {
+    width: 160px;
+    padding: 12px;
+    margin-top: 0;
+  }
+  
+  .time-badge {
+    display: none; /* Hide time status card on phone vertical */
+  }
+  
+  .login-form-side {
+    flex: none;
+    padding: 10px 20px 30px 20px;
+    width: 100%;
+  }
+  
+  .login-card {
+    padding: 25px 20px;
+    border-left: none;
+    border-top: 2px solid rgba(0, 229, 255, 0.3);
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  
+  .tab-item {
+    font-size: 18px;
+    padding-bottom: 6px;
+    margin-right: 20px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+
+  .login-form {
+    gap: 16px;
+  }
+
+  .input-group input {
+    padding: 11px 16px 11px 40px;
+    font-size: 13px;
+  }
+
+  .input-icon {
+    left: 14px;
+    font-size: 13px;
+  }
+
+  .btn-login {
+    padding: 11px;
+    font-size: 14px;
+  }
+
+  
+  /* 2. Header Mobile */
+  .portal-header {
+    height: 64px;
+    padding: 0 16px;
+  }
+  
+  .portal-logo {
+    height: 32px;
+  }
+  
+  .header-title {
+    display: none; /* Hide long name on mobile */
+  }
+  
+  .portal-badge {
+    font-size: 8px;
+    padding: 3px 8px;
+  }
+  
+  .header-right {
+    gap: 16px;
+  }
+  
+  .user-email {
+    display: none; /* Hide email to save space */
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  .btn-logout {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+  
+  /* 3. Main Dashboard Layout Mobile */
+  .portal-main {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  /* Toggle visibility based on activeMobileSection state */
+  .projects-sidebar.mobile-hidden,
+  .project-details-container.mobile-hidden {
+    display: none !important;
+  }
+  
+  .projects-sidebar.mobile-active,
+  .project-details-container.mobile-active {
+    display: flex !important;
+    width: 100% !important;
+    flex: 1 !important;
+    height: 100% !important;
+  }
+  
+  .projects-sidebar {
+    border-right: none;
+  }
+  
+  .project-details-container {
+    width: 100% !important;
+  }
+  
+  .mobile-back-bar {
+    display: block; /* Show back button bar */
+  }
+  
+  /* 4. Details View Mobile */
+  .project-details {
+    padding: 16px;
+    gap: 24px;
+  }
+  
+  .details-hero {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .hero-info h2 {
+    font-size: 22px;
+  }
+  
+  .hero-desc {
+    font-size: 13px;
+  }
+  
+  .hero-stat-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 16px;
+  }
+  
+  .stat-circle {
+    width: 70px;
+    height: 70px;
+  }
+  
+  /* 5. Scrollable Containers for Gantt Chart and Tables */
+  .gantt-chart {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .gantt-header-row,
+  .gantt-body {
+    min-width: 680px; /* Force min-width to trigger horizontal scroll rather than squishing */
+  }
+  
+  .tasks-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tasks-table {
+    min-width: 600px; /* Force min-width for table readability */
+  }
+  
+  .tasks-table th,
+  .tasks-table td {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  
+  .details-state h2 {
+    font-size: 22px;
+  }
+
+  .input-row {
+    flex-direction: column;
+    gap: 22px;
+  }
+}
+
+/* Registration Form Layout & Feedback Styles */
+.input-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.input-row .input-group {
+  flex: 1;
+}
+
+.success-alert {
+  background-color: rgba(0, 230, 118, 0.12);
+  border-left: 3px solid var(--accent-green);
+  color: #98FFC2;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 4px 15px rgba(0, 230, 118, 0.05);
 }

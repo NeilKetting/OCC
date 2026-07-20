@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
+using OCC.Shared.Interfaces;
 using OCC.WpfClient.Features.ProcurementHub.Models;
 using OCC.WpfClient.Infrastructure;
 using CommunityToolkit.Mvvm.Messaging;
@@ -25,6 +26,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IPdfService _pdfService;
         private readonly IToastService _toastService;
+        private readonly IGoogleMapsService _googleMapsService;
+        private readonly ISettingsService _settingsService;
+        private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private readonly ILogger<PurchaseOrderDetailViewModel> _logger;
 
         [ObservableProperty]
@@ -47,10 +51,23 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private List<Guid> _allOrderIds = new();
         private int _currentIndex = -1;
+        [ObservableProperty]
         private bool _isNewOrder = true;
 
         [ObservableProperty]
         private Guid? _orderId;
+
+        [ObservableProperty]
+        private AddressSuggestion? _selectedAddressSuggestion;
+
+        [ObservableProperty]
+        private bool _isAddressFocused;
+
+        public ObservableCollection<AddressSuggestion> AddressSuggestions { get; } = new();
+
+        private string _addressSessionToken = Guid.NewGuid().ToString();
+        private System.Threading.CancellationTokenSource? _addressCts;
+        private bool _isHandlingAddressSelection;
 
         public PurchaseOrderDetailViewModel(
             IOrderService orderService,
@@ -60,6 +77,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             INavigationService navigationService,
             IPdfService pdfService,
             IToastService toastService,
+            IGoogleMapsService googleMapsService,
+            ISettingsService settingsService,
+            OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings,
             ILogger<PurchaseOrderDetailViewModel> logger)
         {
             _orderService = orderService;
@@ -69,9 +89,37 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _navigationService = navigationService;
             _pdfService = pdfService;
             _toastService = toastService;
+            _googleMapsService = googleMapsService;
+            _settingsService = settingsService;
+            _connectionSettings = connectionSettings;
             _logger = logger;
 
             Title = "Create Purchase Order";
+        }
+
+        partial void OnCurrentOrderChanged(OrderWrapper? oldValue, OrderWrapper? newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.PropertyChanged -= CurrentOrder_PropertyChanged;
+            }
+            if (newValue != null)
+            {
+                newValue.PropertyChanged += CurrentOrder_PropertyChanged;
+            }
+        }
+
+        private async void CurrentOrder_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_isHandlingAddressSelection) return;
+
+            if (e.PropertyName == nameof(OrderWrapper.DeliveryInstructions))
+            {
+                if (CurrentOrder != null && CurrentOrder.IsOtherSelected)
+                {
+                    await UpdateAddressSuggestionsAsync();
+                }
+            }
         }
 
         [RelayCommand]
@@ -135,7 +183,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
                             SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
                             _currentIndex = _allOrderIds.IndexOf(order.Id);
-                            _isNewOrder = false;
+                            IsNewOrder = false;
                         });
                     }
                 }
@@ -147,7 +195,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     {
                         CurrentOrder = new OrderWrapper(order);
                         _currentIndex = -1; // -1 represents "New Order"
-                        _isNewOrder = true;
+                        IsNewOrder = true;
                         
                         // QuickBooks style: Pre-fill with 10 empty rows
                         for (int i = 0; i < 10; i++)
@@ -236,7 +284,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 IsBusy = true;
                 
-                if (_isNewOrder)
+                if (IsNewOrder)
                 {
                     var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
                     
@@ -274,7 +322,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 IsBusy = true;
                 
-                if (_isNewOrder)
+                if (IsNewOrder)
                 {
                     var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
                     
@@ -295,7 +343,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 SelectedSupplier = null;
                 SelectedProject = null;
                 _currentIndex = -1; // Ready for another new order
-                _isNewOrder = true;
+                IsNewOrder = true;
                 
                 for (int i = 0; i < 10; i++) AddLine();
             }
@@ -321,7 +369,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 SelectedSupplier = null;
                 SelectedProject = null;
                 _currentIndex = -1;
-                _isNewOrder = true;
+                IsNewOrder = true;
                 for (int i = 0; i < 10; i++) AddLine();
             }
             finally
@@ -454,7 +502,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     CurrentOrder = new OrderWrapper(order);
                     SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
                     SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
-                    _isNewOrder = false;
+                    IsNewOrder = false;
                 }
             }
             catch (Exception ex)
@@ -480,7 +528,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 
                 // Update index for cycling
                 _currentIndex = _allOrderIds.IndexOf(order.Id);
-                _isNewOrder = false;
+                IsNewOrder = false;
                 
                 CloseOverlay();
             };
@@ -582,6 +630,109 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 }
             };
             OpenOverlay(dialog);
+        }
+
+        private async Task UpdateAddressSuggestionsAsync()
+        {
+            if (CurrentOrder == null) return;
+
+            if (SelectedAddressSuggestion != null && CurrentOrder.DeliveryAddress == SelectedAddressSuggestion.Description)
+                return;
+
+            if (string.IsNullOrWhiteSpace(CurrentOrder.DeliveryAddress) || CurrentOrder.DeliveryAddress.Length < 3)
+            {
+                AddressSuggestions.Clear();
+                return;
+            }
+
+            // Ensure Google Maps API key is available
+            if (string.IsNullOrEmpty(_connectionSettings.GoogleApiKey))
+            {
+                var key = await _settingsService.GetGoogleMapsKeyAsync();
+                if (!string.IsNullOrEmpty(key))
+                {
+                    _connectionSettings.GoogleApiKey = key;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(_connectionSettings.GoogleApiKey))
+            {
+                return;
+            }
+
+            // Debounce logic
+            _addressCts?.Cancel();
+            _addressCts = new System.Threading.CancellationTokenSource();
+            var token = _addressCts.Token;
+
+            try
+            {
+                await Task.Delay(300, token);
+                
+                var suggestions = await _googleMapsService.GetAddressSuggestionsAsync(CurrentOrder.DeliveryAddress, _addressSessionToken);
+                
+                if (token.IsCancellationRequested) return;
+
+                AddressSuggestions.Clear();
+                foreach (var s in suggestions ?? Array.Empty<AddressSuggestion>())
+                {
+                    AddressSuggestions.Add(s);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Address Search Error");
+            }
+        }
+
+        partial void OnSelectedAddressSuggestionChanged(AddressSuggestion? value)
+        {
+            if (value != null)
+            {
+                _ = HandleAddressSelectionAsync(value);
+            }
+        }
+
+        private async Task HandleAddressSelectionAsync(AddressSuggestion suggestion)
+        {
+            if (suggestion == null || CurrentOrder == null) return;
+
+            try
+            {
+                IsBusy = true;
+                BusyText = "Fetching address details...";
+                
+                var details = await _googleMapsService.GetPlaceDetailsAsync(suggestion.PlaceId, _addressSessionToken);
+                if (details != null)
+                {
+                    _isHandlingAddressSelection = true;
+                    
+                    var parts = new System.Collections.Generic.List<string>();
+                    if (!string.IsNullOrWhiteSpace(details.StreetLine1)) parts.Add(details.StreetLine1);
+                    if (!string.IsNullOrWhiteSpace(details.StreetLine2)) parts.Add(details.StreetLine2);
+                    if (!string.IsNullOrWhiteSpace(details.City)) parts.Add(details.City);
+                    if (!string.IsNullOrWhiteSpace(details.StateOrProvince)) parts.Add(details.StateOrProvince);
+                    if (!string.IsNullOrWhiteSpace(details.PostalCode)) parts.Add(details.PostalCode);
+                    
+                    CurrentOrder.DeliveryAddress = string.Join(", ", parts);
+                    
+                    AddressSuggestions.Clear();
+                    SelectedAddressSuggestion = null;
+                    _addressSessionToken = Guid.NewGuid().ToString();
+                    _isHandlingAddressSelection = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve address details");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 }
