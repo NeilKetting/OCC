@@ -195,10 +195,33 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
                 CalculateSmartStats(taskList);
 
+                // Capture current expansion states to preserve layout
+                var expansionStates = new Dictionary<Guid, bool>();
+                if (_rootTasks != null && _rootTasks.Any())
+                {
+                    void CollectStates(IEnumerable<ProjectTask> currentTasks)
+                    {
+                        foreach (var t in currentTasks)
+                        {
+                            expansionStates[t.Id] = t.IsExpanded;
+                            if (t.Children != null && t.Children.Any())
+                            {
+                                CollectStates(t.Children);
+                            }
+                        }
+                    }
+                    CollectStates(_rootTasks);
+                }
+
                 // Build hierarchy (Ported from legacy app) and sync AssignedTo legacy field
                 foreach (var task in taskList)
                 {
                     task.Children.Clear();
+                    if (expansionStates.TryGetValue(task.Id, out var isExpanded))
+                    {
+                        task.IsExpanded = isExpanded;
+                    }
+
                     if (task.Assignments != null && task.Assignments.Any())
                     {
                         var expectedAssignedTo = string.Join(", ", task.Assignments.Select(a => a.AssigneeName));
@@ -713,7 +736,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         existing.IsOnHold = updatedTask.IsOnHold;
                         existing.HoldReason = updatedTask.HoldReason;
                         existing.Name = updatedTask.Name;
-                        existing.IsExpanded = updatedTask.IsExpanded; // Preserve or update
+                        // Keep existing expand state
                         existing.StartDate = updatedTask.StartDate;
                         existing.FinishDate = updatedTask.FinishDate;
                         
