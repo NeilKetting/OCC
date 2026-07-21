@@ -13,7 +13,7 @@
 		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
 		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
 		<AssemblyName>OCC-ERP</AssemblyName>
-		<Version>1.1.21</Version>
+		<Version>1.1.22</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
 	</PropertyGroup>
 
@@ -61,5 +61,14 @@
 		<Resource Update="Assets\Images\occ_future_logo.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Repair-OCC.bat">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="Uninstall-OCC.bat">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 </Project>

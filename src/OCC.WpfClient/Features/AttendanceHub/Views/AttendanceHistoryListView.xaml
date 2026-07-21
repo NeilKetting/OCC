@@ -207,7 +207,7 @@
                         <ComboBoxItem Content="Absent"/>
                         <ComboBoxItem Content="Sick"/>
                         <ComboBoxItem Content="Leave"/>
-                        <ComboBoxItem Content="Unpaid Sick"/>
+                        <ComboBoxItem Content="Unpaid"/>
                         <ComboBoxItem Content="Unpaid Leave"/>
                     </ComboBox>
 

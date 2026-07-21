@@ -321,31 +321,59 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsBusy = true;
                 BusyText = "Generating print report...";
 
-                string projectTitle = "Project Gantt Tasks Report";
+                string projectTitle = "Project Schedule";
                 if (_projectId != Guid.Empty)
                 {
                     var project = await _projectService.GetProjectAsync(_projectId);
                     if (project != null && !string.IsNullOrWhiteSpace(project.Name))
                     {
-                        projectTitle = $"Gantt Tasks Report - {project.Name}";
+                        projectTitle = project.Name;
                     }
                 }
 
-                var printItems = GanttTasks.Select(gt => new GanttTaskPrintModel
+                var printItems = GanttTasks.Select(gt => 
                 {
-                    Row = gt.RowNumber,
-                    TaskName = gt.Task.Name,
-                    Predecessors = gt.PredecessorText,
-                    StartDate = gt.Task.StartDate == DateTime.MinValue ? "None" : gt.Task.StartDate.ToShortDateString(),
-                    FinishDate = gt.Task.FinishDate == DateTime.MinValue ? "None" : gt.Task.FinishDate.ToShortDateString(),
-                    Progress = $"{gt.Task.PercentComplete}%",
-                    AssignedTo = gt.Task.AssignedTo,
-                    
-                    StartDateRaw = gt.Task.StartDate,
-                    FinishDateRaw = gt.Task.FinishDate,
-                    PercentComplete = gt.Task.PercentComplete,
-                    IsSummary = gt.IsSummary,
-                    IndentLevel = gt.Task.IndentLevel
+                    string durationStr = gt.Task.Duration;
+                    if (string.IsNullOrWhiteSpace(durationStr) && gt.Task.StartDate != DateTime.MinValue && gt.Task.FinishDate != DateTime.MinValue)
+                    {
+                        int days = Math.Max(1, (gt.Task.FinishDate.Date - gt.Task.StartDate.Date).Days);
+                        durationStr = $"{days} day{(days == 1 ? "" : "s")}";
+                    }
+
+                    bool isCritical = gt.Task.PercentComplete < 100 && gt.Task.FinishDate != DateTime.MinValue && (gt.Task.FinishDate.Date <= DateTime.Today.AddDays(7));
+
+                    var predRows = new List<int>();
+                    if (gt.Task.Predecessors != null)
+                    {
+                        foreach (var predStr in gt.Task.Predecessors)
+                        {
+                            var info = ParsePredecessor(predStr);
+                            if (_taskIdToRowNumber.TryGetValue(info.PredecessorId, out var rNum))
+                            {
+                                predRows.Add(rNum);
+                            }
+                        }
+                    }
+
+                    return new GanttTaskPrintModel
+                    {
+                        Row = gt.RowNumber,
+                        TaskName = gt.Task.Name,
+                        Duration = string.IsNullOrWhiteSpace(durationStr) ? "-" : durationStr,
+                        Predecessors = gt.PredecessorText,
+                        StartDate = gt.Task.StartDate == DateTime.MinValue ? "-" : gt.Task.StartDate.ToString("yyyy/MM/dd"),
+                        FinishDate = gt.Task.FinishDate == DateTime.MinValue ? "-" : gt.Task.FinishDate.ToString("yyyy/MM/dd"),
+                        Progress = $"{gt.Task.PercentComplete:0}%",
+                        AssignedTo = gt.Task.AssignedTo ?? string.Empty,
+                        
+                        StartDateRaw = gt.Task.StartDate,
+                        FinishDateRaw = gt.Task.FinishDate,
+                        PercentComplete = gt.Task.PercentComplete,
+                        IsSummary = gt.IsSummary,
+                        IsCritical = isCritical,
+                        IndentLevel = gt.Task.IndentLevel,
+                        PredecessorRowNumbers = predRows
+                    };
                 }).ToList();
 
                 var validTasks = GanttTasks.Where(gt => gt.Task.StartDate != DateTime.MinValue && gt.Task.FinishDate != DateTime.MinValue).ToList();

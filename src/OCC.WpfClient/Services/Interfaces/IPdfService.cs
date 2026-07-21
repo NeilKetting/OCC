@@ -108,6 +108,7 @@ namespace OCC.WpfClient.Services.Interfaces
     {
         public int Row { get; set; }
         public string TaskName { get; set; } = string.Empty;
+        public string Duration { get; set; } = string.Empty;
         public string Predecessors { get; set; } = string.Empty;
         public string StartDate { get; set; } = string.Empty;
         public string FinishDate { get; set; } = string.Empty;
@@ -119,7 +120,9 @@ namespace OCC.WpfClient.Services.Interfaces
         public System.DateTime FinishDateRaw { get; set; }
         public double PercentComplete { get; set; }
         public bool IsSummary { get; set; }
+        public bool IsCritical { get; set; }
         public int IndentLevel { get; set; }
+        public List<int> PredecessorRowNumbers { get; set; } = new();
     }
 
     public class ProjectReportPrintModel
