@@ -28,6 +28,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly IToastService _toastService;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly ISettingsService _settingsService;
+        private readonly IAuthService _authService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private readonly ILogger<PurchaseOrderDetailViewModel> _logger;
 
@@ -79,6 +80,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             IToastService toastService,
             IGoogleMapsService googleMapsService,
             ISettingsService settingsService,
+            IAuthService authService,
             OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings,
             ILogger<PurchaseOrderDetailViewModel> logger)
         {
@@ -91,6 +93,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _toastService = toastService;
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
+            _authService = authService;
             _connectionSettings = connectionSettings;
             _logger = logger;
 
@@ -191,6 +194,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     // Create new order template
                     var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
+                    if (_authService.CurrentUser?.Branch != null)
+                    {
+                        order.Branch = _authService.CurrentUser.Branch.Value;
+                    }
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         CurrentOrder = new OrderWrapper(order);
@@ -339,6 +346,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
                 // Reset to new template
                 var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
+                if (_authService.CurrentUser?.Branch != null)
+                {
+                    order.Branch = _authService.CurrentUser.Branch.Value;
+                }
                 CurrentOrder = new OrderWrapper(order);
                 SelectedSupplier = null;
                 SelectedProject = null;
@@ -365,6 +376,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 IsBusy = true;
                 var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
+                if (_authService.CurrentUser?.Branch != null)
+                {
+                    order.Branch = _authService.CurrentUser.Branch.Value;
+                }
                 CurrentOrder = new OrderWrapper(order);
                 SelectedSupplier = null;
                 SelectedProject = null;

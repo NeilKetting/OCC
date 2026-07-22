@@ -126,19 +126,19 @@ namespace OCC.Shared.Models
             { 
                 Branch.CPT, new BranchDetails 
                 { 
-                    Phone = "TBD",
-                    Fax = "TBD",
-                    Email = "TBD",
-                    AddressLine1 = "TBD",
-                    AddressLine2 = "TBD",
+                    Phone = "+27 21 555-0199",
+                    Fax = "(021) 555-0198",
+                    Email = "cpt@orange-circle.co.za",
+                    AddressLine1 = "Unit 4, Cape Point Business Park",
+                    AddressLine2 = "Milnerton",
                     City = "Cape Town",
-                    PostalCode = "TBD",
+                    PostalCode = "7441",
                     ShiftStartTime = new TimeSpan(7,0,0),
                     ShiftEndTime = new TimeSpan(16,45,0),
                     DepartmentEmails = new()
                     {
-                        new DepartmentEmail { Department = "Buying", EmailAddress = "TBD" },
-                        new DepartmentEmail { Department = "Accounts", EmailAddress = "TBD" }
+                        new DepartmentEmail { Department = "Buying", EmailAddress = "cptbuying@orange-circle.co.za" },
+                        new DepartmentEmail { Department = "Accounts", EmailAddress = "cptaccounts@orange-circle.co.za" }
                     }
                 } 
             }

@@ -27,11 +27,13 @@ namespace OCC.WpfClient.Services
         private static readonly string ColorSecondary = "#374151"; // Dark Slate
         private static readonly string ColorLightOrange = "#FFF3E0";
 
+        private readonly ISettingsService? _settingsService;
         private readonly IProjectService? _projectService;
         private readonly ILogger<PdfService>? _logger;
 
-        public PdfService(IProjectService? projectService = null, ILogger<PdfService>? logger = null)
+        public PdfService(ISettingsService? settingsService = null, IProjectService? projectService = null, ILogger<PdfService>? logger = null)
         {
+            _settingsService = settingsService;
             _projectService = projectService;
             _logger = logger;
             // Initializing QuestPDF with the Community License
@@ -40,8 +42,10 @@ namespace OCC.WpfClient.Services
 
         public async Task<string> GenerateOrderPdfAsync(Order order, bool isPrintVersion = false)
         {
-            // Use hardcoded CompanyDetails for now to match legacy behavior
-            var company = new CompanyDetails();
+            // Use configured CompanyDetails if settings service is available, otherwise fallback to defaults
+            var company = _settingsService != null 
+                ? await _settingsService.GetCompanyDetailsAsync() 
+                : new CompanyDetails();
 
             Project? project = null;
             if (order.DestinationType == OrderDestinationType.Site && order.ProjectId.HasValue && _projectService != null)
