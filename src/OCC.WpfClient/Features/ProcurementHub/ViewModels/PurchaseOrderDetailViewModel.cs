@@ -32,6 +32,12 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private readonly ILogger<PurchaseOrderDetailViewModel> _logger;
 
+        private static readonly Project OtherProjectSentinel = new() { Id = Guid.Empty, Name = "Other..." };
+        private bool _isPopulating;
+
+        [ObservableProperty]
+        private bool _isOtherProjectSelected;
+
         [ObservableProperty]
         private OrderWrapper? _currentOrder;
 
@@ -134,6 +140,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
                 
                 // 1. Load lookups sequentially
+                IEnumerable<Project> allProjectsList = new List<Project>();
                 if (!Suppliers.Any() || !Projects.Any() || !InventoryItems.Any())
                 {
                     var suppliersTask = _supplierService.GetSuppliersAsync();
@@ -141,7 +148,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     var inventoryTask = _inventoryService.GetInventoryAsync();
 
                     var suppliers = await suppliersTask;
-                    var projects = await projectsTask;
+                    allProjectsList = await projectsTask;
                     var inventory = await inventoryTask;
 
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
@@ -155,7 +162,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         if (!Projects.Any())
                         {
                             Projects.Clear();
-                            foreach (var p in projects) Projects.Add(p);
+                            var activeProjects = allProjectsList.Where(p => p.Status != "Completed" && p.Status != "Archived" && p.Status != "Cancelled");
+                            foreach (var p in activeProjects) Projects.Add(p);
+                            Projects.Add(OtherProjectSentinel);
                         }
 
                         if (!InventoryItems.Any())
@@ -164,6 +173,10 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             foreach (var i in inventory) InventoryItems.Add(i);
                         }
                     });
+                }
+                else
+                {
+                    allProjectsList = await _projectService.GetProjectsAsync();
                 }
 
                 // 2. Fetch all existing order IDs for cycling (newest first)
@@ -174,57 +187,67 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 }
 
                 // 3. Populate or create order
-                if (OrderId.HasValue && OrderId.Value != Guid.Empty)
+                _isPopulating = true;
+                try
                 {
-                    // Load existing order
-                    var order = await _orderService.GetOrderAsync(OrderId.Value);
-                    if (order != null)
+                    if (OrderId.HasValue && OrderId.Value != Guid.Empty)
                     {
+                        // Load existing order
+                        var order = await _orderService.GetOrderAsync(OrderId.Value);
+                        if (order != null)
+                        {
+                            await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                            {
+                                CurrentOrder = new OrderWrapper(order);
+                                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                                await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName, allProjectsList);
+                                _currentIndex = _allOrderIds.IndexOf(order.Id);
+                                IsNewOrder = false;
+                            });
+                        }
+                    }
+                    else if (CurrentOrder == null)
+                    {
+                        // Create new order template
+                        var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
+                        if (_authService.CurrentUser?.Branch != null)
+                        {
+                            order.Branch = _authService.CurrentUser.Branch.Value;
+                        }
                         await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                         {
                             CurrentOrder = new OrderWrapper(order);
-                            SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
-                            SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
-                            _currentIndex = _allOrderIds.IndexOf(order.Id);
-                            IsNewOrder = false;
+                            _currentIndex = -1; // -1 represents "New Order"
+                            IsNewOrder = true;
+                            SelectedProject = null;
+                            SelectedSupplier = null;
+                            
+                            // QuickBooks style: Pre-fill with 10 empty rows
+                            for (int i = 0; i < 10; i++)
+                            {
+                                AddLine();
+                            }
+                        });
+                    }
+                    else
+                    {
+                        // If CurrentOrder is already present, synchronize dropdowns
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                        {
+                            if (SelectedSupplier == null && CurrentOrder.SupplierId != Guid.Empty)
+                            {
+                                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
+                            }
+                            if (SelectedProject == null && ((CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty) || !string.IsNullOrEmpty(CurrentOrder.ProjectName)))
+                            {
+                                await ResolveProjectSelectionAsync(CurrentOrder.ProjectId, CurrentOrder.ProjectName, allProjectsList);
+                            }
                         });
                     }
                 }
-                else if (CurrentOrder == null)
+                finally
                 {
-                    // Create new order template
-                    var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
-                    if (_authService.CurrentUser?.Branch != null)
-                    {
-                        order.Branch = _authService.CurrentUser.Branch.Value;
-                    }
-                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        CurrentOrder = new OrderWrapper(order);
-                        _currentIndex = -1; // -1 represents "New Order"
-                        IsNewOrder = true;
-                        
-                        // QuickBooks style: Pre-fill with 10 empty rows
-                        for (int i = 0; i < 10; i++)
-                        {
-                            AddLine();
-                        }
-                    });
-                }
-                else
-                {
-                    // If CurrentOrder is already present, synchronize dropdowns
-                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        if (SelectedSupplier == null && CurrentOrder.SupplierId != Guid.Empty)
-                        {
-                            SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
-                        }
-                        if (SelectedProject == null && CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty)
-                        {
-                            SelectedProject = Projects.FirstOrDefault(p => p.Id == CurrentOrder.ProjectId.Value);
-                        }
-                    });
+                    _isPopulating = false;
                 }
             }
             catch (Exception ex)
@@ -236,6 +259,35 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             finally
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = false);
+            }
+        }
+
+        private async Task ResolveProjectSelectionAsync(Guid? projectId, string? projectName, IEnumerable<Project>? allProjectsList = null)
+        {
+            if (projectId.HasValue && projectId.Value != Guid.Empty)
+            {
+                var matchingProject = Projects.FirstOrDefault(p => p.Id == projectId.Value);
+                if (matchingProject == null)
+                {
+                    var all = allProjectsList ?? await _projectService.GetProjectsAsync();
+                    var originalProject = all.FirstOrDefault(p => p.Id == projectId.Value);
+                    if (originalProject != null)
+                    {
+                        int otherIndex = Projects.IndexOf(OtherProjectSentinel);
+                        if (otherIndex >= 0) Projects.Insert(otherIndex, originalProject);
+                        else Projects.Add(originalProject);
+                        matchingProject = originalProject;
+                    }
+                }
+                SelectedProject = matchingProject;
+            }
+            else if (!string.IsNullOrEmpty(projectName))
+            {
+                SelectedProject = OtherProjectSentinel;
+            }
+            else
+            {
+                SelectedProject = null;
             }
         }
 
@@ -253,11 +305,38 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         partial void OnSelectedProjectChanged(Project? value)
         {
-            if (value != null && CurrentOrder != null)
+            if (CurrentOrder == null) return;
+
+            if (value != null)
             {
-                CurrentOrder.ProjectId = value.Id;
-                CurrentOrder.ProjectName = value.Name;
-                CurrentOrder.Attention = value.ProjectManager ?? string.Empty;
+                if (value.Id == Guid.Empty) // "Other..." sentinel
+                {
+                    CurrentOrder.ProjectId = null;
+                    IsOtherProjectSelected = true;
+                    if (CurrentOrder.ProjectName == null || CurrentOrder.ProjectName == "Other...")
+                    {
+                        CurrentOrder.ProjectName = string.Empty;
+                    }
+                }
+                else
+                {
+                    CurrentOrder.ProjectId = value.Id;
+                    CurrentOrder.ProjectName = value.Name;
+                    CurrentOrder.Attention = value.ProjectManager ?? string.Empty;
+                    IsOtherProjectSelected = false;
+
+                    if (!_isPopulating)
+                    {
+                        // Automatically select "Site" destination type for delivery address on interactive user selection
+                        CurrentOrder.DestinationType = OrderDestinationType.Site;
+                    }
+                }
+            }
+            else
+            {
+                CurrentOrder.ProjectId = null;
+                CurrentOrder.ProjectName = null;
+                IsOtherProjectSelected = false;
             }
         }
 
@@ -350,11 +429,19 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     order.Branch = _authService.CurrentUser.Branch.Value;
                 }
-                CurrentOrder = new OrderWrapper(order);
-                SelectedSupplier = null;
-                SelectedProject = null;
-                _currentIndex = -1; // Ready for another new order
-                IsNewOrder = true;
+                _isPopulating = true;
+                try
+                {
+                    CurrentOrder = new OrderWrapper(order);
+                    SelectedSupplier = null;
+                    SelectedProject = null;
+                    _currentIndex = -1; // Ready for another new order
+                    IsNewOrder = true;
+                }
+                finally
+                {
+                    _isPopulating = false;
+                }
                 
                 for (int i = 0; i < 10; i++) AddLine();
             }
@@ -380,11 +467,19 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     order.Branch = _authService.CurrentUser.Branch.Value;
                 }
-                CurrentOrder = new OrderWrapper(order);
-                SelectedSupplier = null;
-                SelectedProject = null;
-                _currentIndex = -1;
-                IsNewOrder = true;
+                _isPopulating = true;
+                try
+                {
+                    CurrentOrder = new OrderWrapper(order);
+                    SelectedSupplier = null;
+                    SelectedProject = null;
+                    _currentIndex = -1;
+                    IsNewOrder = true;
+                }
+                finally
+                {
+                    _isPopulating = false;
+                }
                 for (int i = 0; i < 10; i++) AddLine();
             }
             finally
@@ -514,10 +609,18 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 var order = await _orderService.GetOrderAsync(id);
                 if (order != null)
                 {
-                    CurrentOrder = new OrderWrapper(order);
-                    SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
-                    SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
-                    IsNewOrder = false;
+                    _isPopulating = true;
+                    try
+                    {
+                        CurrentOrder = new OrderWrapper(order);
+                        SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                        await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName);
+                        IsNewOrder = false;
+                    }
+                    finally
+                    {
+                        _isPopulating = false;
+                    }
                 }
             }
             catch (Exception ex)
@@ -535,15 +638,23 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         {
             var dialog = new FindOrderViewModel(_orderService, _supplierService);
             dialog.CloseRequested += CloseOverlay;
-            dialog.OrderSelected += (order) =>
+            dialog.OrderSelected += async (order) =>
             {
-                CurrentOrder = new OrderWrapper(order);
-                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
-                SelectedProject = Projects.FirstOrDefault(p => p.Id == order.ProjectId);
-                
-                // Update index for cycling
-                _currentIndex = _allOrderIds.IndexOf(order.Id);
-                IsNewOrder = false;
+                _isPopulating = true;
+                try
+                {
+                    CurrentOrder = new OrderWrapper(order);
+                    SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                    await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName);
+                    
+                    // Update index for cycling
+                    _currentIndex = _allOrderIds.IndexOf(order.Id);
+                    IsNewOrder = false;
+                }
+                finally
+                {
+                    _isPopulating = false;
+                }
                 
                 CloseOverlay();
             };

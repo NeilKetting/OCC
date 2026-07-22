@@ -370,7 +370,7 @@
                         <ColumnDefinition Width="1.2*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Col 1: Supplier & SOW -->
+                    <!-- Col 1: Supplier & Project -->
                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
                         <TextBlock Text="SUPPLIER" Style="{StaticResource CompactLabel}" Foreground="{StaticResource AccentBlue}"/>
                         <ComboBox ItemsSource="{Binding Suppliers}" 
@@ -382,11 +382,23 @@
                                   ap:CommandProperties.IsFiltered="True"
                                   ap:WatermarkProperties.Watermark="Select Supplier..."/>
                         
-                        <TextBlock Text="SCOPE OF WORK (SOW)" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
-                        <TextBox Text="{Binding CurrentOrder.ScopeOfWork}" Style="{StaticResource CompactTextBox}" ap:WatermarkProperties.Watermark="Brief description..."/>
+                        <TextBlock Text="PROJECT" Style="{StaticResource CompactLabel}" Margin="0,8,0,2" Foreground="{StaticResource AccentBlue}"/>
+                        <ComboBox ItemsSource="{Binding Projects}" 
+                                  SelectedItem="{Binding SelectedProject}"
+                                  DisplayMemberPath="Name"
+                                  Style="{StaticResource CompactComboBox}"
+                                  IsEditable="True"
+                                  IsTextSearchEnabled="True"
+                                  ap:CommandProperties.IsFiltered="True"
+                                  ap:WatermarkProperties.Watermark="Link Project..."/>
+                        <TextBox Text="{Binding CurrentOrder.ProjectName, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource CompactTextBox}" 
+                                 Margin="0,4,0,0"
+                                 ap:WatermarkProperties.Watermark="Enter project name..."
+                                 Visibility="{Binding IsOtherProjectSelected, Converter={StaticResource VisibilityConverter}}"/>
                     </StackPanel>
 
-                    <!-- Col 2: Project / Reference -->
+                    <!-- Col 2: Delivery Address & SOW -->
                     <StackPanel Grid.Column="1" Margin="0,0,15,0">
                         <Grid>
                             <TextBlock Text="DELIVERY ADDRESS" Style="{StaticResource CompactLabel}" Foreground="{StaticResource AccentBlue}"/>
@@ -426,8 +438,8 @@
                             </Popup>
                         </Grid>
 
-                        <TextBlock Text="ATTENTION / CONTACT" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
-                        <TextBox Text="{Binding CurrentOrder.Attention}" Style="{StaticResource CompactTextBox}" ap:WatermarkProperties.Watermark="Recipient name..."/>
+                        <TextBlock Text="SCOPE OF WORK (SOW)" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
+                        <TextBox Text="{Binding CurrentOrder.ScopeOfWork}" Style="{StaticResource CompactTextBox}" ap:WatermarkProperties.Watermark="Brief description..."/>
                     </StackPanel>
 
                     <!-- Col 3: Dates -->
@@ -439,7 +451,7 @@
                         <DatePicker SelectedDate="{Binding CurrentOrder.ExpectedDeliveryDate}" Style="{StaticResource CompactDatePicker}"/>
                     </StackPanel>
 
-                    <!-- Col 4: PO No -->
+                    <!-- Col 4: PO No & Attention -->
                     <StackPanel Grid.Column="3">
                         <TextBlock Text="P.O. NUMBER" Style="{StaticResource CompactLabel}"/>
                         <TextBox Text="{Binding CurrentOrder.OrderNumber}" 
@@ -447,6 +459,9 @@
                                  IsReadOnly="{Binding IsNewOrder, Converter={StaticResource InverseBooleanConverter}}" 
                                  FontWeight="Bold" 
                                  Foreground="{StaticResource AccentBlue}"/>
+                        
+                        <TextBlock Text="ATTENTION / CONTACT" Style="{StaticResource CompactLabel}" Margin="0,8,0,2"/>
+                        <TextBox Text="{Binding CurrentOrder.Attention}" Style="{StaticResource CompactTextBox}" ap:WatermarkProperties.Watermark="Recipient name..."/>
                     </StackPanel>
                 </Grid>
             </Border>

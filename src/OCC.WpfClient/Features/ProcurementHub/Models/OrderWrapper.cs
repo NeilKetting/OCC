@@ -157,8 +157,6 @@ namespace OCC.WpfClient.Features.ProcurementHub.Models
                 if (value) 
                 {
                     DestinationType = OrderDestinationType.Other;
-                    ProjectId = null;
-                    ProjectName = null;
                 } 
             }
         }
