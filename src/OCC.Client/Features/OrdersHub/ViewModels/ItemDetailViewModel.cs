@@ -190,7 +190,7 @@ namespace OCC.Client.Features.OrdersHub.ViewModels
         /// <summary>
         /// Gets the list of standard units of measure.
         /// </summary>
-        public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack" };
+        public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack", "pair" };
 
         #endregion
 

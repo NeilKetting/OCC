@@ -179,6 +179,7 @@ namespace OCC.Client.Services
             if (input.Contains("box", StringComparison.OrdinalIgnoreCase)) return "box";
             if (input.Contains("can", StringComparison.OrdinalIgnoreCase)) return "can";
             if (input.Contains("each", StringComparison.OrdinalIgnoreCase)) return "ea";
+            if (input.Contains("pair", StringComparison.OrdinalIgnoreCase)) return "pair";
 
             return null;
         }

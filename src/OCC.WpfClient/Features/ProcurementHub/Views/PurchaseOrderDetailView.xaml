@@ -472,6 +472,8 @@
                             <Setter Property="Padding" Value="0"/>
                             <Setter Property="Margin" Value="0"/>
                             <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <EventSetter Event="GotKeyboardFocus" Handler="TextBox_GotKeyboardFocus"/>
+                            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="TextBox_PreviewMouseLeftButtonDown"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="TextBox">
@@ -552,7 +554,7 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="UNIT PRICE" Width="Auto" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='#,##0.00####'}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
+                        <DataGridTextColumn Header="UNIT PRICE" Width="Auto" Binding="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, StringFormat='#,##0.00####'}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="HorizontalAlignment" Value="Right"/>

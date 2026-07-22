@@ -57,6 +57,7 @@ namespace OCC.Client.Features.OrdersHub.ViewModels
             // Design-time data
             AvailableUOMs.Add("ea");
             AvailableUOMs.Add("m");
+            AvailableUOMs.Add("pair");
             
             CurrentOrder = new OrderWrapper(new Order());
             CurrentOrder.Lines.Add(new OrderLineWrapper(new OrderLine { Description = "Design Time Item", QuantityOrdered = 1, UnitPrice = 100, LineTotal = 100 }));
@@ -78,6 +79,7 @@ namespace OCC.Client.Features.OrdersHub.ViewModels
             AvailableUOMs.Add("kg");
             AvailableUOMs.Add("L");
             AvailableUOMs.Add("unit");
+            AvailableUOMs.Add("pair");
         }
 
         public virtual void Initialize(OrderWrapper order, IEnumerable<InventoryItem> inventory)

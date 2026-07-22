@@ -71,7 +71,7 @@ namespace OCC.Client.Features.OrdersHub.ViewModels
         
         public OrderMenuViewModel OrderMenu { get; }
 
-        public List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack" };
+        public List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack", "pair" };
         public List<Branch> Branches { get; } = Enum.GetValues<Branch>().Cast<Branch>().ToList();
 
         [ObservableProperty]

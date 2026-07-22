@@ -22,7 +22,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [ObservableProperty] private InventoryItem _item = new();
         [ObservableProperty] private bool _isEditMode;
 
-        public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack" };
+        public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack", "pair" };
         public ObservableCollection<ItemType> ItemTypes { get; } = new(Enum.GetValues<ItemType>());
 
         public ItemType SelectedType
