@@ -27,6 +27,14 @@ namespace OCC.WpfClient.Infrastructure
             {
                 return await base.SendAsync(request, cancellationToken);
             }
+            catch (System.OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Request timed out or socket connection was aborted by transport layer
+                return new HttpResponseMessage(System.Net.HttpStatusCode.RequestTimeout)
+                {
+                    Content = new StringContent("Request timed out or network connection was interrupted.")
+                };
+            }
             catch (System.Net.Http.HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
             {
                 // Return a custom response instead of crashing

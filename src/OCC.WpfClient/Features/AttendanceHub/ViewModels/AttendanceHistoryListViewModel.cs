@@ -33,6 +33,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             new() { Header = "Clock In",   PropertyName = "CheckInTime",   Width = 1 },
             new() { Header = "Clock Out",  PropertyName = "CheckOutTime",  Width = 1 },
             new() { Header = "Hours",      PropertyName = "HoursWorked",   Width = 0.8 },
+            new() { Header = "STD O/T",    PropertyName = "StdOvertime",   Width = 0.8 },
+            new() { Header = "O/T Sat",    PropertyName = "OtSaturday",    Width = 0.8 },
+            new() { Header = "O/T Sun",    PropertyName = "OtSunday",      Width = 0.8 },
+            new() { Header = "O/T Hol",    PropertyName = "OtHoliday",     Width = 0.8 },
             new() { Header = "Branch",     PropertyName = "Branch",        Width = 1 },
         };
 
@@ -63,6 +67,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isClockInColumnVisible = true;
         [ObservableProperty] private bool _isClockOutColumnVisible = true;
         [ObservableProperty] private bool _isHoursColumnVisible = true;
+        [ObservableProperty] private bool _isStdOtColumnVisible = true;
         [ObservableProperty] private bool _isBranchColumnVisible = true;
         [ObservableProperty] private bool _isNotesColumnVisible = true;
         [ObservableProperty] private bool _isOtSatColumnVisible = true;
@@ -259,7 +264,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
             TotalCount = result.Count;
-            TotalHours = (int)result.Sum(r => r.Record.HoursWorked);
+            TotalHours = (int)Math.Round(result.Sum(r => r.CalculateActualHours()));
         }
 
         public string GetEmployeeName(Guid? id) =>
@@ -931,6 +936,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             get
             {
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
+                    return 0;
+
                 var dow = Date.DayOfWeek;
                 bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
                 bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
@@ -940,13 +948,36 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     return null;
                 }
 
-                return CalculateActualHours();
+                var actual = CalculateActualHours();
+                return actual > 0 ? Math.Min(8.75, actual) : 0;
             }
         }
+
+        public string StdOvertime
+        {
+            get
+            {
+                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
+                    return string.Empty;
+
+                var dow = Date.DayOfWeek;
+                bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
+                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
+
+                if (!isWeekend && !isHoliday)
+                {
+                    var actual = CalculateActualHours();
+                    double stdOt = Math.Max(0, actual - 8.75);
+                    return stdOt > 0 ? stdOt.ToString("F2") : string.Empty;
+                }
+                return string.Empty;
+            }
+        }
+
         public string?         Branch         => Record.Branch;
         public string?         Notes          => Record.Notes;
 
-        private double CalculateActualHours()
+        public double CalculateActualHours()
         {
             if (CheckInTime == null || CheckOutTime == null)
                 return 0;
