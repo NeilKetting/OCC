@@ -150,12 +150,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     ScrapMetalsTon = draft.ScrapMetalsTon;
                     AsbestosTon = draft.AsbestosTon;
                     PowPercentRequired = draft.PowPercentRequired;
-                    // Start with clean photos for each new report run
-                    ExecuteOnUIThread(() =>
-                    {
-                        ReportPhotos.Clear();
-                        HasPhotos = false;
-                    });
+                    LoadPhotosFromDraft(draft.PhotoUrls);
                 }
                 else
                 {
@@ -878,9 +873,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         _logger.LogWarning(ex, "Failed to upload generated PDF to report history.");
                     }
 
-                    // Reset photos for next report run
-                    await ClearPhotosAsync();
-                    
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
                 }
                 finally
@@ -1046,46 +1038,71 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             var openFileDialog = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "Image Files (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png",
-                Title = "Select Project Report Photo"
+                Title = "Select Project Report Photo(s)",
+                Multiselect = true
             };
 
-            if (openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == true && openFileDialog.FileNames.Length > 0)
             {
-                IsBusy = true;
-                BusyText = "Uploading photo...";
-                try
-                {
-                    using var stream = new FileStream(openFileDialog.FileName, FileMode.Open, FileAccess.Read);
-                    var relativeUrl = await _projectReportService.UploadReportPhotoAsync(stream, Path.GetFileName(openFileDialog.FileName));
-                    
-                    if (!string.IsNullOrEmpty(relativeUrl))
-                    {
-                        var baseUrl = _connectionSettings.ApiBaseUrl?.TrimEnd('/') ?? "";
-                        var fullUrl = relativeUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) 
-                            ? relativeUrl 
-                            : $"{baseUrl}/{relativeUrl.TrimStart('/')}";
+                var fileNames = openFileDialog.FileNames;
+                int total = fileNames.Length;
+                int successCount = 0;
 
-                        ExecuteOnUIThread(() =>
+                IsBusy = true;
+
+                for (int i = 0; i < total; i++)
+                {
+                    var fileName = fileNames[i];
+                    BusyText = total > 1 
+                        ? $"Uploading photo {i + 1} of {total}..." 
+                        : "Uploading photo...";
+
+                    try
+                    {
+                        using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+                        var relativeUrl = await _projectReportService.UploadReportPhotoAsync(stream, Path.GetFileName(fileName));
+
+                        if (!string.IsNullOrEmpty(relativeUrl))
                         {
-                            ReportPhotos.Add(fullUrl);
-                            HasPhotos = ReportPhotos.Any();
-                        });
-                        // Save changes to database immediately
-                        await SaveLocalReportDataAsync();
+                            var baseUrl = _connectionSettings.ApiBaseUrl?.TrimEnd('/') ?? "";
+                            var fullUrl = relativeUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) 
+                                ? relativeUrl 
+                                : $"{baseUrl}/{relativeUrl.TrimStart('/')}";
+
+                            ExecuteOnUIThread(() =>
+                            {
+                                if (!ReportPhotos.Contains(fullUrl))
+                                {
+                                    ReportPhotos.Add(fullUrl);
+                                }
+                                HasPhotos = ReportPhotos.Any();
+                            });
+                            successCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error uploading photo {FileName}", fileName);
+                    }
+                }
+
+                IsBusy = false;
+
+                if (successCount > 0)
+                {
+                    await SaveLocalReportDataAsync();
+                    if (successCount == 1)
+                    {
                         NotifySuccess("Upload Success", "Photo uploaded and added to the report.");
                     }
                     else
                     {
-                        NotifyError("Upload Error", "Failed to upload photo.");
+                        NotifySuccess("Upload Success", $"{successCount} photos uploaded and added to the report.");
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    NotifyError("Upload Error", $"An error occurred: {ex.Message}");
-                }
-                finally
-                {
-                    IsBusy = false;
+                    NotifyError("Upload Error", "Failed to upload selected photos.");
                 }
             }
         }

@@ -40,7 +40,7 @@ namespace OCC.WpfClient.Services
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public async Task<string> GenerateOrderPdfAsync(Order order, bool isPrintVersion = false)
+        public async Task<string> GenerateOrderPdfAsync(Order order, bool isPrintVersion = false, string? customOutputPath = null)
         {
             // Use configured CompanyDetails if settings service is available, otherwise fallback to defaults
             var company = _settingsService != null 
@@ -62,7 +62,25 @@ namespace OCC.WpfClient.Services
 
             // Path to save the PDF
             var fileName = $"Order_{order.OrderNumber}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-            var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
+            string filePath;
+            if (!string.IsNullOrWhiteSpace(customOutputPath))
+            {
+                filePath = customOutputPath;
+                var parentDir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
+                {
+                    Directory.CreateDirectory(parentDir);
+                }
+            }
+            else
+            {
+                var tempDir = Path.Combine(Path.GetTempPath(), "OCC", "TempOrders");
+                if (!Directory.Exists(tempDir))
+                {
+                    Directory.CreateDirectory(tempDir);
+                }
+                filePath = Path.Combine(tempDir, fileName);
+            }
 
             await Task.Run(() =>
             {

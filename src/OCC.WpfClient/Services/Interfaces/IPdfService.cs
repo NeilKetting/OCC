@@ -6,7 +6,7 @@ namespace OCC.WpfClient.Services.Interfaces
 {
     public interface IPdfService
     {
-        Task<string> GenerateOrderPdfAsync(Order order, bool isPrintVersion = false);
+        Task<string> GenerateOrderPdfAsync(Order order, bool isPrintVersion = false, string? customOutputPath = null);
         
         /// <summary>
         /// Generates a branded list report from a collection of items.
