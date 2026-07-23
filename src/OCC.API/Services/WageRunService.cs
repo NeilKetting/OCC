@@ -759,12 +759,11 @@ namespace OCC.API.Services
             var target = targetDate.Date;
 
             // Normalize lr.StartDate and lr.EndDate handling potential UTC stored values
-            var lrStartLocal = (lr.StartDate.Kind == DateTimeKind.Utc ? lr.StartDate.ToLocalTime() : lr.StartDate).Date;
-            var lrEndLocal = (lr.EndDate.Kind == DateTimeKind.Utc ? lr.EndDate.ToLocalTime() : lr.EndDate).Date;
+            var start = lr.StartDate.Kind == DateTimeKind.Utc ? lr.StartDate.ToLocalTime().Date : lr.StartDate.Date;
+            var end = lr.EndDate.Kind == DateTimeKind.Utc ? lr.EndDate.ToLocalTime().Date : lr.EndDate.Date;
 
-            bool dateMatches = (target >= lrStartLocal && target <= lrEndLocal) ||
-                               (target >= lr.StartDate.Date && target <= lr.EndDate.Date) ||
-                               (target >= lr.StartDate.AddHours(-4).Date && target <= lr.EndDate.AddHours(4).Date);
+            bool dateMatches = (target >= start && target <= end) ||
+                               (target >= lr.StartDate.Date && target <= lr.EndDate.Date);
 
             if (!dateMatches) return false;
 
