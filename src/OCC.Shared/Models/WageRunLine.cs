@@ -105,7 +105,7 @@ namespace OCC.Shared.Models
         /// <summary> 
         /// Final payout amount: TotalWage + Incentives - Deductions. 
         /// </summary>
-        public decimal NetPay => Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + BibcAmount));
+        public decimal NetPay => Math.Max(0m, (TotalWage + IncentiveSupervisor) - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + BibcAmount));
 
         /// <summary> Snapshot of worked days in the first week of the cycle. </summary>
         public double DaysWorkedWeek1 { get; set; }
