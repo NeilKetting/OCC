@@ -31,6 +31,7 @@ namespace OCC.API.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerContact> CustomerContacts { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<SupplierContact> SupplierContacts { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamMember> TeamMembers { get; set; }
         public DbSet<ProjectTeamMember> ProjectTeamMembers { get; set; }

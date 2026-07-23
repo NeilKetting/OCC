@@ -36,6 +36,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         [ObservableProperty] private BankName _selectedBank = BankName.None;
         [ObservableProperty] private string _customBankName = string.Empty;
+        [ObservableProperty] private ObservableCollection<SupplierContact> _contacts = new();
 
         public bool IsOtherBankSelected => SelectedBank == BankName.Other;
         public List<BankName> AvailableBanks { get; } = Enum.GetValues<BankName>().ToList();
@@ -73,6 +74,20 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             SupplierAccountNumber = model.SupplierAccountNumber;
             SelectedBranch = model.Branch;
 
+            Contacts = new ObservableCollection<SupplierContact>(model.Contacts ?? new List<SupplierContact>());
+            if (Contacts.Count == 0 && (!string.IsNullOrEmpty(model.ContactPerson) || !string.IsNullOrEmpty(model.Email) || !string.IsNullOrEmpty(model.Phone)))
+            {
+                Contacts.Add(new SupplierContact
+                {
+                    Id = Guid.NewGuid(),
+                    SupplierId = model.Id,
+                    ContactName = model.ContactPerson,
+                    Email = model.Email,
+                    Phone = model.Phone,
+                    Department = "General"
+                });
+            }
+
             // Map BankName string to Enum
             if (!string.IsNullOrEmpty(model.BankName))
             {
@@ -99,6 +114,29 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 SelectedBank = BankName.None;
                 CustomBankName = string.Empty;
+            }
+        }
+
+        [RelayCommand]
+        private void AddContact()
+        {
+            Contacts.Add(new SupplierContact
+            {
+                Id = Guid.NewGuid(),
+                SupplierId = _model.Id,
+                ContactName = string.Empty,
+                Email = string.Empty,
+                Phone = string.Empty,
+                Department = "Sales"
+            });
+        }
+
+        [RelayCommand]
+        private void RemoveContact(SupplierContact contact)
+        {
+            if (contact != null)
+            {
+                Contacts.Remove(contact);
             }
         }
 
@@ -149,14 +187,26 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _model.Address = Address;
             _model.City = City;
             _model.PostalCode = PostalCode;
-            _model.Phone = Phone;
-            _model.ContactPerson = ContactPerson;
-            _model.Email = Email;
             _model.VatNumber = VatNumber;
             _model.BankAccountNumber = BankAccountNumber;
             _model.BranchCode = BranchCode;
             _model.SupplierAccountNumber = SupplierAccountNumber;
             _model.Branch = SelectedBranch;
+            _model.Contacts = Contacts.ToList();
+
+            if (Contacts.Count > 0)
+            {
+                var primary = Contacts[0];
+                _model.ContactPerson = primary.ContactName;
+                _model.Email = string.Join("; ", Contacts.Where(c => !string.IsNullOrWhiteSpace(c.Email)).Select(c => c.Email.Trim()).Distinct());
+                _model.Phone = primary.Phone;
+            }
+            else
+            {
+                _model.ContactPerson = ContactPerson;
+                _model.Email = Email;
+                _model.Phone = Phone;
+            }
 
             if (SelectedBank == BankName.None)
             {

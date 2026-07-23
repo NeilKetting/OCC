@@ -43,6 +43,9 @@ namespace OCC.Shared.Models
 
         /// <summary> The branch this supplier belongs to. If null, available to all. </summary>
         public Branch? Branch { get; set; }
+
+        /// <summary> Collection of multiple contact persons for this supplier. </summary>
+        public virtual System.Collections.Generic.ICollection<SupplierContact> Contacts { get; set; } = new System.Collections.Generic.List<SupplierContact>();
         
         public override string ToString() => Name;
     }

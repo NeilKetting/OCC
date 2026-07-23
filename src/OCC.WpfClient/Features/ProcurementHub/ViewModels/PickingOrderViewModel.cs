@@ -478,13 +478,64 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsBusy = true;
                 BusyText = "Preparing email...";
                 var path = await _pdfService.GenerateOrderPdfAsync(CurrentOrder.Model);
-                
-                var subject = Uri.EscapeDataString($"Picking Order {CurrentOrder.OrderNumber} - Onsite Construction Care");
-                var body = Uri.EscapeDataString($"Please find attached Picking Order {CurrentOrder.OrderNumber}.");
-                var mailto = $"mailto:?subject={subject}&body={body}";
-                
-                Process.Start(new ProcessStartInfo(mailto) { UseShellExecute = true });
-                _toastService.ShowInfo("Email", "Default mail client opened. Please attach the generated PDF from your Documents folder.");
+
+                Supplier? supplier = CurrentOrder.SupplierId.HasValue 
+                    ? await _supplierService.GetSupplierAsync(CurrentOrder.SupplierId.Value) 
+                    : null;
+                var rawEmail = supplier?.Email;
+                var supplierName = supplier?.Name ?? CurrentOrder.SupplierName ?? "Supplier";
+                var emails = EmailHelper.ParseEmailAddresses(rawEmail);
+                string recipientEmail = string.Empty;
+
+                if (emails.Count > 1)
+                {
+                    IsBusy = false;
+                    var tcs = new TaskCompletionSource<string?>();
+                    var dialog = new SelectEmailViewModel(supplierName, emails);
+                    dialog.Completed += (selected) =>
+                    {
+                        CloseOverlay();
+                        tcs.TrySetResult(selected);
+                    };
+                    OpenOverlay(dialog);
+                    var userChosen = await tcs.Task;
+                    if (string.IsNullOrWhiteSpace(userChosen))
+                    {
+                        return; // User cancelled
+                    }
+                    recipientEmail = userChosen;
+                }
+                else if (emails.Count == 1)
+                {
+                    recipientEmail = emails[0];
+                }
+                else
+                {
+                    IsBusy = false;
+                    var entered = await _dialogService.ShowInputDialogAsync("Recipient Email", "Enter recipient email address:", rawEmail ?? string.Empty);
+                    if (string.IsNullOrWhiteSpace(entered))
+                    {
+                        return; // Cancelled
+                    }
+                    recipientEmail = entered.Trim();
+                }
+
+                IsBusy = true;
+                BusyText = "Opening email client...";
+
+                var subject = $"Picking Order {CurrentOrder.OrderNumber} - Onsite Construction Care";
+                var body = $"Dear {supplierName},\n\nPlease find attached Picking Order {CurrentOrder.OrderNumber}.\n\nKind regards,\nOnsite Construction Care";
+
+                bool usedOutlook = EmailHelper.OpenEmailWithAttachment(recipientEmail, subject, body, path);
+
+                if (usedOutlook)
+                {
+                    _toastService.ShowSuccess("Email Created", $"Outlook opened with Picking Order {CurrentOrder.OrderNumber} attached for {recipientEmail}.");
+                }
+                else
+                {
+                    _toastService.ShowInfo("Email Prepared", $"Default mail client opened for {recipientEmail}. PDF location opened in File Explorer.");
+                }
             }
             catch (Exception ex)
             {

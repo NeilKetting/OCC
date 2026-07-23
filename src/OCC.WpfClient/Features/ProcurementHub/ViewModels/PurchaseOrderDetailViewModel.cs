@@ -30,6 +30,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IAuthService _authService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
+        private readonly IDialogService _dialogService;
         private readonly ILogger<PurchaseOrderDetailViewModel> _logger;
 
         private static readonly Project OtherProjectSentinel = new() { Id = Guid.Empty, Name = "Other..." };
@@ -84,6 +85,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             INavigationService navigationService,
             IPdfService pdfService,
             IToastService toastService,
+            IDialogService dialogService,
             IGoogleMapsService googleMapsService,
             ISettingsService settingsService,
             IAuthService authService,
@@ -97,6 +99,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _navigationService = navigationService;
             _pdfService = pdfService;
             _toastService = toastService;
+            _dialogService = dialogService;
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
             _authService = authService;
@@ -702,16 +705,61 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsBusy = true;
                 BusyText = "Preparing email...";
                 var path = await _pdfService.GenerateOrderPdfAsync(CurrentOrder.Model);
-                
-                var subject = Uri.EscapeDataString($"Purchase Order {CurrentOrder.OrderNumber} - Onsite Construction Care");
-                var body = Uri.EscapeDataString($"Please find attached Purchase Order {CurrentOrder.OrderNumber}.");
-                var mailto = $"mailto:?subject={subject}&body={body}";
-                
-                Process.Start(new ProcessStartInfo(mailto) { UseShellExecute = true });
-                
-                // Note: Standard mailto doesn't support attachments in a cross-platform/cross-client way reliably.
-                // In a production app, we'd use MAPI or an SMTP client if needed, or prompt the user.
-                _toastService.ShowInfo("Email", "Default mail client opened. Please attach the generated PDF from your Documents folder.");
+
+                var rawEmail = SelectedSupplier?.Email;
+                var emails = EmailHelper.ParseEmailAddresses(rawEmail);
+                string recipientEmail = string.Empty;
+
+                if (emails.Count > 1)
+                {
+                    IsBusy = false;
+                    var tcs = new TaskCompletionSource<string?>();
+                    var dialog = new SelectEmailViewModel(SelectedSupplier?.Name ?? "Supplier", emails);
+                    dialog.Completed += (selected) =>
+                    {
+                        CloseOverlay();
+                        tcs.TrySetResult(selected);
+                    };
+                    OpenOverlay(dialog);
+                    var userChosen = await tcs.Task;
+                    if (string.IsNullOrWhiteSpace(userChosen))
+                    {
+                        return; // User cancelled
+                    }
+                    recipientEmail = userChosen;
+                }
+                else if (emails.Count == 1)
+                {
+                    recipientEmail = emails[0];
+                }
+                else
+                {
+                    IsBusy = false;
+                    // No email on file - prompt user to enter one
+                    var entered = await _dialogService.ShowInputDialogAsync("Recipient Email", "Enter supplier email address:", rawEmail ?? string.Empty);
+                    if (string.IsNullOrWhiteSpace(entered))
+                    {
+                        return; // Cancelled
+                    }
+                    recipientEmail = entered.Trim();
+                }
+
+                IsBusy = true;
+                BusyText = "Opening email client...";
+
+                var subject = $"Purchase Order {CurrentOrder.OrderNumber} - Onsite Construction Care";
+                var body = $"Dear {SelectedSupplier?.ContactPerson ?? SelectedSupplier?.Name ?? "Supplier"},\n\nPlease find attached Purchase Order {CurrentOrder.OrderNumber}.\n\nKind regards,\nOnsite Construction Care";
+
+                bool usedOutlook = EmailHelper.OpenEmailWithAttachment(recipientEmail, subject, body, path);
+
+                if (usedOutlook)
+                {
+                    _toastService.ShowSuccess("Email Created", $"Outlook opened with Purchase Order {CurrentOrder.OrderNumber} attached for {recipientEmail}.");
+                }
+                else
+                {
+                    _toastService.ShowInfo("Email Prepared", $"Default mail client opened for {recipientEmail}. PDF location opened in File Explorer.");
+                }
             }
             catch (Exception ex)
             {

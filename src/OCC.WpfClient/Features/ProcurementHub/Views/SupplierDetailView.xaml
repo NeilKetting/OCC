@@ -4,13 +4,60 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
+             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
              xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1000"
              d:DataContext="{d:DesignInstance Type=vm:SupplierDetailViewModel}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <conv:FriendlyEnumConverter x:Key="FriendlyEnumConverter" />
+
+        <!-- Compact Add Line Button Style -->
+        <Style x:Key="CompactAddLineButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1A2E9DFF"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True"
+                                Padding="{TemplateBinding Padding}"
+                                RenderTransformOrigin="0.5,0.5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#332E9DFF"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentBlueHover}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4D2E9DFF"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.97" ScaleY="0.97"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource BackgroundDark}">
@@ -103,37 +150,82 @@
 
                     <!-- Section: Contact Details -->
                     <StackPanel Margin="0,0,0,25">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource SuccessGreen}"/>
-                            <TextBlock Text="Contact Details" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource SuccessGreen}"/>
-                        </StackPanel>
+                        <Grid Margin="0,0,0,15">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE77B;" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource SuccessGreen}"/>
+                                <TextBlock Text="Contacts &amp; Departments" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource SuccessGreen}"/>
+                            </StackPanel>
+                            <Button Content="+ Add Contact" Command="{Binding AddContactCommand}" 
+                                    Style="{StaticResource CompactAddLineButtonStyle}" HorizontalAlignment="Right"/>
+                        </Grid>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Contact Person" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Name..."/>
-                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding Contacts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:SupplierContact}">
+                                    <Border Background="#10FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <TextBlock Text="CONTACT DETAILS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                                <Button Style="{StaticResource ToolbarIconButton}" Command="{Binding DataContext.RemoveContactCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Foreground="{StaticResource ErrorRed}" HorizontalAlignment="Right" ToolTip="Remove Contact">
+                                                    <TextBlock Text="&#xE74D;" Style="{StaticResource SymbolIcon}" FontSize="13"/>
+                                                </Button>
+                                            </Grid>
 
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="email@supplier.com"/>
-                        </StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="Contact Name" Style="{StaticResource FormLabelText}"/>
+                                                    <TextBox Text="{Binding ContactName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="Name..."/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2">
+                                                    <TextBlock Text="Department" Style="{StaticResource FormLabelText}"/>
+                                                    <TextBox Text="{Binding Department, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="e.g. Sales, Accounts..."/>
+                                                </StackPanel>
+                                            </Grid>
 
-                        <StackPanel>
-                            <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
-                            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="+27..."/>
-                        </StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="Email Address" Style="{StaticResource FormLabelText}"/>
+                                                    <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="email@supplier.com"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2">
+                                                    <TextBlock Text="Phone Number" Style="{StaticResource FormLabelText}"/>
+                                                    <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="+27..."/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
 
                     <!-- Section: Banking Info -->
                     <StackPanel Margin="0,0,0,25">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AlertOrange}"/>
+                            <TextBlock Text="&#xE807;" Style="{StaticResource SymbolSectionIcon}" Foreground="{StaticResource AlertOrange}"/>
                             <TextBlock Text="Banking Information" Style="{StaticResource SectionHeaderText}" Foreground="{StaticResource AlertOrange}"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,12">
                             <TextBlock Text="Bank Name" Style="{StaticResource FormLabelText}"/>
-                            <ComboBox ItemsSource="{Binding AvailableBanks}" SelectedItem="{Binding SelectedBank}" Style="{StaticResource ModernComboBox}" Height="36"/>
+                            <ComboBox ItemsSource="{Binding AvailableBanks}" SelectedItem="{Binding SelectedBank}" Style="{StaticResource ModernComboBox}" Height="36">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,12" Visibility="{Binding IsOtherBankSelected, Converter={StaticResource BooleanToVisibilityConverter}}">

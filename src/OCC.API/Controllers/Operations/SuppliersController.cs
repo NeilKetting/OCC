@@ -70,7 +70,7 @@ namespace OCC.API.Controllers
         {
             try
             {
-                return await _context.Suppliers.AsNoTracking().ToListAsync();
+                return await _context.Suppliers.Include(s => s.Contacts).AsNoTracking().ToListAsync();
             }
             catch (Exception ex)
             {
@@ -86,6 +86,7 @@ namespace OCC.API.Controllers
             try
             {
                 var supplier = await _context.Suppliers
+                    .Include(s => s.Contacts)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(s => s.Id == id);
                 
@@ -106,6 +107,14 @@ namespace OCC.API.Controllers
             try
             {
                 if (supplier.Id == Guid.Empty) supplier.Id = Guid.NewGuid();
+                if (supplier.Contacts != null)
+                {
+                    foreach (var c in supplier.Contacts)
+                    {
+                        if (c.Id == Guid.Empty) c.Id = Guid.NewGuid();
+                        c.SupplierId = supplier.Id;
+                    }
+                }
                 _context.Suppliers.Add(supplier);
                 await _context.SaveChangesAsync();
                 
@@ -132,6 +141,20 @@ namespace OCC.API.Controllers
             }
 
             _context.Entry(existingSupplier).CurrentValues.SetValues(supplier);
+
+            // Sync Contacts
+            var existingContacts = await _context.SupplierContacts.Where(c => c.SupplierId == id).ToListAsync();
+            _context.SupplierContacts.RemoveRange(existingContacts);
+
+            if (supplier.Contacts != null && supplier.Contacts.Count > 0)
+            {
+                foreach (var c in supplier.Contacts)
+                {
+                    if (c.Id == Guid.Empty) c.Id = Guid.NewGuid();
+                    c.SupplierId = id;
+                    _context.SupplierContacts.Add(c);
+                }
+            }
 
             try
             {
