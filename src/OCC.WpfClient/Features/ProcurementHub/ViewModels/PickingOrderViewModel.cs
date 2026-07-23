@@ -523,8 +523,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsBusy = true;
                 BusyText = "Opening email client...";
 
-                var subject = $"Picking Order {CurrentOrder.OrderNumber} - Onsite Construction Care";
-                var body = $"Dear {supplierName},\n\nPlease find attached Picking Order {CurrentOrder.OrderNumber}.\n\nKind regards,\nOnsite Construction Care";
+                var subject = $"Picking Order {CurrentOrder.OrderNumber} - Orange Circle Construction (Pty) Ltd";
+                var body = $"Dear {supplierName},\n\nPlease find attached Picking Order {CurrentOrder.OrderNumber}.\n\nKind regards,\nOrange Circle Construction (Pty) Ltd";
 
                 bool usedOutlook = EmailHelper.OpenEmailWithAttachment(recipientEmail, subject, body, path);
 
