@@ -129,8 +129,8 @@ namespace OCC.API.Services
 
             var activeLeaveRequests = await _context.LeaveRequests
                 .Where(lr => lr.Status == LeaveStatus.Approved &&
-                             lr.StartDate <= request.EndDate &&
-                             lr.EndDate >= prepaidStart)
+                             lr.StartDate <= request.EndDate.AddDays(2) &&
+                             lr.EndDate >= prepaidStart.AddDays(-2))
                 .ToListAsync();
 
             var prepaidAttendanceRecords = await _context.AttendanceRecords
@@ -274,8 +274,7 @@ namespace OCC.API.Services
                         
                         if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
                         {
-                            var hasUnpaidLeave = empLeaveRequests.Any(lr => record.Date.Date >= lr.StartDate.Date && record.Date.Date <= lr.EndDate.Date &&
-                                (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+                            var hasUnpaidLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, record.Date));
 
                             if (!hasUnpaidLeave)
                             {
@@ -350,8 +349,7 @@ namespace OCC.API.Services
                         if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
 
                         // Check if there is an approved unpaid/absent leave request for this projected day
-                        var hasUnpaidProjLeave = empLeaveRequests.Any(lr => d.Date >= lr.StartDate.Date && d.Date <= lr.EndDate.Date &&
-                            (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+                        var hasUnpaidProjLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, d));
 
                         if (hasUnpaidProjLeave) continue;
 
@@ -389,8 +387,17 @@ namespace OCC.API.Services
 
                 // Find the previous run line to determine what projected hours were actually paid in advance
                 var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
-                double maxProjectedHoursToDeduct = (priorLine != null) ? (double)priorLine.ProjectedHours : 0;
+
+                // Use shift dailyHours if available, default to 8.75
+                double standardDayHours = dailyHours > 0 ? dailyHours : 8.75;
+
+                // Allow max projected hours to deduct based on prior line if available (>0), or default to max 2 prepaid days
+                double maxProjectedHoursToDeduct = (priorLine != null && priorLine.ProjectedHours > 0)
+                    ? (double)priorLine.ProjectedHours
+                    : (2.0 * standardDayHours);
+
                 double remainingProjectedHours = maxProjectedHoursToDeduct;
+                var absentDatesList = new List<string>();
 
                 for (var d = prepaidEnd; d >= prepaidStart; d = d.AddDays(-1))
                 {
@@ -400,14 +407,13 @@ namespace OCC.API.Services
 
                     prepaidWorkingDays++;
 
-                    double dayHours = 8.75;
+                    double dayHours = standardDayHours;
                     TimeSpan? startTime = emp.ShiftStartTime;
                     TimeSpan? endTime = emp.ShiftEndTime;
 
                     if (startTime == null || endTime == null)
                     {
                         var bEnum = emp.Branch.ToBranchEnum() ?? Branch.JHB;
-                        
                         if (companyDetails != null && companyDetails.Branches != null && companyDetails.Branches.TryGetValue(bEnum, out var branchDetails))
                         {
                             startTime = branchDetails.ShiftStartTime;
@@ -438,12 +444,14 @@ namespace OCC.API.Services
                     {
                         remainingProjectedHours -= dayHours;
 
-                        var isAbsent = empLeaveRequests.Any(lr => d >= lr.StartDate.Date && d <= lr.EndDate.Date &&
-                            (lr.IsUnpaid || lr.LeaveType == LeaveType.Unpaid || lr.LeaveType == LeaveType.AbsentWithoutLeave));
+                        var isAbsent = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, d));
 
                         if (!isAbsent)
                         {
-                            var attendanceRecord = empAttendanceRecords.FirstOrDefault(ar => ar.Date.Date == d);
+                            var attendanceRecord = empAttendanceRecords.FirstOrDefault(ar =>
+                                ar.Date.Date == d.Date ||
+                                (ar.Date.Kind == DateTimeKind.Utc ? ar.Date.ToLocalTime().Date : ar.Date.Date) == d.Date);
+
                             if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
                             {
                                 isAbsent = true;
@@ -454,21 +462,28 @@ namespace OCC.API.Services
                         {
                             leaveDeductionDays++;
                             leaveDeductionHours += dayHours;
+                            absentDatesList.Add(d.ToString("dd/MM"));
                         }
                     }
                 }
 
-                if (leaveDeductionDays > 0 && maxProjectedHoursToDeduct > 0)
+                if (leaveDeductionDays > 0)
                 {
                     line.VarianceHours = -leaveDeductionHours;
-                    if (lastRun != null)
-                    {
-                        line.VarianceNotes = $"Adj from {lastRun.EndDate:MMM dd}: Absent {leaveDeductionDays:F1} day(s)";
-                    }
-                    else
-                    {
-                        line.VarianceNotes = $"Adj from prior cycle: Absent {leaveDeductionDays:F1} day(s)";
-                    }
+                    absentDatesList.Reverse();
+                    string dateStr = absentDatesList.Any() ? string.Join(", ", absentDatesList) : $"{leaveDeductionDays:F0} day(s)";
+                    string noteText = $"Adv Adj ({dateStr}): Absent -{leaveDeductionDays:F0} day(s)";
+
+                    if (string.IsNullOrWhiteSpace(line.VarianceNotes))
+                        line.VarianceNotes = noteText + "; ";
+                    else if (!line.VarianceNotes.Contains("Adv Adj"))
+                        line.VarianceNotes += noteText + "; ";
+
+                    if (string.IsNullOrWhiteSpace(line.Comments))
+                        line.Comments = noteText;
+                    else if (!line.Comments.Contains("Adv Adj"))
+                        line.Comments += " | " + noteText;
+
                     line.DaysWorkedWeek1 = -leaveDeductionDays;
                 }
 
@@ -737,6 +752,27 @@ namespace OCC.API.Services
 
             await _context.SaveChangesAsync();
             return run;
+        }
+
+        private static bool IsUnpaidLeaveForDate(LeaveRequest lr, DateTime targetDate)
+        {
+            var target = targetDate.Date;
+
+            // Normalize lr.StartDate and lr.EndDate handling potential UTC stored values
+            var lrStartLocal = (lr.StartDate.Kind == DateTimeKind.Utc ? lr.StartDate.ToLocalTime() : lr.StartDate).Date;
+            var lrEndLocal = (lr.EndDate.Kind == DateTimeKind.Utc ? lr.EndDate.ToLocalTime() : lr.EndDate).Date;
+
+            bool dateMatches = (target >= lrStartLocal && target <= lrEndLocal) ||
+                               (target >= lr.StartDate.Date && target <= lr.EndDate.Date) ||
+                               (target >= lr.StartDate.AddHours(-4).Date && target <= lr.EndDate.AddHours(4).Date);
+
+            if (!dateMatches) return false;
+
+            return lr.IsUnpaid ||
+                   lr.LeaveType == LeaveType.Unpaid ||
+                   lr.LeaveType == LeaveType.AbsentWithoutLeave ||
+                   lr.UnpaidDays > 0 ||
+                   (lr.LeaveType != LeaveType.Annual && lr.LeaveType != LeaveType.Sick && lr.PaidDays == 0);
         }
     }
 }
