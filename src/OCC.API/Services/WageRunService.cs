@@ -115,7 +115,9 @@ namespace OCC.API.Services
             var lastRun = await _context.WageRuns
                 .Include(w => w.Lines)
                 .Where(w => (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) && 
-                            (w.Branch == request.Branch || w.Branch == "All") && 
+                            (w.Branch == request.Branch || w.Branch == "All" ||
+                             (request.Branch == "Johannesburg" && (w.Branch == "JHB" || w.Branch == "Johannesburg")) ||
+                             (request.Branch == "Cape Town" && (w.Branch == "CPT" || w.Branch == "Cape Town"))) && 
                             w.PayType == request.PayType &&
                             w.EndDate < request.StartDate)
                 .OrderByDescending(w => w.EndDate)
@@ -454,14 +456,6 @@ namespace OCC.API.Services
                             leaveDeductionHours += dayHours;
                         }
                     }
-                }
-
-                // If they were absent on all working days in the prepaid window (e.g. 2 out of 2),
-                // it means they were not paid projected hours in the previous run.
-                if (leaveDeductionDays == prepaidWorkingDays)
-                {
-                    leaveDeductionDays = 0;
-                    leaveDeductionHours = 0;
                 }
 
                 if (leaveDeductionDays > 0 && maxProjectedHoursToDeduct > 0)

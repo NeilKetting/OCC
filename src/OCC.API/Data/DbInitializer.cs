@@ -41,6 +41,37 @@ namespace OCC.API.Data
                 logger.LogWarning("Manual schema patch for WageRunLines columns skipped or failed: {Message}", ex.Message);
             }
 
+            // Manual Schema Patch: Ensure SupplierContacts table exists
+            try
+            {
+                logger.LogInformation("Applying manual schema patch for SupplierContacts table...");
+                context.Database.ExecuteSqlRaw(@"
+                    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SupplierContacts]') AND type in (N'U'))
+                    BEGIN
+                        CREATE TABLE [dbo].[SupplierContacts] (
+                            [Id] UNIQUEIDENTIFIER NOT NULL,
+                            [SupplierId] UNIQUEIDENTIFIER NOT NULL,
+                            [ContactName] NVARCHAR(MAX) NOT NULL DEFAULT '',
+                            [Email] NVARCHAR(MAX) NOT NULL DEFAULT '',
+                            [Phone] NVARCHAR(MAX) NOT NULL DEFAULT '',
+                            [Department] NVARCHAR(MAX) NOT NULL DEFAULT '',
+                            [CreatedAtUtc] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                            [CreatedBy] NVARCHAR(MAX) NOT NULL DEFAULT 'System',
+                            [UpdatedAtUtc] DATETIME2 NULL,
+                            [UpdatedBy] NVARCHAR(MAX) NULL,
+                            [IsActive] BIT NOT NULL DEFAULT 1,
+                            [RowVersion] VARBINARY(MAX) NULL,
+                            CONSTRAINT [PK_SupplierContacts] PRIMARY KEY CLUSTERED ([Id] ASC),
+                            CONSTRAINT [FK_SupplierContacts_Suppliers_SupplierId] FOREIGN KEY ([SupplierId]) REFERENCES [dbo].[Suppliers] ([Id]) ON DELETE CASCADE
+                        );
+                        CREATE INDEX [IX_SupplierContacts_SupplierId] ON [dbo].[SupplierContacts] ([SupplierId]);
+                    END");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Manual schema patch for SupplierContacts table skipped or failed: {Message}", ex.Message);
+            }
+
             // Standardize task IsGroup data integrity for existing/legacy database records
             try
             {

@@ -194,11 +194,17 @@
                             <DatePicker SelectedDate="{Binding ToDate}" Style="{StaticResource ModernDatePicker}"/>
                         </StackPanel>
 
-                        <ComboBox SelectedIndex="{Binding SelectedFilterIndex}" Style="{StaticResource ModernComboBox}" Width="130" VerticalAlignment="Center">
+                        <ComboBox SelectedIndex="{Binding SelectedFilterIndex}" Style="{StaticResource ModernComboBox}" Margin="0,0,15,0" Width="130" VerticalAlignment="Center">
                             <ComboBoxItem Content="All Statuses"/>
                             <ComboBoxItem Content="Pending"/>
                             <ComboBoxItem Content="Approved"/>
                             <ComboBoxItem Content="Rejected"/>
+                        </ComboBox>
+
+                        <ComboBox SelectedIndex="{Binding SelectedBranchIndex}" Style="{StaticResource ModernComboBox}" Width="130" VerticalAlignment="Center">
+                            <ComboBoxItem Content="All Branches"/>
+                            <ComboBoxItem Content="Johannesburg"/>
+                            <ComboBoxItem Content="Cape Town"/>
                         </ComboBox>
                     </StackPanel>
                 </Grid>

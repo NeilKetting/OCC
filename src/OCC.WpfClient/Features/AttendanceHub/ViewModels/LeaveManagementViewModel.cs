@@ -124,6 +124,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         // ── Status filter ────────────────────────────────────────────────────
         [ObservableProperty] private int _selectedFilterIndex; // 0 All, 1 Pending, 2 Approved, 3 Rejected
 
+        // ── Branch filter ────────────────────────────────────────────────────
+        [ObservableProperty] private int _selectedBranchIndex = 0; // 0 All, 1 Johannesburg, 2 Cape Town
+
+        private Dictionary<Guid, string> _employeeBranchMap = new();
+
+        partial void OnSelectedBranchIndexChanged(int value) => FilterItems();
+
         // ── Date range filter ────────────────────────────────────────────────
         [ObservableProperty] private DateTime _fromDate = DateTime.Today.AddDays(-30);
         [ObservableProperty] private DateTime _toDate = DateTime.Today;
@@ -245,6 +252,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 BusyText = "Loading leave records...";
 
                 var emps = await _employeeService.GetEmployeesAsync();
+                _employeeBranchMap = new Dictionary<Guid, string>();
+                foreach (var e in emps)
+                {
+                    _employeeBranchMap[e.Id] = e.Branch;
+                }
+
                 Employees = new ObservableCollection<OCC.Shared.DTOs.EmployeeSummaryDto>(
                     emps.Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.FirstName));
 
@@ -280,6 +293,17 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 _ => filtered
             };
 
+            filtered = SelectedBranchIndex switch
+            {
+                1 => filtered.Where(r =>
+                    (r.Employee?.Branch?.ToBranchEnum() == Branch.JHB) ||
+                    (_employeeBranchMap.TryGetValue(r.EmployeeId, out var b) && b.ToBranchEnum() == Branch.JHB)),
+                2 => filtered.Where(r =>
+                    (r.Employee?.Branch?.ToBranchEnum() == Branch.CPT) ||
+                    (_employeeBranchMap.TryGetValue(r.EmployeeId, out var b) && b.ToBranchEnum() == Branch.CPT)),
+                _ => filtered
+            };
+
             if (SelectedTimeSpanIndex != 0)
             {
                 filtered = filtered.Where(r => r.StartDate.Date <= ToDate.Date && r.EndDate.Date >= FromDate.Date);
@@ -289,9 +313,20 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             Items = new ObservableCollection<LeaveRequest>(result);
             TotalCount = result.Count;
 
-            PendingCount = _allRequests.Count(r => r.Status == LeaveStatus.Pending);
-            ApprovedCount = _allRequests.Count(r => r.Status == LeaveStatus.Approved);
-            RejectedCount = _allRequests.Count(r => r.Status == LeaveStatus.Rejected);
+            var branchFilteredAll = SelectedBranchIndex switch
+            {
+                1 => _allRequests.Where(r =>
+                    (r.Employee?.Branch?.ToBranchEnum() == Branch.JHB) ||
+                    (_employeeBranchMap.TryGetValue(r.EmployeeId, out var b) && b.ToBranchEnum() == Branch.JHB)),
+                2 => _allRequests.Where(r =>
+                    (r.Employee?.Branch?.ToBranchEnum() == Branch.CPT) ||
+                    (_employeeBranchMap.TryGetValue(r.EmployeeId, out var b) && b.ToBranchEnum() == Branch.CPT)),
+                _ => _allRequests.AsEnumerable()
+            };
+
+            PendingCount = branchFilteredAll.Count(r => r.Status == LeaveStatus.Pending);
+            ApprovedCount = branchFilteredAll.Count(r => r.Status == LeaveStatus.Approved);
+            RejectedCount = branchFilteredAll.Count(r => r.Status == LeaveStatus.Rejected);
         }
 
         // ── Apply Panel ──────────────────────────────────────────────────────

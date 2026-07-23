@@ -41,15 +41,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnStartDateChanged(DateTime value)
         {
             if (_isUpdatingDates) return;
-            if (SelectedBranch.ToBranchEnum() == Branch.CPT)
-            {
-                IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
-                return;
-            }
             _isUpdatingDates = true;
             try
             {
-                int days = 13;
+                bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
+                int days = isCpt ? 6 : 13;
                 EndDate = value.AddDays(days);
                 IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
             }
@@ -62,15 +58,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnEndDateChanged(DateTime value)
         {
             if (_isUpdatingDates) return;
-            if (SelectedBranch.ToBranchEnum() == Branch.CPT)
-            {
-                IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
-                return;
-            }
             _isUpdatingDates = true;
             try
             {
-                int days = 13;
+                bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
+                int days = isCpt ? 6 : 13;
                 StartDate = value.AddDays(-days);
                 IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
             }
@@ -219,27 +211,55 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public bool IsWashingGasVisible => SelectedBranch.ToBranchEnum() != Branch.CPT;
         public bool IsWeekBreakdownVisible => SelectedBranch.ToBranchEnum() != Branch.CPT;
 
+        private void UpdateDatesForSelectedBranch()
+        {
+            if (_isUpdatingDates) return;
+            _isUpdatingDates = true;
+            try
+            {
+                var branchName = SelectedBranch;
+                var pastRun = PastRuns
+                    .Where(r => (r.Status == WageRunStatus.Finalized || r.Status == WageRunStatus.Paid) &&
+                                (branchName == "All" ||
+                                 string.Equals(r.Branch, branchName, StringComparison.OrdinalIgnoreCase) ||
+                                 (string.Equals(branchName, "Johannesburg", StringComparison.OrdinalIgnoreCase) && string.Equals(r.Branch, "JHB", StringComparison.OrdinalIgnoreCase)) ||
+                                 (string.Equals(branchName, "Cape Town", StringComparison.OrdinalIgnoreCase) && string.Equals(r.Branch, "CPT", StringComparison.OrdinalIgnoreCase))))
+                    .OrderByDescending(r => r.EndDate)
+                    .FirstOrDefault();
+
+                DateTime newStart;
+                bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
+                int days = isCpt ? 6 : 13;
+
+                if (pastRun != null)
+                {
+                    newStart = pastRun.EndDate.AddDays(1).Date;
+                }
+                else
+                {
+                    var today = DateTime.Today;
+                    int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
+                    newStart = today.AddDays(-diff).AddDays(-7).Date;
+                }
+
+                StartDate = newStart;
+                EndDate = newStart.AddDays(days);
+                IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+            }
+            finally
+            {
+                _isUpdatingDates = false;
+            }
+        }
+
         partial void OnSelectedBranchChanged(string value)
         {
             LinesView?.Refresh();
             UpdateGrandTotal();
 
+            UpdateDatesForSelectedBranch();
+
             var branchEnum = value.ToBranchEnum();
-
-            if (branchEnum != Branch.CPT)
-            {
-                _isUpdatingDates = true;
-                try
-                {
-                    int days = 13;
-                    EndDate = StartDate.AddDays(days);
-                }
-                finally
-                {
-                    _isUpdatingDates = false;
-                }
-            }
-
             IsDeductionsButtonVisible = branchEnum != Branch.CPT;
             IsDeductionsVisible = true;
             OnPropertyChanged(nameof(IsBibcColumnVisible));
@@ -417,6 +437,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 BusyText = "Loading past runs...";
                 var runs = await _wageService.GetWageRunsAsync();
                 PastRuns = new ObservableCollection<WageRun>(runs);
+                UpdateDatesForSelectedBranch();
             }
             catch (Exception ex)
             {

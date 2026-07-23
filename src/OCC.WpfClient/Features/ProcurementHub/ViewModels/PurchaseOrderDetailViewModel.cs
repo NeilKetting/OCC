@@ -146,13 +146,58 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IEnumerable<Project> allProjectsList = new List<Project>();
                 if (!Suppliers.Any() || !Projects.Any() || !InventoryItems.Any())
                 {
-                    var suppliersTask = _supplierService.GetSuppliersAsync();
-                    var projectsTask = _projectService.GetProjectsAsync();
-                    var inventoryTask = _inventoryService.GetInventoryAsync();
+                    IEnumerable<Supplier> suppliers = new List<Supplier>();
+                    try
+                    {
+                        suppliers = await _supplierService.GetSuppliersAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load full suppliers with contacts, falling back to summaries");
+                        try
+                        {
+                            var summaries = await _supplierService.GetSupplierSummariesAsync();
+                            suppliers = summaries.Select(s => new Supplier
+                            {
+                                Id = s.Id,
+                                Name = s.Name,
+                                Email = s.Email,
+                                Phone = s.Phone,
+                                ContactPerson = s.ContactPerson,
+                                VatNumber = s.VatNumber,
+                                Address = s.Address,
+                                City = s.City,
+                                PostalCode = s.PostalCode,
+                                BankName = s.BankName,
+                                BankAccountNumber = s.BankAccountNumber,
+                                BranchCode = s.BranchCode,
+                                SupplierAccountNumber = s.SupplierAccountNumber
+                            }).ToList();
+                        }
+                        catch (Exception ex2)
+                        {
+                            _logger.LogError(ex2, "Failed to load supplier summaries fallback");
+                        }
+                    }
 
-                    var suppliers = await suppliersTask;
-                    allProjectsList = await projectsTask;
-                    var inventory = await inventoryTask;
+                    try
+                    {
+                        allProjectsList = await _projectService.GetProjectsAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to load projects");
+                    }
+
+                    IEnumerable<InventoryItem> inventory = new List<InventoryItem>();
+                    try
+                    {
+                        inventory = await _inventoryService.GetInventoryAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to load inventory");
+                    }
 
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                     {
