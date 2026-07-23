@@ -441,10 +441,11 @@
                             <Popup.Style>
                                 <Style TargetType="Popup">
                                     <Setter Property="IsOpen" Value="False"/>
-                                    <Style.Triggers>
+                                     <Style.Triggers>
                                         <MultiDataTrigger>
                                             <MultiDataTrigger.Conditions>
                                                 <Condition Binding="{Binding ElementName=SupplierComboBox, Path=IsMouseOver}" Value="True"/>
+                                                <Condition Binding="{Binding ElementName=SupplierComboBox, Path=IsDropDownOpen}" Value="False"/>
                                                 <Condition Binding="{Binding SelectedSupplier, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}" Value="Visible"/>
                                             </MultiDataTrigger.Conditions>
                                             <Setter Property="IsOpen" Value="True"/>
@@ -452,6 +453,7 @@
                                         <MultiDataTrigger>
                                             <MultiDataTrigger.Conditions>
                                                 <Condition Binding="{Binding ElementName=PopupBorder, Path=IsMouseOver}" Value="True"/>
+                                                <Condition Binding="{Binding ElementName=SupplierComboBox, Path=IsDropDownOpen}" Value="False"/>
                                                 <Condition Binding="{Binding SelectedSupplier, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}" Value="Visible"/>
                                             </MultiDataTrigger.Conditions>
                                             <Setter Property="IsOpen" Value="True"/>
@@ -665,7 +667,7 @@
                           Background="Transparent" BorderThickness="0" 
                           CanUserAddRows="False"
                           RowHeaderWidth="0"
-                          RowHeight="30"
+                          MinRowHeight="32"
                           GridLinesVisibility="All"
                           HorizontalGridLinesBrush="#33FFFFFF"
                           VerticalGridLinesBrush="#33FFFFFF"
@@ -732,7 +734,29 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="DESCRIPTION" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextSub}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}"/>
+                        <DataGridTemplateColumn Header="DESCRIPTION" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Description}" 
+                                               TextWrapping="Wrap" 
+                                               VerticalAlignment="Center" 
+                                               Foreground="{StaticResource TextSub}"
+                                               Padding="4,2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" 
+                                             TextWrapping="Wrap" 
+                                             AcceptsReturn="True"
+                                             VerticalAlignment="Center" 
+                                             Foreground="White" 
+                                             Background="Transparent" 
+                                             BorderThickness="0"
+                                             Padding="4,2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn Header="REMARKS" Binding="{Binding Remarks}" Width="Auto" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}"/>
                         <DataGridTextColumn Header="QTY" Width="60" Binding="{Binding QuantityOrdered, UpdateSourceTrigger=PropertyChanged}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
                             <DataGridTextColumn.ElementStyle>

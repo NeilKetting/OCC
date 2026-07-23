@@ -247,7 +247,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                             {
                                 CurrentOrder = new OrderWrapper(order);
-                                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                                ResolveSupplierSelection(order.SupplierId, order.SupplierName);
                                 await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName, allProjectsList);
                                 _currentIndex = _allOrderIds.IndexOf(order.Id);
                                 IsNewOrder = false;
@@ -282,9 +282,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         // If CurrentOrder is already present, synchronize dropdowns
                         await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                         {
-                            if (SelectedSupplier == null && CurrentOrder.SupplierId != Guid.Empty)
+                            if (SelectedSupplier == null && (CurrentOrder.SupplierId != Guid.Empty || !string.IsNullOrEmpty(CurrentOrder.SupplierName)))
                             {
-                                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
+                                ResolveSupplierSelection(CurrentOrder.SupplierId, CurrentOrder.SupplierName);
                             }
                             if (SelectedProject == null && ((CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty) || !string.IsNullOrEmpty(CurrentOrder.ProjectName)))
                             {
@@ -339,8 +339,42 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
         }
 
+        private void ResolveSupplierSelection(Guid? supplierId, string? supplierName)
+        {
+            Supplier? matchingSupplier = null;
+
+            if (supplierId.HasValue && supplierId.Value != Guid.Empty)
+            {
+                matchingSupplier = Suppliers.FirstOrDefault(s => s.Id == supplierId.Value);
+            }
+
+            if (matchingSupplier == null && !string.IsNullOrWhiteSpace(supplierName))
+            {
+                matchingSupplier = Suppliers.FirstOrDefault(s => string.Equals(s.Name, supplierName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (matchingSupplier == null && !string.IsNullOrWhiteSpace(supplierName))
+            {
+                matchingSupplier = Suppliers.FirstOrDefault(s => s.Name.Contains(supplierName, StringComparison.OrdinalIgnoreCase) || supplierName.Contains(s.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (matchingSupplier == null && (!string.IsNullOrWhiteSpace(supplierName) || (supplierId.HasValue && supplierId.Value != Guid.Empty)))
+            {
+                matchingSupplier = new Supplier
+                {
+                    Id = (supplierId.HasValue && supplierId.Value != Guid.Empty) ? supplierId.Value : Guid.NewGuid(),
+                    Name = !string.IsNullOrWhiteSpace(supplierName) ? supplierName : "Unknown Supplier"
+                };
+                Suppliers.Add(matchingSupplier);
+            }
+
+            SelectedSupplier = matchingSupplier;
+        }
+
         partial void OnSelectedSupplierChanged(Supplier? value)
         {
+            if (_isPopulating) return;
+
             if (value != null && CurrentOrder != null)
             {
                 CurrentOrder.SupplierId = value.Id;
@@ -661,7 +695,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     try
                     {
                         CurrentOrder = new OrderWrapper(order);
-                        SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == order.SupplierId);
+                        ResolveSupplierSelection(order.SupplierId, order.SupplierName);
                         await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName);
                         IsNewOrder = false;
                     }

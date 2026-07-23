@@ -107,6 +107,15 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
 
                     comboBox.SelectionChanged += (s, ev) =>
                     {
+                        if (comboBox.ItemsSource != null)
+                        {
+                            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(comboBox.ItemsSource);
+                            if (view != null && view.Filter != null)
+                            {
+                                view.Filter = null;
+                            }
+                        }
+
                         comboBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
                         {
                             var textBox = comboBox.Template.FindName("PART_EditableTextBox", comboBox) as System.Windows.Controls.TextBox;
@@ -120,6 +129,15 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
 
                     comboBox.DropDownClosed += (s, ev) =>
                     {
+                        if (comboBox.ItemsSource != null)
+                        {
+                            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(comboBox.ItemsSource);
+                            if (view != null && view.Filter != null)
+                            {
+                                view.Filter = null;
+                            }
+                        }
+
                         comboBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
                         {
                             var textBox = comboBox.Template.FindName("PART_EditableTextBox", comboBox) as System.Windows.Controls.TextBox;
@@ -140,6 +158,19 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                             {
                                 if (isUpdating) return;
 
+                                if (!comboBox.IsKeyboardFocusWithin)
+                                {
+                                    if (comboBox.ItemsSource != null)
+                                    {
+                                        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(comboBox.ItemsSource);
+                                        if (view != null && view.Filter != null)
+                                        {
+                                            view.Filter = null;
+                                        }
+                                    }
+                                    return;
+                                }
+
                                 isUpdating = true;
                                 try
                                 {
@@ -149,7 +180,7 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                         ? textBox.Text.Substring(0, textBox.SelectionStart) 
                                         : textBox.Text;
 
-                                    if (comboBox.IsDropDownOpen == false && !string.IsNullOrEmpty(filterText))
+                                    if (comboBox.IsKeyboardFocusWithin && comboBox.IsDropDownOpen == false && !string.IsNullOrEmpty(filterText))
                                     {
                                         comboBox.IsDropDownOpen = true;
                                     }
