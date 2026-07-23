@@ -213,9 +213,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             var nonGroupTasks = _allTasks.Where(t => !t.IsGroup).ToList();
             TotalTasks = nonGroupTasks.Count;
-            CompletedTasks = nonGroupTasks.Count(t => t.Status == "Completed" || t.Status == "Done");
-            InProgressTasks = nonGroupTasks.Count(t => t.Status == "In Progress" || t.Status == "Started");
-            ToDoTasks = nonGroupTasks.Count(t => t.Status == "To Do" || t.Status == "New" || t.Status == "Not Started");
+            CompletedTasks = nonGroupTasks.Count(t => t.IsComplete);
+            InProgressTasks = nonGroupTasks.Count(t => !t.IsComplete && (t.PercentComplete > 0 || t.Status == "In Progress" || t.Status == "Started" || t.Status == "Halfway" || t.Status == "Almost Done" || (t.Status != "Not Started" && t.Status != "To Do" && t.Status != "New" && t.Status != "On Hold" && t.Status != "Cancelled")));
+            ToDoTasks = nonGroupTasks.Count(t => !t.IsComplete && t.PercentComplete == 0 && (t.Status == "Not Started" || t.Status == "To Do" || t.Status == "New"));
 
             var now = DateTime.Now;
             OverdueTasks = nonGroupTasks.Count(t => t.IsOverdue);

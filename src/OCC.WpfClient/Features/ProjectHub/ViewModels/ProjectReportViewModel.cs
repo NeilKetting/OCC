@@ -110,7 +110,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 var nonGroupTasks = tasks.Where(t => !t.IsGroup).ToList();
                 _loadedTasks = nonGroupTasks;
                 TotalTasks = nonGroupTasks.Count;
-                InProgressTasks = nonGroupTasks.Count(t => t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100));
+                InProgressTasks = nonGroupTasks.Count(t => !t.IsComplete && (t.PercentComplete > 0 || t.Status == "In Progress" || t.Status == "Started" || t.Status == "Halfway" || t.Status == "Almost Done" || (t.Status != "Not Started" && t.Status != "To Do" && t.Status != "New" && t.Status != "On Hold" && t.Status != "Cancelled")));
                 CompletedTasks = nonGroupTasks.Count(t => t.Status == "Completed" || t.Status == "Done" || t.PercentComplete == 100);
                 OverallProgress = TotalTasks > 0 ? (double)nonGroupTasks.Sum(t => t.PercentComplete) / TotalTasks : 0;
 
@@ -150,8 +150,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     ScrapMetalsTon = draft.ScrapMetalsTon;
                     AsbestosTon = draft.AsbestosTon;
                     PowPercentRequired = draft.PowPercentRequired;
-                    DelayDays = draft.DelayDays;
-                    LoadPhotosFromDraft(draft.PhotoUrls);
+                    // Start with clean photos for each new report run
+                    ExecuteOnUIThread(() =>
+                    {
+                        ReportPhotos.Clear();
+                        HasPhotos = false;
+                    });
                 }
                 else
                 {
@@ -768,21 +772,13 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     }
                 }
 
-                // Download report photos to temporary local files
+                // Download report photos to temporary local files in an isolated folder per project run
                 var localPhotoPaths = new List<string>();
-                if (ReportPhotos != null && ReportPhotos.Any())
+                var tempPhotosDir = Path.Combine(Path.GetTempPath(), $"OCC_Report_Photos_{ProjectId}_{Guid.NewGuid():N}");
+                
+                try
                 {
-                    var tempPhotosDir = Path.Combine(Path.GetTempPath(), "OCC_Report_Photos");
-                    try
-                    {
-                        if (Directory.Exists(tempPhotosDir))
-                        {
-                            Directory.Delete(tempPhotosDir, true);
-                        }
-                    }
-                    catch { }
-                    
-                    try
+                    if (ReportPhotos != null && ReportPhotos.Any())
                     {
                         Directory.CreateDirectory(tempPhotosDir);
                         using var client = _httpClientFactory.CreateClient();
@@ -814,68 +810,90 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                             }
                         }
                     }
+
+                    // Map UI fields to print model
+                    var model = new ProjectReportPrintModel
+                    {
+                        Project = Project ?? new(),
+                        ReportDate = DateTime.Today,
+                        WeekNumber = WeekNumber,
+                        TotalTasks = TotalTasks,
+                        InProgressTasks = InProgressTasks,
+                        CompletedTasks = CompletedTasks,
+                        OverallProgress = OverallProgress,
+                        PowPercentRequired = PowPercentRequired,
+                        DelayDays = DelayDays,
+                        SafeWorkingHours = SafeWorkingHours,
+                        CustomerLogoPath = customerLogoLocalPath,
+                        ThisWeekMilestones = ThisWeekMilestones.Select(m => new MilestonePrintModel
+                        {
+                            Name = m.Name,
+                            StartDate = m.StartDate,
+                            PlannedDate = m.PlannedDate,
+                            Progress = m.Progress,
+                            Status = m.Status,
+                            Reason = m.Reason,
+                            IsComplete = m.IsComplete
+                        }).ToList(),
+                        OverdueMilestones = OverdueMilestones.Select(m => new MilestonePrintModel
+                        {
+                            Name = m.Name,
+                            StartDate = m.StartDate,
+                            PlannedDate = m.PlannedDate,
+                            Progress = m.Progress,
+                            Status = m.Status,
+                            Reason = m.Reason,
+                            IsComplete = m.IsComplete
+                        }).ToList(),
+                        GeneralWasteTon = GeneralWasteTon,
+                        RubbleM3 = RubbleM3,
+                        ScrapMetalsTon = ScrapMetalsTon,
+                        AsbestosTon = AsbestosTon,
+                        StatusSummary = StatusSummary,
+                        VendorReportRows = VendorReportRows.Select(r => new ProjectReportPrintVendorRow
+                        {
+                            VendorName = r.VendorName,
+                            Scope = r.Scope,
+                            SafetyApproved = r.SafetyApproved,
+                            AppScore = r.AppScore,
+                            Audit1 = r.Audit1,
+                            Audit2 = r.Audit2,
+                            Audit3 = r.Audit3
+                        }).ToList(),
+                        VariationOrders = VariationOrders.ToList(),
+                        IncidentPhotoPaths = localPhotoPaths
+                    };
+
+                    var path = await _pdfService.GenerateProjectReportPdfAsync(model);
+
+                    // Save report PDF to Report History on server
+                    try
+                    {
+                        using var pdfStream = System.IO.File.OpenRead(path);
+                        await _projectReportService.UploadReportAsync(ProjectId, WeekNumber, $"Week {WeekNumber} Report ({DateTime.Today:yyyy-MM-dd})", pdfStream, Path.GetFileName(path));
+                        await LoadHistoryAsync();
+                    }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to initialize temp directory for photos.");
+                        _logger.LogWarning(ex, "Failed to upload generated PDF to report history.");
                     }
+
+                    // Reset photos for next report run
+                    await ClearPhotosAsync();
+                    
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
                 }
-
-                // Map UI fields to print model
-                var model = new ProjectReportPrintModel
+                finally
                 {
-                    Project = Project ?? new(),
-                    ReportDate = DateTime.Today,
-                    WeekNumber = WeekNumber,
-                    TotalTasks = TotalTasks,
-                    InProgressTasks = InProgressTasks,
-                    CompletedTasks = CompletedTasks,
-                    OverallProgress = OverallProgress,
-                    PowPercentRequired = PowPercentRequired,
-                    DelayDays = DelayDays,
-                    SafeWorkingHours = SafeWorkingHours,
-                    CustomerLogoPath = customerLogoLocalPath,
-                    ThisWeekMilestones = ThisWeekMilestones.Select(m => new MilestonePrintModel
+                    try
                     {
-                        Name = m.Name,
-                        StartDate = m.StartDate,
-                        PlannedDate = m.PlannedDate,
-                        Progress = m.Progress,
-                        Status = m.Status,
-                        Reason = m.Reason,
-                        IsComplete = m.IsComplete
-                    }).ToList(),
-                    OverdueMilestones = OverdueMilestones.Select(m => new MilestonePrintModel
-                    {
-                        Name = m.Name,
-                        StartDate = m.StartDate,
-                        PlannedDate = m.PlannedDate,
-                        Progress = m.Progress,
-                        Status = m.Status,
-                        Reason = m.Reason,
-                        IsComplete = m.IsComplete
-                    }).ToList(),
-                    GeneralWasteTon = GeneralWasteTon,
-                    RubbleM3 = RubbleM3,
-                    ScrapMetalsTon = ScrapMetalsTon,
-                    AsbestosTon = AsbestosTon,
-                    StatusSummary = StatusSummary,
-                    VendorReportRows = VendorReportRows.Select(r => new ProjectReportPrintVendorRow
-                    {
-                        VendorName = r.VendorName,
-                        Scope = r.Scope,
-                        SafetyApproved = r.SafetyApproved,
-                        AppScore = r.AppScore,
-                        Audit1 = r.Audit1,
-                        Audit2 = r.Audit2,
-                        Audit3 = r.Audit3
-                    }).ToList(),
-                    VariationOrders = VariationOrders.ToList(),
-                    IncidentPhotoPaths = localPhotoPaths
-                };
-
-                var path = await _pdfService.GenerateProjectReportPdfAsync(model);
-                
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+                        if (Directory.Exists(tempPhotosDir))
+                        {
+                            Directory.Delete(tempPhotosDir, true);
+                        }
+                    }
+                    catch { }
+                }
             }
             catch (Exception ex)
             {
@@ -1089,6 +1107,24 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch (Exception ex)
             {
                 NotifyError("Error", $"Could not remove photo: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task ClearPhotosAsync()
+        {
+            try
+            {
+                ExecuteOnUIThread(() =>
+                {
+                    ReportPhotos.Clear();
+                    HasPhotos = false;
+                });
+                await SaveLocalReportDataAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to clear photos.");
             }
         }
 

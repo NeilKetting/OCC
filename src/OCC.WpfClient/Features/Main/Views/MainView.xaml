@@ -299,7 +299,7 @@
         </Grid>
 
         <!-- Main Shell (Displaced by the menu/title bar height) -->
-        <Grid Margin="0,32,0,0">
+        <Grid Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />

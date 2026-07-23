@@ -232,7 +232,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                             ReportDate = DateTime.Today,
                             WeekNumber = item.WeekNumber,
                             TotalTasks = item.LoadedTasks.Count(t => !t.IsGroup),
-                            InProgressTasks = item.LoadedTasks.Count(t => !t.IsGroup && (t.Status == "In Progress" || t.Status == "Started" || (t.PercentComplete > 0 && t.PercentComplete < 100))),
+                            InProgressTasks = item.LoadedTasks.Count(t => !t.IsGroup && !t.IsComplete && (t.PercentComplete > 0 || t.Status == "In Progress" || t.Status == "Started" || t.Status == "Halfway" || t.Status == "Almost Done" || (t.Status != "Not Started" && t.Status != "To Do" && t.Status != "New" && t.Status != "On Hold" && t.Status != "Cancelled"))),
                             CompletedTasks = item.LoadedTasks.Count(t => !t.IsGroup && (t.Status == "Completed" || t.Status == "Done" || t.PercentComplete == 100)),
                             OverallProgress = item.LoadedTasks.Count(t => !t.IsGroup) > 0 ? (double)item.LoadedTasks.Where(t => !t.IsGroup).Sum(t => t.PercentComplete) / item.LoadedTasks.Count(t => !t.IsGroup) : 0,
                             PowPercentRequired = item.PowPercentRequired,
@@ -466,6 +466,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         private async Task<List<string>> FetchAndDownloadIncidentPhotosAsync(Guid projectId, string projectName)
         {
             var localPhotoPaths = new List<string>();
+            var tempPhotosDir = Path.Combine(Path.GetTempPath(), $"OCC_Report_Photos_{projectId}_{Guid.NewGuid():N}");
             try
             {
                 var draft = await _projectReportService.GetDraftAsync(projectId);
@@ -474,16 +475,6 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                     var urls = draft.PhotoUrls.Split(';', StringSplitOptions.RemoveEmptyEntries);
                     if (urls.Any())
                     {
-                        var tempPhotosDir = Path.Combine(Path.GetTempPath(), $"OCC_Report_Photos_{projectId}");
-                        try
-                        {
-                            if (Directory.Exists(tempPhotosDir))
-                            {
-                                Directory.Delete(tempPhotosDir, true);
-                            }
-                        }
-                        catch { }
-
                         Directory.CreateDirectory(tempPhotosDir);
                         using var client = _httpClientFactory.CreateClient();
                         var token = _authService.CurrentToken;
@@ -519,6 +510,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to fetch project report photos for project {ProjectName}", projectName);
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(tempPhotosDir))
+                    {
+                        Directory.Delete(tempPhotosDir, true);
+                    }
+                }
+                catch { }
             }
             return localPhotoPaths;
         }

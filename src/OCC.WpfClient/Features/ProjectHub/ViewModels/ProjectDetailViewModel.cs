@@ -199,7 +199,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 }
                 else if (message.Filter == "InProgress")
                 {
-                    _tasksVM.ApplyFilters("Started", "All Tasks");
+                    _tasksVM.ApplyFilters("In Progress", "All Tasks");
                 }
                 else if (message.Filter == "Overdue")
                 {

@@ -75,7 +75,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public ObservableCollection<string> AvailableStages { get; } = new() 
         {
-            "All Stages", "Not Started", "Started", "Halfway", "Almost Done", "Completed", "On Hold"
+            "All Stages", "In Progress", "Not Started", "Started", "Halfway", "Almost Done", "Completed", "On Hold"
         };
 
         private List<ProjectTask> _rootTasks = new();
@@ -293,7 +293,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 task.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
 
             bool matchesStage = SelectedStageFilter == "All Stages" || 
-                task.Status.Equals(SelectedStageFilter, StringComparison.OrdinalIgnoreCase);
+                (SelectedStageFilter == "In Progress"
+                    ? (!task.IsComplete && (task.PercentComplete > 0 || task.Status == "In Progress" || task.Status == "Started" || task.Status == "Halfway" || task.Status == "Almost Done" || (task.Status != "Not Started" && task.Status != "To Do" && task.Status != "New" && task.Status != "On Hold" && task.Status != "Cancelled")))
+                    : task.Status.Equals(SelectedStageFilter, StringComparison.OrdinalIgnoreCase));
 
             bool matchesSmart = true;
             if (ActiveSmartFilter == "Overdue") matchesSmart = task.IsOverdue;
