@@ -261,7 +261,7 @@ namespace OCC.API.Controllers
                         // Add new
                         var newLine = new OrderLine
                         {
-                            Id = Guid.NewGuid(), // Ignore DTO ID if it was temp
+                            Id = lineDto.Id != Guid.Empty ? lineDto.Id : Guid.NewGuid(),
                             OrderId = existingOrder.Id,
                             InventoryItemId = lineDto.InventoryItemId,
                             ItemCode = lineDto.ItemCode,

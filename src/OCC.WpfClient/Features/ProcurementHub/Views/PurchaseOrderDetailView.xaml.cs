@@ -5,6 +5,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
 {
     public partial class PurchaseOrderDetailView : UserControl
     {
+        private bool _isLoaded;
+
         public PurchaseOrderDetailView()
         {
             InitializeComponent();
@@ -13,6 +15,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
 
         private void PurchaseOrderDetailView_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {
+            if (_isLoaded) return;
+            _isLoaded = true;
+
             if (DataContext is PurchaseOrderDetailViewModel viewModel)
             {
                 if (viewModel.LoadDataCommand.CanExecute(null))

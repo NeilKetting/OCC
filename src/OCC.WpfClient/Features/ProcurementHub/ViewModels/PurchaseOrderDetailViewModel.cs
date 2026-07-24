@@ -444,10 +444,61 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             CurrentOrder?.Lines.Remove(line);
         }
 
+        private bool ValidateAndPrepareOrderForSave()
+        {
+            if (CurrentOrder == null) return false;
+
+            // 1. Check Supplier
+            if (SelectedSupplier == null && (CurrentOrder.SupplierId == null || CurrentOrder.SupplierId == Guid.Empty) && string.IsNullOrWhiteSpace(CurrentOrder.SupplierName))
+            {
+                _toastService.ShowError("Save Failed", "Please select a supplier for the purchase order.");
+                return false;
+            }
+
+            // 2. Resolve missing InventoryItemIds for typed SKUs
+            foreach (var line in CurrentOrder.Lines)
+            {
+                if (!string.IsNullOrWhiteSpace(line.ItemCode) && (!line.InventoryItemId.HasValue || line.InventoryItemId.Value == Guid.Empty))
+                {
+                    var match = InventoryItems.FirstOrDefault(i => i.Sku.Equals(line.ItemCode, StringComparison.OrdinalIgnoreCase));
+                    if (match != null)
+                    {
+                        line.InventoryItemId = match.Id;
+                    }
+                }
+            }
+
+            // 3. Remove incomplete lines (0 quantity or empty item code/description)
+            var invalidLines = CurrentOrder.Lines
+                .Where(l => l.QuantityOrdered <= 0 || (string.IsNullOrWhiteSpace(l.ItemCode) && string.IsNullOrWhiteSpace(l.Description)))
+                .ToList();
+            foreach (var line in invalidLines)
+            {
+                CurrentOrder.Lines.Remove(line);
+            }
+
+            // 4. Ensure at least 1 valid line item exists
+            if (!CurrentOrder.Lines.Any())
+            {
+                _toastService.ShowError("Save Failed", "Please add at least one line item with a quantity greater than zero.");
+                return false;
+            }
+
+            // 5. Ensure ETA is not in the past
+            if (CurrentOrder.ExpectedDeliveryDate.HasValue && CurrentOrder.ExpectedDeliveryDate.Value.Date < DateTime.Today)
+            {
+                CurrentOrder.ExpectedDeliveryDate = DateTime.Today.AddDays(7);
+            }
+
+            return true;
+        }
+
         [RelayCommand]
         private async Task SaveOrderAsync()
         {
             if (CurrentOrder == null) return;
+            if (!ValidateAndPrepareOrderForSave()) return;
+
             try
             {
                 IsBusy = true;
@@ -468,6 +519,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     await _orderService.UpdateOrderAsync(CurrentOrder.Model);
                 }
                 
+                _toastService.ShowSuccess("Order Saved", $"Purchase Order {CurrentOrder.OrderNumber} saved successfully.");
                 WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
                 WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
             }
@@ -475,6 +527,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 _logger.LogError(ex, "Error saving order");
                 ErrorMessage = ex.Message;
+                _toastService.ShowError("Save Error", ex.Message);
             }
             finally
             {
@@ -486,6 +539,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private async Task SaveAndNewAsync()
         {
             if (CurrentOrder == null) return;
+            if (!ValidateAndPrepareOrderForSave()) return;
+
             try
             {
                 IsBusy = true;
@@ -504,6 +559,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     await _orderService.UpdateOrderAsync(CurrentOrder.Model);
                 }
+
+                _toastService.ShowSuccess("Order Saved", $"Purchase Order {CurrentOrder.OrderNumber} saved successfully.");
 
                 // Reset to new template
                 var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
@@ -531,6 +588,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 _logger.LogError(ex, "Error saving order");
                 ErrorMessage = ex.Message;
+                _toastService.ShowError("Save Error", ex.Message);
             }
             finally
             {
@@ -579,19 +637,42 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private bool _isShowingItemNotFoundDialog = false;
 
+        private void CleanupEmptyLines()
+        {
+            if (CurrentOrder == null) return;
+            var emptyLines = CurrentOrder.Lines
+                .Where(l => string.IsNullOrWhiteSpace(l.ItemCode) && string.IsNullOrWhiteSpace(l.Description) && l.QuantityOrdered == 0 && l.UnitPrice == 0)
+                .ToList();
+            foreach (var line in emptyLines)
+            {
+                CurrentOrder.Lines.Remove(line);
+            }
+        }
+
         [RelayCommand]
         private void UpdateLineItem(OrderLineWrapper line)
         {
-            if (string.IsNullOrWhiteSpace(line.ItemCode)) return;
+            if (line == null || string.IsNullOrWhiteSpace(line.ItemCode)) return;
 
             // Real-time update: Only update if we find a match. DO NOT show popup while typing.
             var item = InventoryItems.FirstOrDefault(i => i.Sku.Equals(line.ItemCode, StringComparison.OrdinalIgnoreCase));
             if (item != null)
             {
+                bool isNewItemForLine = line.InventoryItemId != item.Id;
+
                 line.InventoryItemId = item.Id;
-                line.Description = item.Description;
-                line.UnitOfMeasure = item.UnitOfMeasure;
-                line.UnitPrice = item.AverageCost;
+                if (isNewItemForLine || string.IsNullOrWhiteSpace(line.Description))
+                {
+                    line.Description = item.Description;
+                }
+                if (isNewItemForLine || string.IsNullOrWhiteSpace(line.UnitOfMeasure))
+                {
+                    line.UnitOfMeasure = item.UnitOfMeasure;
+                }
+                if (isNewItemForLine || line.UnitPrice == 0)
+                {
+                    line.UnitPrice = item.AverageCost;
+                }
                 line.UpdateCalculations();
             }
         }
@@ -599,7 +680,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         [RelayCommand]
         private void ValidateLineItem(OrderLineWrapper line)
         {
-            if (string.IsNullOrWhiteSpace(line.ItemCode)) return;
+            if (line == null || string.IsNullOrWhiteSpace(line.ItemCode)) return;
 
             // FIX: If we just showed a dialog for THIS EXACT CODE and the user said No, don't nag them again.
             if (line.ItemCode.Equals(line.LastValidatedSku, StringComparison.OrdinalIgnoreCase)) return;
@@ -609,11 +690,21 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             if (item != null)
             {
                 line.LastValidatedSku = line.ItemCode; // Mark as validated
-                // Ensure everything is up to date
+                bool isNewItemForLine = line.InventoryItemId != item.Id;
+
                 line.InventoryItemId = item.Id;
-                line.Description = item.Description;
-                line.UnitOfMeasure = item.UnitOfMeasure;
-                line.UnitPrice = item.AverageCost;
+                if (isNewItemForLine || string.IsNullOrWhiteSpace(line.Description))
+                {
+                    line.Description = item.Description;
+                }
+                if (isNewItemForLine || string.IsNullOrWhiteSpace(line.UnitOfMeasure))
+                {
+                    line.UnitOfMeasure = item.UnitOfMeasure;
+                }
+                if (isNewItemForLine || line.UnitPrice == 0)
+                {
+                    line.UnitPrice = item.AverageCost;
+                }
                 line.UpdateCalculations();
             }
             else
@@ -929,11 +1020,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 
                 if (token.IsCancellationRequested) return;
 
-                AddressSuggestions.Clear();
-                foreach (var s in suggestions ?? Array.Empty<AddressSuggestion>())
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    AddressSuggestions.Add(s);
-                }
+                    AddressSuggestions.Clear();
+                    foreach (var s in suggestions ?? Array.Empty<AddressSuggestion>())
+                    {
+                        AddressSuggestions.Add(s);
+                    }
+                });
             }
             catch (OperationCanceledException)
             {

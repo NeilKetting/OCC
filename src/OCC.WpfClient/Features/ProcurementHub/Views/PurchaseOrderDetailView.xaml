@@ -758,12 +758,11 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
                         <DataGridTextColumn Header="REMARKS" Binding="{Binding Remarks}" Width="Auto" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}"/>
-                        <DataGridTextColumn Header="QTY" Width="60" Binding="{Binding QuantityOrdered, UpdateSourceTrigger=PropertyChanged}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
+                        <DataGridTextColumn Header="QTY" Width="60" Binding="{Binding QuantityOrdered, UpdateSourceTrigger=LostFocus}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="HorizontalAlignment" Value="Center"/>
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Visibility" Value="Visible"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsItemValid}" Value="False">
                                             <Setter Property="Visibility" Value="Hidden"/>
@@ -772,6 +771,7 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
+
                         <DataGridTextColumn Header="UNIT" Width="Auto" Binding="{Binding UnitOfMeasure}" IsReadOnly="True">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -785,7 +785,8 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="UNIT PRICE" Width="Auto" Binding="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, StringFormat='#,##0.00####'}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
+
+                        <DataGridTextColumn Header="UNIT PRICE" Width="Auto" Binding="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, StringFormat='#,##0.00'}" EditingElementStyle="{StaticResource DataGridEditingTextBoxStyle}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -875,12 +876,12 @@
                     <!-- Totals Block -->
                     <StackPanel Margin="0,0,0,15">
                         <Grid Width="250" Margin="0,3">
-                            <TextBlock Text="TOTAL VAT" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding CurrentOrder.VatTotal, StringFormat='R {0:N2}'}" HorizontalAlignment="Right" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="SUBTOTAL (EXCL. VAT)" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentOrder.SubTotal, StringFormat='R {0:N2}'}" HorizontalAlignment="Right" Foreground="White" FontWeight="SemiBold"/>
                         </Grid>
                         <Grid Width="250" Margin="0,3">
-                            <TextBlock Text="TOTAL" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding CurrentOrder.SubTotal, StringFormat='R {0:N2}'}" HorizontalAlignment="Right" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="VAT (15%)" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentOrder.VatTotal, StringFormat='R {0:N2}'}" HorizontalAlignment="Right" Foreground="White" FontWeight="SemiBold"/>
                         </Grid>
                         <Grid Width="250" Margin="0,3">
                             <TextBlock Text="PAYMENTS APPLIED" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
@@ -888,7 +889,7 @@
                         </Grid>
                         <Separator Background="#33FFFFFF" Margin="0,8"/>
                         <Grid Width="250">
-                            <TextBlock Text="BALANCE DUE" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="TOTAL (INCL. VAT)" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding CurrentOrder.TotalAmount, StringFormat='R {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Right"/>
                         </Grid>
                     </StackPanel>

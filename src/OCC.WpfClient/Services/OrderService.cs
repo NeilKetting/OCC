@@ -365,7 +365,7 @@ namespace OCC.WpfClient.Services
                 Terms = order.Terms,
                 ReferenceNo = order.ReferenceNo,
                 Lines = order.Lines
-                    .Where(l => l.InventoryItemId.HasValue && l.InventoryItemId.Value != Guid.Empty && l.QuantityOrdered > 0)
+                    .Where(l => (!string.IsNullOrWhiteSpace(l.ItemCode) || !string.IsNullOrWhiteSpace(l.Description)) && (l.QuantityOrdered > 0 || l.UnitPrice > 0 || l.InventoryItemId.HasValue))
                     .Select(l => new OrderLineDto
                     {
                         Id = l.Id,
