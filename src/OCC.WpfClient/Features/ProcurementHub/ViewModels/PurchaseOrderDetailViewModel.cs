@@ -140,7 +140,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             if (IsBusy) return;
             try
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
+                if (System.Windows.Application.Current?.Dispatcher != null)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
+                }
+                else
+                {
+                    IsBusy = true;
+                }
                 
                 // 1. Load lookups sequentially
                 IEnumerable<Project> allProjectsList = new List<Project>();
@@ -199,7 +206,32 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         _logger.LogError(ex, "Failed to load inventory");
                     }
 
-                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    if (System.Windows.Application.Current?.Dispatcher != null)
+                    {
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            if (!Suppliers.Any())
+                            {
+                                Suppliers.Clear();
+                                foreach (var s in suppliers) Suppliers.Add(s);
+                            }
+
+                            if (!Projects.Any())
+                            {
+                                Projects.Clear();
+                                var activeProjects = allProjectsList.Where(p => p.Status != "Completed" && p.Status != "Archived" && p.Status != "Cancelled");
+                                foreach (var p in activeProjects) Projects.Add(p);
+                                Projects.Add(OtherProjectSentinel);
+                            }
+
+                            if (!InventoryItems.Any())
+                            {
+                                InventoryItems.Clear();
+                                foreach (var i in inventory) InventoryItems.Add(i);
+                            }
+                        });
+                    }
+                    else
                     {
                         if (!Suppliers.Any())
                         {
@@ -220,7 +252,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             InventoryItems.Clear();
                             foreach (var i in inventory) InventoryItems.Add(i);
                         }
-                    });
+                    }
                 }
                 else
                 {
@@ -244,14 +276,25 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         var order = await _orderService.GetOrderAsync(OrderId.Value);
                         if (order != null)
                         {
-                            await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                            if (System.Windows.Application.Current?.Dispatcher != null)
+                            {
+                                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                                {
+                                    CurrentOrder = new OrderWrapper(order);
+                                    ResolveSupplierSelection(order.SupplierId, order.SupplierName);
+                                    await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName, allProjectsList);
+                                    _currentIndex = _allOrderIds.IndexOf(order.Id);
+                                    IsNewOrder = false;
+                                });
+                            }
+                            else
                             {
                                 CurrentOrder = new OrderWrapper(order);
                                 ResolveSupplierSelection(order.SupplierId, order.SupplierName);
                                 await ResolveProjectSelectionAsync(order.ProjectId, order.ProjectName, allProjectsList);
                                 _currentIndex = _allOrderIds.IndexOf(order.Id);
                                 IsNewOrder = false;
-                            });
+                            }
                         }
                     }
                     else if (CurrentOrder == null)
@@ -262,25 +305,55 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         {
                             order.Branch = _authService.CurrentUser.Branch.Value;
                         }
-                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+
+                        if (System.Windows.Application.Current?.Dispatcher != null)
+                        {
+                            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                            {
+                                CurrentOrder = new OrderWrapper(order);
+                                _currentIndex = -1; // -1 represents "New Order"
+                                IsNewOrder = true;
+                                SelectedProject = null;
+                                SelectedSupplier = null;
+                                
+                                for (int i = 0; i < 10; i++)
+                                {
+                                    AddLine();
+                                }
+                            });
+                        }
+                        else
                         {
                             CurrentOrder = new OrderWrapper(order);
-                            _currentIndex = -1; // -1 represents "New Order"
+                            _currentIndex = -1;
                             IsNewOrder = true;
                             SelectedProject = null;
                             SelectedSupplier = null;
-                            
-                            // QuickBooks style: Pre-fill with 10 empty rows
+
                             for (int i = 0; i < 10; i++)
                             {
                                 AddLine();
                             }
-                        });
+                        }
                     }
                     else
                     {
                         // If CurrentOrder is already present, synchronize dropdowns
-                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                        if (System.Windows.Application.Current?.Dispatcher != null)
+                        {
+                            await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                            {
+                                if (SelectedSupplier == null && (CurrentOrder.SupplierId != Guid.Empty || !string.IsNullOrEmpty(CurrentOrder.SupplierName)))
+                                {
+                                    ResolveSupplierSelection(CurrentOrder.SupplierId, CurrentOrder.SupplierName);
+                                }
+                                if (SelectedProject == null && ((CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty) || !string.IsNullOrEmpty(CurrentOrder.ProjectName)))
+                                {
+                                    await ResolveProjectSelectionAsync(CurrentOrder.ProjectId, CurrentOrder.ProjectName, allProjectsList);
+                                }
+                            });
+                        }
+                        else
                         {
                             if (SelectedSupplier == null && (CurrentOrder.SupplierId != Guid.Empty || !string.IsNullOrEmpty(CurrentOrder.SupplierName)))
                             {
@@ -290,7 +363,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             {
                                 await ResolveProjectSelectionAsync(CurrentOrder.ProjectId, CurrentOrder.ProjectName, allProjectsList);
                             }
-                        });
+                        }
                     }
                 }
                 finally
@@ -301,12 +374,26 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading purchase order details data");
-                System.Windows.Application.Current.Dispatcher.Invoke(() => 
-                    ErrorMessage = "Failed to load required data. Please try again.");
+                if (System.Windows.Application.Current?.Dispatcher != null)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                        ErrorMessage = "Failed to load required data. Please try again.");
+                }
+                else
+                {
+                    ErrorMessage = "Failed to load required data. Please try again.";
+                }
             }
             finally
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = false);
+                if (System.Windows.Application.Current?.Dispatcher != null)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = false);
+                }
+                else
+                {
+                    IsBusy = false;
+                }
             }
         }
 
@@ -468,9 +555,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 }
             }
 
-            // 3. Remove incomplete lines (0 quantity or empty item code/description)
+            // 3. Remove completely blank placeholder lines (empty item code and description)
             var invalidLines = CurrentOrder.Lines
-                .Where(l => l.QuantityOrdered <= 0 || (string.IsNullOrWhiteSpace(l.ItemCode) && string.IsNullOrWhiteSpace(l.Description)))
+                .Where(l => string.IsNullOrWhiteSpace(l.ItemCode) && string.IsNullOrWhiteSpace(l.Description))
                 .ToList();
             foreach (var line in invalidLines)
             {
@@ -480,7 +567,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             // 4. Ensure at least 1 valid line item exists
             if (!CurrentOrder.Lines.Any())
             {
-                _toastService.ShowError("Save Failed", "Please add at least one line item with a quantity greater than zero.");
+                _toastService.ShowError("Save Failed", "Please add at least one line item to the purchase order.");
                 return false;
             }
 

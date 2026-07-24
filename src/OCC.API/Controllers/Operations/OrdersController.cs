@@ -119,10 +119,9 @@ namespace OCC.API.Controllers
                     if (string.IsNullOrWhiteSpace(line.Description))
                         return BadRequest("All line items must have a description.");
 
-                    if (line.QuantityOrdered <= 0)
-                        return BadRequest("All line items must have a quantity greater than zero.");
+                    if (line.QuantityOrdered < 0)
+                        return BadRequest("Quantity ordered cannot be negative.");
 
-                    // UnitPrice 0 allowed (e.g. for Picking Orders / Samples)
                     if (line.UnitPrice < 0) 
                          return BadRequest("All line items must have a unit price greater than or equal to zero.");
 
@@ -156,7 +155,7 @@ namespace OCC.API.Controllers
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Order {OrderNumber} created by {User}", order.OrderNumber, User.FindFirst(ClaimTypes.Name)?.Value);
+                _logger.LogInformation("Order {OrderNumber} created by {User}", order.OrderNumber, User?.FindFirst(ClaimTypes.Name)?.Value ?? "System");
 
                 var resultDto = ToDto(order);
 
@@ -227,7 +226,7 @@ namespace OCC.API.Controllers
                 foreach (var lineDto in orderDto.Lines)
                 {
                     // Validation
-                    if (lineDto.QuantityOrdered <= 0) return BadRequest("Quantity must be > 0");
+                    if (lineDto.QuantityOrdered < 0) return BadRequest("Quantity ordered cannot be negative.");
                     if (lineDto.UnitPrice < 0) return BadRequest("All line items must have a unit price greater than or equal to zero.");
 
                     var existingLine = existingOrder.Lines.FirstOrDefault(l => l.Id == lineDto.Id);
@@ -286,7 +285,7 @@ namespace OCC.API.Controllers
                             }
                         }
 
-                        existingOrder.Lines.Add(newLine);
+                        _context.OrderLines.Add(newLine);
                     }
                 }
 
@@ -295,27 +294,32 @@ namespace OCC.API.Controllers
                     .Where(l => !orderDto.Lines.Any(ol => ol.Id == l.Id))
                     .ToList();
 
-                if (linesToRemove.Any())
+                foreach (var lineToRemove in linesToRemove)
                 {
                     // Handle Stock for Removed Lines
                     if (existingOrder.OrderType == OrderType.PickingOrder || existingOrder.OrderType == OrderType.ReturnToInventory)
                     {
                         double undoMultiplier = existingOrder.OrderType == OrderType.PickingOrder ? 1 : -1;
-                        foreach (var l in linesToRemove)
+                        if (lineToRemove.InventoryItemId.HasValue)
                         {
-                            if (l.InventoryItemId.HasValue)
-                            {
-                                await _stockService.AdjustStockAsync(l.InventoryItemId.Value, l.QuantityOrdered * undoMultiplier, existingOrder.Branch);
-                            }
+                            await _stockService.AdjustStockAsync(lineToRemove.InventoryItemId.Value, lineToRemove.QuantityOrdered * undoMultiplier, existingOrder.Branch);
                         }
                     }
 
-                    _context.OrderLines.RemoveRange(linesToRemove);
+                    var entry = _context.Entry(lineToRemove);
+                    if (entry.State == EntityState.Added)
+                    {
+                        entry.State = EntityState.Detached;
+                    }
+                    else
+                    {
+                        _context.OrderLines.Remove(lineToRemove);
+                    }
                 }
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Order {OrderNumber} updated by {User}", orderDto.OrderNumber, User.FindFirst(ClaimTypes.Name)?.Value);
+                _logger.LogInformation("Order {OrderNumber} updated by {User}", orderDto.OrderNumber, User?.FindFirst(ClaimTypes.Name)?.Value ?? "System");
 
                 // Notify clients
                 await _hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", ToDto(existingOrder));
@@ -325,7 +329,7 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating order {OrderId}", id);
-                return StatusCode(500, "An error occurred while updating the order.");
+                return StatusCode(500, $"{ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
             }
         }
 
