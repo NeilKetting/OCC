@@ -13,6 +13,10 @@ namespace OCC.WpfClient.Infrastructure.Converters
 
             if (value is AttendanceStatus status)
             {
+                if (status == AttendanceStatus.UnpaidHalfDay)
+                {
+                    return "Unpaid Half Day";
+                }
                 if (status == AttendanceStatus.UnpaidSick || status == AttendanceStatus.UnpaidLeave)
                 {
                     return "Unpaid";

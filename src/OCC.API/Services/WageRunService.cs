@@ -308,6 +308,10 @@ namespace OCC.API.Services
                         {
                             line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Leave; ";
                         }
+                        else if (record.Status == AttendanceStatus.UnpaidHalfDay)
+                        {
+                            line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Half Day; ";
+                        }
                     }
                     else
                     {

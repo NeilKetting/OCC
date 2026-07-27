@@ -799,6 +799,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                                         dayPrint.TimeOut = "XXXX";
                                         dayPrint.Overtime = "UNP";
                                     }
+                                    else if (dayRow.Status == AttendanceStatus.UnpaidHalfDay)
+                                    {
+                                        dayPrint.Site = "UNPAID HALF DAY";
+                                        dayPrint.Overtime = "UNP";
+                                    }
                                     else if (dayRow.Status == AttendanceStatus.LeaveAuthorized)
                                     {
                                         dayPrint.Site = "LEAVE";

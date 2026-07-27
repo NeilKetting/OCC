@@ -629,5 +629,47 @@ namespace OCC.Tests.API.Controllers
             // Since it's not today (KnownMonday is in past) and checkout is missing, worked hours = 0. Paid leave hours = 3.0
             Assert.Equal(3.0, result.Normal, precision: 2);
         }
+
+        [Fact]
+        public void CalculateHours_UnpaidHalfDay_WithoutClockIn_ReturnsZeroPaidHours()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee();
+
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = KnownMonday,
+                Status = AttendanceStatus.UnpaidHalfDay,
+                UnpaidLeaveHours = 4.375,
+                PaidLeaveHours = 0,
+                CheckInTime = null,
+                CheckOutTime = null
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            // No check in -> 0 paid normal hours
+            Assert.Equal(0.0, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime15, precision: 2);
+        }
+
+        [Fact]
+        public void CalculateHours_UnpaidHalfDay_WithHalfDayClockIn_ReturnsWorkedHoursOnly()
+        {
+            var svc = CreateService();
+            var emp = DefaultEmployee(); // 07:00 to 16:00
+
+            var record = Record(KnownMonday, new(7, 0, 0), new(12, 0, 0), emp.Id, AttendanceStatus.UnpaidHalfDay); // 07:00 to 12:00 = 5.0 hours
+            record.UnpaidLeaveHours = 4.375;
+            record.PaidLeaveHours = 0;
+
+            var result = svc.CalculateHours(record, emp);
+
+            // 5.0 worked normal hours, 0 paid leave hours
+            Assert.Equal(5.0, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime15, precision: 2);
+        }
     }
 }

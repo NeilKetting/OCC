@@ -66,6 +66,7 @@
                     <ComboBoxItem Content="Leave Early" Tag="LeaveEarly"/>
                     <ComboBoxItem Content="Unpaid" Tag="UnpaidSick"/>
                     <ComboBoxItem Content="Unpaid Leave" Tag="UnpaidLeave"/>
+                    <ComboBoxItem Content="Unpaid Half Day" Tag="UnpaidHalfDay"/>
                 </ComboBox>
 
                 <!-- Project Selection (visible for Present/Late/LeaveEarly) -->

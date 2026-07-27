@@ -367,6 +367,9 @@
         <DataTemplate DataType="{x:Type dialogVm:SelectEmailViewModel}">
             <dialogs:SelectEmailDialog />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type dialogVm:AddSupplierContactViewModel}">
+            <dialogs:AddSupplierContactDialog />
+        </DataTemplate>
     </UserControl.Resources>
     
     <Grid Background="{StaticResource BackgroundDark}">

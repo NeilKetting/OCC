@@ -470,6 +470,36 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 CurrentOrder.EntityTel = value.Phone;
                 CurrentOrder.EntityVatNo = value.VatNumber;
             }
+
+            if (value != null && value.Id != Guid.Empty && (value.Contacts == null || !value.Contacts.Any()))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var freshSupplier = await _supplierService.GetSupplierAsync(value.Id);
+                        if (freshSupplier != null && freshSupplier.Contacts != null && freshSupplier.Contacts.Any())
+                        {
+                            if (System.Windows.Application.Current?.Dispatcher != null)
+                            {
+                                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                                {
+                                    if (SelectedSupplier?.Id == freshSupplier.Id)
+                                    {
+                                        SelectedSupplier = freshSupplier;
+                                        var idx = Suppliers.IndexOf(Suppliers.FirstOrDefault(s => s.Id == freshSupplier.Id));
+                                        if (idx >= 0) Suppliers[idx] = freshSupplier;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to asynchronously load supplier contacts for {SupplierId}", value.Id);
+                    }
+                });
+            }
         }
 
         partial void OnSelectedProjectChanged(Project? value)
@@ -963,8 +993,49 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 BusyText = "Preparing email...";
                 var path = await _pdfService.GenerateOrderPdfAsync(CurrentOrder.Model);
 
-                var rawEmail = SelectedSupplier?.Email;
-                var emails = EmailHelper.ParseEmailAddresses(rawEmail);
+                var emails = new List<string>();
+                if (SelectedSupplier != null)
+                {
+                    if (SelectedSupplier.Id != Guid.Empty)
+                    {
+                        try
+                        {
+                            var freshSupplier = await _supplierService.GetSupplierAsync(SelectedSupplier.Id);
+                            if (freshSupplier != null)
+                            {
+                                SelectedSupplier = freshSupplier;
+                                var idx = Suppliers.IndexOf(Suppliers.FirstOrDefault(s => s.Id == freshSupplier.Id));
+                                if (idx >= 0) Suppliers[idx] = freshSupplier;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Could not refresh supplier details for {SupplierId}", SelectedSupplier.Id);
+                        }
+                    }
+
+                    var mainEmails = EmailHelper.ParseEmailAddresses(SelectedSupplier.Email);
+                    foreach (var e in mainEmails)
+                    {
+                        if (!emails.Contains(e, StringComparer.OrdinalIgnoreCase)) emails.Add(e);
+                    }
+
+                    if (SelectedSupplier.Contacts != null)
+                    {
+                        foreach (var contact in SelectedSupplier.Contacts)
+                        {
+                            if (!string.IsNullOrWhiteSpace(contact.Email))
+                            {
+                                var contactEmails = EmailHelper.ParseEmailAddresses(contact.Email);
+                                foreach (var ce in contactEmails)
+                                {
+                                    if (!emails.Contains(ce, StringComparer.OrdinalIgnoreCase)) emails.Add(ce);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 string recipientEmail = string.Empty;
 
                 if (emails.Count > 1)
@@ -992,13 +1063,49 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 else
                 {
                     IsBusy = false;
-                    // No email on file - prompt user to enter one
-                    var entered = await _dialogService.ShowInputDialogAsync("Recipient Email", "Enter supplier email address:", rawEmail ?? string.Empty);
-                    if (string.IsNullOrWhiteSpace(entered))
+                    // No email on file - prompt user with custom contact overlay dialog to save contact to supplier
+                    var tcs = new TaskCompletionSource<SupplierContact?>();
+                    var dialog = new AddSupplierContactViewModel(SelectedSupplier?.Name ?? "Supplier");
+                    dialog.Completed += (newContact) =>
+                    {
+                        CloseOverlay();
+                        tcs.TrySetResult(newContact);
+                    };
+                    OpenOverlay(dialog);
+                    var newContact = await tcs.Task;
+                    if (newContact == null || string.IsNullOrWhiteSpace(newContact.Email))
                     {
                         return; // Cancelled
                     }
-                    recipientEmail = entered.Trim();
+
+                    recipientEmail = newContact.Email.Trim();
+
+                    // Persist new contact information to the supplier
+                    if (SelectedSupplier != null)
+                    {
+                        newContact.SupplierId = SelectedSupplier.Id;
+                        SelectedSupplier.Contacts ??= new List<SupplierContact>();
+                        SelectedSupplier.Contacts.Add(newContact);
+
+                        if (string.IsNullOrWhiteSpace(SelectedSupplier.Email))
+                        {
+                            SelectedSupplier.Email = newContact.Email;
+                        }
+                        if (string.IsNullOrWhiteSpace(SelectedSupplier.ContactPerson))
+                        {
+                            SelectedSupplier.ContactPerson = newContact.ContactName;
+                        }
+
+                        try
+                        {
+                            await _supplierService.UpdateSupplierAsync(SelectedSupplier);
+                            _toastService.ShowSuccess("Supplier Contact Saved", $"Saved '{newContact.ContactName}' ({newContact.Email}) to supplier {SelectedSupplier.Name}.");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Could not save supplier contact automatically");
+                        }
+                    }
                 }
 
                 IsBusy = true;

@@ -50,7 +50,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public bool IsProjectSelectorVisible => 
             Status == AttendanceStatus.Present || 
             Status == AttendanceStatus.Late || 
-            Status == AttendanceStatus.LeaveEarly;
+            Status == AttendanceStatus.LeaveEarly ||
+            Status == AttendanceStatus.UnpaidHalfDay;
 
         public TimeSpan? CheckInTimeSpan
         {
@@ -311,6 +312,29 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 EditingRecord.ProjectId = null;
                 EditingRecord.CustomSite = null;
+            }
+
+            // Set Paid and Unpaid Leave Hours based on Status
+            var shiftStart = SelectedEmployee?.ShiftStartTime ?? new TimeSpan(7, 0, 0);
+            var isCapeTown = string.Equals(SelectedEmployee?.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase);
+            var shiftEnd = SelectedEmployee?.ShiftEndTime ?? (isCapeTown ? new TimeSpan(16, 30, 0) : new TimeSpan(16, 45, 0));
+            var fullShiftHours = Math.Max(0, (shiftEnd - shiftStart).TotalHours - 1.0);
+            if (fullShiftHours <= 0) fullShiftHours = 8.0;
+
+            if (EditingRecord.Status == AttendanceStatus.UnpaidHalfDay)
+            {
+                EditingRecord.UnpaidLeaveHours = fullShiftHours / 2.0;
+                EditingRecord.PaidLeaveHours = 0;
+            }
+            else if (EditingRecord.Status == AttendanceStatus.UnpaidLeave || EditingRecord.Status == AttendanceStatus.UnpaidSick)
+            {
+                EditingRecord.UnpaidLeaveHours = fullShiftHours;
+                EditingRecord.PaidLeaveHours = 0;
+            }
+            else if (EditingRecord.Status == AttendanceStatus.LeaveAuthorized)
+            {
+                EditingRecord.PaidLeaveHours = fullShiftHours;
+                EditingRecord.UnpaidLeaveHours = 0;
             }
 
             // 2. Save the attendance record

@@ -359,6 +359,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 AttendanceStatus.LeaveEarly => "Left Early",
                 AttendanceStatus.UnpaidSick => "Unpaid Sick",
                 AttendanceStatus.UnpaidLeave => "Unpaid Leave",
+                AttendanceStatus.UnpaidHalfDay => "Unpaid Half Day",
                 _ => "Unknown"
             };
 
@@ -374,6 +375,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 AttendanceStatus.LeaveEarly => "#E65100",
                 AttendanceStatus.UnpaidSick => "#8E24AA",
                 AttendanceStatus.UnpaidLeave => "#5E35B1",
+                AttendanceStatus.UnpaidHalfDay => "#7B1FA2",
                 _ => "#607D8B"
             };
 

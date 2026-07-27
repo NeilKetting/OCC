@@ -100,8 +100,10 @@ namespace OCC.Shared.Models
         LeaveAuthorized,
         /// <summary> Employee is off duty due to illness, but has exhausted paid sick leave. </summary>
         UnpaidSick,
-        /// <summary> Employee is off duty without pay. </summary>
-        UnpaidLeave
+        /// <summary> Employee is off duty without pay for half the shift. </summary>
+        UnpaidLeave,
+        /// <summary> Employee is off duty without pay for half of the working day. </summary>
+        UnpaidHalfDay
     }
 }
 

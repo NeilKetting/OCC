@@ -482,9 +482,31 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 Supplier? supplier = CurrentOrder.SupplierId.HasValue 
                     ? await _supplierService.GetSupplierAsync(CurrentOrder.SupplierId.Value) 
                     : null;
-                var rawEmail = supplier?.Email;
                 var supplierName = supplier?.Name ?? CurrentOrder.SupplierName ?? "Supplier";
-                var emails = EmailHelper.ParseEmailAddresses(rawEmail);
+                var emails = new List<string>();
+                if (supplier != null)
+                {
+                    var mainEmails = EmailHelper.ParseEmailAddresses(supplier.Email);
+                    foreach (var e in mainEmails)
+                    {
+                        if (!emails.Contains(e, StringComparer.OrdinalIgnoreCase)) emails.Add(e);
+                    }
+
+                    if (supplier.Contacts != null)
+                    {
+                        foreach (var contact in supplier.Contacts)
+                        {
+                            if (!string.IsNullOrWhiteSpace(contact.Email))
+                            {
+                                var contactEmails = EmailHelper.ParseEmailAddresses(contact.Email);
+                                foreach (var ce in contactEmails)
+                                {
+                                    if (!emails.Contains(ce, StringComparer.OrdinalIgnoreCase)) emails.Add(ce);
+                                }
+                            }
+                        }
+                    }
+                }
                 string recipientEmail = string.Empty;
 
                 if (emails.Count > 1)
@@ -512,7 +534,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 else
                 {
                     IsBusy = false;
-                    var entered = await _dialogService.ShowInputDialogAsync("Recipient Email", "Enter recipient email address:", rawEmail ?? string.Empty);
+                    var entered = await _dialogService.ShowInputDialogAsync("Recipient Email", "Enter recipient email address:", supplier?.Email ?? string.Empty);
                     if (string.IsNullOrWhiteSpace(entered))
                     {
                         return; // Cancelled
