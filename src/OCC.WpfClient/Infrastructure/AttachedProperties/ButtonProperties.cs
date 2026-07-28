@@ -81,5 +81,39 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
 
         public static Brush GetHoverIconForeground(DependencyObject d) => (Brush)d.GetValue(HoverIconForegroundProperty);
         public static void SetHoverIconForeground(DependencyObject d, Brush value) => d.SetValue(HoverIconForegroundProperty, value);
+
+        // OpenContextMenuOnClick Property
+        public static readonly DependencyProperty OpenContextMenuOnClickProperty =
+            DependencyProperty.RegisterAttached(
+                "OpenContextMenuOnClick",
+                typeof(bool),
+                typeof(ButtonProperties),
+                new PropertyMetadata(false, OnOpenContextMenuOnClickChanged));
+
+        public static bool GetOpenContextMenuOnClick(DependencyObject obj) => (bool)obj.GetValue(OpenContextMenuOnClickProperty);
+        public static void SetOpenContextMenuOnClick(DependencyObject obj, bool value) => obj.SetValue(OpenContextMenuOnClickProperty, value);
+
+        private static void OnOpenContextMenuOnClickChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is System.Windows.Controls.Button btn)
+            {
+                btn.Click -= OnButtonClickOpenContextMenu;
+                if ((bool)e.NewValue)
+                {
+                    btn.Click += OnButtonClickOpenContextMenu;
+                }
+            }
+        }
+
+        private static void OnButtonClickOpenContextMenu(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && btn.ContextMenu != null)
+            {
+                btn.ContextMenu.PlacementTarget = btn;
+                btn.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                btn.ContextMenu.DataContext = btn.DataContext;
+                btn.ContextMenu.IsOpen = true;
+            }
+        }
     }
 }

@@ -33,7 +33,7 @@ namespace OCC.Tests
             public double NetPay { get; set; }
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task FindMissingEmployees()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -149,7 +149,7 @@ namespace OCC.Tests
             public string Comments { get; set; } = "";
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task CompareExcelWithDatabase()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -211,8 +211,10 @@ namespace OCC.Tests
 
             // Build the WageCalculationService
             var wageCalc = new WageCalculationService(new WageCalculationOptions());
-            var wageRunService = new WageRunService(context, wageCalc, null!);
-            var controller = new WageRunsController(context, wageRunService);
+            var loggerRun = Microsoft.Extensions.Logging.Abstractions.NullLogger<WageRunService>.Instance;
+            var loggerCtrl = Microsoft.Extensions.Logging.Abstractions.NullLogger<WageRunsController>.Instance;
+            var wageRunService = new WageRunService(context, wageCalc, null!, loggerRun);
+            var controller = new WageRunsController(context, wageRunService, loggerCtrl);
 
             // Generate the draft request
             var draftReq = new WageRun
@@ -280,7 +282,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\excel_comparison_audit.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public void VerifySafeWorkingHours()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -319,7 +321,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\safe_hours_verification.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task CheckCasualRates()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -339,7 +341,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\casual_rates_check.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task CompareBankingDetails()
         {
             var oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -483,7 +485,7 @@ namespace OCC.Tests
             return oldBank; // Fallback to raw if not matched
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task UpdateEmployeeRatesFromExcel()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -534,12 +536,12 @@ namespace OCC.Tests
                 var dbEmp = dbEmployees.FirstOrDefault(e => e.EmployeeNumber?.Trim() == excelEmp.Bas);
                 if (dbEmp != null)
                 {
-                    double oldRate = dbEmp.HourlyRate;
+                    double oldRate = (double)dbEmp.HourlyRate;
                     double newRate = excelEmp.Rate;
 
                     if (Math.Abs(oldRate - newRate) > 0.001)
                     {
-                        dbEmp.HourlyRate = newRate;
+                        dbEmp.HourlyRate = (decimal)newRate;
                         sb.AppendLine($"| {excelEmp.Bas} | {dbEmp.FirstName} {dbEmp.LastName} | R {oldRate:F2} | R {newRate:F2} | Updated |");
                         updatedCount++;
                     }
@@ -571,7 +573,7 @@ namespace OCC.Tests
             _output.WriteLine(sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public void DumpPdfText()
         {
             string pdfPath = @"C:\Users\Neil\Documents\OCC\WageRuns\WageRun_Johannesburg_20260710_082216.pdf";
@@ -590,7 +592,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\pdf_text_dump.txt", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public void TestPdfParserRows()
         {
             string pdfPath = @"C:\Users\Neil\Documents\OCC Report Runs\audit_01kx34zdvw8gpf8a3m971jddj0_20260709_124054.pdf";
@@ -617,7 +619,7 @@ namespace OCC.Tests
             Assert.NotEmpty(rows);
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task PortSuppliers()
         {
             string oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -814,7 +816,7 @@ namespace OCC.Tests
             _output.WriteLine(sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task PortInventoryItems()
         {
             string oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -1024,7 +1026,7 @@ namespace OCC.Tests
             _output.WriteLine(sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task DumpEmployeeAttendance()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1074,7 +1076,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\employee_attendance_dump.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task PrintEmployeeShiftDetails()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1097,7 +1099,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\employee_shifts.txt", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task DumpCompanyProfile()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1109,7 +1111,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\company_profile.json", profile?.Value ?? "{}");
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task DumpMismatchedSaturdays()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1146,7 +1148,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\saturday_mismatches_dump.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task DumpMismatchDetails()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1182,7 +1184,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\mismatch_details_dump.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task DumpAllEmployeesDailyHours()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -1238,7 +1240,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\all_employees_hours_compare.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public async Task DumpTimothyDetails()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1270,7 +1272,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\timothy_details_dump.md", sb.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public void DumpHerisExcelRow()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -1299,7 +1301,7 @@ namespace OCC.Tests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Local debug test requiring local database or files")]
         public void DumpExcelColumns()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

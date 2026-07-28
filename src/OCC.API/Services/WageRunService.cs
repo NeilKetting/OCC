@@ -3,31 +3,45 @@ using Microsoft.Extensions.Configuration;
 using OCC.API.Data;
 using OCC.Shared.Models;
 using OCC.Shared.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace OCC.API.Services
 {
+    /// <summary>
+    /// Implements wage run calculation, draft generation, loan adjustments, and finalization logic.
+    /// </summary>
     public class WageRunService : IWageRunService
     {
         private readonly AppDbContext _context;
         private readonly IWageCalculationService _wageCalc;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<WageRunService> _logger;
 
-        public WageRunService(AppDbContext context, IWageCalculationService wageCalc, IConfiguration configuration)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WageRunService"/> class.
+        /// </summary>
+        public WageRunService(AppDbContext context, IWageCalculationService wageCalc, IConfiguration configuration, ILogger<WageRunService> logger)
         {
-            _context = context;
-            _wageCalc = wageCalc;
-            _configuration = configuration;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _wageCalc = wageCalc ?? throw new ArgumentNullException(nameof(wageCalc));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         public async Task<WageRun> GenerateDraftAsync(WageRun request)
         {
-            // Request contains StartDate, EndDate. RunDate is Now.
-            var runDate = DateTime.Now.Date; // "Today"
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (request.StartDate > request.EndDate)
+            {
+                throw new ArgumentException("Start date cannot be after end date.");
+            }
+
+            var runDate = DateTime.Now.Date;
             var branchEnum = request.Branch.ToBranchEnum();
             bool isCapeTown = branchEnum == Branch.CPT;
 
@@ -53,12 +67,12 @@ namespace OCC.API.Services
                 RunDate = runDate,
                 Status = WageRunStatus.Draft,
                 PayType = request.PayType,
-                Branch = request.Branch, // Ensure Branch is set from request
+                Branch = request.Branch,
                 Notes = request.Notes
             };
 
-            // 2. Fetch Active Staff matching the PayType
-            var rateType = RateType.Hourly; // Default
+            // 3. Fetch Active Staff matching the PayType
+            var rateType = RateType.Hourly;
             if (!string.IsNullOrEmpty(request.PayType) && Enum.TryParse<RateType>(request.PayType, out var parsedType))
             {
                 rateType = parsedType;
@@ -84,21 +98,28 @@ namespace OCC.API.Services
             
             // Calculate gas split
             var housedEmployees = employees.Where(e => e.LivesInCompanyHousing).ToList();
-            decimal gasPerPerson = 0;
+            decimal gasPerPerson = 0m;
             if (housedEmployees.Count > 0 && request.InputTotalGasCharge > 0)
             {
                 gasPerPerson = request.InputTotalGasCharge / housedEmployees.Count;
             }
 
-            // 3. Load CompanyProfile to resolve branch shift defaults (no hardcoded times)
+            // Load CompanyProfile to resolve branch shift defaults
             CompanyDetails? companyDetails = null;
             var profileSetting = await _context.AppSettings.FirstOrDefaultAsync(s => s.Key == "CompanyProfile");
             if (profileSetting != null && !string.IsNullOrEmpty(profileSetting.Value))
             {
-                companyDetails = JsonSerializer.Deserialize<CompanyDetails>(profileSetting.Value);
+                try
+                {
+                    companyDetails = JsonSerializer.Deserialize<CompanyDetails>(profileSetting.Value);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize CompanyProfile setting.");
+                }
             }
 
-            // 4. Fetch Attendance for the Period (up to EndDate of Week 2) and any historical unpaid paid/leave records
+            // Fetch Attendance for Period
             var attendance = await _context.AttendanceRecords
                 .Where(a => a.PaidWageRunId == null && 
                             ((a.Date >= request.StartDate && a.Date <= request.EndDate) ||
@@ -106,12 +127,12 @@ namespace OCC.API.Services
                               (a.Status == AttendanceStatus.Sick || a.Status == AttendanceStatus.LeaveAuthorized || (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
                 .ToListAsync();
 
-            // 4. Fetch Active Loans
+            // Fetch Active Loans
             var activeLoans = await _context.EmployeeLoans
                 .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate <= runDate)
                 .ToListAsync();
 
-            // 4. Fetch Previous Finalized Run (for Variance) - MUST BE BRANCH SPECIFIC
+            // Fetch Previous Finalized Run
             var lastRun = await _context.WageRuns
                 .Include(w => w.Lines)
                 .Where(w => (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) && 
@@ -123,7 +144,6 @@ namespace OCC.API.Services
                 .OrderByDescending(w => w.EndDate)
                 .FirstOrDefaultAsync();
 
-            // 5. Pre-load prepaid window (Thursday/Friday of previous cycle) leave requests and attendance records
             var prepaidStart = request.StartDate.AddDays(-2).Date;
             var prepaidEnd = request.StartDate.AddDays(-1).Date;
 
@@ -153,9 +173,9 @@ namespace OCC.API.Services
                     Comments = string.Empty,
                     EmploymentType = emp.EmploymentType.ToString(),
                     HourlyRate = (decimal)emp.HourlyRate,
-                    DeductionGas = 0, // Initialized to 0, set below
-                    DeductionWashing = 0, // Initialized to 0, set below
-                    IncentiveSupervisor = 0, // Initialized to 0, set below
+                    DeductionGas = 0m,
+                    DeductionWashing = 0m,
+                    IncentiveSupervisor = 0m,
                     IsCompanyHoused = emp.LivesInCompanyHousing,
                     IsSupervisor = (emp.Role == EmployeeRole.Supervisor || emp.Role == EmployeeRole.SiteManager ||
                                     emp.Role == EmployeeRole.BuildingSupervisor || emp.Role == EmployeeRole.PlasterSupervisor ||
@@ -164,9 +184,8 @@ namespace OCC.API.Services
                     IsBibc = emp.IsBibc
                 };
 
-                // Supervisor Incentive: try to reuse the fee from the previous finalized run first
-                decimal supervisorFee = 0;
-                if (lastRun != null)
+                decimal supervisorFee = 0m;
+                if (lastRun != null && lastRun.Lines != null)
                 {
                     var lastLine = lastRun.Lines.FirstOrDefault(l => l.EmployeeId == emp.Id);
                     if (lastLine != null && lastLine.IncentiveSupervisor > 0)
@@ -175,19 +194,13 @@ namespace OCC.API.Services
                     }
                 }
 
-                // If not found in the previous run, fall back to default fee if they are in a supervisor role
-                if (supervisorFee == 0 &&
-                    (emp.Role == EmployeeRole.Supervisor || emp.Role == EmployeeRole.SiteManager ||
-                     emp.Role == EmployeeRole.BuildingSupervisor || emp.Role == EmployeeRole.PlasterSupervisor ||
-                     emp.Role == EmployeeRole.ShopfittingSupervisor || emp.Role == EmployeeRole.PaintingSupervisor ||
-                     emp.Role == EmployeeRole.LabourSupervisor))
+                if (supervisorFee == 0 && line.IsSupervisor)
                 {
                     supervisorFee = request.InputDefaultSupervisorFee;
                 }
 
                 line.IncentiveSupervisor = supervisorFee;
 
-                // Gas and specific washing deduction for Company Housing
                 if (emp.LivesInCompanyHousing)
                 {
                     line.DeductionGas = gasPerPerson;
@@ -197,7 +210,6 @@ namespace OCC.API.Services
                     }
                 }
 
-                // A. Calculate Normal & Overtime Hours (Actual)
                 var empAttendance = attendance
                     .Where(a => a.EmployeeId == emp.Id)
                     .OrderBy(a => a.Date)
@@ -209,22 +221,18 @@ namespace OCC.API.Services
 
                 var week1End = request.StartDate.AddDays(6);
                 
-                // Track distinct dates worked in each week
                 var distinctDaysW1 = new HashSet<DateTime>();
                 var distinctDaysW2 = new HashSet<DateTime>();
 
-                // Resolve branch shift defaults for this employee if no personal shift is set
                 var empForCalc = emp;
                 if ((emp.ShiftStartTime == null || emp.ShiftEndTime == null) && companyDetails != null)
                 {
-                    // Map the employee's branch string to the Branch enum key
                     var branchKey = emp.Branch?.Contains("Cape", StringComparison.OrdinalIgnoreCase) == true
                         ? Branch.CPT
                         : Branch.JHB;
 
                     if (companyDetails?.Branches != null && companyDetails.Branches.TryGetValue(branchKey, out var branchDetails))
                     {
-                        // Clone with the branch shift so the original DB entity is untouched
                         empForCalc = new Employee
                         {
                             Id                    = emp.Id,
@@ -243,7 +251,6 @@ namespace OCC.API.Services
                     }
                 }
 
-                // Calculate standard weekday shift duration for the employee
                 double dailyHours = 9.0;
                 if (empForCalc.ShiftStartTime.HasValue && empForCalc.ShiftEndTime.HasValue)
                 {
@@ -325,12 +332,11 @@ namespace OCC.API.Services
                     }
                 }
 
-                line.DaysWorkedWeek1 = 0; // W1 (deducted days offset)
-                line.DaysWorkedWeek2 = distinctDaysW1.Count; // W2 (Week 1 actual worked)
-                line.DaysWorkedWeek3 = distinctDaysW2.Count; // W3 (Week 2 actual worked)
+                line.DaysWorkedWeek1 = 0;
+                line.DaysWorkedWeek2 = distinctDaysW1.Count;
+                line.DaysWorkedWeek3 = distinctDaysW2.Count;
                 line.TotalDaysWorked = distinctDaysW1.Count + distinctDaysW2.Count;
 
-                // B. Calculate Projected Hours (Thursday to Friday of the run period)
                 var projectedStart = DateTime.MinValue;
                 var projectedEnd = DateTime.MinValue;
                 int startOffset = isCapeTown ? 0 : 7;
@@ -349,19 +355,15 @@ namespace OCC.API.Services
                     for (var d = projectedStart; d <= projectedEnd; d = d.AddDays(1))
                     {
                         var dow = d.DayOfWeek;
-                        // Skip Weekend or Public Holiday
                         if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
 
-                        // Check if there is an approved unpaid/absent leave request for this projected day
                         var hasUnpaidProjLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, d));
 
                         if (hasUnpaidProjLeave) continue;
 
-                        // Check if there is an attendance record for this day
                         var record = empAttendance.FirstOrDefault(r => r.Date.Date == d.Date);
                         if (record == null)
                         {
-                            // If there isn't any record, we by default pay them
                             line.ProjectedHours += dailyHours;
                         }
                     }
@@ -380,22 +382,17 @@ namespace OCC.API.Services
                 }
                 line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
-                // C. Variance Calculation (Previous Run)
                 double leaveDeductionDays = 0;
                 double leaveDeductionHours = 0;
-                int prepaidWorkingDays = 0;
 
                 var empAttendanceRecords = prepaidAttendanceRecords
                     .Where(ar => ar.EmployeeId == emp.Id)
                     .ToList();
 
-                // Find the previous run line to determine what projected hours were actually paid in advance
                 var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
 
-                // Use shift dailyHours if available, default to 8.75
                 double standardDayHours = dailyHours > 0 ? dailyHours : 8.75;
 
-                // Allow max projected hours to deduct based on prior line if available (>0), or default to max 2 prepaid days
                 double maxProjectedHoursToDeduct = (priorLine != null && priorLine.ProjectedHours > 0)
                     ? (double)priorLine.ProjectedHours
                     : (2.0 * standardDayHours);
@@ -405,11 +402,8 @@ namespace OCC.API.Services
 
                 for (var d = prepaidEnd; d >= prepaidStart; d = d.AddDays(-1))
                 {
-                    // Skip weekends and public holidays
                     if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
                         continue;
-
-                    prepaidWorkingDays++;
 
                     double dayHours = standardDayHours;
                     TimeSpan? startTime = emp.ShiftStartTime;
@@ -443,7 +437,6 @@ namespace OCC.API.Services
                         }
                     }
 
-                    // Only deduct if this day was paid as projected in the previous run
                     if (remainingProjectedHours >= dayHours - 0.01)
                     {
                         remainingProjectedHours -= dayHours;
@@ -491,10 +484,8 @@ namespace OCC.API.Services
                     line.DaysWorkedWeek1 = -leaveDeductionDays;
                 }
 
-                // Recalculate TotalDaysWorked to include the deducted days offset (Week 1)
                 line.TotalDaysWorked = line.DaysWorkedWeek1 + line.DaysWorkedWeek2 + line.DaysWorkedWeek3;
 
-                // Calculate BIBC Amount
                 if (emp.IsBibc && emp.Branch.ToBranchEnum() == Branch.CPT)
                 {
                     line.BibcAmount = bibcRate * (decimal)line.TotalDaysWorked;
@@ -504,15 +495,13 @@ namespace OCC.API.Services
                     line.BibcAmount = 0m;
                 }
 
-                // D. Total Wage
                 var calculatedWage = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours) * line.HourlyRate +
                                      (decimal)(line.Overtime15Hours + line.SaturdayOvertimeHours) * line.HourlyRate * 1.5m +
                                      (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
                 line.TotalWage = Math.Max(0m, calculatedWage);
                     
-                // E. Loans (deducted according to frequency specified in loan agreement)
                 var empLoans = activeLoans.Where(l => l.EmployeeId == emp.Id).ToList();
-                decimal totalLoanDeduction = 0;
+                decimal totalLoanDeduction = 0m;
                 foreach (var loan in empLoans)
                 {
                     string frequency = "";
@@ -566,12 +555,12 @@ namespace OCC.API.Services
                 }
 
                 var backupPath = _configuration.GetValue<string>("Backup:Path") ?? @"C:\OCCBackups";
-                if (!System.IO.Directory.Exists(backupPath))
+                if (!Directory.Exists(backupPath))
                 {
-                    System.IO.Directory.CreateDirectory(backupPath);
+                    Directory.CreateDirectory(backupPath);
                 }
 
-                var backupFileName = System.IO.Path.Combine(backupPath, $"{dbName}_PreFinalize_{DateTime.Now:yyyyMMdd_HHmmss}.bak");
+                var backupFileName = Path.Combine(backupPath, $"{dbName}_PreFinalize_{DateTime.Now:yyyyMMdd_HHmmss}.bak");
                 
 #pragma warning disable EF1002
                 await _context.Database.ExecuteSqlRawAsync(
@@ -581,18 +570,23 @@ namespace OCC.API.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Pre-finalization backup failed: {ex.Message}");
+                _logger.LogWarning(ex, "Pre-finalization backup failed or ignored for non-SQL Server provider.");
             }
         }
 
+        /// <inheritdoc/>
         public async Task<WageRun> FinalizeRunAsync(WageRun run)
         {
+            if (run == null)
+            {
+                throw new ArgumentNullException(nameof(run));
+            }
+
             await PerformPreFinalizationBackupAsync();
 
             var existing = await _context.WageRuns.Include(w => w.Lines).FirstOrDefaultAsync(w => w.Id == run.Id);
             if (existing != null)
             {
-                // Reverse old loan updates for existing run
                 foreach (var line in existing.Lines)
                 {
                     if (line.DeductionLoan > 0)
@@ -648,12 +642,11 @@ namespace OCC.API.Services
                 _context.WageRuns.Add(run);
             }
 
-            // Update employee loan outstanding balances
             foreach (var line in run.Lines)
             {
                 if (line.DeductionLoan > 0)
                 {
-                    var rateType = RateType.Hourly; // Default
+                    var rateType = RateType.Hourly;
                     if (!string.IsNullOrEmpty(run.PayType) && Enum.TryParse<RateType>(run.PayType, out var parsedType))
                     {
                         rateType = parsedType;
@@ -705,15 +698,15 @@ namespace OCC.API.Services
                         if (loan.OutstandingBalance >= remainingDeduction)
                         {
                             loan.OutstandingBalance -= remainingDeduction;
-                            remainingDeduction = 0;
+                            remainingDeduction = 0m;
                         }
                         else
                         {
                             remainingDeduction -= loan.OutstandingBalance;
-                            loan.OutstandingBalance = 0;
+                            loan.OutstandingBalance = 0m;
                         }
 
-                        if (loan.OutstandingBalance == 0)
+                        if (loan.OutstandingBalance == 0m)
                         {
                             loan.IsActive = false;
                             loan.EndDate = run.EndDate;
@@ -722,7 +715,6 @@ namespace OCC.API.Services
                 }
             }
 
-            // Mark all processed attendance records as paid by this wage run
             var runDateFinal = run.RunDate != default ? run.RunDate : DateTime.Now.Date;
             var cutoffDateFinal = DateTime.MinValue;
             int startOffset = run.Branch == "Cape Town" ? 0 : 7;
@@ -762,7 +754,6 @@ namespace OCC.API.Services
         {
             var target = targetDate.Date;
 
-            // Normalize lr.StartDate and lr.EndDate handling potential UTC stored values
             var start = lr.StartDate.Kind == DateTimeKind.Utc ? lr.StartDate.ToLocalTime().Date : lr.StartDate.Date;
             var end = lr.EndDate.Kind == DateTimeKind.Utc ? lr.EndDate.ToLocalTime().Date : lr.EndDate.Date;
 

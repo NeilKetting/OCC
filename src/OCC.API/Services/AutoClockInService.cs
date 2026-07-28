@@ -5,18 +5,28 @@ using System.Text.Json;
 
 namespace OCC.API.Services
 {
+    /// <summary>
+    /// Background service that periodically checks scheduled shift start/end times and active site deployments
+    /// to automatically generate clock-in and clock-out attendance records.
+    /// </summary>
     public class AutoClockInService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<AutoClockInService> _logger;
         private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(15);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AutoClockInService"/> background service.
+        /// </summary>
+        /// <param name="serviceProvider">The root service provider for scoped DB context creation.</param>
+        /// <param name="logger">The logger instance.</param>
         public AutoClockInService(IServiceProvider serviceProvider, ILogger<AutoClockInService> logger)
         {
-            _serviceProvider = serviceProvider;
-            _logger = logger;
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <inheritdoc/>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("AutoClockInService is starting.");
@@ -38,7 +48,11 @@ namespace OCC.API.Services
             _logger.LogInformation("AutoClockInService is stopping.");
         }
 
-        private async Task ProcessClockInAsync(CancellationToken stoppingToken)
+        /// <summary>
+        /// Processes automatic clock-ins and clock-outs for all active employees based on deployment and company shift configurations.
+        /// </summary>
+        /// <param name="stoppingToken">Cancellation token.</param>
+        public async Task ProcessClockInAsync(CancellationToken stoppingToken = default)
         {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -50,13 +64,23 @@ namespace OCC.API.Services
                 return;
             }
 
-            var companyDetails = JsonSerializer.Deserialize<CompanyDetails>(setting.Value);
+            CompanyDetails? companyDetails = null;
+            try
+            {
+                companyDetails = JsonSerializer.Deserialize<CompanyDetails>(setting.Value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize CompanyProfile for AutoClockInService.");
+                return;
+            }
+
             if (companyDetails == null || !companyDetails.AutoClockInEnabled)
             {
                 return; // Feature is disabled
             }
 
-            // South Africa Standard Time (SAST, UTC+2) is the local timezone for all branches (JHB and CPT)
+            // South Africa Standard Time (SAST, UTC+2)
             var saTimeZone = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
             var saTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, saTimeZone);
             var today = saTime.Date;
@@ -78,14 +102,13 @@ namespace OCC.API.Services
                 }
             }
 
-            // Check if today is a scheduled day
             bool isScheduledDay = companyDetails.AutoClockInDays != null && 
                                   companyDetails.AutoClockInDays.Count > 0 && 
                                   companyDetails.AutoClockInDays.Contains(todayDay);
 
             if (!isScheduledDay && employeeProjectMap.Count == 0)
             {
-                _logger.LogInformation($"AutoClockInService: Skipping today ({todayDay}) as it is not a scheduled day and no crews are deployed.");
+                _logger.LogInformation("AutoClockInService: Skipping today ({TodayDay}) as it is not a scheduled day and no crews are deployed.", todayDay);
                 return;
             }
 
@@ -108,7 +131,6 @@ namespace OCC.API.Services
                 var shiftStartTime = employee.ShiftStartTime;
                 var shiftEndTime = employee.ShiftEndTime;
 
-                // Resolve branch-specific times from the Company Profile (if defined there)
                 if (!string.IsNullOrEmpty(employee.Branch) && companyDetails.Branches != null)
                 {
                     Branch? branchEnum = employee.Branch.ToLower().Trim() switch
@@ -127,11 +149,9 @@ namespace OCC.API.Services
                     }
                 }
 
-                // Default fallback if still null
                 shiftStartTime ??= new TimeSpan(7, 0, 0);
                 shiftEndTime ??= new TimeSpan(16, 45, 0);
                 
-                // Get V1 and V2 records for today
                 var existingRecord = await dbContext.AttendanceRecords
                     .FirstOrDefaultAsync(r => r.EmployeeId == employee.Id && r.Date.Date == today, stoppingToken);
 
@@ -148,12 +168,10 @@ namespace OCC.API.Services
 
                 if (existingRecord == null)
                 {
-                    // If they don't have a record today, check if we should auto clock-in
                     if (shiftStartTime != null && currentTime >= shiftStartTime.Value)
                     {
                         var inTime = today.Add(shiftStartTime.Value);
                         
-                        // V1
                         var record = new AttendanceRecord
                         {
                             Id = Guid.NewGuid(),
@@ -168,7 +186,6 @@ namespace OCC.API.Services
                         };
                         dbContext.AttendanceRecords.Add(record);
                         
-                        // V2
                         if (v2Timesheet == null)
                         {
                             v2Timesheet = new DailyTimesheet
@@ -182,7 +199,6 @@ namespace OCC.API.Services
                             dbContext.DailyTimesheets.Add(v2Timesheet);
                         }
 
-                        // V2 Immutable Event
                         var clockingEvent = new ClockingEvent
                         {
                             Id = Guid.NewGuid(),
@@ -204,12 +220,10 @@ namespace OCC.API.Services
                         madeChanges = true;
                     }
 
-                    // If they have an open record today, check if we should auto clock-out
                     if (existingRecord.CheckOutTime == null && shiftEndTime != null && currentTime >= shiftEndTime.Value)
                     {
                         var outTime = today.Add(shiftEndTime.Value);
                         
-                        // V1
                         existingRecord.CheckOutTime = outTime;
                         if (existingRecord.CheckInTime.HasValue)
                         {
@@ -245,12 +259,10 @@ namespace OCC.API.Services
                         else
                             existingRecord.Notes += " | Auto Clock-Out generated by system.";
                             
-                        // V2
                         if (v2Timesheet != null && v2Timesheet.LastOutTime == null)
                         {
                             v2Timesheet.LastOutTime = outTime;
                             
-                            // Rough calculation for V2 auto-checkout
                             if (v2Timesheet.FirstInTime.HasValue)
                             {
                                 v2Timesheet.CalculatedHours = (decimal)(outTime - v2Timesheet.FirstInTime.Value).TotalHours;
@@ -258,7 +270,6 @@ namespace OCC.API.Services
                             }
                         }
 
-                        // V2 Immutable Event
                         var clockingEvent = new ClockingEvent
                         {
                             Id = Guid.NewGuid(),
@@ -282,7 +293,7 @@ namespace OCC.API.Services
             if (processedCount > 0)
             {
                 await dbContext.SaveChangesAsync(stoppingToken);
-                _logger.LogInformation($"AutoClockInService: Automatically processed {processedCount} clock-in/out events.");
+                _logger.LogInformation("AutoClockInService: Automatically processed {ProcessedCount} clock-in/out events.", processedCount);
             }
         }
     }

@@ -364,8 +364,12 @@
                               ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                               VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.ScrollUnit="Pixel"
-                              MouseDoubleClick="OnTaskDoubleClick">
+                              VirtualizingPanel.ScrollUnit="Pixel">
+                        <DataGrid.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick"
+                                          Command="{Binding EditTaskCommand}"
+                                          CommandParameter="{Binding SelectedTask}" />
+                        </DataGrid.InputBindings>
                         <DataGrid.Columns>
                             <!-- Status Icon -->
                             <DataGridTemplateColumn Header="STATUS" Width="Auto">

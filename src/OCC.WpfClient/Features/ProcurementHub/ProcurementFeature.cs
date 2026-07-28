@@ -18,11 +18,17 @@ namespace OCC.WpfClient.Features.ProcurementHub
         {
             services.AddTransient<ProcurementViewModel>();
             services.AddTransient<InventoryListViewModel>();
+            services.AddTransient<InventoryDetailViewModel>();
             services.AddTransient<PurchaseOrderDetailViewModel>();
             services.AddTransient<PickingOrderViewModel>();
             services.AddTransient<SupplierListViewModel>();
+            services.AddTransient<SupplierDetailViewModel>();
             services.AddTransient<ViewModels.Dialogs.ReceiveStockViewModel>();
             services.AddTransient<ViewModels.Dialogs.FindOrderViewModel>();
+            services.AddTransient<ViewModels.Dialogs.AddSupplierContactViewModel>();
+            services.AddTransient<ViewModels.Dialogs.ItemNotFoundViewModel>();
+            services.AddTransient<ViewModels.Dialogs.NewItemViewModel>();
+            services.AddTransient<ViewModels.Dialogs.SelectEmailViewModel>();
 
             services.AddTransient<ISupplierService, SupplierService>();
             services.AddTransient<IOrderService, OrderService>();

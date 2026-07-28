@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
 using OCC.API.Hubs;
+using OCC.API.Security;
 using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 using System;
@@ -13,6 +14,9 @@ using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for managing site deployments, crew allocations, daily site manager receipts with GPS verification, and active site personnel tracking.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -22,6 +26,12 @@ namespace OCC.API.Controllers
         private readonly ILogger<SiteDeploymentsController> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SiteDeploymentsController"/> class.
+        /// </summary>
+        /// <param name="context">Database context.</param>
+        /// <param name="logger">Logger instance.</param>
+        /// <param name="hubContext">SignalR notification hub context.</param>
         public SiteDeploymentsController(
             AppDbContext context,
             ILogger<SiteDeploymentsController> logger,
@@ -32,7 +42,14 @@ namespace OCC.API.Controllers
             _hubContext = hubContext;
         }
 
-        // GET: api/sitedeployments?projectId=&date=&siteManagerId=
+        /// <summary>
+        /// Retrieves site deployments matching the specified query filters.
+        /// </summary>
+        /// <param name="projectId">Optional project ID filter.</param>
+        /// <param name="date">Optional deployment date filter.</param>
+        /// <param name="siteManagerId">Optional site manager ID filter.</param>
+        /// <param name="status">Optional deployment status filter.</param>
+        /// <returns>A list of site deployment DTOs.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SiteDeploymentDto>>> GetDeployments(
             [FromQuery] Guid? projectId = null,
@@ -51,7 +68,10 @@ namespace OCC.API.Controllers
                     .AsQueryable();
 
                 if (projectId.HasValue)
+                {
+                    if (projectId.Value == Guid.Empty) return BadRequest("Invalid project ID.");
                     query = query.Where(sd => sd.ProjectId == projectId.Value);
+                }
 
                 if (date.HasValue)
                     query = query.Where(sd => sd.DeploymentDate.Date == date.Value.Date);
@@ -59,9 +79,11 @@ namespace OCC.API.Controllers
                 if (status.HasValue)
                     query = query.Where(sd => sd.Status == status.Value);
 
-                // When filtering by siteManagerId, match deployments for projects where that SM is assigned
                 if (siteManagerId.HasValue)
+                {
+                    if (siteManagerId.Value == Guid.Empty) return BadRequest("Invalid site manager ID.");
                     query = query.Where(sd => sd.Project != null && sd.Project.SiteManagerId == siteManagerId.Value);
+                }
 
                 var deployments = await query
                     .OrderByDescending(sd => sd.DeploymentDate)
@@ -73,14 +95,20 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving site deployments");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving site deployments.");
             }
         }
 
-        // GET: api/sitedeployments/{id}
+        /// <summary>
+        /// Retrieves details for a specific site deployment by its ID.
+        /// </summary>
+        /// <param name="id">The site deployment ID.</param>
+        /// <returns>The requested site deployment DTO.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<SiteDeploymentDto>> GetDeployment(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid deployment ID.");
+
             try
             {
                 var sd = await _context.SiteDeployments
@@ -96,40 +124,52 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving site deployment {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving the site deployment.");
             }
         }
 
-        // POST: api/sitedeployments
+        /// <summary>
+        /// Creates a new site deployment record with crew members.
+        /// </summary>
+        /// <param name="request">The creation request payload.</param>
+        /// <returns>The created site deployment DTO.</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<ActionResult<SiteDeploymentDto>> CreateDeployment([FromBody] CreateSiteDeploymentRequest request)
         {
+            if (request == null) return BadRequest("Deployment request cannot be null.");
+            if (request.ProjectId == Guid.Empty) return BadRequest("Invalid project ID.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
                 var project = await _context.Projects.FindAsync(request.ProjectId);
-                if (project == null) return NotFound("Project not found");
+                if (project == null) return NotFound("Project not found.");
 
                 var deployment = new SiteDeployment
                 {
                     Id = Guid.NewGuid(),
                     ProjectId = request.ProjectId,
                     DeploymentDate = request.DeploymentDate.Date,
-                    Label = request.Label,
+                    Label = InputSanitizer.Sanitize(request.Label),
                     Status = DeploymentStatus.Pending
                 };
 
-                // Add members
-                foreach (var empId in request.MemberEmployeeIds.Distinct())
+                if (request.MemberEmployeeIds != null)
                 {
-                    var employee = await _context.Employees.FindAsync(empId);
-                    if (employee == null) continue;
-
-                    deployment.Members.Add(new SiteDeploymentMember
+                    foreach (var empId in request.MemberEmployeeIds.Distinct())
                     {
-                        Id = Guid.NewGuid(),
-                        SiteDeploymentId = deployment.Id,
-                        EmployeeId = empId
-                    });
+                        if (empId == Guid.Empty) continue;
+                        var employee = await _context.Employees.FindAsync(empId);
+                        if (employee == null) continue;
+
+                        deployment.Members.Add(new SiteDeploymentMember
+                        {
+                            Id = Guid.NewGuid(),
+                            SiteDeploymentId = deployment.Id,
+                            EmployeeId = empId
+                        });
+                    }
                 }
 
                 _context.SiteDeployments.Add(deployment);
@@ -137,7 +177,6 @@ namespace OCC.API.Controllers
 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "SiteDeployment", "Create", deployment.Id.ToString());
 
-                // Reload for full DTO
                 var created = await _context.SiteDeployments
                     .AsNoTracking()
                     .Include(sd => sd.Project)
@@ -149,14 +188,24 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating site deployment");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while creating the site deployment.");
             }
         }
 
-        // PUT: api/sitedeployments/{id}
+        /// <summary>
+        /// Updates an existing pending site deployment.
+        /// </summary>
+        /// <param name="id">The deployment ID.</param>
+        /// <param name="request">The update request payload.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> UpdateDeployment(Guid id, [FromBody] CreateSiteDeploymentRequest request)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid deployment ID.");
+            if (request == null) return BadRequest("Deployment request cannot be null.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
                 var deployment = await _context.SiteDeployments
@@ -167,19 +216,22 @@ namespace OCC.API.Controllers
                 if (deployment.Status != DeploymentStatus.Pending)
                     return Conflict("Only Pending deployments can be edited.");
 
-                deployment.Label = request.Label;
+                deployment.Label = InputSanitizer.Sanitize(request.Label);
                 deployment.DeploymentDate = request.DeploymentDate.Date;
 
-                // Replace members
                 _context.SiteDeploymentMembers.RemoveRange(deployment.Members);
-                foreach (var empId in request.MemberEmployeeIds.Distinct())
+                if (request.MemberEmployeeIds != null)
                 {
-                    deployment.Members.Add(new SiteDeploymentMember
+                    foreach (var empId in request.MemberEmployeeIds.Distinct())
                     {
-                        Id = Guid.NewGuid(),
-                        SiteDeploymentId = id,
-                        EmployeeId = empId
-                    });
+                        if (empId == Guid.Empty) continue;
+                        deployment.Members.Add(new SiteDeploymentMember
+                        {
+                            Id = Guid.NewGuid(),
+                            SiteDeploymentId = id,
+                            EmployeeId = empId
+                        });
+                    }
                 }
 
                 await _context.SaveChangesAsync();
@@ -190,14 +242,21 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating site deployment {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while updating the site deployment.");
             }
         }
 
-        // DELETE: api/sitedeployments/{id}
+        /// <summary>
+        /// Cancels a site deployment.
+        /// </summary>
+        /// <param name="id">The deployment ID.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> CancelDeployment(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid deployment ID.");
+
             try
             {
                 var deployment = await _context.SiteDeployments.FindAsync(id);
@@ -215,22 +274,34 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error cancelling site deployment {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while cancelling the site deployment.");
             }
         }
 
-        // POST: api/sitedeployments/{id}/receive
         /// <summary>
-        /// Called by the Site Manager on the tablet to confirm the crew is on-site.
-        /// This action:
-        ///   1. Flips deployment Status → Received
-        ///   2. Records GPS + timestamp
-        ///   3. Marks specified members as absent
-        ///   4. Sets AttendanceRecord.ProjectId for all present members (and the SM)
+        /// Confirms crew arrival on-site, records GPS verification coordinates, marks absent crew members, and links attendance to the project.
         /// </summary>
+        /// <param name="id">The site deployment ID.</param>
+        /// <param name="request">The receipt request containing site manager ID, GPS coords, and absent member IDs.</param>
+        /// <returns>Distance from site in metres.</returns>
         [HttpPost("{id}/receive")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> ReceiveDeployment(Guid id, [FromBody] ReceiveDeploymentRequest request)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid deployment ID.");
+            if (request == null) return BadRequest("Receive request cannot be null.");
+            if (request.SiteManagerId == Guid.Empty) return BadRequest("Invalid Site Manager ID.");
+
+            // Validate GPS ranges if provided
+            if (request.GpsLatitude.HasValue && (request.GpsLatitude.Value < -90.0 || request.GpsLatitude.Value > 90.0))
+            {
+                return BadRequest("Invalid GPS latitude coordinate.");
+            }
+            if (request.GpsLongitude.HasValue && (request.GpsLongitude.Value < -180.0 || request.GpsLongitude.Value > 180.0))
+            {
+                return BadRequest("Invalid GPS longitude coordinate.");
+            }
+
             try
             {
                 var deployment = await _context.SiteDeployments
@@ -244,7 +315,6 @@ namespace OCC.API.Controllers
 
                 var today = DateTime.UtcNow.Date;
 
-                // Calculate distance from project site if GPS provided
                 double? distance = null;
                 if (request.GpsLatitude.HasValue && request.GpsLongitude.HasValue
                     && deployment.Project?.Latitude.HasValue == true
@@ -255,7 +325,6 @@ namespace OCC.API.Controllers
                         deployment.Project.Latitude!.Value, deployment.Project.Longitude!.Value);
                 }
 
-                // Update deployment record
                 deployment.Status = DeploymentStatus.Received;
                 deployment.ReceivedAt = DateTime.UtcNow;
                 deployment.ReceivedBySiteManagerId = request.SiteManagerId;
@@ -263,15 +332,16 @@ namespace OCC.API.Controllers
                 deployment.ReceivedGpsLongitude = request.GpsLongitude;
                 deployment.DistanceFromSiteMetres = distance;
 
-                // Mark absent members + attribute attendance to project for present members
-                var absentSet = new HashSet<Guid>(request.AbsentMemberEmployeeIds);
+                var absentSet = request.AbsentMemberEmployeeIds != null 
+                    ? new HashSet<Guid>(request.AbsentMemberEmployeeIds) 
+                    : new HashSet<Guid>();
+
                 foreach (var member in deployment.Members)
                 {
                     member.IsAbsent = absentSet.Contains(member.EmployeeId);
 
                     if (!member.IsAbsent)
                     {
-                        // Attribute today's attendance record to this project
                         var attendance = await _context.AttendanceRecords
                             .FirstOrDefaultAsync(r =>
                                 r.EmployeeId == member.EmployeeId &&
@@ -284,7 +354,6 @@ namespace OCC.API.Controllers
                     }
                 }
 
-                // Attribute the Site Manager's own attendance record to the project
                 var smAttendance = await _context.AttendanceRecords
                     .FirstOrDefaultAsync(r =>
                         r.EmployeeId == request.SiteManagerId &&
@@ -311,15 +380,14 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error receiving site deployment {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while receiving the site deployment.");
             }
         }
 
-        // GET: api/sitedeployments/today-clocked-in
         /// <summary>
-        /// Returns employees who have an attendance record for today — used by the
-        /// WPF crew builder to show who is available to be allocated to a crew.
+        /// Retrieves active employees who have an attendance record for today (used for crew building).
         /// </summary>
+        /// <returns>A list of employee summary DTOs clocked in today.</returns>
         [HttpGet("today-clocked-in")]
         public async Task<ActionResult<IEnumerable<EmployeeSummaryDto>>> GetTodayClockedIn()
         {
@@ -327,7 +395,6 @@ namespace OCC.API.Controllers
             {
                 var today = DateTime.UtcNow.Date;
 
-                // Get EmployeeIds that have an attendance record today
                 var employeeIds = await _context.AttendanceRecords
                     .AsNoTracking()
                     .Where(r => r.Date.Date == today && r.EmployeeId != null)
@@ -356,11 +423,9 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving today's clocked-in employees");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving clocked-in employees.");
             }
         }
-
-        // ─── Helpers ────────────────────────────────────────────────────────────
 
         private static SiteDeploymentDto ToDto(SiteDeployment sd) => new()
         {
@@ -393,10 +458,9 @@ namespace OCC.API.Controllers
             return $"{f}{l}".ToUpper();
         }
 
-        /// <summary> Haversine formula — returns distance in metres between two GPS coordinates. </summary>
         private static double CalculateDistanceMetres(double lat1, double lon1, double lat2, double lon2)
         {
-            const double R = 6371000; // Earth radius in metres
+            const double R = 6371000;
             var dLat = (lat2 - lat1) * Math.PI / 180;
             var dLon = (lon2 - lon1) * Math.PI / 180;
             var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)

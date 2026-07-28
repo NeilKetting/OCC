@@ -23,6 +23,19 @@ namespace OCC.WpfClient.Infrastructure.Converters
                 }
             }
 
+            if (value is Enum enumVal)
+            {
+                var fi = enumVal.GetType().GetField(enumVal.ToString());
+                if (fi != null)
+                {
+                    var attributes = (System.ComponentModel.DescriptionAttribute[])fi.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+                    if (attributes.Length > 0)
+                    {
+                        return attributes[0].Description;
+                    }
+                }
+            }
+
             string? enumString = value?.ToString();
             if (string.IsNullOrEmpty(enumString)) return string.Empty;
 

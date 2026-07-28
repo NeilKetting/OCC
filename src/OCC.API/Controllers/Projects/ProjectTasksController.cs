@@ -5,10 +5,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OCC.API.Data;
 using OCC.API.Hubs;
+using OCC.API.Security;
 using OCC.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for managing project tasks, status rollups, subcontractor assignments, and contractor performance tracking.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -18,6 +26,12 @@ namespace OCC.API.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<ProjectTasksController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProjectTasksController"/> class.
+        /// </summary>
+        /// <param name="context">Database context.</param>
+        /// <param name="hubContext">SignalR notification hub context.</param>
+        /// <param name="logger">Logger instance.</param>
         public ProjectTasksController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<ProjectTasksController> logger)
         {
             _context = context;
@@ -25,7 +39,14 @@ namespace OCC.API.Controllers
             _logger = logger;
         }
 
-        // GET: api/ProjectTasks
+        /// <summary>
+        /// Retrieves project tasks, with support for project filtering, pagination, and user assignment filtering.
+        /// </summary>
+        /// <param name="projectId">Optional project ID filter.</param>
+        /// <param name="assignedToMe">If true, filters tasks assigned to or managed by the authenticated user.</param>
+        /// <param name="skip">Number of records to skip for pagination.</param>
+        /// <param name="take">Number of records to return.</param>
+        /// <returns>A list of project tasks.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectTask>>> GetProjectTasks(Guid? projectId = null, bool assignedToMe = false, int skip = 0, int take = 1000)
         {
@@ -46,7 +67,6 @@ namespace OCC.API.Controllers
 
                 if (assignedToMe)
                 {
-                    // 1. If Admin, bypass assignment filter and show all tasks for the project (if projectId specified)
                     if (User.IsInRole("Admin"))
                     {
                         _logger.LogInformation("Admin user bypasses assignment filter.");
@@ -57,7 +77,6 @@ namespace OCC.API.Controllers
                     }
                     else
                     {
-                        // Standard assignment filtering for non-admins
                         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
                                          ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
                         
@@ -69,10 +88,8 @@ namespace OCC.API.Controllers
 
                         _logger.LogInformation("Filtering tasks for User ID: {UserId}", userId);
 
-                        // 2. Find the linked Employee (if any)
                         var linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == userId);
                         
-                        // FALLBACK: If not linked by ID, try to link by Email
                         if (linkedEmployee == null)
                         {
                             var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
@@ -93,7 +110,6 @@ namespace OCC.API.Controllers
                         else
                             _logger.LogWarning("User {UserId} is NOT linked to any Employee record.", userId);
 
-                        // 3. Get Team IDs if user is an employee
                         var teamIds = linkedEmployee != null 
                             ? await _context.TeamMembers.AsNoTracking()
                                 .Where(tm => tm.EmployeeId == linkedEmployee.Id)
@@ -101,7 +117,6 @@ namespace OCC.API.Controllers
                                 .ToListAsync() 
                             : new List<Guid>();
 
-                        // 4. Filter query - Ensure ProjectId filter is also applied here if provided
                         query = query.Where(t => 
                             ((t.OwnerId == userId) || 
                              (t.Assignments.Any(a => 
@@ -123,23 +138,30 @@ namespace OCC.API.Controllers
 
                 var results = await query
                     .OrderBy(t => t.OrderIndex)
-                    .Skip(skip)
-                    .Take(take)
+                    .Skip(Math.Max(0, skip))
+                    .Take(Math.Clamp(take, 1, 1000))
                     .ToListAsync();
                 
                 _logger.LogInformation("Returning {Count} tasks.", results.Count);
-                return results;
+                return Ok(results);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving tasks");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving project tasks.");
             }
         }
 
+        /// <summary>
+        /// Retrieves tasks assigned to a specific subcontractor.
+        /// </summary>
+        /// <param name="subContractorId">The subcontractor ID.</param>
+        /// <returns>A list of tasks assigned to the subcontractor.</returns>
         [HttpGet("assigned-to/{subContractorId}")]
         public async Task<ActionResult<IEnumerable<ProjectTask>>> GetSubContractorTasks(Guid subContractorId)
         {
+            if (subContractorId == Guid.Empty) return BadRequest("Invalid subcontractor ID.");
+
             try
             {
                 var query = _context.ProjectTasks
@@ -147,19 +169,25 @@ namespace OCC.API.Controllers
                     .Where(t => t.Assignments.Any(a => a.AssigneeType == AssigneeType.Contractor && a.AssigneeId == subContractorId))
                     .AsNoTracking();
 
-                return await query.ToListAsync();
+                return Ok(await query.ToListAsync());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving tasks for subcontractor {Id}", subContractorId);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving subcontractor tasks.");
             }
         }
 
-        // GET: api/ProjectTasks/5
+        /// <summary>
+        /// Retrieves a single project task by its ID.
+        /// </summary>
+        /// <param name="id">The task ID.</param>
+        /// <returns>The requested project task.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectTask>> GetProjectTask(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid task ID.");
+
             try
             {
                 var task = await _context.ProjectTasks
@@ -171,15 +199,19 @@ namespace OCC.API.Controllers
                     .FirstOrDefaultAsync(t => t.Id == id);
 
                 if (task == null) return NotFound();
-                return task;
+                return Ok(task);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving task {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving the task.");
             }
         }
 
+        /// <summary>
+        /// Retrieves recent task status updates across active projects for dashboard presentation.
+        /// </summary>
+        /// <returns>A list of dashboard update DTOs.</returns>
         [HttpGet("recent-updates")]
         public async Task<ActionResult<IEnumerable<OCC.Shared.DTOs.DashboardUpdateDto>>> GetRecentUpdates()
         {
@@ -195,7 +227,6 @@ namespace OCC.API.Controllers
                     .AsNoTracking()
                     .ToListAsync();
 
-                // Resolve Display Names
                 var userIds = topTasks.Select(t => string.IsNullOrEmpty(t.UpdatedBy) ? t.CreatedBy : t.UpdatedBy)
                     .Where(id => !string.IsNullOrEmpty(id) && id != "System")
                     .Distinct()
@@ -209,7 +240,6 @@ namespace OCC.API.Controllers
                     .Where(u => userGuids.Contains(u.Id))
                     .ToDictionaryAsync(u => u.Id.ToString(), u => u.DisplayName ?? u.Email);
                 
-                // Pre-fetch project names to ensure we have them even if Include fails
                 var projectIds = topTasks.Where(t => t.ProjectId.HasValue).Select(t => t.ProjectId!.Value).Distinct().ToList();
                 var projectMap = await _context.Projects
                     .Where(p => projectIds.Contains(p.Id))
@@ -222,7 +252,6 @@ namespace OCC.API.Controllers
                     if (userId == "System") displayName = "System";
                     else if (!string.IsNullOrEmpty(userId)) userMap.TryGetValue(userId, out displayName);
 
-                    // Robust project name resolution
                     string? pName = t.Project?.Name;
                     if (string.IsNullOrEmpty(pName) && t.ProjectId.HasValue && t.ProjectId.Value != Guid.Empty)
                     {
@@ -247,32 +276,44 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving recent task updates");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving recent updates.");
             }
         }
 
-        // POST: api/ProjectTasks
+        /// <summary>
+        /// Creates a new project task.
+        /// </summary>
+        /// <param name="task">The project task entity.</param>
+        /// <returns>The created task entity.</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<ActionResult<ProjectTask>> PostProjectTask(ProjectTask task)
         {
+            if (task == null) return BadRequest("Task payload cannot be null.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
                 if (task.Id == Guid.Empty) task.Id = Guid.NewGuid();
-                TaskHelper.EnsureUtcDates(task);
+                
+                // Input sanitization
+                task.Name = InputSanitizer.Sanitize(task.Name);
+                task.Description = InputSanitizer.Sanitize(task.Description);
+                task.HoldReason = InputSanitizer.Sanitize(task.HoldReason);
+                task.AssignedTo = InputSanitizer.Sanitize(task.AssignedTo);
+                task.PercentComplete = Math.Clamp(task.PercentComplete, 0, 100);
 
-                // Legacy column protection
+                TaskHelper.EnsureUtcDates(task);
                 task.PlannedDurationHours ??= TimeSpan.Zero;
 
                 _context.ProjectTasks.Add(task);
                 await _context.SaveChangesAsync();
 
-                // Rollup / set IsGroup on parent if this is a subtask
                 if (task.ParentId.HasValue && task.ParentId.Value != Guid.Empty)
                 {
                     await CalculateParentRollup(task.ParentId.Value);
                 }
 
-                // Standardize on string for ID and notify project
                 var idStr = task.Id.ToString();
                 _logger.LogInformation("[SignalR-Broadcast] Notifying all clients: ProjectTask Create {Id}", idStr);
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Create", idStr);
@@ -288,19 +329,25 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating task");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while creating the task.");
             }
         }
 
-        // PUT: api/ProjectTasks/5
+        /// <summary>
+        /// Updates an existing project task and performs parent progress rollup.
+        /// </summary>
+        /// <param name="id">The ID of the task to update.</param>
+        /// <param name="task">The updated task entity.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> PutProjectTask(Guid id, ProjectTask task)
         {
-            if (id != task.Id)
+            if (id == Guid.Empty || id != task.Id)
             {
-                return BadRequest();
+                return BadRequest("Task ID mismatch or empty.");
             }
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var existingTask = await _context.ProjectTasks
                 .Include(t => t.Children)
@@ -316,14 +363,13 @@ namespace OCC.API.Controllers
             {
                 _logger.LogInformation("Updating ProjectTask {Id}. New Status: {Status}, %: {Percent}", id, task.Status, task.PercentComplete);
 
-                // Surgical Update: Copy scalar properties only to avoid EF navigation issues
-                existingTask.Name = task.Name;
-                existingTask.Description = task.Description;
+                existingTask.Name = InputSanitizer.Sanitize(task.Name);
+                existingTask.Description = InputSanitizer.Sanitize(task.Description);
                 existingTask.StartDate = TaskHelper.EnsureUtc(task.StartDate);
                 existingTask.FinishDate = TaskHelper.EnsureUtc(task.FinishDate);
                 existingTask.ActualStartDate = TaskHelper.EnsureUtc(task.ActualStartDate);
                 existingTask.ActualCompleteDate = TaskHelper.EnsureUtc(task.ActualCompleteDate);
-                existingTask.PercentComplete = task.PercentComplete;
+                existingTask.PercentComplete = Math.Clamp(task.PercentComplete, 0, 100);
                 existingTask.Priority = task.Priority;
                 
                 var wasNotCompleted = existingTask.Status != "Completed" && existingTask.Status != "Done";
@@ -346,7 +392,7 @@ namespace OCC.API.Controllers
                 existingTask.ParentId = task.ParentId;
                 existingTask.Type = task.Type;
                 existingTask.IsOnHold = task.IsOnHold;
-                existingTask.HoldReason = task.HoldReason;
+                existingTask.HoldReason = InputSanitizer.Sanitize(task.HoldReason);
                 existingTask.OrderIndex = task.OrderIndex;
                 existingTask.IndentLevel = task.IndentLevel;
                 existingTask.IsGroup = task.IsGroup;
@@ -354,11 +400,9 @@ namespace OCC.API.Controllers
                 existingTask.NextReminderDate = task.NextReminderDate;
                 existingTask.IsReminderSet = task.IsReminderSet;
                 existingTask.Frequency = task.Frequency;
-                existingTask.AssignedTo = task.AssignedTo; // Persist legacy assignment string
+                existingTask.AssignedTo = InputSanitizer.Sanitize(task.AssignedTo);
                 existingTask.Predecessors = task.Predecessors ?? new List<string>();
                 
-                // Recursive Completion: If a parent is marked Completed, mark all children as Completed.
-                // This preserves DB integrity where parents can't be done if kids are active.
                 if (existingTask.Status == "Completed" || existingTask.PercentComplete == 100)
                 {
                     await MarkChildrenCompleted(existingTask);
@@ -366,7 +410,6 @@ namespace OCC.API.Controllers
 
                 var updatedTaskIds = new List<Guid> { id };
 
-                // 2. Perform Rollup: Update parent task progress based on child changes
                 if (existingTask.ParentId.HasValue)
                 {
                     await CalculateParentRollup(existingTask.ParentId.Value, updatedTaskIds);
@@ -386,10 +429,8 @@ namespace OCC.API.Controllers
 
                 _logger.LogInformation("Successfully saved ProjectTask {Id}", id);
 
-                // Wrap SignalR in try-catch to avoid 500 if broadcast fails
                 try
                 {
-                    // Notify clients for each updated task in the hierarchy
                     foreach (var updatedId in updatedTaskIds)
                     {
                         var idStr = updatedId.ToString();
@@ -397,8 +438,6 @@ namespace OCC.API.Controllers
                         await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", idStr);
                     }
                     
-                    // Also notify that the project itself has changed (e.g. for rollup values)
-                    // Use existingTask.ProjectId as it is definitely populated from DB
                     if (existingTask.ProjectId != Guid.Empty)
                     {
                         var projIdStr = existingTask.ProjectId.ToString();
@@ -408,7 +447,6 @@ namespace OCC.API.Controllers
 
                     if (existingTask.Status != task.Status)
                     {
-                        // Fetch project name for the live broadcast
                         var pName = await _context.Projects
                             .Where(p => p.Id == task.ProjectId)
                             .Select(p => p.Name)
@@ -436,14 +474,11 @@ namespace OCC.API.Controllers
             }
             catch (Exception ex)
             {
-                // Detailed logging for troubleshooting
                 string errorMessage = ex.Message;
                 if (ex.InnerException != null) errorMessage += " | Inner: " + ex.InnerException.Message;
                 
                 _logger.LogError(ex, "Update failed for ProjectTask {Id}: {Message}", id, errorMessage);
 
-                // Use a fresh scope to save the error log, as the current _context might be "poisoned" 
-                // and would try to re-save the failed entity along with the log.
                 try
                 {
                     using (var scope = HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>().CreateScope())
@@ -466,14 +501,21 @@ namespace OCC.API.Controllers
                     _logger.LogError(logEx, "FATAL: Could not even log the update error to the database via fresh context.");
                 }
                 
-                return StatusCode(500, $"Internal server error: {errorMessage}");
+                return StatusCode(500, "An error occurred while updating the project task.");
             }
         }
 
-        // DELETE: api/ProjectTasks/5
+        /// <summary>
+        /// Deletes a project task by its unique identifier.
+        /// </summary>
+        /// <param name="id">The task ID.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> DeleteProjectTask(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid task ID.");
+
             try
             {
                 var task = await _context.ProjectTasks.FindAsync(id);
@@ -489,11 +531,9 @@ namespace OCC.API.Controllers
                     await CalculateParentRollup(parentId.Value);
                 }
 
-                // Standardize on string for ID
                 var idStr = id.ToString();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Delete", idStr);
                 
-                // Use the projectId from the task we found before deleting
                 if (task.ProjectId != Guid.Empty)
                 {
                     await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", task.ProjectId.ToString());
@@ -504,7 +544,7 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting task {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while deleting the task.");
             }
         }
         
@@ -518,10 +558,8 @@ namespace OCC.API.Controllers
                 child.PercentComplete = 100;
                 child.ActualCompleteDate = TaskHelper.EnsureUtc(DateTime.UtcNow);
                 
-                // Recursively load and mark grandchildren if this is a group
                 if (child.IsGroup)
                 {
-                    // Ensure children are loaded for the recursive call
                     await _context.Entry(child).Collection(c => c.Children).LoadAsync();
                     await MarkChildrenCompleted(child);
                 }
@@ -548,8 +586,6 @@ namespace OCC.API.Controllers
                             parentChanged = true;
                         }
 
-                        // Compute average progress of children
-                        // We only rollup progress for non-meeting tasks or handle based on business rules
                         var children = parent.Children.ToList();
                         double average = children.Average(c => (double)c.PercentComplete);
                         int rounded = (int)Math.Round(average);
@@ -560,7 +596,6 @@ namespace OCC.API.Controllers
                             
                             parent.PercentComplete = rounded;
 
-                            // Sync Status if progress is 100% or just started
                             if (rounded == 100) parent.Status = "Done";
                             else if (rounded > 0 && (parent.Status == "To Do" || parent.Status == "Not Started")) 
                                 parent.Status = "Started";
@@ -586,7 +621,6 @@ namespace OCC.API.Controllers
                                 updatedTaskIds.Add(parent.Id);
                             }
 
-                            // Recurse up the tree
                             if (parent.ParentId.HasValue)
                             {
                                 await CalculateParentRollup(parent.ParentId.Value, updatedTaskIds);
@@ -596,10 +630,8 @@ namespace OCC.API.Controllers
                         {
                             await _context.SaveChangesAsync();
                             
-                            // Notify clients about parent update
                             await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "Update", parent.Id);
 
-                            // Recurse up the tree
                             if (parent.ParentId.HasValue)
                             {
                                 await CalculateParentRollup(parent.ParentId.Value);
@@ -620,7 +652,6 @@ namespace OCC.API.Controllers
         {
             try
             {
-                // Ensure assignments are loaded
                 await _context.Entry(task).Collection(t => t.Assignments).LoadAsync();
                 
                 var contractorAssignments = task.Assignments
@@ -634,21 +665,16 @@ namespace OCC.API.Controllers
                     {
                         contractor.CompletedTasksCount++;
                         
-                        // On-time check
-                        // Note: Ensure dates are compared correctly as UTC
                         bool isOnTime = (task.ActualCompleteDate ?? DateTime.UtcNow) <= task.FinishDate;
                         
-                        // Calculate new OnTimeRate
                         int oldCount = contractor.CompletedTasksCount - 1;
                         if (contractor.CompletedTasksCount > 0)
                         {
                             contractor.OnTimeRate = (contractor.OnTimeRate * oldCount + (isOnTime ? 1m : 0m)) / contractor.CompletedTasksCount;
                         }
                         
-                        // Recalculate Rating using the Dilution Formula
                         decimal baseRating = contractor.OnTimeRate * 5.0m;
                         
-                        // Get snag stats for fair weighting
                         var snags = await _context.SnagJobs.Where(s => s.SubContractorId == contractor.Id).ToListAsync();
                         int activeSnags = snags.Count(s => s.Status == SnagStatus.Open || s.Status == SnagStatus.InProgress);
                         int resolvedSnags = snags.Count - activeSnags;
@@ -662,7 +688,6 @@ namespace OCC.API.Controllers
                         
                         contractor.Rating = Math.Max(1.0m, Math.Min(5.0m, baseRating - activeDeduction - historicalDeduction));
 
-                        // Set Tier
                         contractor.PerformanceTier = contractor.Rating switch
                         {
                             >= 4.8m => "Diamond",
@@ -734,14 +759,23 @@ namespace OCC.API.Controllers
         }
     }
     
+    /// <summary>
+    /// Utility helper for date standardization in tasks.
+    /// </summary>
     public static class TaskHelper
     {
+        /// <summary>
+        /// Ensures a DateTime instance is specified as UTC.
+        /// </summary>
         public static DateTime EnsureUtc(DateTime date)
         {
             if (date.Kind == DateTimeKind.Unspecified) return DateTime.SpecifyKind(date, DateTimeKind.Utc);
             return date.Kind == DateTimeKind.Local ? date.ToUniversalTime() : date;
         }
 
+        /// <summary>
+        /// Ensures a nullable DateTime instance is specified as UTC.
+        /// </summary>
         public static DateTime? EnsureUtc(DateTime? date)
         {
             if (!date.HasValue) return null;
@@ -749,6 +783,9 @@ namespace OCC.API.Controllers
             return date.Value.Kind == DateTimeKind.Local ? date.Value.ToUniversalTime() : date.Value;
         }
 
+        /// <summary>
+        /// Converts all date fields of a task to UTC.
+        /// </summary>
         public static void EnsureUtcDates(ProjectTask task)
         {
             task.StartDate = EnsureUtc(task.StartDate);

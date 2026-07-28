@@ -497,7 +497,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 else if (SelectedLeaveType == LeaveType.CulturalObligations)
                 {
                     double capped = Math.Min(3.0, CalculatedDays);
-                    double availableAnnual = SelectedEmployee.LeaveBalance;
+                    double availableAnnual = (double)SelectedEmployee.LeaveBalance;
                     draftPaid = Math.Min(capped, availableAnnual);
                     draftUnpaid = CalculatedDays - draftPaid;
                 }
@@ -755,7 +755,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var emp = await _employeeService.GetEmployeeAsync(value.Id);
                 App.Current.Dispatcher.Invoke(() =>
                 {
-                    _selectedNoteEmployeeSickBalance = emp?.SickLeaveBalance ?? 0;
+                    _selectedNoteEmployeeSickBalance = (double)(emp?.SickLeaveBalance ?? 0m);
                     RecalculateNoteSummary();
                 });
             }

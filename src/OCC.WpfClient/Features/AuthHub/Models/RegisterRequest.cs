@@ -27,9 +27,15 @@ namespace OCC.WpfClient.Features.AuthHub.Models
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
         private string _password = string.Empty;
 
-        [ObservableProperty]
-        [property: Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
         private string _confirmPassword = string.Empty;
+
+        [Required(ErrorMessage = "Confirm password is required")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword
+        {
+            get => _confirmPassword;
+            set => SetProperty(ref _confirmPassword, value, true);
+        }
 
         public void Validate() => ValidateAllProperties();
     }

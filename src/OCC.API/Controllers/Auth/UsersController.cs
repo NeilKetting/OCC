@@ -1,34 +1,57 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
-using OCC.Shared.Models;
-using Microsoft.AspNetCore.SignalR;
-using OCC.API.Services;
 using OCC.API.Hubs;
+using OCC.API.Services;
+using OCC.Shared.DTOs;
+using OCC.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for managing user profiles, contacts, provisional encryption keys, and password changes.
+    /// </summary>
     [Route("api/users")]
     [ApiController]
     [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly PasswordHasher _passwordHasher;
+        private readonly IPasswordHasher _passwordHasher;
         private readonly ILogger<UsersController> _logger;
-        private readonly Microsoft.AspNetCore.SignalR.IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public UsersController(AppDbContext context, PasswordHasher passwordHasher, ILogger<UsersController> logger, IHubContext<NotificationHub> hubContext)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UsersController"/> class.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="passwordHasher">The password hashing service.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="hubContext">The SignalR notification hub context.</param>
+        public UsersController(
+            AppDbContext context,
+            IPasswordHasher passwordHasher,
+            ILogger<UsersController> logger,
+            IHubContext<NotificationHub> hubContext)
         {
-            _context = context;
-            _passwordHasher = passwordHasher;
-            _logger = logger;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _hubContext = hubContext;
         }
 
-        // GET: api/Users
+        /// <summary>
+        /// Retrieves all registered system users (Admin role required).
+        /// </summary>
+        /// <returns>A list of system users.</returns>
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
@@ -44,11 +67,15 @@ namespace OCC.API.Controllers
             }
         }
 
-        // GET: api/Users/5
+        /// <summary>
+        /// Retrieves a user by unique identifier. Users may view their own profile; Admins may view any profile.
+        /// </summary>
+        /// <param name="id">The user ID.</param>
+        /// <returns>The matching user entity.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(Guid id)
         {
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var isAdmin = User.IsInRole("Admin");
 
             if (currentUserId != null && id.ToString() != currentUserId && !isAdmin)
@@ -74,7 +101,11 @@ namespace OCC.API.Controllers
             }
         }
 
-        // GET: api/Users/5/public-key
+        /// <summary>
+        /// Retrieves or generates the public encryption key for a specific user for E2EE chat.
+        /// </summary>
+        /// <param name="id">The target user ID.</param>
+        /// <returns>Object containing the public key.</returns>
         [HttpGet("{id}/public-key")]
         public async Task<ActionResult<string>> GetUserPublicKey(Guid id)
         {
@@ -89,10 +120,14 @@ namespace OCC.API.Controllers
             return Ok(new { PublicKey = user.PublicKey });
         }
 
+        /// <summary>
+        /// Retrieves the provisional private key for the currently authenticated user during onboarding.
+        /// </summary>
+        /// <returns>Object containing the provisional private key.</returns>
         [HttpGet("me/provisional-key")]
         public async Task<ActionResult<string>> GetMyProvisionalKey()
         {
-            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (Guid.TryParse(userIdStr, out var userId))
             {
                 var user = await _context.Users.FindAsync(userId);
@@ -103,19 +138,23 @@ namespace OCC.API.Controllers
             return Unauthorized();
         }
 
-        // GET: api/Users/contacts
+        /// <summary>
+        /// Retrieves contact list for secure messaging excluding the caller.
+        /// </summary>
+        /// <returns>List of contact user details with public keys.</returns>
         [HttpGet("contacts")]
-        public async Task<ActionResult<IEnumerable<OCC.Shared.DTOs.ChatUserDto>>> GetContacts()
+        public async Task<ActionResult<IEnumerable<ChatUserDto>>> GetContacts()
         {
-            var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            
+            var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             try
             {
+                Guid.TryParse(currentUserIdStr, out var currentUserId);
                 var users = await _context.Users
-                    .Where(u => u.Id.ToString() != currentUserIdStr) // Exclude self
+                    .Where(u => u.Id != currentUserId)
                     .ToListAsync();
 
-                var contacts = new List<OCC.Shared.DTOs.ChatUserDto>();
+                var contacts = new List<ChatUserDto>();
                 bool anyGenerated = false;
 
                 foreach (var u in users)
@@ -126,7 +165,7 @@ namespace OCC.API.Controllers
                         anyGenerated = true;
                     }
 
-                    contacts.Add(new OCC.Shared.DTOs.ChatUserDto
+                    contacts.Add(new ChatUserDto
                     {
                         UserId = u.Id,
                         FirstName = u.FirstName,
@@ -140,7 +179,7 @@ namespace OCC.API.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                    
+
                 return Ok(contacts.OrderBy(u => u.FirstName).ThenBy(u => u.LastName));
             }
             catch (Exception ex)
@@ -150,23 +189,20 @@ namespace OCC.API.Controllers
             }
         }
 
-        private async Task GenerateProvisionalKeysAsync(User user)
-        {
-            using var rsa = RSA.Create(2048);
-            user.ProvisionalPrivateKey = rsa.ToXmlString(true);
-            user.PublicKey = rsa.ToXmlString(false);
-            
-            // Note: We don't call SaveChanges here, the caller should.
-            // But for GetUserPublicKey we might want to save immediately.
-            _context.Entry(user).State = EntityState.Modified;
-            await _context.SaveChangesAsync(); 
-        }
-
-        // POST: api/Users
+        /// <summary>
+        /// Creates a new user (Admin role required).
+        /// </summary>
+        /// <param name="user">The user entity to create.</param>
+        /// <returns>201 CreatedAtAction with the user record.</returns>
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<User>> PostUser(User user)
         {
+            if (user == null || string.IsNullOrWhiteSpace(user.Email))
+            {
+                return BadRequest("Invalid user data.");
+            }
+
             if (await _context.Users.AnyAsync(u => u.Email == user.Email))
             {
                 return Conflict("User with this email already exists.");
@@ -174,24 +210,35 @@ namespace OCC.API.Controllers
 
             if (!string.IsNullOrEmpty(user.Password))
             {
+                if (!_passwordHasher.IsPasswordComplex(user.Password))
+                {
+                    return BadRequest("Password does not meet complexity requirements.");
+                }
                 user.Password = _passwordHasher.HashPassword(user.Password);
             }
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Notify clients
-            await _hubContext.Clients.All.SendAsync("EntityUpdate", "User", "Create", user.Id);
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"New user created: {user.FirstName} {user.LastName}");
+            if (_hubContext != null)
+            {
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "User", "Create", user.Id);
+                await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"New user created: {user.FirstName} {user.LastName}");
+            }
 
             return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }
 
-        // PUT: api/Users/5
+        /// <summary>
+        /// Updates an existing user profile.
+        /// </summary>
+        /// <param name="id">The user ID matching the request path.</param>
+        /// <param name="user">The updated user entity.</param>
+        /// <returns>204 NoContent if successful; 400 BadRequest or 403 Forbidden on failure.</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(Guid id, User user)
         {
-            if (id != user.Id)
+            if (user == null || id != user.Id)
             {
                 return BadRequest();
             }
@@ -202,64 +249,54 @@ namespace OCC.API.Controllers
                 return NotFound();
             }
 
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            // Allow Admin to update anyone, or user to update themselves
-            if (currentUserId != null && id.ToString() != currentUserId && userRole != "Admin") 
+            if (currentUserId != null && id.ToString() != currentUserId && userRole != "Admin")
             {
                 return Forbid("You can only update your own profile.");
             }
 
-            // Prevent changing own role or locking oneself out ideally, but simple for now
-            if (existingUser != null && (existingUser.Email == "neil@mdk.co.za" || existingUser.Email == "neil@origize63.co.za"))
+            if (existingUser.Email == "neil@mdk.co.za" || existingUser.Email == "neil@origize63.co.za")
             {
-                var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value?.ToLowerInvariant();
+                var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value?.ToLowerInvariant();
                 if (currentUserEmail != "neil@mdk.co.za" && currentUserEmail != "neil@origize63.co.za")
                 {
                     return Forbid("Only the Developer can modify this account.");
                 }
             }
 
-            // If password provided, hash it
-            
-            // Note: AsNoTracking means the entity is not tracked. 
-            // We need to attach the new 'user' or update properties.
-            // Since we set State = Modified below, that attaches it.
-            
-            if (existingUser != null && user.Password != existingUser.Password) 
+            if (!string.IsNullOrEmpty(user.Password) && user.Password != existingUser.Password)
             {
-                if (!string.IsNullOrEmpty(user.Password))
+                if (!_passwordHasher.IsPasswordComplex(user.Password))
                 {
-                   user.Password = _passwordHasher.HashPassword(user.Password);
+                    return BadRequest("Password does not meet complexity requirements.");
                 }
-                else 
-                {
-                    user.Password = existingUser.Password; // Keep old if empty
-                }
+                user.Password = _passwordHasher.HashPassword(user.Password);
+            }
+            else
+            {
+                user.Password = existingUser.Password;
             }
 
-            if (existingUser != null)
+            if (!string.IsNullOrEmpty(user.PublicKey) && user.PublicKey != existingUser.PublicKey)
             {
-                // If PublicKey is being updated, it means rotation is happening or initial setup is complete.
-                // Clear the provisional private key as it's no longer needed (the user has their own).
-                if (!string.IsNullOrEmpty(user.PublicKey) && user.PublicKey != existingUser.PublicKey)
-                {
-                    user.ProvisionalPrivateKey = null;
-                }
-                // Otherwise, if not provided in request, preserve it (handles profile updates)
-                else if (string.IsNullOrEmpty(user.ProvisionalPrivateKey))
-                {
-                    user.ProvisionalPrivateKey = existingUser.ProvisionalPrivateKey;
-                }
+                user.ProvisionalPrivateKey = null;
+            }
+            else if (string.IsNullOrEmpty(user.ProvisionalPrivateKey))
+            {
+                user.ProvisionalPrivateKey = existingUser.ProvisionalPrivateKey;
             }
 
-            _context.Entry(existingUser!).CurrentValues.SetValues(user);
+            _context.Entry(existingUser).CurrentValues.SetValues(user);
 
             try
             {
                 await _context.SaveChangesAsync();
-                await _hubContext.Clients.All.SendAsync("EntityUpdate", "User", "Update", id);
+                if (_hubContext != null)
+                {
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "User", "Update", id);
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -275,29 +312,46 @@ namespace OCC.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Changes the password for the currently authenticated user.
+        /// </summary>
+        /// <param name="request">The password change request containing old and new passwords.</param>
+        /// <returns>200 OK if successful; 400 BadRequest if current password is wrong or new password violates rules.</returns>
         [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] OCC.Shared.DTOs.ChangePasswordRequest request)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (request == null || string.IsNullOrWhiteSpace(request.OldPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest("Current password and new password are required.");
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized();
 
             var user = await _context.Users.FindAsync(Guid.Parse(userId));
             if (user == null) return NotFound("User not found.");
 
-            // Verify old password
-            if (!_passwordHasher.VerifyPassword(user.Password, request.OldPassword))
+            if (!_passwordHasher.VerifyPassword(request.OldPassword, user.Password))
             {
                 return BadRequest("Incorrect current password.");
             }
 
-            // Set new password
+            if (!_passwordHasher.IsPasswordComplex(request.NewPassword))
+            {
+                return BadRequest("Password does not meet OWASP complexity requirements. Minimum 8 characters, containing uppercase, lowercase, and a digit or special character.");
+            }
+
             user.Password = _passwordHasher.HashPassword(request.NewPassword);
-            
+
             await _context.SaveChangesAsync();
             return Ok("Password updated successfully.");
         }
 
-        // DELETE: api/Users/5
+        /// <summary>
+        /// Deletes a user account (Admin role required).
+        /// </summary>
+        /// <param name="id">The ID of the user to delete.</param>
+        /// <returns>240 NoContent if successful; 400 BadRequest or 404 NotFound on error.</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(Guid id)
@@ -321,13 +375,12 @@ namespace OCC.API.Controllers
                     }
                 }
 
-                var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
                 {
                     return BadRequest("You cannot delete your own active account.");
                 }
 
-                // Clean up any employee links before deleting the user to avoid orphaned Guid references
                 var linkedEmployees = await _context.Employees.Where(e => e.LinkedUserId == id).ToListAsync();
                 foreach (var employee in linkedEmployees)
                 {
@@ -336,8 +389,11 @@ namespace OCC.API.Controllers
 
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
-                
-                await _hubContext.Clients.All.SendAsync("EntityUpdate", "User", "Delete", id);
+
+                if (_hubContext != null)
+                {
+                    await _hubContext.Clients.All.SendAsync("EntityUpdate", "User", "Delete", id);
+                }
 
                 return NoContent();
             }
@@ -346,6 +402,16 @@ namespace OCC.API.Controllers
                 _logger.LogError(ex, "Error deleting user {Id}", id);
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        private async Task GenerateProvisionalKeysAsync(User user)
+        {
+            using var rsa = RSA.Create(2048);
+            user.ProvisionalPrivateKey = rsa.ToXmlString(true);
+            user.PublicKey = rsa.ToXmlString(false);
+
+            _context.Entry(user).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
         }
 
         private bool UserExists(Guid id)

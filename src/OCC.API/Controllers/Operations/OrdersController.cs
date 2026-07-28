@@ -11,6 +11,9 @@ using OCC.API.Services;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for managing operations, purchase orders, picking orders, returns, and inventory receiving.
+    /// </summary>
     [Authorize(Roles = "Admin,Office")]
     [ApiController]
     [Route("api/[controller]")]
@@ -21,14 +24,25 @@ namespace OCC.API.Controllers
         private readonly ILogger<OrdersController> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OrdersController"/> class.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="hubContext">The SignalR hub context for real-time notifications.</param>
+        /// <param name="stockService">The stock service for inventory adjustments.</param>
         public OrdersController(AppDbContext context, ILogger<OrdersController> logger, IHubContext<NotificationHub> hubContext, IStockService stockService)
         {
-            _context = context;
-            _logger = logger;
-            _hubContext = hubContext;
-            _stockService = stockService;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+            _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         }
 
+        /// <summary>
+        /// Retrieves a summary list of all orders.
+        /// </summary>
+        /// <returns>A list of order summary DTOs.</returns>
         [HttpGet]
         public async Task<ActionResult<List<OrderSummaryDto>>> GetOrders()
         {
@@ -42,11 +56,11 @@ namespace OCC.API.Controllers
                         Id = o.Id,
                         OrderNumber = o.OrderNumber,
                         OrderDate = o.OrderDate,
-                        ExpectedDeliveryDate = o.ExpectedDeliveryDate, // Added this field
+                        ExpectedDeliveryDate = o.ExpectedDeliveryDate,
                         SupplierName = o.SupplierName,
                         ProjectName = o.ProjectName ?? string.Empty,
                         Status = o.Status,
-                        TotalAmount = o.Lines.Sum(l => l.LineTotal + l.VatAmount),
+                        TotalAmount = Math.Round(o.Lines.Sum(l => l.LineTotal + l.VatAmount), 2, MidpointRounding.AwayFromZero),
                         Branch = o.Branch.ToString(),
                         SupplierId = o.SupplierId,
                         OrderType = o.OrderType,
@@ -63,9 +77,16 @@ namespace OCC.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieves detailed information for a specific order by ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the order.</param>
+        /// <returns>The order DTO if found; otherwise, 404 Not Found.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderDto>> GetOrder(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid order ID.");
+
             try
             {
                 var order = await _context.Orders
@@ -85,24 +106,35 @@ namespace OCC.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Creates a new purchase, picking, or return order.
+        /// </summary>
+        /// <param name="orderDto">The order payload data.</param>
+        /// <returns>The created order DTO.</returns>
         [HttpPost]
-        public async Task<ActionResult<OrderDto>> CreateOrder(OrderDto orderDto)
+        public async Task<ActionResult<OrderDto>> CreateOrder([FromBody] OrderDto orderDto)
         {
+            if (orderDto == null) return BadRequest("Order data is null.");
+
             try
             {
-                if (orderDto == null) return BadRequest("Order data is null.");
-
                 // Validate order
-                if (!orderDto.Lines.Any())
+                if (orderDto.Lines == null || !orderDto.Lines.Any())
                     return BadRequest("Order must have at least one line item.");
+
+                if (orderDto.TaxRate < 0)
+                    return BadRequest("Tax rate cannot be negative.");
 
                 if (orderDto.ExpectedDeliveryDate.HasValue && orderDto.ExpectedDeliveryDate.Value.Date < DateTime.Today)
                     return BadRequest("Expected delivery date (ETA) cannot be in the past.");
 
-                // Check for duplicate order number
-                var exists = await _context.Orders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber);
-                if (exists)
-                    return BadRequest($"Order number '{orderDto.OrderNumber}' is already in use.");
+                // Check for duplicate order number if specified
+                if (!string.IsNullOrWhiteSpace(orderDto.OrderNumber))
+                {
+                    var exists = await _context.Orders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber);
+                    if (exists)
+                        return BadRequest($"Order number '{orderDto.OrderNumber}' is already in use.");
+                }
 
                 var order = ToEntity(orderDto);
 
@@ -127,7 +159,11 @@ namespace OCC.API.Controllers
 
                     line.Id = Guid.NewGuid();
                     line.OrderId = order.Id;
+                    line.LineTotal = Math.Round((decimal)line.QuantityOrdered * line.UnitPrice, 2, MidpointRounding.AwayFromZero);
+                    line.VatAmount = Math.Round(line.LineTotal * order.TaxRate, 2, MidpointRounding.AwayFromZero);
                 }
+
+                order.TotalAmount = Math.Round(order.Lines.Sum(l => l.LineTotal + l.VatAmount), 2, MidpointRounding.AwayFromZero);
 
                 _context.Orders.Add(order);
 
@@ -160,9 +196,6 @@ namespace OCC.API.Controllers
                 var resultDto = ToDto(order);
 
                 // Notify clients via SignalR
-                // Note: We send the Full DTO or Summary? 
-                // Currently listeners might expect Entity. Let's send DTO. 
-                // Clients must be updated to handle this change.
                 await _hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", resultDto);
 
                 return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, resultDto);
@@ -174,14 +207,26 @@ namespace OCC.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Updates an existing order.
+        /// </summary>
+        /// <param name="id">The unique identifier of the order to update.</param>
+        /// <param name="orderDto">The updated order payload data.</param>
+        /// <returns>No content on success; bad request or not found on validation failure.</returns>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrder(Guid id, OrderDto orderDto)
+        public async Task<IActionResult> UpdateOrder(Guid id, [FromBody] OrderDto orderDto)
         {
-            if (id != orderDto.Id)
-                return BadRequest();
+            if (orderDto == null || id != orderDto.Id)
+                return BadRequest("Order ID mismatch or order payload is null.");
 
             try
             {
+                if (orderDto.TaxRate < 0)
+                    return BadRequest("Tax rate cannot be negative.");
+
+                if (orderDto.ExpectedDeliveryDate.HasValue && orderDto.ExpectedDeliveryDate.Value.Date < DateTime.Today)
+                    return BadRequest("Expected delivery date (ETA) cannot be in the past.");
+
                 // Check for duplicate order number
                 var exists = await _context.Orders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber && o.Id != id);
                 if (exists)
@@ -195,11 +240,7 @@ namespace OCC.API.Controllers
                 if (existingOrder == null) return NotFound();
 
                 // 2. Update scalar properties
-                // Map Scalar Properties manually or auto-map
-                existingOrder.OrderNumber = orderDto.OrderNumber; // Usually readonly but...
-                // existingOrder.OrderDate = orderDto.OrderDate; // Keep original date? Or allow update? 
-                // Let's assume Order Date allows edit if it was wrong.
-                
+                existingOrder.OrderNumber = orderDto.OrderNumber;
                 existingOrder.ExpectedDeliveryDate = orderDto.ExpectedDeliveryDate;
                 existingOrder.OrderType = orderDto.OrderType;
                 existingOrder.Branch = orderDto.Branch;
@@ -219,15 +260,15 @@ namespace OCC.API.Controllers
                 existingOrder.DeliveryInstructions = orderDto.DeliveryInstructions;
                 existingOrder.ScopeOfWork = orderDto.ScopeOfWork;
 
-                if (orderDto.ExpectedDeliveryDate.HasValue && orderDto.ExpectedDeliveryDate.Value.Date < DateTime.Today)
-                    return BadRequest("Expected delivery date (ETA) cannot be in the past.");
-
                 // 3. Reconcile Lines (Smart Merge)
                 foreach (var lineDto in orderDto.Lines)
                 {
                     // Validation
                     if (lineDto.QuantityOrdered < 0) return BadRequest("Quantity ordered cannot be negative.");
                     if (lineDto.UnitPrice < 0) return BadRequest("All line items must have a unit price greater than or equal to zero.");
+
+                    decimal computedLineTotal = Math.Round((decimal)lineDto.QuantityOrdered * lineDto.UnitPrice, 2, MidpointRounding.AwayFromZero);
+                    decimal computedVatAmount = Math.Round(computedLineTotal * existingOrder.TaxRate, 2, MidpointRounding.AwayFromZero);
 
                     var existingLine = existingOrder.Lines.FirstOrDefault(l => l.Id == lineDto.Id);
                     if (existingLine != null)
@@ -251,9 +292,9 @@ namespace OCC.API.Controllers
                         existingLine.UnitOfMeasure = lineDto.UnitOfMeasure;
                         existingLine.UnitPrice = lineDto.UnitPrice;
                         existingLine.QuantityOrdered = lineDto.QuantityOrdered;
-                        existingLine.QuantityReceived = lineDto.QuantityReceived; // Allow update?
-                        existingLine.LineTotal = lineDto.LineTotal;
-                        existingLine.VatAmount = lineDto.VatAmount;
+                        existingLine.QuantityReceived = lineDto.QuantityReceived;
+                        existingLine.LineTotal = computedLineTotal;
+                        existingLine.VatAmount = computedVatAmount;
                     }
                     else
                     {
@@ -270,8 +311,8 @@ namespace OCC.API.Controllers
                             UnitPrice = lineDto.UnitPrice,
                             QuantityOrdered = lineDto.QuantityOrdered,
                             QuantityReceived = lineDto.QuantityReceived,
-                            LineTotal = lineDto.LineTotal,
-                            VatAmount = lineDto.VatAmount,
+                            LineTotal = computedLineTotal,
+                            VatAmount = computedVatAmount,
                             Remarks = lineDto.Remarks
                         };
 
@@ -317,6 +358,8 @@ namespace OCC.API.Controllers
                     }
                 }
 
+                existingOrder.TotalAmount = Math.Round(existingOrder.Lines.Sum(l => l.LineTotal + l.VatAmount), 2, MidpointRounding.AwayFromZero);
+
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Order {OrderNumber} updated by {User}", orderDto.OrderNumber, User?.FindFirst(ClaimTypes.Name)?.Value ?? "System");
@@ -329,13 +372,20 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating order {OrderId}", id);
-                return StatusCode(500, $"{ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, "An error occurred while updating the order.");
             }
         }
 
+        /// <summary>
+        /// Deletes an order by ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the order to delete.</param>
+        /// <returns>No content on success; 404 Not Found if order is missing.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid order ID.");
+
             try
             {
                 var order = await _context.Orders
@@ -361,7 +411,7 @@ namespace OCC.API.Controllers
                 _context.Orders.Remove(order);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Order {OrderNumber} deleted by {User}", order.OrderNumber, User.FindFirst(ClaimTypes.Name)?.Value);
+                _logger.LogInformation("Order {OrderNumber} deleted by {User}", order.OrderNumber, User?.FindFirst(ClaimTypes.Name)?.Value);
 
                 // Notify clients
                 await _hubContext.Clients.All.SendAsync("ReceiveOrderDelete", id);
@@ -375,12 +425,16 @@ namespace OCC.API.Controllers
             }
         }
         
+        /// <summary>
+        /// Processes received quantities for order line items and updates inventory stock & weighted average cost.
+        /// </summary>
+        /// <param name="id">The unique identifier of the order.</param>
+        /// <param name="receivedLines">The list of received order line DTOs with quantity received updates.</param>
+        /// <returns>The updated order DTO.</returns>
         [HttpPost("{id}/receive")]
         public async Task<IActionResult> ReceiveOrder(Guid id, [FromBody] List<OrderLineDto> receivedLines)
         {
-            // Keeping legacy signature for now, but returning OrderDto potentially?
-            // The client expects Order back.
-            
+            if (id == Guid.Empty) return BadRequest("Invalid order ID.");
             if (receivedLines == null || !receivedLines.Any())
                 return BadRequest("No lines to receive.");
 
@@ -396,6 +450,9 @@ namespace OCC.API.Controllers
 
                 foreach (var receivedLine in receivedLines)
                 {
+                    if (receivedLine.QuantityReceived < 0)
+                        return BadRequest("Received quantity cannot be negative.");
+
                     var originalLine = order.Lines.FirstOrDefault(l => l.Id == receivedLine.Id);
                     if (originalLine == null) continue;
 
@@ -420,7 +477,7 @@ namespace OCC.API.Controllers
 
                                 if (newTotalQty > 0)
                                 {
-                                    inventoryItem.AverageCost = (currentTotalValue + receivedTotalValue) / (decimal)newTotalQty;
+                                    inventoryItem.AverageCost = Math.Round((currentTotalValue + receivedTotalValue) / (decimal)newTotalQty, 2, MidpointRounding.AwayFromZero);
                                 }
                                 else if (inventoryItem.QuantityOnHand <= 0) 
                                 {
@@ -446,7 +503,7 @@ namespace OCC.API.Controllers
 
                 await _context.SaveChangesAsync();
                 
-                _logger.LogInformation("Order {OrderNumber} received/updated by {User}", order.OrderNumber, User.FindFirst(ClaimTypes.Name)?.Value);
+                _logger.LogInformation("Order {OrderNumber} received/updated by {User}", order.OrderNumber, User?.FindFirst(ClaimTypes.Name)?.Value);
                 
                 var dto = ToDto(order);
                 await _hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", dto);
@@ -461,6 +518,10 @@ namespace OCC.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Generates an order template prepopulated with low-stock inventory items for restock replenishment.
+        /// </summary>
+        /// <returns>A pre-populated order DTO template.</returns>
         [HttpGet("restock-template")]
         public async Task<ActionResult<OrderDto>> GetRestockTemplate()
         {
@@ -471,7 +532,6 @@ namespace OCC.API.Controllers
 
                 if (!lowStockItems.Any()) 
                 {
-                    // Return empty template
                     return Ok(CreateNewOrderDtoTemplate());
                 }
 
@@ -485,12 +545,6 @@ namespace OCC.API.Controllers
                 var orderDto = CreateNewOrderDtoTemplate();
                 orderDto.ExpectedDeliveryDate = DateTime.Today.AddDays(7);
                 orderDto.Notes = $"Auto-generated restock order for {supplierName}.";
-                
-                // Try to find supplier details
-                // Note: We don't have Supplier Service here, but we can query suppliers table if it existed, 
-                // but Supplier name is stored on Item. 
-                // Basic lookup if Supplier Table exists (assumed separate Controller/Context usage)
-                // For now, just set the name.
                 orderDto.SupplierName = supplierName;
 
                 foreach (var item in itemsToOrder)
@@ -519,6 +573,9 @@ namespace OCC.API.Controllers
                         unitPrice = lastLine.UnitPrice;
                     }
 
+                    decimal lineTotal = Math.Round((decimal)needed * unitPrice, 2, MidpointRounding.AwayFromZero);
+                    decimal vatAmount = Math.Round(lineTotal * 0.15m, 2, MidpointRounding.AwayFromZero);
+
                     orderDto.Lines.Add(new OrderLineDto
                     {
                         Id = Guid.NewGuid(),
@@ -529,13 +586,13 @@ namespace OCC.API.Controllers
                         UnitOfMeasure = item.UnitOfMeasure,
                         UnitPrice = unitPrice,
                         QuantityOrdered = needed,
-                        LineTotal = (decimal)needed * unitPrice,
-                        VatAmount = ((decimal)needed * unitPrice) * 0.15m
+                        LineTotal = lineTotal,
+                        VatAmount = vatAmount
                     });
                 }
                 
                 // Recalculate total
-                orderDto.TotalAmount = orderDto.Lines.Sum(l => l.LineTotal) * 1.15m;
+                orderDto.TotalAmount = Math.Round(orderDto.Lines.Sum(l => l.LineTotal + l.VatAmount), 2, MidpointRounding.AwayFromZero);
                 
                 return Ok(orderDto);
             }
@@ -546,6 +603,11 @@ namespace OCC.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Computes restock candidate inventory items filtered by target branch.
+        /// </summary>
+        /// <param name="branch">Optional branch filter (JHB or CPT).</param>
+        /// <returns>A collection of restock candidate DTOs.</returns>
         [HttpGet("restock-candidates")]
         public async Task<ActionResult<IEnumerable<RestockCandidateDto>>> GetRestockCandidates([FromQuery] Branch? branch = null)
         {
@@ -573,7 +635,6 @@ namespace OCC.API.Controllers
                             if (!pendingQuantities.ContainsKey(key))
                                 pendingQuantities[key] = 0;
                             
-                            // Remaining logic: Max(0, Ordered - Received)
                             double remaining = Math.Max(0, line.QuantityOrdered - line.QuantityReceived);
                             pendingQuantities[key] += remaining;
                         }
@@ -630,7 +691,7 @@ namespace OCC.API.Controllers
             }
         }
 
-        private OrderDto CreateNewOrderDtoTemplate(OrderType type = OrderType.PurchaseOrder)
+        private static OrderDto CreateNewOrderDtoTemplate(OrderType type = OrderType.PurchaseOrder)
         {
             string prefix = type switch
             {
@@ -644,7 +705,7 @@ namespace OCC.API.Controllers
             {
                 Id = Guid.NewGuid(),
                 OrderDate = DateTime.Now,
-                OrderNumber = $"{prefix}-{DateTime.Now:yyMM}-{new Random().Next(1000, 9999)}",
+                OrderNumber = $"{prefix}-{DateTime.Now:yyMM}-{Random.Shared.Next(1000, 9999)}",
                 OrderType = type,
                 TaxRate = 0.15m,
                 DestinationType = OrderDestinationType.Stock,
@@ -683,7 +744,7 @@ namespace OCC.API.Controllers
                 Template = order.Template,
                 Terms = order.Terms,
                 ReferenceNo = order.ReferenceNo,
-                TotalAmount = order.TotalAmount, // Use calculated
+                TotalAmount = Math.Round(order.TotalAmount, 2, MidpointRounding.AwayFromZero),
                 Lines = order.Lines.Select(l => new OrderLineDto
                 {
                     Id = l.Id,
@@ -694,9 +755,9 @@ namespace OCC.API.Controllers
                     QuantityOrdered = l.QuantityOrdered,
                     QuantityReceived = l.QuantityReceived,
                     UnitOfMeasure = l.UnitOfMeasure,
-                    UnitPrice = l.UnitPrice,
-                    VatAmount = l.VatAmount,
-                    LineTotal = l.LineTotal,
+                    UnitPrice = Math.Round(l.UnitPrice, 2, MidpointRounding.AwayFromZero),
+                    VatAmount = Math.Round(l.VatAmount, 2, MidpointRounding.AwayFromZero),
+                    LineTotal = Math.Round(l.LineTotal, 2, MidpointRounding.AwayFromZero),
                     Remarks = l.Remarks
                 }).ToList()
             };
@@ -742,9 +803,9 @@ namespace OCC.API.Controllers
                         QuantityOrdered = l.QuantityOrdered,
                         QuantityReceived = l.QuantityReceived,
                         UnitOfMeasure = l.UnitOfMeasure,
-                        UnitPrice = l.UnitPrice,
-                        VatAmount = l.VatAmount,
-                        LineTotal = l.LineTotal,
+                        UnitPrice = Math.Round(l.UnitPrice, 2, MidpointRounding.AwayFromZero),
+                        VatAmount = Math.Round(l.VatAmount, 2, MidpointRounding.AwayFromZero),
+                        LineTotal = Math.Round(l.LineTotal, 2, MidpointRounding.AwayFromZero),
                         Remarks = l.Remarks
                     })
                 )

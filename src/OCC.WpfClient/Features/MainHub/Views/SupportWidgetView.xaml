@@ -1,0 +1,147 @@
+<UserControl x:Class="OCC.WpfClient.Features.MainHub.Views.SupportWidgetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.MainHub.ViewModels"
+             xmlns:models="clr-namespace:OCC.Shared.Models;assembly=OCC.Shared"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SupportWidgetViewModel}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid MinHeight="200">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Support Hub" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                <Border Background="#FF8F00" CornerRadius="8" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SupportTicketsNeedingFeedback.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding SupportTicketsNeedingFeedback.Count, StringFormat={}{0} Reply}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                </Border>
+            </StackPanel>
+
+            <Button Content="Open Support Hub" Command="{Binding NavigateToRouteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Support.SupportHub" HorizontalAlignment="Right" Style="{StaticResource ModernTabButton}" Foreground="{StaticResource AccentBlue}" FontWeight="SemiBold"/>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <!-- Loading Spinner -->
+            <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top" Background="Transparent" Foreground="{StaticResource AccentBlue}"
+                         Visibility="{Binding IsLoadingSupportTickets, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <!-- No Open Tickets Message -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding OpenSupportTickets.Count}" Value="0"/>
+                                    <Condition Binding="{Binding IsLoadingSupportTickets}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,5" Opacity="0.5"/>
+                <TextBlock Text="No active support tickets." Foreground="{StaticResource TextSub}" FontSize="13" FontStyle="Italic" HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Support Tickets List -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"  Padding="0,0,15,0">
+                <ScrollViewer.Style>
+                    <Style TargetType="ScrollViewer">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <Trigger Property="HasContent" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding OpenSupportTickets.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ScrollViewer.Style>
+
+                <ItemsControl ItemsSource="{Binding OpenSupportTickets}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:BugReport}">
+                            <Button Command="{Binding DataContext.NavigateToTicketCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,8" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="cardBorder" Background="#0DFFFFFF" CornerRadius="10" Padding="12,8" BorderThickness="1" BorderBrush="#08FFFFFF">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/> <!-- Status Icon -->
+                                                    <ColumnDefinition Width="*"/>    <!-- Details -->
+                                                    <ColumnDefinition Width="Auto"/> <!-- Feedback Tag -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Status Dot -->
+                                                <Border x:Name="StatusDot" Grid.Column="0" Width="10" Height="10" CornerRadius="5" Background="#00FF88" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                                                <!-- Details -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Description}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock Text="{Binding ReporterName}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="•" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="{Binding Status}" Foreground="#BE9DFF" FontSize="11" x:Name="StatusText"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Feedback Request -->
+                                                <Border x:Name="FeedbackBadge" Grid.Column="2" Background="#FF8F00" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="Collapsed">
+                                                    <TextBlock Text="Feedback Required" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="cardBorder" Property="Background" Value="#1AFFFFFF"/>
+                                                <Setter TargetName="cardBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                            </Trigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Waiting for Client">
+                                                <Setter TargetName="StatusDot" Property="Background" Value="#FF8F00"/>
+                                                <Setter TargetName="StatusText" Property="Foreground" Value="#FF8F00"/>
+                                                <Setter TargetName="FeedbackBadge" Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="In Progress">
+                                                <Setter TargetName="StatusDot" Property="Background" Value="#2E9DFF"/>
+                                                <Setter TargetName="StatusText" Property="Foreground" Value="#2E9DFF"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Planning">
+                                                <Setter TargetName="StatusDot" Property="Background" Value="#BE9DFF"/>
+                                                <Setter TargetName="StatusText" Property="Foreground" Value="#BE9DFF"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Fixed">
+                                                <Setter TargetName="StatusDot" Property="Background" Value="#C084FC"/>
+                                                <Setter TargetName="StatusText" Property="Foreground" Value="#C084FC"/>
+                                            </DataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

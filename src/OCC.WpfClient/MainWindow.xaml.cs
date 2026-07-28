@@ -14,10 +14,10 @@ namespace OCC.WpfClient
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Features.Shell.ViewModels.ShellViewModel _viewModel;
+        private readonly Features.ShellHub.ViewModels.ShellViewModel _viewModel;
         private readonly LocalSettingsService _settingsService;
 
-        public MainWindow(Features.Shell.ViewModels.ShellViewModel viewModel, LocalSettingsService settingsService)
+        public MainWindow(Features.ShellHub.ViewModels.ShellViewModel viewModel, LocalSettingsService settingsService)
         {
             InitializeComponent();
             
@@ -85,6 +85,7 @@ namespace OCC.WpfClient
         private void OnCloseClick(object? sender, RoutedEventArgs e)
         {
             Close();
+            Application.Current.Shutdown();
         }
 
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)

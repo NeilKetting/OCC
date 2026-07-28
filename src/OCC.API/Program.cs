@@ -118,6 +118,7 @@ else
     Console.WriteLine("[STARTUP] Registered MockEmailService (Fallback).");
 }
 // Security
+builder.Services.AddScoped<OCC.API.Services.IPasswordHasher, OCC.API.Services.PasswordHasher>();
 builder.Services.AddScoped<OCC.API.Services.PasswordHasher>();
 builder.Services.AddScoped<OCC.API.Services.IAuthService, OCC.API.Services.AuthService>();
 builder.Services.AddScoped<OCC.API.Services.IStockService, OCC.API.Services.StockService>();
@@ -209,6 +210,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseSerilogRequestLogging();
+app.UseMiddleware<OCC.API.Middleware.GlobalExceptionMiddleware>();
 
 app.UseHttpMethodOverride();
 

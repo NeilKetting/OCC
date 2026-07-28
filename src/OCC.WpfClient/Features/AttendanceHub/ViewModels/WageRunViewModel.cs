@@ -524,9 +524,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating draft wage run");
-                System.Windows.MessageBox.Show(
-                    $"Failed to generate draft:\n\n{ex.Message}",
-                    "Wage Run Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Wage Run Error", $"Failed to generate draft:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -552,9 +550,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 var finalized = await _wageService.FinalizeRunAsync(_currentDraft);
 
-                System.Windows.MessageBox.Show(
-                    $"Wage Run finalized successfully.\nRun ID: {finalized.Id}",
-                    "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                await _dialogService.ShowAlertAsync("Success", $"Wage Run finalized successfully.\nRun ID: {finalized.Id}");
 
                 Lines.Clear();
                 IsGenerated = false;
@@ -567,9 +563,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error finalizing wage run");
-                System.Windows.MessageBox.Show(
-                    $"Failed to finalize run:\n\n{ex.Message}",
-                    "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to finalize run:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -600,8 +594,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating wage run PDF");
-                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -632,8 +625,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating salary version PDF");
-                System.Windows.MessageBox.Show($"Failed to generate Salary PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate Salary PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -664,8 +656,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating filtered wage run PDF");
-                System.Windows.MessageBox.Show($"Failed to generate Filtered PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate Filtered PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -696,8 +687,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating supervisor payments PDF");
-                System.Windows.MessageBox.Show($"Failed to generate supervisor payments PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate supervisor payments PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -749,8 +739,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading wage run for edit");
-                System.Windows.MessageBox.Show($"Failed to load run:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to load run:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -789,8 +778,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating past supervisor payments PDF");
-                System.Windows.MessageBox.Show($"Failed to generate supervisor payments PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate supervisor payments PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -812,8 +800,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating past wage run PDF");
-                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -833,8 +820,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 if (!paymentList.Any())
                 {
-                    System.Windows.MessageBox.Show("There are no valid employee payments (Net Pay > R0) in this wage run.", "No Payments",
-                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    await _dialogService.ShowAlertAsync("No Payments", "There are no valid employee payments (Net Pay > R0) in this wage run.");
                     return;
                 }
 
@@ -843,7 +829,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 IsBusy = false;
 
-                var dialog = new Dialogs.BankExportDialogView(totalCount, totalAmount, DateTime.Today);
+                var dialog = new OCC.WpfClient.Dialogs.BankExportDialogView(totalCount, totalAmount, DateTime.Today);
                 if (dialog.ShowDialog() == true)
                 {
                     var format = dialog.SelectedFormat;
@@ -876,8 +862,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                         await _exportService.GenerateBankExportFileAsync(paymentList, format, actionDate, sfd.FileName);
 
-                        System.Windows.MessageBox.Show($"Bank export file generated successfully:\n\n{Path.GetFileName(sfd.FileName)}", "Success",
-                            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                        await _dialogService.ShowAlertAsync("Success", $"Bank export file generated successfully:\n\n{Path.GetFileName(sfd.FileName)}");
 
                         var saveDir = Path.GetDirectoryName(sfd.FileName);
                         if (!string.IsNullOrEmpty(saveDir))
@@ -890,8 +875,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error exporting past bank file");
-                System.Windows.MessageBox.Show($"Failed to export bank file:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to export bank file:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -922,8 +906,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 if (!paymentList.Any())
                 {
-                    System.Windows.MessageBox.Show("There are no valid employee payments (Net Pay > R0) in the current draft.", "No Payments",
-                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    await _dialogService.ShowAlertAsync("No Payments", "There are no valid employee payments (Net Pay > R0) in the current draft.");
                     return;
                 }
 
@@ -932,7 +915,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 IsBusy = false;
 
-                var dialog = new Dialogs.BankExportDialogView(totalCount, totalAmount, DateTime.Today);
+                var dialog = new OCC.WpfClient.Dialogs.BankExportDialogView(totalCount, totalAmount, DateTime.Today);
                 if (dialog.ShowDialog() == true)
                 {
                     var format = dialog.SelectedFormat;
@@ -965,8 +948,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                         await _exportService.GenerateBankExportFileAsync(paymentList, format, actionDate, sfd.FileName);
 
-                        System.Windows.MessageBox.Show($"Draft bank export file generated successfully:\n\n{Path.GetFileName(sfd.FileName)}", "Success",
-                            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                        await _dialogService.ShowAlertAsync("Success", $"Draft bank export file generated successfully:\n\n{Path.GetFileName(sfd.FileName)}");
 
                         var saveDir = Path.GetDirectoryName(sfd.FileName);
                         if (!string.IsNullOrEmpty(saveDir))
@@ -979,8 +961,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error exporting draft bank file");
-                System.Windows.MessageBox.Show($"Failed to export bank file:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to export bank file:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }

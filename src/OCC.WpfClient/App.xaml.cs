@@ -8,19 +8,19 @@ using Microsoft.Extensions.Logging;
 using OCC.WpfClient.Services;
 using OCC.WpfClient.Services.Interfaces;
 using OCC.WpfClient.Features.AuthHub;
-using OCC.WpfClient.Features.Splash;
-using OCC.WpfClient.Features.Main.ViewModels;
+using OCC.WpfClient.Features.SplashHub;
+using OCC.WpfClient.Features.MainHub.ViewModels;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Infrastructure.Logging;
 using OCC.WpfClient.Features.EmployeeHub;
-using OCC.WpfClient.Features.Admin;
+using OCC.WpfClient.Features.AdminHub;
 using OCC.WpfClient.Features.SupportHub;
 using OCC.WpfClient.Features.ChatHub;
 using OCC.WpfClient.Features.ProcurementHub;
 using OCC.WpfClient.Infrastructure;
-using OCC.WpfClient.Features.Splash.ViewModels;
+using OCC.WpfClient.Features.SplashHub.ViewModels;
 using OCC.WpfClient.Features.AuthHub.ViewModels;
-using OCC.WpfClient.Features.Shell.ViewModels;
+using OCC.WpfClient.Features.ShellHub.ViewModels;
 using OCC.WpfClient.Features.CustomerHub;
 using OCC.WpfClient.Features.SettingsHub;
 using OCC.WpfClient.Features.ProjectHub;
@@ -49,10 +49,14 @@ namespace OCC.WpfClient
             Thread.CurrentThread.CurrentUICulture = culture;
 
             // Ensure WPF uses the same culture for bindings by default
-            FrameworkElement.LanguageProperty.OverrideMetadata(
-                typeof(FrameworkElement),
-                new FrameworkPropertyMetadata(
-                    System.Windows.Markup.XmlLanguage.GetLanguage("en-US")));
+            try
+            {
+                FrameworkElement.LanguageProperty.OverrideMetadata(
+                    typeof(FrameworkElement),
+                    new FrameworkPropertyMetadata(
+                        System.Windows.Markup.XmlLanguage.GetLanguage("en-US")));
+            }
+            catch { /* Ignore if already overridden */ }
 
             // Global Exception Handling
             this.DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -74,10 +78,8 @@ namespace OCC.WpfClient
 
             // Show Splash Screen
             var splashViewModel = ServiceProvider.GetRequiredService<SplashViewModel>();
-            var splashView = ServiceProvider.GetRequiredService<Features.Splash.Views.SplashView>();
+            var splashView = ServiceProvider.GetRequiredService<Features.SplashHub.Views.SplashView>();
             splashView.DataContext = splashViewModel;
-            
-            this.MainWindow = splashView;
             splashView.Show();
 
             // Perform Initialization
@@ -172,7 +174,7 @@ namespace OCC.WpfClient
 
             // Windows
             services.AddSingleton<MainWindow>();
-            services.AddSingleton<Features.Splash.Views.SplashView>();
+            services.AddSingleton<Features.SplashHub.Views.SplashView>();
         }
 
         private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)

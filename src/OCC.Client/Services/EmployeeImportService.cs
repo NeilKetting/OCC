@@ -144,7 +144,7 @@ namespace OCC.Client.Services
                 ContractDuration = row.ContractDuration,
                 Role = role,
                 RateType = rateType,
-                HourlyRate = row.Rate,
+                HourlyRate = (decimal)row.Rate,
                 Branch = row.Branch?.Trim() ?? "Johannesburg",
                 ShiftStartTime = shiftStart,
                 ShiftEndTime = shiftEnd,
@@ -152,8 +152,8 @@ namespace OCC.Client.Services
                 AccountType = row.AccountType?.Trim(),
                 AccountNumber = row.AccountNumber?.Trim(),
                 BranchCode = row.BranchCode?.Trim(),
-                AnnualLeaveBalance = row.AnnualLeaveBalance,
-                SickLeaveBalance = row.SickLeaveBalance,
+                AnnualLeaveBalance = (decimal)row.AnnualLeaveBalance,
+                SickLeaveBalance = (decimal)row.SickLeaveBalance,
                 LeaveCycleStartDate = leaveStartDate,
                 Status = EmployeeStatus.Active
             };

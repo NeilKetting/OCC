@@ -100,7 +100,7 @@ namespace OCC.Client.Features.TimeAttendanceHub.ViewModels
             {
                 if (_staff.RateType == RateType.Hourly)
                 {
-                    return (decimal)(HoursWorked * _staff.HourlyRate);
+                    return (decimal)HoursWorked * _staff.HourlyRate;
                 }
                 return 0;
             }

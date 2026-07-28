@@ -38,19 +38,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views.Dialogs
 
             if (hasErrors)
             {
-                MessageBox.Show(
-                    "Spelling issues were found:\n" + errorDetails + "\nPlease right-click the red squiggly underlined words to correct them.",
-                    "Spell Check",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                new OCC.WpfClient.Dialogs.CustomDialogView("Spell Check", "Spelling issues were found:\n" + errorDetails + "\nPlease right-click the red squiggly underlined words to correct them.", "OK", null, null).ShowDialog();
             }
             else
             {
-                MessageBox.Show(
-                    "No spelling errors were found.",
-                    "Spell Check",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                new OCC.WpfClient.Dialogs.CustomDialogView("Spell Check", "No spelling errors were found.", "OK", null, null).ShowDialog();
             }
         }
     }

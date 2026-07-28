@@ -15,8 +15,13 @@
 		<AssemblyName>OCC-ERP</AssemblyName>
 		<Version>1.1.33</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 	
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="ExcelDataReader" />
@@ -24,6 +29,7 @@
 		<PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Http" />
 		<PackageReference Include="Microsoft.Extensions.Logging" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
@@ -40,6 +46,11 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\OCC.Shared\OCC.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Features\ProcurementHub\Views\Dialogs\**" />
+		<Page Remove="Features\ProcurementHub\Views\Dialogs\**" />
 	</ItemGroup>
 
 	<ItemGroup>

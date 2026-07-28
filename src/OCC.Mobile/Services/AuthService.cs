@@ -37,7 +37,7 @@ namespace OCC.Mobile.Services
 
         public string GetBaseUrl()
         {
-            if (_settingsService.Settings.SelectedEnvironment == AppEnvironment.Local)
+            if (_settingsService.Settings.SelectedEnvironment.IsLocal())
             {
                 if (!string.IsNullOrEmpty(_settingsService.Settings.CustomLocalUrl))
                 {

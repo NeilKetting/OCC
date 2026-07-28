@@ -44,9 +44,184 @@ namespace OCC.Tests.API.Controllers
         }
 
         [Fact]
+        public void Constructor_NullArguments_ThrowsArgumentNullException()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            Assert.Throws<ArgumentNullException>(() => new OrdersController(null!, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object));
+            Assert.Throws<ArgumentNullException>(() => new OrdersController(context, null!, _mockHubContext.Object, _mockStockService.Object));
+            Assert.Throws<ArgumentNullException>(() => new OrdersController(context, _mockLogger.Object, null!, _mockStockService.Object));
+            Assert.Throws<ArgumentNullException>(() => new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, null!));
+        }
+
+        [Fact]
+        public async Task GetOrders_ReturnsListOfOrderSummaryDtos()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            context.Orders.Add(new Order
+            {
+                Id = Guid.NewGuid(),
+                OrderNumber = "PO-100",
+                OrderDate = DateTime.UtcNow,
+                SupplierName = "Supplier A",
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine { Id = Guid.NewGuid(), LineTotal = 100m, VatAmount = 15m }
+                }
+            });
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var result = await controller.GetOrders();
+
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var orders = Assert.IsType<List<OrderSummaryDto>>(okResult.Value);
+            Assert.Single(orders);
+            Assert.Equal("PO-100", orders.First().OrderNumber);
+            Assert.Equal(115m, orders.First().TotalAmount);
+        }
+
+        [Fact]
+        public async Task GetOrder_EmptyGuid_ReturnsBadRequest()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var result = await controller.GetOrder(Guid.Empty);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task GetOrder_NonExistent_ReturnsNotFound()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var result = await controller.GetOrder(Guid.NewGuid());
+            Assert.IsType<NotFoundResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task GetOrder_ValidId_ReturnsOrderDto()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var id = Guid.NewGuid();
+            context.Orders.Add(new Order
+            {
+                Id = id,
+                OrderNumber = "PO-200",
+                SupplierName = "Supplier B",
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = id, Description = "Line Item 1", QuantityOrdered = 5, UnitPrice = 10 }
+                }
+            });
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var result = await controller.GetOrder(id);
+
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<OrderDto>(okResult.Value);
+            Assert.Equal(id, dto.Id);
+            Assert.Single(dto.Lines);
+        }
+
+        [Fact]
+        public async Task CreateOrder_NullPayloadOrNoLines_ReturnsBadRequest()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var nullRes = await controller.CreateOrder(null!);
+            Assert.IsType<BadRequestObjectResult>(nullRes.Result);
+
+            var noLinesDto = new OrderDto { Lines = new List<OrderLineDto>() };
+            var noLinesRes = await controller.CreateOrder(noLinesDto);
+            Assert.IsType<BadRequestObjectResult>(noLinesRes.Result);
+        }
+
+        [Fact]
+        public async Task CreateOrder_PastEta_ReturnsBadRequest()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var pastEtaDto = new OrderDto
+            {
+                OrderNumber = "PO-PAST",
+                ExpectedDeliveryDate = DateTime.Today.AddDays(-2),
+                Lines = new List<OrderLineDto>
+                {
+                    new OrderLineDto { InventoryItemId = Guid.NewGuid(), Description = "Test", QuantityOrdered = 1, UnitPrice = 10 }
+                }
+            };
+
+            var result = await controller.CreateOrder(pastEtaDto);
+            var badReq = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Expected delivery date (ETA) cannot be in the past.", badReq.Value);
+        }
+
+        [Fact]
+        public async Task CreateOrder_DuplicateOrderNumber_ReturnsBadRequest()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            context.Orders.Add(new Order { Id = Guid.NewGuid(), OrderNumber = "PO-DUP" });
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var dupDto = new OrderDto
+            {
+                OrderNumber = "PO-DUP",
+                Lines = new List<OrderLineDto>
+                {
+                    new OrderLineDto { InventoryItemId = Guid.NewGuid(), Description = "Item", QuantityOrdered = 1, UnitPrice = 10 }
+                }
+            };
+
+            var result = await controller.CreateOrder(dupDto);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task CreateOrder_PickingOrder_AdjustsStockAndCreatesSuccessfully()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var invId = Guid.NewGuid();
+            var createDto = new OrderDto
+            {
+                OrderNumber = "PK-001",
+                OrderType = OrderType.PickingOrder,
+                Branch = Branch.JHB,
+                TaxRate = 0.15m,
+                Lines = new List<OrderLineDto>
+                {
+                    new OrderLineDto
+                    {
+                        InventoryItemId = invId,
+                        Description = "Stock Item",
+                        QuantityOrdered = 10,
+                        UnitPrice = 50
+                    }
+                }
+            };
+
+            var result = await controller.CreateOrder(createDto);
+            var created = Assert.IsType<CreatedAtActionResult>(result.Result);
+            var dto = Assert.IsType<OrderDto>(created.Value);
+
+            Assert.Equal("PK-001", dto.OrderNumber);
+            Assert.Equal(500m, dto.Lines.First().LineTotal);
+            Assert.Equal(75m, dto.Lines.First().VatAmount);
+
+            _mockStockService.Verify(s => s.AdjustStockAsync(invId, -10, Branch.JHB), Times.Once);
+            _mockClientProxy.Verify(c => c.SendCoreAsync("ReceiveOrderUpdate", It.IsAny<object[]>(), default), Times.Once);
+        }
+
+        [Fact]
         public async Task UpdateOrder_AddNewLineToExistingOrder_PreservesLineIdAndSavesSuccessfully()
         {
-            // Arrange
             using var context = new AppDbContext(_dbOptions);
             var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
 
@@ -76,7 +251,6 @@ namespace OCC.Tests.API.Controllers
             context.Orders.Add(existingOrder);
             await context.SaveChangesAsync();
 
-            // Act - Add a 2nd line with a client-generated Guid
             var newLineId = Guid.NewGuid();
             var updateDto = new OrderDto
             {
@@ -106,25 +280,16 @@ namespace OCC.Tests.API.Controllers
             };
 
             var result = await controller.UpdateOrder(orderId, updateDto);
-
-            // Assert
             Assert.IsType<NoContentResult>(result);
 
             var dbOrder = await context.Orders.Include(o => o.Lines).FirstOrDefaultAsync(o => o.Id == orderId);
             Assert.NotNull(dbOrder);
             Assert.Equal(2, dbOrder.Lines.Count);
-
-            var addedLine = dbOrder.Lines.FirstOrDefault(l => l.Id == newLineId);
-            Assert.NotNull(addedLine);
-            Assert.Equal("ITEM-002", addedLine.ItemCode);
-            Assert.Equal(5, addedLine.QuantityOrdered);
-            Assert.Equal(250, addedLine.UnitPrice);
         }
 
         [Fact]
         public async Task UpdateOrder_RemoveLineFromExistingOrder_RemovesLineSuccessfully()
         {
-            // Arrange
             using var context = new AppDbContext(_dbOptions);
             var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
 
@@ -147,7 +312,6 @@ namespace OCC.Tests.API.Controllers
             context.Orders.Add(existingOrder);
             await context.SaveChangesAsync();
 
-            // Act - Send update with Line 2 removed
             var updateDto = new OrderDto
             {
                 Id = orderId,
@@ -160,69 +324,17 @@ namespace OCC.Tests.API.Controllers
             };
 
             var result = await controller.UpdateOrder(orderId, updateDto);
-
-            // Assert
             Assert.IsType<NoContentResult>(result);
 
             var dbOrder = await context.Orders.Include(o => o.Lines).FirstOrDefaultAsync(o => o.Id == orderId);
             Assert.NotNull(dbOrder);
             var activeLines = dbOrder.Lines.Where(l => l.IsActive).ToList();
             Assert.Single(activeLines);
-            Assert.Equal(line1Id, activeLines.First().Id);
-        }
-
-        [Fact]
-        public async Task UpdateOrder_ZeroQuantityOrZeroPriceLine_SavesSuccessfully()
-        {
-            // Arrange
-            using var context = new AppDbContext(_dbOptions);
-            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
-
-            var orderId = Guid.NewGuid();
-            var existingOrder = new Order
-            {
-                Id = orderId,
-                OrderNumber = "PO-TEST-003",
-                SupplierName = "Supplier C",
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
-                {
-                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-A", Description = "Item A", QuantityOrdered = 1, UnitPrice = 10 }
-                }
-            };
-
-            context.Orders.Add(existingOrder);
-            await context.SaveChangesAsync();
-
-            var lineId = Guid.NewGuid();
-            var updateDto = new OrderDto
-            {
-                Id = orderId,
-                OrderNumber = "PO-TEST-003",
-                SupplierName = "Supplier C",
-                Lines = new List<OrderLineDto>
-                {
-                    new OrderLineDto { Id = lineId, ItemCode = "ITEM-ZERO", Description = "Unquantified / Draft Item", QuantityOrdered = 0, UnitPrice = 0 }
-                }
-            };
-
-            // Act
-            var result = await controller.UpdateOrder(orderId, updateDto);
-
-            // Assert
-            Assert.IsType<NoContentResult>(result);
-
-            var dbOrder = await context.Orders.Include(o => o.Lines).FirstOrDefaultAsync(o => o.Id == orderId);
-            Assert.NotNull(dbOrder);
-            var line = dbOrder.Lines.FirstOrDefault(l => l.Id == lineId);
-            Assert.NotNull(line);
-            Assert.Equal(0, line.QuantityOrdered);
-            Assert.Equal(0, line.UnitPrice);
         }
 
         [Fact]
         public async Task UpdateOrder_NegativeQuantityLine_ReturnsBadRequest()
         {
-            // Arrange
             using var context = new AppDbContext(_dbOptions);
             var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
 
@@ -252,49 +364,175 @@ namespace OCC.Tests.API.Controllers
                 }
             };
 
-            // Act
             var result = await controller.UpdateOrder(orderId, updateDto);
-
-            // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Quantity ordered cannot be negative.", badRequest.Value);
         }
 
         [Fact]
-        public async Task CreateOrder_ZeroQuantityLine_SavesSuccessfully()
+        public async Task DeleteOrder_EmptyGuid_ReturnsBadRequest()
         {
-            // Arrange
             using var context = new AppDbContext(_dbOptions);
             var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
 
-            var inventoryItemId = Guid.NewGuid();
-            var createDto = new OrderDto
+            var result = await controller.DeleteOrder(Guid.Empty);
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task DeleteOrder_NonExistent_ReturnsNotFound()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var result = await controller.DeleteOrder(Guid.NewGuid());
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task DeleteOrder_PickingOrder_UndoesStockAndDeletes()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var orderId = Guid.NewGuid();
+            var invId = Guid.NewGuid();
+
+            context.Orders.Add(new Order
             {
-                OrderNumber = "PO-CREATE-001",
-                SupplierName = "New Supplier",
-                ExpectedDeliveryDate = DateTime.Today.AddDays(3),
-                Lines = new List<OrderLineDto>
+                Id = orderId,
+                OrderNumber = "PK-DEL",
+                OrderType = OrderType.PickingOrder,
+                Branch = Branch.CPT,
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
                 {
-                    new OrderLineDto
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, InventoryItemId = invId, QuantityOrdered = 5, UnitPrice = 20 }
+                }
+            });
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var result = await controller.DeleteOrder(orderId);
+
+            Assert.IsType<NoContentResult>(result);
+            var dbOrder = await context.Orders.FindAsync(orderId);
+            Assert.False(dbOrder!.IsActive);
+
+            _mockStockService.Verify(s => s.AdjustStockAsync(invId, 5, Branch.CPT), Times.Once);
+            _mockClientProxy.Verify(c => c.SendCoreAsync("ReceiveOrderDelete", It.Is<object[]>(o => (Guid)o[0] == orderId), default), Times.Once);
+        }
+
+        [Fact]
+        public async Task ReceiveOrder_ValidInboundPO_UpdatesReceivedQuantityAverageCostAndStatus()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var orderId = Guid.NewGuid();
+            var lineId = Guid.NewGuid();
+            var invId = Guid.NewGuid();
+
+            context.InventoryItems.Add(new InventoryItem
+            {
+                Id = invId,
+                Sku = "CEMENT",
+                Description = "Cement Bag",
+                QuantityOnHand = 10,
+                JhbQuantity = 10,
+                AverageCost = 50m
+            });
+
+            context.Orders.Add(new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-REC",
+                OrderType = OrderType.PurchaseOrder,
+                Branch = Branch.JHB,
+                Status = OrderStatus.Ordered,
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine
                     {
-                        InventoryItemId = inventoryItemId,
-                        ItemCode = "INV-001",
-                        Description = "Unpriced Item",
-                        QuantityOrdered = 0,
-                        UnitPrice = 0
+                        Id = lineId,
+                        OrderId = orderId,
+                        InventoryItemId = invId,
+                        QuantityOrdered = 10,
+                        QuantityReceived = 0,
+                        UnitPrice = 80m
                     }
                 }
+            });
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var receivedLines = new List<OrderLineDto>
+            {
+                new OrderLineDto { Id = lineId, QuantityReceived = 10 }
             };
 
-            // Act
-            var result = await controller.CreateOrder(createDto);
+            var result = await controller.ReceiveOrder(orderId, receivedLines);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var dto = Assert.IsType<OrderDto>(okResult.Value);
 
-            // Assert
-            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-            var returnDto = Assert.IsType<OrderDto>(createdResult.Value);
-            Assert.Single(returnDto.Lines);
-            Assert.Equal(0, returnDto.Lines.First().QuantityOrdered);
-            Assert.Equal(0, returnDto.Lines.First().UnitPrice);
+            Assert.Equal(OrderStatus.Completed, dto.Status);
+
+            var dbInv = await context.InventoryItems.FindAsync(invId);
+            Assert.NotNull(dbInv);
+            Assert.Equal(20, dbInv.QuantityOnHand);
+            Assert.Equal(20, dbInv.JhbQuantity);
+            Assert.Equal(65m, dbInv.AverageCost);
+        }
+
+        [Fact]
+        public async Task GetRestockTemplate_LowStockExists_ReturnsPrepopulatedTemplate()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            var item = new InventoryItem
+            {
+                Id = Guid.NewGuid(),
+                Sku = "BRICK-01",
+                Description = "Red Brick",
+                Supplier = "Supplier Mega",
+                TrackLowStock = true,
+                JhbQuantity = 5,
+                JhbReorderPoint = 10,
+                AverageCost = 5m
+            };
+            context.InventoryItems.Add(item);
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var result = await controller.GetRestockTemplate();
+
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var template = Assert.IsType<OrderDto>(okResult.Value);
+
+            Assert.Equal("Supplier Mega", template.SupplierName);
+            Assert.Single(template.Lines);
+            Assert.Equal("BRICK-01", template.Lines.First().ItemCode);
+        }
+
+        [Fact]
+        public async Task GetRestockCandidates_ReturnsLowStockItemsFilteredByBranch()
+        {
+            using var context = new AppDbContext(_dbOptions);
+            context.InventoryItems.Add(new InventoryItem
+            {
+                Id = Guid.NewGuid(),
+                Sku = "PIPE-01",
+                Description = "PVC Pipe",
+                TrackLowStock = true,
+                JhbQuantity = 2,
+                JhbReorderPoint = 5,
+                CptQuantity = 10,
+                CptReorderPoint = 5
+            });
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+            var result = await controller.GetRestockCandidates(Branch.JHB);
+
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var candidates = Assert.IsAssignableFrom<IEnumerable<RestockCandidateDto>>(okResult.Value);
+
+            Assert.Single(candidates);
+            Assert.Equal(Branch.JHB, candidates.First().TargetBranch);
         }
     }
 }

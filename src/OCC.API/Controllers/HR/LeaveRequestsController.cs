@@ -156,7 +156,7 @@ namespace OCC.API.Controllers
                 {
                     double totalDays = request.NumberOfDays;
                     double cappedPaid = Math.Min(3.0, totalDays);
-                    double employeeAnnualBalance = employee.AnnualLeaveBalance;
+                    double employeeAnnualBalance = (double)employee.AnnualLeaveBalance;
                     
                     request.PaidDays = Math.Max(0, Math.Min(cappedPaid, employeeAnnualBalance));
                     request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);

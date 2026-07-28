@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OCC.Shared.Models
 {
@@ -13,6 +14,14 @@ namespace OCC.Shared.Models
         public string ApprovedBy { get; set; } = string.Empty;
         public DateTime Date { get; set; } = DateTime.UtcNow;
         public string AdditionalComments { get; set; } = string.Empty;
+
+        /// <summary> Cost of the variation order. </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Cost { get; set; }
+
+        /// <summary> Claim amount associated with the variation order. </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal ClaimAmount { get; set; }
 
         public string Status { get; set; } = "Variation Request";
         public bool IsInvoiced { get; set; }

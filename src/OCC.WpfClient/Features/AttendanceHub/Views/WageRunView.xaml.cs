@@ -9,16 +9,5 @@ namespace OCC.WpfClient.Features.AttendanceHub.Views
         {
             InitializeComponent();
         }
-
-        private void PrintButton_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.ContextMenu != null)
-            {
-                btn.ContextMenu.PlacementTarget = btn;
-                btn.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
-                btn.ContextMenu.DataContext = btn.DataContext;
-                btn.ContextMenu.IsOpen = true;
-            }
-        }
     }
 }

@@ -59,7 +59,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         private string _branch = "Johannesburg";
 
         [ObservableProperty]
-        private double _hourlyRate;
+        private decimal _hourlyRate;
 
         [ObservableProperty]
         private RateType _rateType = RateType.Hourly;
@@ -83,8 +83,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         [ObservableProperty] private string? _accountType;
 
         // Leave Balances
-        [ObservableProperty] private double _annualLeaveBalance;
-        [ObservableProperty] private double _sickLeaveBalance = 30;
+        [ObservableProperty] private decimal _annualLeaveBalance;
+        [ObservableProperty] private decimal _sickLeaveBalance = 30m;
         [ObservableProperty] private DateTime? _leaveCycleStartDate;
 
         // Identity Link

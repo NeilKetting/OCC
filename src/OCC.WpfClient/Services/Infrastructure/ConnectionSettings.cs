@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OCC.WpfClient.Services.Infrastructure
@@ -22,7 +23,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         {
             _googleApiKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY") ?? "";
 #if DEBUG
-            _selectedEnvironment = AppEnvironment.Local;
+            _selectedEnvironment = AppEnvironment.LocalPC;
             _apiBaseUrl = LocalUrl;
 #else
             _selectedEnvironment = AppEnvironment.Test;
@@ -32,9 +33,14 @@ namespace OCC.WpfClient.Services.Infrastructure
 
         public enum AppEnvironment
         {
+            [Description("Live")]
             Live,
+            [Description("Test")]
             Test,
-            Local
+            [Description("Local-PC")]
+            LocalPC,
+            [Description("Local-Laptop")]
+            LocalLaptop
         }
 
         partial void OnSelectedEnvironmentChanged(AppEnvironment value)
@@ -43,7 +49,8 @@ namespace OCC.WpfClient.Services.Infrastructure
             {
                 AppEnvironment.Live => LiveUrl,
                 AppEnvironment.Test => TestUrl,
-                AppEnvironment.Local => LocalUrl,
+                AppEnvironment.LocalPC => LocalUrl,
+                AppEnvironment.LocalLaptop => LocalUrl,
                 _ => ApiBaseUrl
             };
         }

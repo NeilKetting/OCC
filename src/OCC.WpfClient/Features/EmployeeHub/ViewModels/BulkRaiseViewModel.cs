@@ -18,10 +18,10 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         public Guid Id { get; set; }
         public string EmployeeNumber { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public double OldRate { get; set; }
+        public decimal OldRate { get; set; }
 
         [ObservableProperty]
-        private double _newRate;
+        private decimal _newRate;
 
         [ObservableProperty]
         private bool _isChecked = true;
@@ -72,7 +72,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
                         EmployeeNumber = emp.EmployeeNumber,
                         Name = $"{emp.FirstName} {emp.LastName}",
                         OldRate = emp.HourlyRate,
-                        NewRate = Math.Round(emp.HourlyRate * (1 + IncreasePercentage / 100.0), 2)
+                        NewRate = Math.Round(emp.HourlyRate * (1m + (decimal)IncreasePercentage / 100m), 2)
                     });
                 }
 
@@ -98,7 +98,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         {
             foreach (var item in Previews)
             {
-                item.NewRate = Math.Round(item.OldRate * (1 + IncreasePercentage / 100.0), 2);
+                item.NewRate = Math.Round(item.OldRate * (1m + (decimal)IncreasePercentage / 100m), 2);
             }
         }
 

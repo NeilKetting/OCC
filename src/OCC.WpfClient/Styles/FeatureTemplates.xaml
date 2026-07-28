@@ -1,11 +1,11 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:mainVm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
-                    xmlns:mainViews="clr-namespace:OCC.WpfClient.Features.Main.Views"
+                    xmlns:mainVm="clr-namespace:OCC.WpfClient.Features.MainHub.ViewModels"
+                    xmlns:mainViews="clr-namespace:OCC.WpfClient.Features.MainHub.Views"
                     xmlns:empVm="clr-namespace:OCC.WpfClient.Features.EmployeeHub.ViewModels"
                     xmlns:empViews="clr-namespace:OCC.WpfClient.Features.EmployeeHub.Views"
-                    xmlns:userVm="clr-namespace:OCC.WpfClient.Features.Admin.Users.ViewModels"
-                    xmlns:userViews="clr-namespace:OCC.WpfClient.Features.Admin.Users.Views"
+                    xmlns:userVm="clr-namespace:OCC.WpfClient.Features.AdminHub.Users.ViewModels"
+                    xmlns:userViews="clr-namespace:OCC.WpfClient.Features.AdminHub.Users.Views"
                     xmlns:chatVm="clr-namespace:OCC.WpfClient.Features.ChatHub.ViewModels"
                     xmlns:chatViews="clr-namespace:OCC.WpfClient.Features.ChatHub.Views"
                     xmlns:shVm="clr-namespace:OCC.WpfClient.Features.SupportHub.ViewModels"
@@ -16,22 +16,25 @@
                     xmlns:authViews="clr-namespace:OCC.WpfClient.Features.AuthHub.Views"
                     xmlns:procVm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels"
                     xmlns:procViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views"
-                    xmlns:mainShellVm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
-                    xmlns:mainShellViews="clr-namespace:OCC.WpfClient.Features.Main.Views"
+                    xmlns:mainShellVm="clr-namespace:OCC.WpfClient.Features.MainHub.ViewModels"
+                    xmlns:mainShellViews="clr-namespace:OCC.WpfClient.Features.MainHub.Views"
                     xmlns:settVm="clr-namespace:OCC.WpfClient.Features.SettingsHub.ViewModels"
                     xmlns:settViews="clr-namespace:OCC.WpfClient.Features.SettingsHub.Views"
                     xmlns:projVm="clr-namespace:OCC.WpfClient.Features.ProjectHub.ViewModels"
                     xmlns:projViews="clr-namespace:OCC.WpfClient.Features.ProjectHub.Views"
-                    xmlns:splashVm="clr-namespace:OCC.WpfClient.Features.Splash.ViewModels"
-                    xmlns:splashViews="clr-namespace:OCC.WpfClient.Features.Splash.Views"
+                    xmlns:projDialogViews="clr-namespace:OCC.WpfClient.Features.ProjectHub.Dialogs"
+                    xmlns:splashVm="clr-namespace:OCC.WpfClient.Features.SplashHub.ViewModels"
+                    xmlns:splashViews="clr-namespace:OCC.WpfClient.Features.SplashHub.Views"
                     xmlns:subHubVm="clr-namespace:OCC.WpfClient.Features.SubContractorHub.ViewModels"
                     xmlns:subHubViews="clr-namespace:OCC.WpfClient.Features.SubContractorHub.Views"
                     xmlns:hseqVm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
                     xmlns:hseqViews="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
+                    xmlns:hseqDialogViews="clr-namespace:OCC.WpfClient.Features.HseqHub.Dialogs"
 xmlns:procDialogVm="clr-namespace:OCC.WpfClient.Features.ProcurementHub.ViewModels.Dialogs"
-xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Views.Dialogs"
+xmlns:procDialogViews="clr-namespace:OCC.WpfClient.Features.ProcurementHub.Dialogs"
 xmlns:attndVm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
 xmlns:attndViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views"
+xmlns:attndDialogViews="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Dialogs"
 xmlns:calVm="clr-namespace:OCC.WpfClient.Features.CalendarHub.ViewModels"
 xmlns:calViews="clr-namespace:OCC.WpfClient.Features.CalendarHub.Views"
 xmlns:todoVm="clr-namespace:OCC.WpfClient.Features.TodoHub.ViewModels"
@@ -90,6 +93,10 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
         <custViews:CustomerListView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type custVm:CustomerDetailViewModel}">
+        <custViews:CustomerDetailView />
+    </DataTemplate>
+
     <!-- Procurement -->
     <DataTemplate DataType="{x:Type procVm:ProcurementViewModel}">
         <procViews:ProcurementView/>
@@ -121,6 +128,22 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
 
     <DataTemplate DataType="{x:Type procDialogVm:FindOrderViewModel}">
         <procDialogViews:FindOrderDialog/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procDialogVm:AddSupplierContactViewModel}">
+        <procDialogViews:AddSupplierContactDialog/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procDialogVm:ItemNotFoundViewModel}">
+        <procDialogViews:ItemNotFoundDialog/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procDialogVm:NewItemViewModel}">
+        <procDialogViews:NewItemDialog/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type procDialogVm:SelectEmailViewModel}">
+        <procDialogViews:SelectEmailDialog/>
     </DataTemplate>
 
     <!-- Settings Hub -->
@@ -166,7 +189,7 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:ProjectReportRunViewModel}">
-        <projViews:ProjectReportRunView />
+        <projDialogViews:ProjectReportRunView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:ProjectTaskListViewModel}">
@@ -190,11 +213,11 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:ProjectCreateDetailViewModel}">
-        <projViews:ProjectCreateDetailView />
+        <projDialogViews:ProjectCreateDetailView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:ProjectEditDetailViewModel}">
-        <projViews:ProjectEditDetailView />
+        <projDialogViews:ProjectEditDetailView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:CrewDeploymentListViewModel}">
@@ -202,11 +225,11 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:CrewBuilderViewModel}">
-        <projViews:CrewBuilderView />
+        <projDialogViews:CrewBuilderView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:DailyCrewBuilderViewModel}">
-        <projViews:DailyCrewBuilderView />
+        <projDialogViews:DailyCrewBuilderView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type projVm:ProjectHseqViewModel}">
@@ -226,8 +249,16 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
         <subHubViews:SubContractorListView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type subHubVm:SubContractorDetailViewModel}">
+        <subHubViews:SubContractorDetailView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type subHubVm:SnagListViewModel}">
         <subHubViews:SnagListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type subHubVm:SnagDetailViewModel}">
+        <subHubViews:SnagDetailView />
     </DataTemplate>
 
     <!-- HSEQ Hub -->
@@ -264,11 +295,11 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:TrainingDetailViewModel}">
-        <hseqViews:TrainingDetailView />
+        <hseqDialogViews:TrainingDetailView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:DocumentDetailViewModel}">
-        <hseqViews:DocumentDetailView />
+        <hseqDialogViews:DocumentDetailView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:AuditDetailViewModel}">
@@ -276,7 +307,11 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type hseqVm:DeviationDetailViewModel}">
-        <hseqViews:DeviationDetailView />
+        <hseqDialogViews:DeviationDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type hseqVm:AuditPdfMappingViewModel}">
+        <hseqDialogViews:AuditPdfMappingView />
     </DataTemplate>
 
     <!-- Attendance Hub -->
@@ -313,7 +348,7 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type attndVm:AttendanceImportPreviewViewModel}">
-        <attndViews:AttendanceImportPreviewView />
+        <attndDialogViews:AttendanceImportPreviewView />
     </DataTemplate>
 
     <!-- Splash -->

@@ -50,7 +50,8 @@ namespace OCC.WpfClient.Dialogs
             {
                 if (selectedProj.Name.Contains("-- Please Select"))
                 {
-                    MessageBox.Show("Please select a project/site or select Other.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    var dlg = new CustomDialogView("Validation Error", "Please select a project/site or select Other.", "OK", null, null) { Owner = this };
+                    dlg.ShowDialog();
                     return;
                 }
 
@@ -58,7 +59,8 @@ namespace OCC.WpfClient.Dialogs
                 {
                     if (string.IsNullOrWhiteSpace(CustomSiteTxt.Text))
                     {
-                        MessageBox.Show("Please specify the custom site location name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        var dlg = new CustomDialogView("Validation Error", "Please specify the custom site location name.", "OK", null, null) { Owner = this };
+                        dlg.ShowDialog();
                         return;
                     }
                     SelectedProjectId = null;

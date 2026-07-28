@@ -106,7 +106,7 @@ namespace OCC.Tests.Features.ProcurementHub
             await vm.LoadDataCommand.ExecuteAsync(null);
 
             Assert.False(vm.IsNewOrder);
-            Assert.Equal(orderId, vm.CurrentOrder.Id);
+            Assert.Equal(orderId, vm.CurrentOrder!.Id);
             Assert.Single(vm.CurrentOrder.Lines);
 
             // Act 2 - User clicks "+ Add Line" and enters details for line 2
@@ -162,7 +162,7 @@ namespace OCC.Tests.Features.ProcurementHub
 
             // Act - Add unpriced/unquantified line
             vm.AddLineCommand.Execute(null);
-            var newLine = vm.CurrentOrder.Lines.Last();
+            var newLine = vm.CurrentOrder!.Lines.Last();
             newLine.ItemCode = "UNPRICED-001";
             newLine.Description = "Draft Unpriced Item";
             newLine.QuantityOrdered = 0;

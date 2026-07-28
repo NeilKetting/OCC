@@ -9,6 +9,11 @@ namespace OCC.API.Data
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         public bool SupressSoftDelete { get; set; }
+        public bool SuppressSoftDelete 
+        { 
+            get => SupressSoftDelete; 
+            set => SupressSoftDelete = value; 
+        }
 
         public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor = null!) : base(options)
         {
@@ -23,6 +28,7 @@ namespace OCC.API.Data
             base.OnConfiguring(optionsBuilder);
         }
 
+        // --- Core & Organization Entities ---
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectTask> ProjectTasks { get; set; }
         public DbSet<UserDevice> UserDevices { get; set; }
@@ -37,6 +43,7 @@ namespace OCC.API.Data
         public DbSet<ProjectTeamMember> ProjectTeamMembers { get; set; }
         public DbSet<SubContractor> SubContractors { get; set; }
 
+        // --- Attendance & Payroll Entities ---
         public DbSet<TimeRecord> TimeRecords { get; set; }
         public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
@@ -45,10 +52,10 @@ namespace OCC.API.Data
         public DbSet<WageRun> WageRuns { get; set; }
         public DbSet<WageRunLine> WageRunLines { get; set; }
         public DbSet<EmployeeLoan> EmployeeLoans { get; set; }
-
         public DbSet<ClockingEvent> ClockingEvents { get; set; }
         public DbSet<DailyTimesheet> DailyTimesheets { get; set; }
 
+        // --- Tasks & System Operations ---
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
@@ -56,6 +63,7 @@ namespace OCC.API.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<TaskAttachment> TaskAttachments { get; set; }
 
+        // --- Inventory, Orders & Content ---
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderLine> OrderLines { get; set; }
         public DbSet<InventoryItem> InventoryItems { get; set; }
@@ -64,7 +72,7 @@ namespace OCC.API.Data
         public DbSet<PersonalTodo> PersonalTodos { get; set; }
         public DbSet<NoticeBoardItem> NoticeBoardItems { get; set; }
 
-        // HSEQ Modules
+        // --- HSEQ Modules ---
         public DbSet<Incident> Incidents { get; set; }
         public DbSet<IncidentPhoto> IncidentPhotos { get; set; }
         public DbSet<IncidentDocument> IncidentDocuments { get; set; }
@@ -77,14 +85,14 @@ namespace OCC.API.Data
         public DbSet<HseqDocument> HseqDocuments { get; set; }
         public DbSet<HseqAuditAttachment> HseqAuditAttachments { get; set; }
         
+        // --- Utilities & Reports ---
         public DbSet<NotificationDismissal> NotificationDismissals { get; set; }
         public DbSet<ProjectVariationOrder> ProjectVariationOrders { get; set; }
         public DbSet<LogUploadRequest> LogUploads { get; set; }
-
         public DbSet<ProjectReportDraft> ProjectReportDrafts { get; set; }
         public DbSet<ProjectReportHistory> ProjectReportHistories { get; set; }
 
-        // Chat System
+        // --- Chat System ---
         public DbSet<ChatSession> ChatSessions { get; set; }
         public DbSet<ChatSessionUser> ChatSessionUsers { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
@@ -92,7 +100,7 @@ namespace OCC.API.Data
         public DbSet<ChatMessageReadReceipt> ChatMessageReadReceipts { get; set; }
         public DbSet<SnagJob> SnagJobs { get; set; }
 
-        // Crew Deployment
+        // --- Crew Deployment ---
         public DbSet<SiteDeployment> SiteDeployments { get; set; }
         public DbSet<SiteDeploymentMember> SiteDeploymentMembers { get; set; }
 
@@ -152,10 +160,6 @@ namespace OCC.API.Data
                             
                             // Adjust audit for soft delete
                             auditEntry.AuditType = "Delete"; 
-                            // We need to capture old values for soft delete as if it was a delete?
-                            // Technically it's an update IS_ACTIVE=false, but conceptually a delete.
-                            // The original code set AuditType="Delete". 
-                            // Let's copy properties manually since state changed to Modified.
                             foreach (var p in entry.Properties)
                             {
                                  auditEntry.OldValues[p.Metadata.Name] = p.OriginalValue;
@@ -244,13 +248,7 @@ namespace OCC.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure relationships if needed
-            // modelBuilder.Entity<ProjectTask>()
-            //     .HasOne<Project>()
-            //     .WithMany()
-            //     .HasForeignKey(t => t.ProjectId);
-
-            // Seed SA Public Holidays 2026
+            // --- 1. Seed SA Public Holidays 2026 ---
             modelBuilder.Entity<PublicHoliday>().HasData(
                 new PublicHoliday { Id = new Guid("b862c2f5-9fe1-4228-9946-4d0aa0fdb12a"), Date = new DateTime(2026, 1, 1), Name = "New Year's Day" },
                 new PublicHoliday { Id = new Guid("a1e140e8-e1a8-4acf-b5e0-715ed41c7af3"), Date = new DateTime(2026, 3, 21), Name = "Human Rights Day" },
@@ -267,16 +265,49 @@ namespace OCC.API.Data
                 new PublicHoliday { Id = new Guid("fcc99eac-4678-49da-9e2e-f1026fe7c867"), Date = new DateTime(2026, 12, 26), Name = "Day of Goodwill" }
             );
 
-            modelBuilder.Entity<OrderLine>(entity =>
+            // --- 2. Identity & Employee Configurations ---
+            modelBuilder.Entity<User>(entity =>
             {
-                entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
-                entity.Property(e => e.VatAmount).HasPrecision(18, 2);
-                entity.Property(e => e.LineTotal).HasPrecision(18, 2);
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.UserRole);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.Email).HasMaxLength(256).IsRequired();
+                entity.Property(e => e.FirstName).HasMaxLength(100);
+                entity.Property(e => e.LastName).HasMaxLength(100);
             });
 
+            modelBuilder.Entity<Employee>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.EmployeeNumber).IsUnique();
+                entity.HasIndex(e => e.IdNumber);
+                entity.HasIndex(e => e.LinkedUserId);
+                entity.HasIndex(e => e.Branch);
+                entity.HasIndex(e => e.Role);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.FirstName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.LastName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.IdNumber).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.EmployeeNumber).HasMaxLength(50);
+                entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
+                
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(e => e.LinkedUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // --- 3. Customer & Supplier Configurations ---
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(256);
+                entity.Property(e => e.Phone).HasMaxLength(50);
+
                 entity.HasMany(e => e.Contacts)
                       .WithOne(e => e.Customer)
                       .HasForeignKey(e => e.CustomerId)
@@ -286,190 +317,143 @@ namespace OCC.API.Data
             modelBuilder.Entity<CustomerContact>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.CustomerId);
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(256);
+                entity.Property(e => e.Phone).HasMaxLength(50);
             });
 
+            modelBuilder.Entity<Supplier>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(256);
+                entity.Property(e => e.Phone).HasMaxLength(50);
+                entity.Property(e => e.VatNumber).HasMaxLength(50);
+
+                entity.HasMany(e => e.Contacts)
+                      .WithOne(e => e.Supplier)
+                      .HasForeignKey(e => e.SupplierId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<SupplierContact>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.SupplierId);
+                entity.Property(e => e.ContactName).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(256);
+                entity.Property(e => e.Phone).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<SubContractor>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(256);
+                entity.Property(e => e.Phone).HasMaxLength(50);
+                entity.Property(e => e.Rating).HasPrecision(18, 2);
+                entity.Property(e => e.OnTimeRate).HasPrecision(18, 2);
+            });
+
+            // --- 4. Orders & Inventory Configurations ---
             modelBuilder.Entity<Order>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.OrderNumber);
+                entity.HasIndex(e => e.OrderDate);
+                entity.HasIndex(e => e.SupplierId);
+                entity.HasIndex(e => e.CustomerId);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.IsActive);
+                entity.HasIndex(e => new { e.OrderDate, e.Status });
+
+                entity.Property(e => e.OrderNumber).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.TaxRate).HasPrecision(18, 4);
-            });
+                entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
 
-            modelBuilder.Entity<InventoryItem>(entity =>
-            {
-                entity.Property(e => e.AverageCost).HasPrecision(18, 2);
-                entity.Property(e => e.Price).HasPrecision(18, 2);
-            });
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(o => o.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<AttendanceRecord>(entity =>
-            {
-                entity.Property(e => e.CachedHourlyRate).HasPrecision(18, 2);
-            });
+                entity.HasOne<Supplier>()
+                    .WithMany()
+                    .HasForeignKey(o => o.SupplierId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<DailyTimesheet>(entity =>
-            {
-                entity.Property(e => e.CalculatedHours).HasPrecision(18, 2);
-                entity.Property(e => e.WageEstimated).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<EmployeeLoan>(entity =>
-            {
-                entity.Property(e => e.PrincipalAmount).HasPrecision(18, 2);
-                entity.Property(e => e.MonthlyInstallment).HasPrecision(18, 2);
-                entity.Property(e => e.OutstandingBalance).HasPrecision(18, 2);
-                entity.Property(e => e.InterestRate).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<WageRunLine>(entity =>
-            {
-                entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
-                entity.Property(e => e.TotalWage).HasPrecision(18, 2);
-                entity.Property(e => e.DeductionLoan).HasPrecision(18, 2);
-                entity.Property(e => e.DeductionTax).HasPrecision(18, 2);
-                entity.Property(e => e.DeductionWashing).HasPrecision(18, 2);
-                entity.Property(e => e.DeductionGas).HasPrecision(18, 2);
-                entity.Property(e => e.DeductionOther).HasPrecision(18, 2);
-                entity.Property(e => e.DeductionPPE).HasPrecision(18, 2);
-                entity.Property(e => e.IncentiveSupervisor).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<Order>(entity =>
-            {
-                entity.Property(e => e.TaxRate).HasPrecision(18, 2);
+                entity.HasOne<Customer>()
+                    .WithMany()
+                    .HasForeignKey(o => o.CustomerId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<OrderLine>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.OrderId);
+                entity.HasIndex(e => e.InventoryItemId);
+
+                entity.Property(e => e.ItemCode).HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
                 entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
                 entity.Property(e => e.VatAmount).HasPrecision(18, 2);
                 entity.Property(e => e.LineTotal).HasPrecision(18, 2);
-            });
 
-            modelBuilder.Entity<HseqAudit>(entity =>
-            {
-                entity.Property(e => e.TargetScore).HasPrecision(18, 2);
-                entity.Property(e => e.ActualScore).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<HseqAuditSection>(entity =>
-            {
-                entity.Property(e => e.PossibleScore).HasPrecision(18, 2);
-                entity.Property(e => e.ActualScore).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<ProjectVariationOrder>(entity =>
-            {
-                entity.HasOne(v => v.Project)
-                    .WithMany(p => p.VariationOrders)
-                    .HasForeignKey(v => v.ProjectId)
+                entity.HasOne(l => l.Order)
+                    .WithMany(o => o.Lines)
+                    .HasForeignKey(l => l.OrderId)
                     .OnDelete(DeleteBehavior.Cascade);
-            });
 
-            modelBuilder.Entity<ProjectReportDraft>(entity =>
-            {
-                entity.HasOne(e => e.Project)
+                entity.HasOne<InventoryItem>()
                     .WithMany()
-                    .HasForeignKey(e => e.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasForeignKey(l => l.InventoryItemId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
-            modelBuilder.Entity<ProjectReportHistory>(entity =>
+            modelBuilder.Entity<InventoryItem>(entity =>
             {
-                entity.HasOne(e => e.Project)
-                    .WithMany()
-                    .HasForeignKey(e => e.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Sku).IsUnique();
+                entity.HasIndex(e => e.Description);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.Location);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.Sku).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.AverageCost).HasPrecision(18, 2);
+                entity.Property(e => e.Price).HasPrecision(18, 2);
             });
 
-            // HSEQ Configurations
-            modelBuilder.Entity<HseqAudit>()
-                .HasMany(a => a.Sections)
-                .WithOne().HasForeignKey(s => s.AuditId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<HseqAudit>()
-                .HasMany(a => a.ComplianceItems)
-                .WithOne().HasForeignKey(i => i.AuditId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<HseqAudit>()
-                .HasMany(a => a.NonComplianceItems)
-                .WithOne().HasForeignKey(i => i.AuditId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<HseqAudit>()
-                .HasMany(a => a.Attachments)
-                .WithOne(a => a.Audit).HasForeignKey(a => a.AuditId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<HseqAuditNonComplianceItem>()
-                .HasMany(i => i.Attachments)
-                .WithOne(a => a.NonComplianceItem).HasForeignKey(a => a.NonComplianceItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<HseqAudit>(entity =>
-            {
-                entity.Property(e => e.ActualScore).HasPrecision(18, 2);
-                entity.Property(e => e.TargetScore).HasPrecision(18, 2);
-
-                entity.HasOne(e => e.Project)
-                    .WithMany()
-                    .HasForeignKey(e => e.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            modelBuilder.Entity<HseqAuditSection>(entity =>
-            {
-                entity.Property(e => e.ActualScore).HasPrecision(18, 2);
-                entity.Property(e => e.PossibleScore).HasPrecision(18, 2);
-            });
-
-            modelBuilder.Entity<Incident>(entity =>
-            {
-                entity.HasMany(i => i.Photos)
-                    .WithOne().HasForeignKey(p => p.IncidentId)
-                    .OnDelete(DeleteBehavior.Cascade);
-                
-                entity.HasMany(i => i.Documents)
-                    .WithOne().HasForeignKey(d => d.IncidentId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(i => i.Project)
-                    .WithMany()
-                    .HasForeignKey(i => i.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            modelBuilder.Entity<ProjectTask>(entity =>
-            {
-                entity.Property(e => e.PlannedDurationHours)
-                    .HasConversion(
-                        v => v.HasValue ? v.Value.Ticks : (long?)null,
-                        v => v.HasValue ? TimeSpan.FromTicks(v.Value) : (TimeSpan?)null)
-                    .HasColumnType("bigint");
-
-                entity.HasOne(d => d.ParentTask)
-                    .WithMany(p => p.Children)
-                    .HasForeignKey(d => d.ParentId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.Property(e => e.ActualDuration)
-                    .HasConversion(
-                        v => v.HasValue ? v.Value.Ticks : (long?)null,
-                        v => v.HasValue ? TimeSpan.FromTicks(v.Value) : (TimeSpan?)null)
-                    .HasColumnType("bigint");
-
-                entity.HasMany(e => e.Comments)
-                    .WithOne(e => e.ProjectTask)
-                    .HasForeignKey(e => e.TaskId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasMany(e => e.Assignments)
-                    .WithOne(a => a.ProjectTask)
-                    .HasForeignKey(a => a.TaskId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
+            // --- 5. Project & Task Configurations ---
             modelBuilder.Entity<Project>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Code);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CustomerId);
+                entity.HasIndex(e => e.SiteManagerId);
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.ContractValue).HasPrecision(18, 2);
+                entity.Property(e => e.ClaimAmount).HasPrecision(18, 2);
+
+                entity.HasOne(p => p.CustomerEntity)
+                    .WithMany()
+                    .HasForeignKey(p => p.CustomerId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(p => p.SiteManager)
+                    .WithMany()
+                    .HasForeignKey(p => p.SiteManagerId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
                 entity.HasMany(e => e.Tasks)
                     .WithOne(e => e.Project)
                     .HasForeignKey(e => e.ProjectId)
@@ -489,20 +473,459 @@ namespace OCC.API.Data
                 entity.HasMany<HseqDocument>()
                     .WithOne(e => e.Project)
                     .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<ProjectTask>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.ParentId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.AssignedTo);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+                entity.Property(e => e.EstimatedCost).HasPrecision(18, 2);
+
+                entity.Property(e => e.PlannedDurationHours)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.Ticks : (long?)null,
+                        v => v.HasValue ? TimeSpan.FromTicks(v.Value) : (TimeSpan?)null)
+                    .HasColumnType("bigint");
+
+                entity.Property(e => e.ActualDuration)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.Ticks : (long?)null,
+                        v => v.HasValue ? TimeSpan.FromTicks(v.Value) : (TimeSpan?)null)
+                    .HasColumnType("bigint");
+
+                entity.HasOne(d => d.ParentTask)
+                    .WithMany(p => p.Children)
+                    .HasForeignKey(d => d.ParentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(e => e.Comments)
+                    .WithOne(e => e.ProjectTask)
+                    .HasForeignKey(e => e.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Attachments)
+                    .WithOne(a => a.Task)
+                    .HasForeignKey(a => a.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(e => e.Assignments)
+                    .WithOne(a => a.ProjectTask)
+                    .HasForeignKey(a => a.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TaskAssignment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TaskId);
+                entity.HasIndex(e => e.AssigneeId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasOne(a => a.ProjectTask)
+                    .WithMany(t => t.Assignments)
+                    .HasForeignKey(a => a.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TaskAttachment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TaskId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasOne(a => a.Task)
+                    .WithMany(t => t.Attachments)
+                    .HasForeignKey(a => a.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TaskComment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TaskId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasOne(c => c.ProjectTask)
+                    .WithMany(t => t.Comments)
+                    .HasForeignKey(c => c.TaskId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<ProjectTeamMember>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ProjectId, e.EmployeeId }).IsUnique();
+
                 entity.HasOne(tm => tm.Employee)
                     .WithMany()
                     .HasForeignKey(tm => tm.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ProjectVariationOrder>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+
+                entity.Property(e => e.Cost).HasPrecision(18, 2);
+                entity.Property(e => e.ClaimAmount).HasPrecision(18, 2);
+
+                entity.HasOne(v => v.Project)
+                    .WithMany(p => p.VariationOrders)
+                    .HasForeignKey(v => v.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Site Deployment Configuration
+            modelBuilder.Entity<ProjectReportDraft>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectReportHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- 6. Time & Attendance & Payroll Configurations ---
+            modelBuilder.Entity<AttendanceRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.EmployeeId, e.Date });
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.PaidWageRunId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.Property(e => e.CachedHourlyRate).HasPrecision(18, 2);
+
+                entity.HasOne<Employee>()
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne<WageRun>()
+                    .WithMany()
+                    .HasForeignKey(e => e.PaidWageRunId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<ClockingEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.EmployeeId, e.Timestamp });
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.Timestamp);
+
+                entity.HasOne<Employee>()
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<DailyTimesheet>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.EmployeeId, e.Date });
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.Date);
+
+                entity.Property(e => e.CalculatedHours).HasPrecision(18, 2);
+                entity.Property(e => e.WageEstimated).HasPrecision(18, 2);
+
+                entity.HasOne<Employee>()
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TimeRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.EmployeeId, e.Date });
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.TaskId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(tr => tr.ProjectId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+
+                entity.HasOne<ProjectTask>()
+                    .WithMany()
+                    .HasForeignKey(tr => tr.TaskId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+
+                entity.HasOne<Employee>()
+                    .WithMany()
+                    .HasForeignKey(tr => tr.EmployeeId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+
+            modelBuilder.Entity<LeaveRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.EmployeeId, e.StartDate, e.EndDate });
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.Status);
+
+                entity.HasOne(e => e.Employee)
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<OvertimeRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.EmployeeId, e.Date });
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.Status);
+
+                entity.HasOne(e => e.Employee)
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<EmployeeLoan>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.Property(e => e.PrincipalAmount).HasPrecision(18, 2);
+                entity.Property(e => e.MonthlyInstallment).HasPrecision(18, 2);
+                entity.Property(e => e.OutstandingBalance).HasPrecision(18, 2);
+                entity.Property(e => e.InterestRate).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Employee)
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<WageRun>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.StartDate, e.EndDate });
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.Branch);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasMany(w => w.Lines)
+                    .WithOne(l => l.WageRun)
+                    .HasForeignKey(l => l.WageRunId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<WageRunLine>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.WageRunId, e.EmployeeId });
+                entity.HasIndex(e => e.EmployeeId);
+
+                entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
+                entity.Property(e => e.TotalWage).HasPrecision(18, 2);
+                entity.Property(e => e.DeductionLoan).HasPrecision(18, 2);
+                entity.Property(e => e.DeductionTax).HasPrecision(18, 2);
+                entity.Property(e => e.DeductionWashing).HasPrecision(18, 2);
+                entity.Property(e => e.DeductionGas).HasPrecision(18, 2);
+                entity.Property(e => e.DeductionOther).HasPrecision(18, 2);
+                entity.Property(e => e.DeductionPPE).HasPrecision(18, 2);
+                entity.Property(e => e.IncentiveSupervisor).HasPrecision(18, 2);
+                entity.Property(e => e.BibcAmount).HasPrecision(18, 2);
+
+                entity.HasOne<Employee>()
+                    .WithMany()
+                    .HasForeignKey(l => l.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // --- 7. HSEQ Configurations ---
+            modelBuilder.Entity<HseqAudit>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.Property(e => e.TargetScore).HasPrecision(18, 2);
+                entity.Property(e => e.ActualScore).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(a => a.Sections)
+                    .WithOne().HasForeignKey(s => s.AuditId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(a => a.ComplianceItems)
+                    .WithOne().HasForeignKey(i => i.AuditId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(a => a.NonComplianceItems)
+                    .WithOne().HasForeignKey(i => i.AuditId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(a => a.Attachments)
+                    .WithOne(a => a.Audit).HasForeignKey(a => a.AuditId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<HseqAuditSection>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.AuditId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.Property(e => e.PossibleScore).HasPrecision(18, 2);
+                entity.Property(e => e.ActualScore).HasPrecision(18, 2);
+            });
+
+            modelBuilder.Entity<HseqAuditComplianceItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.AuditId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            modelBuilder.Entity<HseqAuditNonComplianceItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.AuditId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasMany(i => i.Attachments)
+                    .WithOne(a => a.NonComplianceItem).HasForeignKey(a => a.NonComplianceItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<HseqAuditAttachment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.AuditId);
+                entity.HasIndex(e => e.NonComplianceItemId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            modelBuilder.Entity<Incident>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.Severity);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasMany(i => i.Photos)
+                    .WithOne().HasForeignKey(p => p.IncidentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasMany(i => i.Documents)
+                    .WithOne().HasForeignKey(d => d.IncidentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(i => i.Project)
+                    .WithMany()
+                    .HasForeignKey(i => i.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<IncidentPhoto>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.IncidentId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            modelBuilder.Entity<IncidentDocument>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.IncidentId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            modelBuilder.Entity<HseqTrainingRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.ValidUntil);
+                entity.HasIndex(e => e.DateCompleted);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasOne<Employee>()
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<HseqDocument>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.EmployeeId);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.ExpiryDate);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Employee)
+                    .WithMany()
+                    .HasForeignKey(e => e.EmployeeId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<HseqSafeHourRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Month);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // --- 8. Site Deployment & Snag Jobs ---
             modelBuilder.Entity<SiteDeployment>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.ReceivedBySiteManagerId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.DeploymentDate);
+                entity.HasIndex(e => e.IsActive);
+
                 entity.HasOne(sd => sd.Project)
                     .WithMany()
                     .HasForeignKey(sd => sd.ProjectId)
@@ -524,6 +947,9 @@ namespace OCC.API.Data
 
             modelBuilder.Entity<SiteDeploymentMember>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.SiteDeploymentId, e.EmployeeId }).IsUnique();
+
                 entity.HasOne(m => m.Employee)
                     .WithMany()
                     .HasForeignKey(m => m.EmployeeId)
@@ -532,6 +958,12 @@ namespace OCC.API.Data
 
             modelBuilder.Entity<SnagJob>(entity =>
             {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.SubContractorId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.IsActive);
+
                 entity.HasOne(s => s.Project)
                     .WithMany()
                     .HasForeignKey(s => s.ProjectId)
@@ -551,74 +983,110 @@ namespace OCC.API.Data
                 entity.Property(e => e.Severity).HasConversion<string>();
             });
 
-            modelBuilder.Entity<Order>()
-                .HasOne<Project>()
-                .WithMany()
-                .HasForeignKey(o => o.ProjectId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-             modelBuilder.Entity<TimeRecord>()
-                 .HasOne<Project>()
-                 .WithMany()
-                 .HasForeignKey(tr => tr.ProjectId)
-                 .OnDelete(DeleteBehavior.ClientSetNull);
- 
-             modelBuilder.Entity<TimeRecord>()
-                 .HasOne<ProjectTask>()
-                 .WithMany()
-                 .HasForeignKey(tr => tr.TaskId)
-                 .OnDelete(DeleteBehavior.ClientSetNull);
-
-            modelBuilder.Entity<SubContractor>(entity =>
+            // --- 9. Chat & Notification Systems ---
+            modelBuilder.Entity<ChatSessionUser>(entity =>
             {
-                entity.Property(e => e.Rating).HasPrecision(18, 2);
-                entity.Property(e => e.OnTimeRate).HasPrecision(18, 2);
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ChatSessionId, e.UserId }).IsUnique();
+
+                entity.HasOne(csu => csu.ChatSession)
+                    .WithMany(cs => cs.SessionUsers)
+                    .HasForeignKey(csu => csu.ChatSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(csu => csu.User)
+                    .WithMany()
+                    .HasForeignKey(csu => csu.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Chat Configuration
-            modelBuilder.Entity<ChatSessionUser>()
-                .HasOne(csu => csu.ChatSession)
-                .WithMany(cs => cs.SessionUsers)
-                .HasForeignKey(csu => csu.ChatSessionId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ChatMessage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ChatSessionId, e.SentDate });
+                entity.HasIndex(e => e.SenderId);
 
-            modelBuilder.Entity<ChatSessionUser>()
-                .HasOne(csu => csu.User)
-                .WithMany()
-                .HasForeignKey(csu => csu.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(cm => cm.ChatSession)
+                    .WithMany(cs => cs.Messages)
+                    .HasForeignKey(cm => cm.ChatSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<ChatMessage>()
-                .HasOne(cm => cm.ChatSession)
-                .WithMany(cs => cs.Messages)
-                .HasForeignKey(cm => cm.ChatSessionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(cm => cm.Sender)
+                    .WithMany()
+                    .HasForeignKey(cm => cm.SenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-            modelBuilder.Entity<ChatMessage>()
-                .HasOne(cm => cm.Sender)
-                .WithMany()
-                .HasForeignKey(cm => cm.SenderId)
-                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<ChatMessageAttachment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.MessageId);
 
-            modelBuilder.Entity<ChatMessageAttachment>()
-                .HasOne(cma => cma.Message)
-                .WithMany(cm => cm.Attachments)
-                .HasForeignKey(cma => cma.MessageId)
-                .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(cma => cma.Message)
+                    .WithMany(cm => cm.Attachments)
+                    .HasForeignKey(cma => cma.MessageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
-            modelBuilder.Entity<ChatMessageReadReceipt>()
-                .HasOne(cmrr => cmrr.Message)
-                .WithMany(cm => cm.ReadReceipts)
-                .HasForeignKey(cmrr => cmrr.MessageId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ChatMessageReadReceipt>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.MessageId, e.UserId }).IsUnique();
 
-            modelBuilder.Entity<ChatMessageReadReceipt>()
-                .HasOne(cmrr => cmrr.User)
-                .WithMany()
-                .HasForeignKey(cmrr => cmrr.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(cmrr => cmrr.Message)
+                    .WithMany(cm => cm.ReadReceipts)
+                    .HasForeignKey(cmrr => cmrr.MessageId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-            // Apply Global Query Filter and Concurrency Config for BaseEntity types
+                entity.HasOne(cmrr => cmrr.User)
+                    .WithMany()
+                    .HasForeignKey(cmrr => cmrr.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.UserId, e.IsRead, e.CreatedAtUtc });
+            });
+
+            modelBuilder.Entity<NotificationDismissal>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.UserId, e.EntityId, e.NotificationType }).IsUnique();
+            });
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TableName, e.Timestamp });
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.Action);
+            });
+
+            modelBuilder.Entity<BugReport>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ReporterId);
+                entity.HasIndex(e => e.IsActive);
+
+                entity.HasMany(b => b.Comments)
+                    .WithOne()
+                    .HasForeignKey(c => c.BugReportId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<NoticeBoardItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.IsPinned);
+                entity.HasIndex(e => e.CreatedAtUtc);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // --- 10. Global Query Filter, Concurrency & Decimal Conventions ---
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
@@ -635,14 +1103,17 @@ namespace OCC.API.Data
                         .IsRequired(false);
                 }
 
-                // Configure precision for all decimal properties to suppress warnings
+                // Default Precision for all decimal properties to suppress warnings
                 var properties = entityType.GetProperties();
                 foreach (var property in properties)
                 {
                     if (property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
                     {
-                        property.SetPrecision(18);
-                        property.SetScale(2);
+                        if (property.GetPrecision() == null)
+                        {
+                            property.SetPrecision(18);
+                            property.SetScale(2);
+                        }
                     }
                 }
             }
@@ -653,7 +1124,6 @@ namespace OCC.API.Data
             modelBuilder.Entity<T>().HasQueryFilter(e => e.IsActive);
         }
     }
-
 
     public class AuditEntry
     {

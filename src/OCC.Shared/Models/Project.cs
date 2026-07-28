@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace OCC.Shared.Models
@@ -14,6 +15,23 @@ namespace OCC.Shared.Models
     /// </remarks>
     public class Project : BaseEntity
     {
+        /// <summary>
+        /// Unique project reference code (e.g., "PRJ-001").
+        /// </summary>
+        public string Code { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Total contract value for the project.
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal ContractValue { get; set; }
+
+        /// <summary>
+        /// Total claim amount submitted/approved for the project.
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal ClaimAmount { get; set; }
+
         /// <summary>
         /// The display name of the project (e.g., "Engen Bendor").
         /// </summary>

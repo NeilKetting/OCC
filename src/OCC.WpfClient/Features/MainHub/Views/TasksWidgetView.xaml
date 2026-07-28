@@ -1,0 +1,19 @@
+<UserControl x:Class="OCC.WpfClient.Features.MainHub.Views.TasksWidgetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.MainHub.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:TasksWidgetViewModel}">
+    <Grid Height="70">
+        <StackPanel VerticalAlignment="Center" Margin="15,0,0,0">
+            <TextBlock Text="TASKS" Foreground="{StaticResource TextSub}" FontSize="11" FontWeight="Bold"/>
+            <TextBlock Text="{Binding TaskCount}" Foreground="White" FontSize="36" FontWeight="Bold" />
+            <TextBlock Text="My Active Tasks" Foreground="{StaticResource TextSub}" FontSize="12"/>
+        </StackPanel>
+        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Height="36" CornerRadius="10" Background="#1A2E9DFF" Margin="0,0,10,0">
+            <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="18"/>
+        </Border>
+    </Grid>
+</UserControl>

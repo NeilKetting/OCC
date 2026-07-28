@@ -5,9 +5,16 @@ using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
 using OCC.API.Hubs;
 using OCC.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for managing task assignments to staff, contractors, and teams, and triggering push notifications.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -18,6 +25,13 @@ namespace OCC.API.Controllers
         private readonly Services.INotificationService _notificationService;
         private readonly ILogger<TaskAssignmentsController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TaskAssignmentsController"/> class.
+        /// </summary>
+        /// <param name="context">Database context.</param>
+        /// <param name="hubContext">SignalR notification hub context.</param>
+        /// <param name="notificationService">Notification service.</param>
+        /// <param name="logger">Logger instance.</param>
         public TaskAssignmentsController(AppDbContext context, IHubContext<NotificationHub> hubContext, Services.INotificationService notificationService, ILogger<TaskAssignmentsController> logger)
         {
             _context = context;
@@ -26,41 +40,68 @@ namespace OCC.API.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Retrieves task assignments, optionally filtered by task ID.
+        /// </summary>
+        /// <param name="taskId">Optional task ID filter.</param>
+        /// <returns>A list of task assignments.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TaskAssignment>>> GetTaskAssignments(Guid? taskId = null)
+        public async Task<ActionResult<IEnumerable<TaskAssignment>>> GetTaskAssignments([FromQuery] Guid? taskId = null)
         {
             try
             {
                 var query = _context.TaskAssignments.AsQueryable();
-                if (taskId.HasValue) query = query.Where(a => a.TaskId == taskId.Value);
-                return await query.ToListAsync();
+                if (taskId.HasValue)
+                {
+                    if (taskId.Value == Guid.Empty) return BadRequest("Invalid task ID.");
+                    query = query.Where(a => a.TaskId == taskId.Value);
+                }
+                return Ok(await query.ToListAsync());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting assignments");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving task assignments.");
             }
         }
 
+        /// <summary>
+        /// Retrieves a single task assignment by its unique identifier.
+        /// </summary>
+        /// <param name="id">The assignment ID.</param>
+        /// <returns>The requested task assignment entity.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<TaskAssignment>> GetTaskAssignment(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid assignment ID.");
+
             try
             {
                 var assignment = await _context.TaskAssignments.FindAsync(id);
                 if (assignment == null) return NotFound();
-                return assignment;
+                return Ok(assignment);
             }
             catch (Exception ex)
             {
-                 _logger.LogError(ex, "Error retrieving assignment {Id}", id);
-                 return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving assignment {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the task assignment.");
             }
         }
 
+        /// <summary>
+        /// Creates a new task assignment and dispatches a push notification to the assignee.
+        /// </summary>
+        /// <param name="assignment">The task assignment entity.</param>
+        /// <returns>The created task assignment entity.</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<ActionResult<TaskAssignment>> PostTaskAssignment(TaskAssignment assignment)
         {
+            if (assignment == null) return BadRequest("Assignment payload cannot be null.");
+            if (assignment.TaskId == Guid.Empty) return BadRequest("Invalid task ID.");
+            if (assignment.AssigneeId == Guid.Empty) return BadRequest("Invalid assignee ID.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
                 if (assignment.Id == Guid.Empty) assignment.Id = Guid.NewGuid();
@@ -69,7 +110,6 @@ namespace OCC.API.Controllers
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "TaskAssignment", "Create", assignment.Id);
 
-                // Notify Assignee
                 await NotifyAssigneeAsync(assignment);
 
                 return CreatedAtAction("GetTaskAssignment", new { id = assignment.Id }, assignment);
@@ -77,13 +117,21 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating assignment");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while creating the task assignment.");
             }
         }
 
+        /// <summary>
+        /// Deletes a task assignment by its ID.
+        /// </summary>
+        /// <param name="id">The assignment ID to delete.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> DeleteTaskAssignment(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid assignment ID.");
+
             try
             {
                 var assignment = await _context.TaskAssignments.FindAsync(id);
@@ -97,8 +145,8 @@ namespace OCC.API.Controllers
             }
             catch (Exception ex)
             {
-                 _logger.LogError(ex, "Error deleting assignment {Id}", id);
-                 return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error deleting assignment {Id}", id);
+                return StatusCode(500, "An error occurred while deleting the task assignment.");
             }
         }
 
@@ -109,11 +157,9 @@ namespace OCC.API.Controllers
                 Guid? targetUserId = null;
                 string taskName = "a new task";
 
-                // 1. Resolve Task Name
                 var task = await _context.ProjectTasks.Include(t => t.Project).FirstOrDefaultAsync(t => t.Id == assignment.TaskId);
                 if (task != null) taskName = task.Name;
 
-                // 2. Resolve target User ID
                 if (assignment.AssigneeType == AssigneeType.Staff)
                 {
                     var employee = await _context.Employees.FindAsync(assignment.AssigneeId);
@@ -121,7 +167,6 @@ namespace OCC.API.Controllers
                     {
                         targetUserId = employee.LinkedUserId;
                         
-                        // Fallback: Link by Email
                         if (!targetUserId.HasValue && !string.IsNullOrEmpty(employee.Email))
                         {
                             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == employee.Email);
@@ -136,20 +181,17 @@ namespace OCC.API.Controllers
                 }
                 else if (assignment.AssigneeType == AssigneeType.Contractor)
                 {
-                    // Check if AssigneeId is a direct User ID
                     if (await _context.Users.AnyAsync(u => u.Id == assignment.AssigneeId))
                     {
                         targetUserId = assignment.AssigneeId;
                     }
                     else
                     {
-                        // Check if it's a SubContractor ID
                         var contractor = await _context.SubContractors.FindAsync(assignment.AssigneeId);
                         if (contractor != null)
                         {
                             targetUserId = contractor.PortalUserId;
                             
-                            // Fallback: Link by Email for SubContractors too
                             if (!targetUserId.HasValue && !string.IsNullOrEmpty(contractor.Email))
                             {
                                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == contractor.Email);

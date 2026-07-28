@@ -8,6 +8,7 @@
                xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
                xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
                xmlns:views="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
+               xmlns:dialogs="clr-namespace:OCC.WpfClient.Features.HseqHub.Dialogs"
                xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
                xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
                mc:Ignorable="d" 
@@ -18,7 +19,7 @@
         <infra:BindingProxy x:Key="Proxy" Data="{Binding}" />
 
         <DataTemplate DataType="{x:Type vm:TrainingDetailViewModel}">
-            <views:TrainingDetailView />
+            <dialogs:TrainingDetailView />
         </DataTemplate>
     </UserControl.Resources>
 

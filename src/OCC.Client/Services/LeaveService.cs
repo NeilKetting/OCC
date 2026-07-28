@@ -146,7 +146,7 @@ namespace OCC.Client.Services
 
 
             // 1. Get Initial Balance
-            double balance = employee.AnnualLeaveBalance;
+            double balance = (double)employee.AnnualLeaveBalance;
 
             // 2. Add Accrued (1 per 17 days worked - Status: Present/Late)
             // Only count attendance records on or after Employment Date

@@ -9,6 +9,11 @@ namespace OCC.WpfClient.Services
     {
         public Task ShowAlertAsync(string title, string message)
         {
+            if (Application.Current?.Dispatcher?.CheckAccess() == false)
+            {
+                return Application.Current.Dispatcher.InvokeAsync(() => ShowAlertAsync(title, message)).Task.Unwrap();
+            }
+
             var dialog = new CustomDialogView(title, message, "OK", null, null);
             dialog.ShowDialog();
             return Task.CompletedTask;
@@ -16,6 +21,11 @@ namespace OCC.WpfClient.Services
 
         public Task<bool> ShowConfirmationAsync(string title, string message)
         {
+            if (Application.Current?.Dispatcher?.CheckAccess() == false)
+            {
+                return Application.Current.Dispatcher.InvokeAsync(() => ShowConfirmationAsync(title, message)).Task.Unwrap();
+            }
+
             var dialog = new CustomDialogView(title, message, "Yes", null, "No");
             if (dialog.ShowDialog() == true)
             {

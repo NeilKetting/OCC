@@ -327,7 +327,8 @@ namespace OCC.API.Controllers
                     return Ok(new { Database = dbName, RegistrationLogs = _registrationLogs, UserCount = allUsers.Count, Users = allUsers });
                 }
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() || u.Id.ToString() == email);
+                Guid.TryParse(email, out var searchGuid);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() || (searchGuid != Guid.Empty && u.Id == searchGuid));
                 if (user == null) return NotFound(new { Database = dbName, message = $"User {email} not found." });
 
                 var employee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);

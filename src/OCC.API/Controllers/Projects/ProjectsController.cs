@@ -4,11 +4,20 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
 using OCC.API.Hubs;
-using OCC.Shared.Models;
+using OCC.API.Security;
 using OCC.Shared.DTOs;
+using OCC.Shared.Framework;
+using OCC.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for managing construction projects, project summaries, personnel allocations, task imports, and lifecycle management.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -19,6 +28,13 @@ namespace OCC.API.Controllers
         private readonly ILogger<ProjectsController> _logger;
         private readonly Services.INotificationService _notificationService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProjectsController"/> class.
+        /// </summary>
+        /// <param name="context">Database context.</param>
+        /// <param name="hubContext">SignalR notification hub context.</param>
+        /// <param name="logger">Logger instance.</param>
+        /// <param name="notificationService">Notification service.</param>
         public ProjectsController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<ProjectsController> logger, Services.INotificationService notificationService)
         {
             _context = context;
@@ -27,6 +43,11 @@ namespace OCC.API.Controllers
             _notificationService = notificationService;
         }
 
+        /// <summary>
+        /// Retrieves project summaries including calculated task progress, status rollups, and site manager details.
+        /// </summary>
+        /// <param name="includeDeleted">Whether to include soft-deleted projects.</param>
+        /// <returns>A list of project summary DTOs.</returns>
         [HttpGet("summaries")]
         public async Task<ActionResult<IEnumerable<ProjectSummaryDto>>> GetProjectSummaries([FromQuery] bool includeDeleted = false)
         {
@@ -63,10 +84,10 @@ namespace OCC.API.Controllers
                 }
                 if (anyChanges) await _context.SaveChangesAsync();
 
-                // Resolve Creator Names for Project Manager field
-                var creators = projects.Select(p => p.CreatedBy).Distinct().ToList();
+                var creators = projects.Select(p => p.CreatedBy).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList();
+                var creatorGuids = creators.Select(c => Guid.TryParse(c, out var g) ? g : Guid.Empty).Where(g => g != Guid.Empty).ToList();
                 var userMap = await _context.Users
-                    .Where(u => creators.Contains(u.Id.ToString()) || creators.Contains(u.Email))
+                    .Where(u => creatorGuids.Contains(u.Id) || creators.Contains(u.Email))
                     .ToListAsync();
                 
                 var nameMap = new Dictionary<string, string>();
@@ -111,11 +132,67 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving project summaries");
-                return StatusCode(500, "Internal server error");
+                var msg = ex.InnerException != null ? $"{ex.Message} ({ex.InnerException.Message})" : ex.Message;
+                return StatusCode(500, $"An error occurred while retrieving project summaries: {msg}");
             }
         }
 
-        // GET: api/Projects
+        /// <summary>
+        /// Retrieves paginated project summaries using OCC Enterprise Framework standards.
+        /// </summary>
+        [HttpGet("paged")]
+        public async Task<ActionResult<ApiResponse<PagedResult<ProjectSummaryDto>>>> GetProjectsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
+        {
+            try
+            {
+                var query = _context.Projects.AsNoTracking().Include(p => p.Tasks).Include(p => p.SiteManager).AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var term = search.Trim().ToLower();
+                    query = query.Where(p => p.Name.ToLower().Contains(term) || (p.Code != null && p.Code.ToLower().Contains(term)));
+                }
+
+                var totalCount = await query.CountAsync();
+                var projects = await query
+                    .OrderByDescending(p => p.CreatedAtUtc)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var summaries = projects.Select(p =>
+                {
+                    var avgProgress = p.Tasks.Any() ? (int)Math.Round(p.Tasks.Average(t => (double)t.PercentComplete)) : 0;
+                    return new ProjectSummaryDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Status = p.Status,
+                        SiteManagerId = p.SiteManagerId,
+                        SiteManagerName = p.SiteManager != null ? $"{p.SiteManager.FirstName} {p.SiteManager.LastName}".Trim() : string.Empty,
+                        Progress = avgProgress,
+                        StartDate = p.StartDate,
+                        TaskCount = p.Tasks.Count,
+                        IsActive = p.IsActive,
+                        Priority = p.Priority
+                    };
+                }).ToList();
+
+                var pagedResult = PagedResult<ProjectSummaryDto>.Create(summaries, totalCount, page, pageSize);
+                return Ok(ApiResponse<PagedResult<ProjectSummaryDto>>.Ok(pagedResult, "Projects retrieved successfully."));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated project summaries");
+                return StatusCode(500, ApiResponse<PagedResult<ProjectSummaryDto>>.Fail("An internal server error occurred while retrieving project summaries."));
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all projects, optionally filtered by current user assignment.
+        /// </summary>
+        /// <param name="assignedToMe">If true, filters projects assigned to the current user or managed by them.</param>
+        /// <returns>A list of projects matching criteria.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(bool assignedToMe = false)
         {
@@ -141,7 +218,7 @@ namespace OCC.API.Controllers
 
                     if (user.UserRole == UserRole.Admin)
                     {
-                        return await query.ToListAsync();
+                        return Ok(await query.ToListAsync());
                     }
 
                     var linkedEmployee = await _context.Employees.FirstOrDefaultAsync(e => e.LinkedUserId == user.Id);
@@ -156,7 +233,6 @@ namespace OCC.API.Controllers
                         }
                     }
 
-                    // For filtering, we include both Employee-based assignments and User-based (Contractor) assignments
                     query = query.Where(p => 
                         (linkedEmployee != null && p.SiteManagerId == linkedEmployee.Id) || 
                         p.Tasks.Any(t => t.Assignments.Any(a => 
@@ -168,10 +244,10 @@ namespace OCC.API.Controllers
 
                 var projects = await query.ToListAsync();
                 
-                // Resolve Project Manager names
-                var creators = projects.Select(p => p.CreatedBy).Distinct().ToList();
+                var creators = projects.Select(p => p.CreatedBy).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList();
+                var creatorGuids = creators.Select(c => Guid.TryParse(c, out var g) ? g : Guid.Empty).Where(g => g != Guid.Empty).ToList();
                 var userMap = await _context.Users
-                    .Where(u => creators.Contains(u.Id.ToString()) || creators.Contains(u.Email))
+                    .Where(u => creatorGuids.Contains(u.Id) || creators.Contains(u.Email))
                     .ToListAsync();
  
                 foreach (var p in projects)
@@ -188,19 +264,25 @@ namespace OCC.API.Controllers
                         p.ProjectManager = user.DisplayName ?? user.Email ?? p.CreatedBy;
                     }
                 }
-                return projects;
+                return Ok(projects);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving projects");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving projects.");
             }
         }
 
-        // GET: api/Projects/5
+        /// <summary>
+        /// Retrieves details for a single project by its unique identifier.
+        /// </summary>
+        /// <param name="id">The project ID.</param>
+        /// <returns>The requested project entity.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProject(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+
             try
             {
                 var project = await _context.Projects
@@ -221,8 +303,8 @@ namespace OCC.API.Controllers
                 else if (avgProgress > 0 && (project.Status == "Planning" || project.Status == "Not Started"))
                     project.Status = "In Progress";
 
-                // Resolve Project Manager
-                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == project.CreatedBy || u.Email == project.CreatedBy);
+                Guid.TryParse(project.CreatedBy, out var creatorGuid);
+                var creator = await _context.Users.FirstOrDefaultAsync(u => (creatorGuid != Guid.Empty && u.Id == creatorGuid) || u.Email == project.CreatedBy);
                 if (creator != null)
                 {
                     project.ProjectManager = creator.DisplayName ?? creator.Email ?? project.CreatedBy;
@@ -232,33 +314,52 @@ namespace OCC.API.Controllers
                     project.ProjectManager = project.CreatedBy;
                 }
 
-                return project;
+                return Ok(project);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving the project.");
             }
         }
 
-        // POST: api/Projects
+        /// <summary>
+        /// Creates a new project entity.
+        /// </summary>
+        /// <param name="project">The project to create.</param>
+        /// <returns>The created project entity.</returns>
         [HttpPost]
         [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<ActionResult<Project>> PostProject(Project project)
         {
+            if (project == null) return BadRequest("Project payload cannot be null.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
                 if (project.Id == Guid.Empty) project.Id = Guid.NewGuid();
                 
-                // Set Project Manager to creator's display name (Immutable Rule)
+                project.Name = InputSanitizer.Sanitize(project.Name);
+                project.Description = InputSanitizer.Sanitize(project.Description);
+                project.Location = InputSanitizer.Sanitize(project.Location);
+                project.Customer = InputSanitizer.Sanitize(project.Customer);
+                project.Priority = InputSanitizer.Sanitize(project.Priority);
+                project.ShortName = InputSanitizer.Sanitize(project.ShortName);
+                project.StreetLine1 = InputSanitizer.Sanitize(project.StreetLine1);
+                project.StreetLine2 = InputSanitizer.Sanitize(project.StreetLine2);
+                project.City = InputSanitizer.Sanitize(project.City);
+                project.StateOrProvince = InputSanitizer.Sanitize(project.StateOrProvince);
+                project.PostalCode = InputSanitizer.Sanitize(project.PostalCode);
+                project.Country = InputSanitizer.Sanitize(project.Country);
+
                 var userEmail = User.Identity?.Name;
                 if (!string.IsNullOrEmpty(userEmail))
                 {
-                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userEmail || u.Email == userEmail);
+                    Guid.TryParse(userEmail, out var userGuid);
+                    var user = await _context.Users.FirstOrDefaultAsync(u => (userGuid != Guid.Empty && u.Id == userGuid) || u.Email == userEmail);
                     project.ProjectManager = user?.DisplayName ?? user?.Email ?? userEmail;
                 }
 
-                // Avoid EF Core tracking/navigation issues with deserialized entities
                 project.SiteManager = null;
                 project.CustomerEntity = null;
 
@@ -267,7 +368,6 @@ namespace OCC.API.Controllers
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Create", project.Id);
 
-                // Notify Site Manager if assigned during creation
                 if (project.SiteManagerId.HasValue)
                 {
                     NotificationsController.LogPush($"[NOTIFY] PostProject triggered site manager assignment notification for manager: {project.SiteManagerId.Value}");
@@ -279,23 +379,41 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating project");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while creating the project.");
             }
         }
 
-        // PUT: api/Projects/5
+        /// <summary>
+        /// Updates an existing project entity.
+        /// </summary>
+        /// <param name="id">The ID of the project to update.</param>
+        /// <param name="project">The updated project entity.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin, Office, SiteManager")]
         public async Task<IActionResult> PutProject(Guid id, Project project)
         {
-            if (id != project.Id) return BadRequest();
+            if (id == Guid.Empty || id != project.Id) return BadRequest("Project ID mismatch or empty.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // Track if Site Manager has changed to send notification
             var existingProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == id);
             if (existingProject == null)
             {
                 return NotFound();
             }
+
+            project.Name = InputSanitizer.Sanitize(project.Name);
+            project.Description = InputSanitizer.Sanitize(project.Description);
+            project.Location = InputSanitizer.Sanitize(project.Location);
+            project.Customer = InputSanitizer.Sanitize(project.Customer);
+            project.Priority = InputSanitizer.Sanitize(project.Priority);
+            project.ShortName = InputSanitizer.Sanitize(project.ShortName);
+            project.StreetLine1 = InputSanitizer.Sanitize(project.StreetLine1);
+            project.StreetLine2 = InputSanitizer.Sanitize(project.StreetLine2);
+            project.City = InputSanitizer.Sanitize(project.City);
+            project.StateOrProvince = InputSanitizer.Sanitize(project.StateOrProvince);
+            project.PostalCode = InputSanitizer.Sanitize(project.PostalCode);
+            project.Country = InputSanitizer.Sanitize(project.Country);
 
             bool siteManagerChanged = existingProject.SiteManagerId != project.SiteManagerId;
             NotificationsController.LogPush($"[PUT] Project {id} Update. SiteManagerChanged: {siteManagerChanged} (Old: {existingProject.SiteManagerId} -> New: {project.SiteManagerId})");
@@ -307,7 +425,6 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
 
-                // Notify if Site Manager was changed during this edit
                 if (siteManagerChanged && project.SiteManagerId.HasValue)
                 {
                     await NotifySiteManagerAssignmentAsync(project, project.SiteManagerId);
@@ -321,21 +438,27 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while updating the project.");
             }
             return NoContent();
         }
 
-        // DELETE: api/Projects/5
+        /// <summary>
+        /// Deletes a project by ID (soft-delete by default, or permanent delete if specified).
+        /// </summary>
+        /// <param name="id">The project ID to delete.</param>
+        /// <param name="permanent">If true, hard deletes the project and related sub-entities.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProject(Guid id, [FromQuery] bool permanent = false)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+
             try
             {
                 if (permanent)
                 {
-                    // Hard Delete
                     var project = await _context.Projects
                         .Include(p => p.Tasks)
                             .ThenInclude(t => t.Comments)
@@ -346,26 +469,22 @@ namespace OCC.API.Controllers
 
                     if (project == null) return NotFound();
 
-                    // Manual deletion for things not in the Project navigation collections but linked via ProjectId
                     var hseqDocs = await _context.Set<HseqDocument>().Where(d => d.ProjectId == id).ToListAsync();
                     var hseqAudits = await _context.Set<HseqAudit>().Where(a => a.ProjectId == id).ToListAsync();
                     var incidents = await _context.Set<Incident>().Where(i => i.ProjectId == id).ToListAsync();
                     var snagJobs = await _context.Set<SnagJob>().Where(s => s.ProjectId == id).ToListAsync();
 
-                    // Manual deletion of HSEQ Audit Attachments to prevent restrict blocker errors
                     var auditIds = hseqAudits.Select(a => a.Id).ToList();
                     var hseqAttachments = auditIds.Any()
                         ? await _context.Set<HseqAuditAttachment>().Where(at => auditIds.Contains(at.AuditId)).ToListAsync()
                         : new List<HseqAuditAttachment>();
 
-                    // Manual dissociation of attendance records (preserving historical presence and payroll logs)
                     var attendanceRecords = await _context.AttendanceRecords.Where(a => a.ProjectId == id).ToListAsync();
                     foreach (var att in attendanceRecords)
                     {
                         att.ProjectId = null;
                     }
 
-                    // Manual dissociation of time records (preserving labor history and payroll logs)
                     var taskIds = project.Tasks.Select(t => t.Id).ToList();
                     var timeRecords = await _context.TimeRecords
                         .Where(tr => tr.ProjectId == id || (tr.TaskId.HasValue && taskIds.Contains(tr.TaskId.Value)))
@@ -391,7 +510,6 @@ namespace OCC.API.Controllers
                 }
                 else
                 {
-                    // Soft Delete
                     var project = await _context.Projects
                         .Include(p => p.Tasks)
                         .Include(p => p.TeamMembers)
@@ -400,28 +518,23 @@ namespace OCC.API.Controllers
 
                     if (project == null) return NotFound();
 
-                    // Soft delete the project
                     project.IsActive = false;
 
-                    // Cascade soft delete to tasks
                     foreach (var task in project.Tasks)
                     {
                         task.IsActive = false;
                     }
 
-                    // Cascade soft delete to team members
                     foreach (var tm in project.TeamMembers)
                     {
                         tm.IsActive = false;
                     }
 
-                    // Cascade soft delete to variation orders
                     foreach (var vo in project.VariationOrders)
                     {
                         vo.IsActive = false;
                     }
 
-                    // Soft delete related task details (comments, assignments, attachments)
                     var taskIds = project.Tasks.Select(t => t.Id).ToList();
                     if (taskIds.Any())
                     {
@@ -435,7 +548,6 @@ namespace OCC.API.Controllers
                         foreach (var at in attachments) at.IsActive = false;
                     }
 
-                    // Soft delete other project-linked items (Incidents, Audits, SnagJobs, HseqDocuments, SiteDeployments, ProjectReportDrafts/Histories)
                     var hseqDocs = await _context.Set<HseqDocument>().Where(d => d.ProjectId == id).ToListAsync();
                     foreach (var doc in hseqDocs) doc.IsActive = false;
 
@@ -457,7 +569,6 @@ namespace OCC.API.Controllers
                     var historyRecords = await _context.ProjectReportHistories.Where(h => h.ProjectId == id).ToListAsync();
                     foreach (var h in historyRecords) h.IsActive = false;
 
-                    // Note: TimeRecords, AttendanceRecords, and WageRuns are EXPLICITLY EXCLUDED and NOT modified.
                     await _context.SaveChangesAsync();
                 }
 
@@ -467,14 +578,21 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while deleting the project.");
             }
         }
 
+        /// <summary>
+        /// Restores a soft-deleted project entity.
+        /// </summary>
+        /// <param name="id">The ID of the project to restore.</param>
+        /// <returns>The restored project entity.</returns>
         [HttpPost("{id}/restore")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RestoreProject(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+
             try
             {
                 var project = await _context.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id);
@@ -494,13 +612,20 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error restoring project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while restoring the project.");
             }
         }
 
+        /// <summary>
+        /// Retrieves personnel allocations for a specific project.
+        /// </summary>
+        /// <param name="id">The project ID.</param>
+        /// <returns>Project personnel DTO.</returns>
         [HttpGet("{id}/personnel")]
         public async Task<ActionResult<ProjectPersonnelDto>> GetProjectPersonnel(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+
             try
             {
                 var project = await _context.Projects
@@ -512,8 +637,8 @@ namespace OCC.API.Controllers
 
                 if (project == null) return NotFound();
 
-                // Resolve Project Manager from Creator
-                var creator = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == project.CreatedBy || u.Email == project.CreatedBy);
+                Guid.TryParse(project.CreatedBy, out var creatorGuid);
+                var creator = await _context.Users.FirstOrDefaultAsync(u => (creatorGuid != Guid.Empty && u.Id == creatorGuid) || u.Email == project.CreatedBy);
                 var projectManager = creator?.DisplayName ?? creator?.Email ?? project.CreatedBy;
 
                 var dto = new ProjectPersonnelDto
@@ -539,14 +664,23 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving personnel for project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving project personnel.");
             }
         }
 
+        /// <summary>
+        /// Updates project site manager and team member allocations.
+        /// </summary>
+        /// <param name="id">The project ID.</param>
+        /// <param name="update">The update payload.</param>
+        /// <returns>No content on success.</returns>
         [HttpPost("{id}/personnel")]
         [Authorize(Roles = "Admin, Office")]
         public async Task<IActionResult> UpdateProjectPersonnel(Guid id, ProjectPersonnelUpdateDto update)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+            if (update == null) return BadRequest("Update payload cannot be null.");
+
             try
             {
                 var project = await _context.Projects
@@ -555,23 +689,22 @@ namespace OCC.API.Controllers
 
                 if (project == null) return NotFound();
 
-                // Update Site Manager
                 project.SiteManagerId = update.SiteManagerId;
 
-                // Update Team Members (if provided)
                 if (update.TeamMemberIds != null)
                 {
-                    // 1. Remove members not in the new list
                     var toRemove = project.TeamMembers.Where(tm => !update.TeamMemberIds.Contains(tm.EmployeeId)).ToList();
-                    foreach (var tm in toRemove) project.TeamMembers.Remove(tm);
+                    foreach (var tm in toRemove)
+                    {
+                        _context.ProjectTeamMembers.Remove(tm);
+                    }
 
-                    // 2. Add new members
                     var existingIds = project.TeamMembers.Select(tm => tm.EmployeeId).ToList();
                     foreach (var empId in update.TeamMemberIds)
                     {
                         if (!existingIds.Contains(empId))
                         {
-                            project.TeamMembers.Add(new ProjectTeamMember
+                            _context.ProjectTeamMembers.Add(new ProjectTeamMember
                             {
                                 Id = Guid.NewGuid(),
                                 ProjectId = id,
@@ -585,7 +718,6 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
 
-                // Notify Site Manager if assigned/updated
                 if (update.SiteManagerId.HasValue)
                 {
                     await NotifySiteManagerAssignmentAsync(project, update.SiteManagerId);
@@ -596,30 +728,34 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating personnel for project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while updating project personnel.");
             }
         }
 
+        /// <summary>
+        /// Retrieves historical activity and personnel entry logs for a project.
+        /// </summary>
+        /// <param name="id">The project ID.</param>
+        /// <returns>Project history DTO.</returns>
         [HttpGet("{id}/history")]
         public async Task<ActionResult<ProjectHistoryDto>> GetProjectHistory(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+
             try
             {
                 var history = new ProjectHistoryDto { ProjectId = id };
 
-                // 1. Get Employee History from AttendanceRecords
                 var attendance = await _context.AttendanceRecords
                     .Where(a => a.ProjectId == id)
                     .Join(_context.Employees, a => a.EmployeeId, e => e.Id, (a, e) => new { a, e })
                     .ToListAsync();
 
-                // 2. Get Assignments (includes potential contractors)
                 var assignments = await _context.TaskAssignments
                     .Include(a => a.ProjectTask)
                     .Where(a => a.ProjectTask != null && a.ProjectTask.ProjectId == id)
                     .ToListAsync();
 
-                // 3. Process Employees
                 var employeeEntries = attendance.GroupBy(x => x.e.Id)
                     .Select(g => new PersonnelHistoryEntryDto
                     {
@@ -633,8 +769,6 @@ namespace OCC.API.Controllers
                         LastActive = g.Max(x => x.a.Date)
                     }).ToList();
 
-                // 4. Process Contractors (who might not have attendance)
-                var contractorIds = assignments.Where(a => a.AssigneeType == AssigneeType.Contractor).Select(a => a.AssigneeId).Distinct();
                 var contractorEntries = assignments
                     .Where(a => a.AssigneeType == AssigneeType.Contractor)
                     .GroupBy(a => a.AssigneeId)
@@ -644,7 +778,7 @@ namespace OCC.API.Controllers
                         Name = g.First().AssigneeName,
                         Role = "Contractor",
                         Type = "Contractor",
-                        DaysWorked = 0, // We don't track attendance for contractors in this simplified logic
+                        DaysWorked = 0,
                         TasksAssigned = g.Count(),
                         FirstActive = null,
                         LastActive = null
@@ -658,13 +792,20 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving history for project {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving project history.");
             }
         }
 
+        /// <summary>
+        /// Generates a comprehensive cost and labor breakdown report for a project.
+        /// </summary>
+        /// <param name="id">The project ID.</param>
+        /// <returns>Project report DTO.</returns>
         [HttpGet("{id}/report")]
         public async Task<ActionResult<ProjectReportDto>> GetProjectReport(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+
             try
             {
                 var project = await _context.Projects
@@ -684,17 +825,15 @@ namespace OCC.API.Controllers
                     EndDate = project.EndDate
                 };
 
-                // Material Costs (Orders linked to this project)
                 var orders = await _context.Orders
                     .Where(o => o.ProjectId == id)
                     .Include(o => o.Lines)
                     .AsNoTracking()
                     .ToListAsync();
 
-                report.TotalMaterialCost = (decimal)orders.Sum(o => o.Lines.Sum(l => l.LineTotal));
+                report.TotalMaterialCost = Math.Round((decimal)orders.Sum(o => o.Lines.Sum(l => l.LineTotal)), 2);
                 report.LinkedOrders = orders.Select(o => ToSummaryDto(o)).OrderByDescending(o => o.OrderDate).ToList();
 
-                // Labour Costs (TimeRecords linked to project)
                 var timeRecords = await _context.TimeRecords
                     .Where(tr => tr.ProjectId == id)
                     .Join(_context.Employees, tr => tr.EmployeeId, e => e.Id, (tr, e) => new { tr, e })
@@ -706,18 +845,142 @@ namespace OCC.API.Controllers
                     .Select(g => new LabourDetailDto
                     {
                         EmployeeName = g.Key,
-                        Hours = g.Sum(x => x.tr.Hours),
-                        HourlyRate = (decimal)g.First().e.HourlyRate
+                        Hours = Math.Round(g.Sum(x => x.tr.Hours), 2),
+                        HourlyRate = Math.Round((decimal)g.First().e.HourlyRate, 2)
                     }).ToList();
 
-                report.TotalLabourCost = report.LabourBreakdown.Sum(l => l.TotalCost);
+                report.TotalLabourCost = Math.Round(report.LabourBreakdown.Sum(l => l.TotalCost), 2);
 
                 return Ok(report);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating project report for {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while generating project report.");
+            }
+        }
+
+        /// <summary>
+        /// Synchronizes and links orphaned projects to the currently authenticated site manager employee.
+        /// </summary>
+        /// <returns>Result of assignment sync operation.</returns>
+        [HttpPost("sync-assignments")]
+        [Authorize]
+        public async Task<IActionResult> SyncAssignments()
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == userEmail);
+            if (employee == null) return NotFound("Employee record not found.");
+
+            var ghostId = Guid.Parse("17c72266-ce66-4144-b7a8-d17dd58b78f5");
+            var myFullName = $"{employee.FirstName} {employee.LastName}";
+            var myInvertedName = $"{employee.LastName}, {employee.FirstName}";
+
+            var orphanedProjects = await _context.Projects
+                .Include(p => p.SiteManager)
+                .Where(p => p.SiteManagerId == ghostId || 
+                           (p.SiteManagerId != employee.Id && p.SiteManager != null && 
+                            (p.SiteManager.Email == employee.Email || 
+                             p.SiteManager.FirstName + " " + p.SiteManager.LastName == myFullName ||
+                             p.SiteManager.LastName + ", " + p.SiteManager.FirstName == myInvertedName)))
+                .ToListAsync();
+
+            try
+            {
+                if (orphanedProjects.Any())
+                {
+                    foreach (var p in orphanedProjects)
+                    {
+                        p.SiteManagerId = employee.Id;
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(new { Success = true, Count = orphanedProjects.Count, Message = $"Successfully re-assigned {orphanedProjects.Count} projects to {employee.DisplayName}." });
+                }
+                return Ok(new { Success = true, Count = 0, Message = "No orphaned projects found for this identity." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing project assignments for {UserEmail}", userEmail);
+                return StatusCode(500, "An error occurred while syncing project assignments.");
+            }
+        }
+
+        /// <summary>
+        /// Imports a batch of project tasks into a project, replacing existing tasks in a transactional scope.
+        /// </summary>
+        /// <param name="id">The project ID.</param>
+        /// <param name="tasks">The list of tasks to import.</param>
+        /// <returns>Result of task import operation.</returns>
+        [HttpPost("{id}/import-tasks")]
+        [Authorize(Roles = "Admin, Office, SiteManager")]
+        public async Task<IActionResult> ImportTasks(Guid id, [FromBody] List<ProjectTask> tasks)
+        {
+            if (id == Guid.Empty) return BadRequest("Invalid project ID.");
+            if (tasks == null) return BadRequest("Tasks collection cannot be null.");
+
+            var projectExists = await _context.Projects.AnyAsync(p => p.Id == id);
+            if (!projectExists) return NotFound($"Project with ID {id} not found.");
+
+            try
+            {
+                var strategy = _context.Database.CreateExecutionStrategy();
+                await strategy.ExecuteAsync(async () =>
+                {
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var existingTaskIds = await _context.ProjectTasks
+                            .Where(t => t.ProjectId == id)
+                            .Select(t => t.Id)
+                            .ToListAsync();
+
+                        if (existingTaskIds.Any())
+                        {
+                            var assignments = _context.TaskAssignments.Where(a => existingTaskIds.Contains(a.TaskId));
+                            _context.TaskAssignments.RemoveRange(assignments);
+
+                            var comments = _context.TaskComments.Where(c => existingTaskIds.Contains(c.TaskId));
+                            _context.TaskComments.RemoveRange(comments);
+
+                            var attachments = _context.TaskAttachments.Where(a => existingTaskIds.Contains(a.TaskId));
+                            _context.TaskAttachments.RemoveRange(attachments);
+
+                            var existingTasks = _context.ProjectTasks.Where(t => t.ProjectId == id);
+                            _context.ProjectTasks.RemoveRange(existingTasks);
+                        }
+
+                        foreach (var task in tasks)
+                        {
+                            if (task.Id == Guid.Empty) task.Id = Guid.NewGuid();
+                            task.Name = InputSanitizer.Sanitize(task.Name);
+                            task.ProjectId = id;
+                            task.Project = null;
+                            task.Children = new List<ProjectTask>();
+                            
+                            _context.ProjectTasks.Add(task);
+                        }
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
+
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "BatchUpdate", id);
+
+                return Ok(new { Success = true, Count = tasks.Count });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing tasks for project {Id}", id);
+                return StatusCode(500, "An error occurred while importing tasks.");
             }
         }
 
@@ -730,7 +993,7 @@ namespace OCC.API.Controllers
                 OrderDate = o.OrderDate,
                 OrderType = o.OrderType,
                 Status = o.Status,
-                TotalAmount = o.TotalAmount,
+                TotalAmount = Math.Round(o.TotalAmount, 2),
                 Branch = o.Branch.ToString(),
                 ProjectName = o.ProjectName ?? string.Empty,
                 SupplierName = o.SupplierName
@@ -752,14 +1015,12 @@ namespace OCC.API.Controllers
                     Guid? targetUserId = employee.LinkedUserId;
                     NotificationsController.LogPush($"[NOTIFY] Employee {employee.DisplayName} found. LinkedUserId: {targetUserId}");
                     
-                    // Fallback: If not explicitly linked, try to find a user by email
                     if (!targetUserId.HasValue && !string.IsNullOrEmpty(employee.Email))
                     {
                         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == employee.Email);
                         if (user != null)
                         {
                             targetUserId = user.Id;
-                            // Auto-link for next time to prevent this lookup
                             employee.LinkedUserId = user.Id;
                             await _context.SaveChangesAsync();
                             _logger.LogInformation("Auto-linked Employee {Emp} to User {User} via Email during notification", employee.DisplayName, user.Id);
@@ -793,124 +1054,6 @@ namespace OCC.API.Controllers
             {
                 NotificationsController.LogPush($"[NOTIFY] ERROR: {ex.Message}");
                 _logger.LogError(ex, "Failed to send push notification for project assignment to Site Manager {Id}", siteManagerId);
-            }
-        }
-
-        [HttpPost("sync-assignments")]
-        [Authorize]
-        public async Task<IActionResult> SyncAssignments()
-        {
-            var userEmail = User.Identity?.Name;
-            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
-
-            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == userEmail);
-            if (employee == null) return NotFound("Employee record not found.");
-
-            // Known ghost ID from diagnostics
-            var ghostId = Guid.Parse("17c72266-ce66-4144-b7a8-d17dd58b78f5");
-            var myFullName = $"{employee.FirstName} {employee.LastName}";
-            var myInvertedName = $"{employee.LastName}, {employee.FirstName}";
-
-            // Find projects assigned to the ghost ID (Hard Override) OR a name match
-            var orphanedProjects = await _context.Projects
-                .Include(p => p.SiteManager)
-                .Where(p => p.SiteManagerId == ghostId || 
-                           (p.SiteManagerId != employee.Id && p.SiteManager != null && 
-                            (p.SiteManager.Email == employee.Email || 
-                             p.SiteManager.FirstName + " " + p.SiteManager.LastName == myFullName ||
-                             p.SiteManager.LastName + ", " + p.SiteManager.FirstName == myInvertedName)))
-                .ToListAsync();
-
-            try
-            {
-                if (orphanedProjects.Any())
-                {
-                    foreach (var p in orphanedProjects)
-                    {
-                        p.SiteManagerId = employee.Id;
-                    }
-                    await _context.SaveChangesAsync();
-                    return Ok(new { Success = true, Count = orphanedProjects.Count, Message = $"Successfully re-assigned {orphanedProjects.Count} projects to {employee.DisplayName}." });
-                }
-                return Ok(new { Success = true, Count = 0, Message = "No orphaned projects found for this identity." });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new { Success = false, Count = 0, Message = $"DB Error: {ex.Message}" });
-            }
-        }
-
-        [HttpPost("{id}/import-tasks")]
-        [Authorize(Roles = "Admin, Office, SiteManager")]
-        public async Task<IActionResult> ImportTasks(Guid id, [FromBody] List<ProjectTask> tasks)
-        {
-            if (tasks == null) return BadRequest("Tasks collection cannot be null.");
-
-            var projectExists = await _context.Projects.AnyAsync(p => p.Id == id);
-            if (!projectExists) return NotFound($"Project with ID {id} not found.");
-
-            try
-            {
-                var strategy = _context.Database.CreateExecutionStrategy();
-                await strategy.ExecuteAsync(async () =>
-                {
-                    using var transaction = await _context.Database.BeginTransactionAsync();
-                    try
-                    {
-                        // Retrieve all existing task IDs for this project
-                        var existingTaskIds = await _context.ProjectTasks
-                            .Where(t => t.ProjectId == id)
-                            .Select(t => t.Id)
-                            .ToListAsync();
-
-                        // Delete related records
-                        if (existingTaskIds.Any())
-                        {
-                            var assignments = _context.TaskAssignments.Where(a => existingTaskIds.Contains(a.TaskId));
-                            _context.TaskAssignments.RemoveRange(assignments);
-
-                            var comments = _context.TaskComments.Where(c => existingTaskIds.Contains(c.TaskId));
-                            _context.TaskComments.RemoveRange(comments);
-
-                            var attachments = _context.TaskAttachments.Where(a => existingTaskIds.Contains(a.TaskId));
-                            _context.TaskAttachments.RemoveRange(attachments);
-
-                            var existingTasks = _context.ProjectTasks.Where(t => t.ProjectId == id);
-                            _context.ProjectTasks.RemoveRange(existingTasks);
-                        }
-
-                        // Add the new tasks
-                        foreach (var task in tasks)
-                        {
-                            task.ProjectId = id;
-                            
-                            // Break object cycles/ EF tracking issues
-                            task.Project = null;
-                            task.Children = new List<ProjectTask>();
-                            
-                            _context.ProjectTasks.Add(task);
-                        }
-
-                        await _context.SaveChangesAsync();
-                        await transaction.CommitAsync();
-                    }
-                    catch
-                    {
-                        await transaction.RollbackAsync();
-                        throw;
-                    }
-                });
-
-                // Trigger SignalR update
-                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
-                await _hubContext.Clients.All.SendAsync("EntityUpdate", "ProjectTask", "BatchUpdate", id);
-
-                return Ok(new { Success = true, Count = tasks.Count });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error importing tasks for project {Id}", id);
-                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
     }

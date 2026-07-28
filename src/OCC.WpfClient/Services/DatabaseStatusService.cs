@@ -79,7 +79,8 @@ namespace OCC.WpfClient.Services
         {
             return _connectionSettings.SelectedEnvironment switch
             {
-                ConnectionSettings.AppEnvironment.Local => "(Local)",
+                ConnectionSettings.AppEnvironment.LocalPC => "(Local PC)",
+                ConnectionSettings.AppEnvironment.LocalLaptop => "(Local Laptop)",
                 ConnectionSettings.AppEnvironment.Test => "(Test)",
                 _ => string.Empty
             };

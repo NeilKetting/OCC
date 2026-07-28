@@ -1,4 +1,4 @@
-using OCC.WpfClient.Services;
+using OCC.Client.Services;
 using System.Collections.Generic;
 using Xunit;
 
@@ -26,6 +26,15 @@ namespace OCC.Tests.Services
         }
 
         [Fact]
+        public void CalculateLineTotals_NegativeInputs_ClampsToZero()
+        {
+            var (net, vat) = _service.CalculateLineTotals(-5, -100, -0.15m);
+
+            Assert.Equal(0m, net);
+            Assert.Equal(0m, vat);
+        }
+
+        [Fact]
         public void CalculateOrderTotals_ReturnsSumOfLines()
         {
             var lines = new List<(decimal Net, decimal Vat)>
@@ -39,6 +48,16 @@ namespace OCC.Tests.Services
             Assert.Equal(300.00m, sub);
             Assert.Equal(45.00m, vat);
             Assert.Equal(345.00m, total);
+        }
+
+        [Fact]
+        public void CalculateOrderTotals_NullLines_ReturnsZero()
+        {
+            var (sub, vat, total) = _service.CalculateOrderTotals(null!);
+
+            Assert.Equal(0m, sub);
+            Assert.Equal(0m, vat);
+            Assert.Equal(0m, total);
         }
     }
 }

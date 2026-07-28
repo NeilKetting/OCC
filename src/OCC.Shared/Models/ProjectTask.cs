@@ -246,8 +246,15 @@ namespace OCC.Shared.Models
             ? "--" 
             : string.Join(", ", Assignments.Select(a => string.Concat(a.AssigneeName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(s => s[0]))).Select(s => s.ToUpper()));
 
+        /// <summary> The estimated cost of completing the task. </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal EstimatedCost { get; set; }
+
         /// <summary> User comments and discussion thread attached to this task. </summary>
         public List<TaskComment> Comments { get; set; } = new();
+
+        /// <summary> Attachments uploaded for this task. </summary>
+        public virtual ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
 
         /// <summary> Resources (employees/teams) assigned to this task. </summary>
         public ICollection<TaskAssignment> Assignments { get; set; } = new List<TaskAssignment>();

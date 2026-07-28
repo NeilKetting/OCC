@@ -104,7 +104,13 @@
                                               IsVisible="{Binding IsDevUser}"
                                               HorizontalAlignment="Center"
                                               Width="200"
-                                              Margin="0,10,0,0"/>
+                                              Margin="0,10,0,0">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
 								</StackPanel>
 
 								<Button Command="{Binding LoginCommand}"

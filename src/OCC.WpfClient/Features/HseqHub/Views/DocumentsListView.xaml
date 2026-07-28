@@ -9,13 +9,14 @@
                xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
                xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
                xmlns:views="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
+               xmlns:dialogs="clr-namespace:OCC.WpfClient.Features.HseqHub.Dialogs"
                mc:Ignorable="d" 
                d:DesignHeight="600" d:DesignWidth="1000"
                d:DataContext="{d:DesignInstance vm:DocumentsListViewModel}">
 
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type vm:DocumentDetailViewModel}">
-            <views:DocumentDetailView />
+            <dialogs:DocumentDetailView />
         </DataTemplate>
     </UserControl.Resources>
 

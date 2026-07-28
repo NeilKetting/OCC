@@ -29,7 +29,7 @@ namespace OCC.Shared.Models
         /// <summary>
         /// Hourly pay rate in local currency.
         /// </summary>
-        public double HourlyRate { get; set; } // Current Rate
+        public decimal HourlyRate { get; set; } // Current Rate
         /// <summary>
         /// The employee's South African Revenue Service (SARS) tax registration number.
         /// </summary>
@@ -39,13 +39,13 @@ namespace OCC.Shared.Models
         /// Current accrued annual leave days.
         /// Usually accrues at a rate of 1 day per 17 days worked or as per BCEA guidelines.
         /// </summary>
-        public double AnnualLeaveBalance { get; set; }
+        public decimal AnnualLeaveBalance { get; set; }
 
         /// <summary>
         /// Remaining sick leave days for the current 36-month cycle.
         /// Defaults to 30 days per cycle for full-time employees.
         /// </summary>
-        public double SickLeaveBalance { get; set; } = 30;
+        public decimal SickLeaveBalance { get; set; } = 30m;
 
         /// <summary>
         /// The date from which leave cycles are calculated. 
@@ -179,7 +179,7 @@ namespace OCC.Shared.Models
         /// <summary>
         /// Available Annual Leave balance in days.
         /// </summary>
-        public double LeaveBalance { get; set; } = 15.0; // Default Logic? 
+        public decimal LeaveBalance { get; set; } = 15.0m; // Default Logic? 
         
 
         /// <summary>

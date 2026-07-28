@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Views"
+    xmlns:dialogs="clr-namespace:OCC.WpfClient.Features.AttendanceHub.Dialogs"
     xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
     xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
     xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
@@ -29,7 +30,7 @@
                 <local:AttendanceDetailView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AttendanceImportPreviewViewModel}">
-                <local:AttendanceImportPreviewView />
+                <dialogs:AttendanceImportPreviewView />
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>

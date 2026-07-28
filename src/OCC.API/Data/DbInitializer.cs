@@ -9,37 +9,41 @@ namespace OCC.API.Data
     {
         public static void Initialize(AppDbContext context, OCC.API.Services.PasswordHasher hasher, bool isDevelopment, ILogger logger)
         {
+            // Manual Schema Patch: Ensure Employees table float columns are converted to decimal(18,2) BEFORE any EF query/migration
+            try
+            {
+                logger.LogInformation("Applying manual schema patches for Employees float columns...");
+                context.Database.ExecuteSqlRaw(@"
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'HourlyRate' AND system_type_id IN (SELECT system_type_id FROM sys.types WHERE name IN ('float', 'real')))
+                        ALTER TABLE Employees ALTER COLUMN HourlyRate DECIMAL(18,2) NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'AnnualLeaveBalance' AND system_type_id IN (SELECT system_type_id FROM sys.types WHERE name IN ('float', 'real')))
+                        ALTER TABLE Employees ALTER COLUMN AnnualLeaveBalance DECIMAL(18,2) NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'SickLeaveBalance' AND system_type_id IN (SELECT system_type_id FROM sys.types WHERE name IN ('float', 'real')))
+                        ALTER TABLE Employees ALTER COLUMN SickLeaveBalance DECIMAL(18,2) NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'LeaveBalance' AND system_type_id IN (SELECT system_type_id FROM sys.types WHERE name IN ('float', 'real')))
+                        ALTER TABLE Employees ALTER COLUMN LeaveBalance DECIMAL(18,2) NOT NULL;
+                ");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Manual schema patch for Employees columns skipped or failed: {Message}", ex.Message);
+            }
+
+            // Manual Schema Patch: Ensure Users table missing columns exist
+            try
+            {
+                logger.LogInformation("Applying manual schema patch for Users table missing columns...");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'AccessFailedCount') ALTER TABLE Users ADD AccessFailedCount INT NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'LockoutEnd') ALTER TABLE Users ADD LockoutEnd DATETIMEOFFSET NULL;");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Manual schema patch for Users columns skipped or failed: {Message}", ex.Message);
+            }
+
             // Prepare DB (Apply Migrations)
             logger.LogInformation("Checking for pending migrations...");
             context.Database.Migrate();
-
-            // Manual Schema Patch: Ensure new ProjectId columns exist (since EF migrations tool failed)
-            try
-            {
-                logger.LogInformation("Applying manual schema patches for HSEQ and Incidents...");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('HseqAudits') AND name = 'ProjectId') ALTER TABLE HseqAudits ADD ProjectId UNIQUEIDENTIFIER NULL;");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Incidents') AND name = 'ProjectId') ALTER TABLE Incidents ADD ProjectId UNIQUEIDENTIFIER NULL;");
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Manual schema patch skipped or failed: {Message}", ex.Message);
-            }
-
-            // Manual Schema Patch: Ensure new WageRunLines columns exist (since EF migrations tool failed)
-            try
-            {
-                logger.LogInformation("Applying manual schema patches for WageRunLines missing columns...");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'BankName') ALTER TABLE WageRunLines ADD BankName NVARCHAR(MAX) NULL;");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek1') ALTER TABLE WageRunLines ADD DaysWorkedWeek1 FLOAT NOT NULL DEFAULT 0;");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek2') ALTER TABLE WageRunLines ADD DaysWorkedWeek2 FLOAT NOT NULL DEFAULT 0;");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DeductionPPE') ALTER TABLE WageRunLines ADD DeductionPPE DECIMAL(18,2) NOT NULL DEFAULT 0;");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'EmploymentType') ALTER TABLE WageRunLines ADD EmploymentType NVARCHAR(MAX) NOT NULL DEFAULT '';");
-                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'TotalDaysWorked') ALTER TABLE WageRunLines ADD TotalDaysWorked FLOAT NOT NULL DEFAULT 0;");
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Manual schema patch for WageRunLines columns skipped or failed: {Message}", ex.Message);
-            }
 
             // Manual Schema Patch: Ensure SupplierContacts table exists
             try

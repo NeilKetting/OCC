@@ -14,6 +14,9 @@ using OCC.Shared.DTOs;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for supplier management, directory listing, and contacts synchronization.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -23,19 +26,30 @@ namespace OCC.API.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<SuppliersController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SuppliersController"/> class.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="hubContext">The SignalR hub context.</param>
+        /// <param name="logger">The logger instance.</param>
         public SuppliersController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<SuppliersController> logger)
         {
-            _context = context;
-            _hubContext = hubContext;
-            _logger = logger;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Retrieves light-weight supplier summaries.
+        /// </summary>
+        /// <returns>A collection of supplier summary DTOs.</returns>
         [HttpGet("summaries")]
         public async Task<ActionResult<IEnumerable<SupplierSummaryDto>>> GetSupplierSummaries()
         {
             try
             {
-                return await _context.Suppliers
+                var summaries = await _context.Suppliers
+                    .Where(s => s.IsActive)
                     .OrderBy(s => s.Name)
                     .Select(s => new SupplierSummaryDto
                     {
@@ -56,33 +70,50 @@ namespace OCC.API.Controllers
                     })
                     .AsNoTracking()
                     .ToListAsync();
+
+                return Ok(summaries);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving supplier summaries");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving supplier summaries.");
             }
         }
 
-        // GET: api/Suppliers
+        /// <summary>
+        /// Retrieves all suppliers with contacts.
+        /// </summary>
+        /// <returns>A collection of suppliers.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Supplier>>> GetSuppliers()
         {
             try
             {
-                return await _context.Suppliers.Include(s => s.Contacts).AsNoTracking().ToListAsync();
+                var suppliers = await _context.Suppliers
+                    .Where(s => s.IsActive)
+                    .Include(s => s.Contacts)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return Ok(suppliers);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving suppliers");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving suppliers.");
             }
         }
 
-        // GET: api/Suppliers/5
+        /// <summary>
+        /// Retrieves a specific supplier by ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the supplier.</param>
+        /// <returns>The supplier entity if found; otherwise, 404 Not Found.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Supplier>> GetSupplier(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid supplier ID.");
+
             try
             {
                 var supplier = await _context.Suppliers
@@ -91,19 +122,29 @@ namespace OCC.API.Controllers
                     .FirstOrDefaultAsync(s => s.Id == id);
                 
                 if (supplier == null) return NotFound();
-                return supplier;
+                return Ok(supplier);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving supplier {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving the supplier.");
             }
         }
 
-        // POST: api/Suppliers
+        /// <summary>
+        /// Creates a new supplier.
+        /// </summary>
+        /// <param name="supplier">The supplier payload.</param>
+        /// <returns>The created supplier object.</returns>
         [HttpPost]
-        public async Task<ActionResult<Supplier>> PostSupplier(Supplier supplier)
+        [Authorize(Roles = "Admin,Office")]
+        public async Task<ActionResult<Supplier>> PostSupplier([FromBody] Supplier supplier)
         {
+            if (supplier == null) return BadRequest("Supplier data is null.");
+
+            if (string.IsNullOrWhiteSpace(supplier.Name))
+                return BadRequest("Supplier name is required.");
+
             try
             {
                 if (supplier.Id == Guid.Empty) supplier.Id = Guid.NewGuid();
@@ -120,20 +161,30 @@ namespace OCC.API.Controllers
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Supplier", "Create", supplier.Id);
 
-                return CreatedAtAction("GetSupplier", new { id = supplier.Id }, supplier);
+                return CreatedAtAction(nameof(GetSupplier), new { id = supplier.Id }, supplier);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating supplier");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while creating the supplier.");
             }
         }
 
-        // PUT: api/Suppliers/5
+        /// <summary>
+        /// Updates an existing supplier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the supplier to update.</param>
+        /// <param name="supplier">The updated supplier payload.</param>
+        /// <returns>No content on success; bad request or not found on failure.</returns>
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSupplier(Guid id, Supplier supplier)
+        [Authorize(Roles = "Admin,Office")]
+        public async Task<IActionResult> PutSupplier(Guid id, [FromBody] Supplier supplier)
         {
-            if (id != supplier.Id) return BadRequest();
+            if (supplier == null || id != supplier.Id) return BadRequest("Supplier ID mismatch or payload is null.");
+
+            if (string.IsNullOrWhiteSpace(supplier.Name))
+                return BadRequest("Supplier name is required.");
+
             var existingSupplier = await _context.Suppliers.FindAsync(id);
             if (existingSupplier == null)
             {
@@ -169,15 +220,22 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating supplier {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while updating the supplier.");
             }
             return NoContent();
         }
 
-        // DELETE: api/Suppliers/5
+        /// <summary>
+        /// Deletes a supplier by ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the supplier to delete.</param>
+        /// <returns>No content on success; 404 Not Found if supplier does not exist.</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Office")]
         public async Task<IActionResult> DeleteSupplier(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid supplier ID.");
+
             try
             {
                 var supplier = await _context.Suppliers.FindAsync(id);
@@ -192,7 +250,7 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting supplier {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while deleting the supplier.");
             }
         }
 

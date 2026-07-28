@@ -31,7 +31,6 @@ namespace OCC.Shared.Models
 
         public LoanType LoanType { get; set; } = LoanType.CashAdvance;
         
-        public new bool IsActive { get; set; } = true;
         public string Notes { get; set; } = string.Empty;
     }
 }

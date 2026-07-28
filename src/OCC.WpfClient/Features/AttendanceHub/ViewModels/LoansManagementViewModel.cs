@@ -185,8 +185,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving loan");
-                System.Windows.MessageBox.Show($"Failed to save loan:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to save loan:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -239,8 +238,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving and printing loan");
-                System.Windows.MessageBox.Show($"Failed to save and print loan:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to save and print loan:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -525,8 +523,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error printing loan agreement");
-                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -542,8 +539,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var statement = await _loanService.GetStatementAsync(loan.Id);
                 if (statement == null)
                 {
-                    System.Windows.MessageBox.Show("Failed to retrieve statement data.", "Error",
-                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    await _dialogService.ShowAlertAsync("Error", "Failed to retrieve statement data.");
                     return;
                 }
                 var path = await _pdfService.GenerateLoanStatementPdfAsync(statement);
@@ -552,8 +548,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error printing loan statement");
-                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }
@@ -777,8 +772,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error printing filtered loans");
-                System.Windows.MessageBox.Show($"Failed to generate PDF:\n\n{ex.Message}", "Error",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Error", $"Failed to generate PDF:\n\n{ex.Message}");
             }
             finally { IsBusy = false; }
         }

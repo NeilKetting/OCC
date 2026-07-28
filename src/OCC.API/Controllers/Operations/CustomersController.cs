@@ -9,6 +9,9 @@ using OCC.Shared.DTOs;
 
 namespace OCC.API.Controllers
 {
+    /// <summary>
+    /// API Controller for customer accounts, contacts synchronization, and logo uploads.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -18,19 +21,33 @@ namespace OCC.API.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<CustomersController> _logger;
 
+        private static readonly string[] AllowedLogoExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg" };
+        private const long MaxLogoSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CustomersController"/> class.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="hubContext">The SignalR hub context.</param>
+        /// <param name="logger">The logger instance.</param>
         public CustomersController(AppDbContext context, IHubContext<NotificationHub> hubContext, ILogger<CustomersController> logger)
         {
-            _context = context;
-            _hubContext = hubContext;
-            _logger = logger;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Retrieves light-weight customer summaries.
+        /// </summary>
+        /// <returns>A collection of customer summary DTOs.</returns>
         [HttpGet("summaries")]
         public async Task<ActionResult<IEnumerable<CustomerSummaryDto>>> GetCustomerSummaries()
         {
             try
             {
-                return await _context.Customers
+                var summaries = await _context.Customers
+                    .Where(c => c.IsActive)
                     .OrderBy(c => c.Name)
                     .Select(c => new CustomerSummaryDto
                     {
@@ -44,58 +61,84 @@ namespace OCC.API.Controllers
                     })
                     .AsNoTracking()
                     .ToListAsync();
+
+                return Ok(summaries);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving customer summaries");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving customer summaries.");
             }
         }
 
-        // GET: api/Customers
+        /// <summary>
+        /// Retrieves all customers.
+        /// </summary>
+        /// <returns>A collection of customer entity objects.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
         {
             try
             {
-                return await _context.Customers.AsNoTracking().ToListAsync();
+                var customers = await _context.Customers.Where(c => c.IsActive).AsNoTracking().ToListAsync();
+                return Ok(customers);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving customers");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving customers.");
             }
         }
 
-        // GET: api/Customers/5
+        /// <summary>
+        /// Retrieves a specific customer by ID with contacts.
+        /// </summary>
+        /// <param name="id">The unique identifier of the customer.</param>
+        /// <returns>The customer entity if found; otherwise, 404 Not Found.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid customer ID.");
+
             try
             {
                 var customer = await _context.Customers
                     .Include(c => c.Contacts)
                     .FirstOrDefaultAsync(c => c.Id == id);
+
                 if (customer == null) return NotFound();
-                return customer;
+                return Ok(customer);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving customer {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while retrieving the customer.");
             }
         }
 
-        // POST: api/Customers
+        /// <summary>
+        /// Creates a new customer account.
+        /// </summary>
+        /// <param name="customer">The customer payload.</param>
+        /// <returns>The created customer entity.</returns>
         [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        [Authorize(Roles = "Admin,Office")]
+        public async Task<ActionResult<Customer>> PostCustomer([FromBody] Customer customer)
         {
+            if (customer == null) return BadRequest("Customer data is null.");
+
+            if (string.IsNullOrWhiteSpace(customer.Name))
+                return BadRequest("Customer name is required.");
+
             try
             {
                 if (customer.Id == Guid.Empty) customer.Id = Guid.NewGuid();
-                foreach (var contact in customer.Contacts)
+                if (customer.Contacts != null)
                 {
-                    if (contact.Id == Guid.Empty) contact.Id = Guid.NewGuid();
+                    foreach (var contact in customer.Contacts)
+                    {
+                        if (contact.Id == Guid.Empty) contact.Id = Guid.NewGuid();
+                    }
                 }
 
                 _context.Customers.Add(customer);
@@ -103,41 +146,61 @@ namespace OCC.API.Controllers
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Create", customer.Id);
 
-                return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
+                return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating customer");
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while creating the customer.");
             }
         }
 
-        // PUT: api/Customers/5
+        /// <summary>
+        /// Updates an existing customer account and synchronizes contacts.
+        /// </summary>
+        /// <param name="id">The unique identifier of the customer to update.</param>
+        /// <param name="customer">The updated customer payload.</param>
+        /// <returns>No content on success; bad request, not found, or conflict on failure.</returns>
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(Guid id, Customer customer)
+        [Authorize(Roles = "Admin,Office")]
+        public async Task<IActionResult> PutCustomer(Guid id, [FromBody] Customer customer)
         {
-            if (id != customer.Id) return BadRequest();
+            if (customer == null || id != customer.Id) return BadRequest("Customer ID mismatch or payload is null.");
+
+            if (string.IsNullOrWhiteSpace(customer.Name))
+                return BadRequest("Customer name is required.");
 
             try
             {
-                // To properly handle disconnected graph including deleted children
                 var existingCustomer = await _context.Customers
                     .Include(c => c.Contacts)
-                    .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.Id == id);
 
                 if (existingCustomer == null) return NotFound();
 
-                _context.Update(customer);
+                _context.Entry(existingCustomer).CurrentValues.SetValues(customer);
 
                 // Delete missing contacts
-                var clientContactIds = customer.Contacts.Select(c => c.Id).ToList();
-                foreach (var existingContact in existingCustomer.Contacts)
+                var clientContactIds = (customer.Contacts ?? new List<CustomerContact>()).Select(c => c.Id).ToList();
+                var contactsToRemove = existingCustomer.Contacts.Where(c => !clientContactIds.Contains(c.Id)).ToList();
+
+                foreach (var contactToRemove in contactsToRemove)
                 {
-                    if (!clientContactIds.Contains(existingContact.Id))
+                    _context.CustomerContacts.Remove(contactToRemove);
+                }
+
+                foreach (var contact in customer.Contacts ?? new List<CustomerContact>())
+                {
+                    var existing = existingCustomer.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+                    if (existing != null)
                     {
-                        var entry = _context.Entry(new CustomerContact { Id = existingContact.Id });
-                        entry.State = EntityState.Deleted;
+                        _context.Entry(existing).CurrentValues.SetValues(contact);
+                    }
+                    else
+                    {
+                        if (contact.Id == Guid.Empty) contact.Id = Guid.NewGuid();
+                        contact.CustomerId = id;
+                        existingCustomer.Contacts.Add(contact);
                     }
                 }
 
@@ -152,15 +215,22 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating customer {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while updating the customer.");
             }
             return NoContent();
         }
 
-        // DELETE: api/Customers/5
+        /// <summary>
+        /// Deletes a customer account by ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the customer to delete.</param>
+        /// <returns>No content on success; 404 Not Found if customer is missing.</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Office")]
         public async Task<IActionResult> DeleteCustomer(Guid id)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid customer ID.");
+
             try
             {
                 var customer = await _context.Customers.FindAsync(id);
@@ -175,44 +245,74 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting customer {Id}", id);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "An error occurred while deleting the customer.");
             }
         }
 
+        /// <summary>
+        /// Securely uploads and associates a logo image for a customer account.
+        /// </summary>
+        /// <param name="id">The unique identifier of the customer.</param>
+        /// <param name="file">The uploaded image file payload.</param>
+        /// <returns>The updated logo URL relative path.</returns>
         [HttpPost("{id}/upload-logo")]
+        [Authorize(Roles = "Admin,Office")]
         public async Task<ActionResult<string>> UploadLogo(Guid id, IFormFile file)
         {
+            if (id == Guid.Empty) return BadRequest("Invalid customer ID.");
+
             if (file == null || file.Length == 0)
             {
                 return BadRequest("No file uploaded.");
             }
 
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            if (file.Length > MaxLogoSizeBytes)
             {
-                return NotFound("Customer not found.");
+                return BadRequest("Uploaded logo image exceeds maximum allowed size (5MB).");
             }
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "customer_logos");
-            if (!Directory.Exists(uploadsFolder))
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !AllowedLogoExtensions.Contains(extension))
             {
-                Directory.CreateDirectory(uploadsFolder);
+                return BadRequest("Invalid image file type. Allowed extensions: .jpg, .jpeg, .png, .webp, .gif, .svg");
             }
 
-            var uniqueFileName = $"{id}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                var customer = await _context.Customers.FindAsync(id);
+                if (customer == null)
+                {
+                    return NotFound("Customer not found.");
+                }
+
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "customer_logos");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Sanitize file name to prevent path traversal
+                var safeExtension = extension;
+                var uniqueFileName = $"{id}_{Guid.NewGuid()}{safeExtension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                customer.LogoUrl = $"/uploads/customer_logos/{uniqueFileName}";
+                await _context.SaveChangesAsync();
+
+                await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Update", id);
+
+                return Ok(customer.LogoUrl);
             }
-
-            customer.LogoUrl = $"/uploads/customer_logos/{uniqueFileName}";
-            await _context.SaveChangesAsync();
-
-            await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Update", id);
-
-            return Ok(customer.LogoUrl);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading logo for customer {Id}", id);
+                return StatusCode(500, "An error occurred while uploading the logo.");
+            }
         }
 
         private bool CustomerExists(Guid id) => _context.Customers.Any(e => e.Id == id);

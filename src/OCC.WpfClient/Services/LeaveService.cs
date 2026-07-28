@@ -108,7 +108,7 @@ namespace OCC.WpfClient.Services
                     {
                         double totalDays = request.NumberOfDays;
                         double cappedPaid = Math.Min(3.0, totalDays);
-                        double employeeAnnualBalance = employee.AnnualLeaveBalance;
+                        double employeeAnnualBalance = (double)employee.AnnualLeaveBalance;
 
                         request.PaidDays = Math.Max(0, Math.Min(cappedPaid, employeeAnnualBalance));
                         request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);
@@ -116,7 +116,7 @@ namespace OCC.WpfClient.Services
                     else if (request.LeaveType == LeaveType.Sick)
                     {
                         double totalDays = request.NumberOfDays;
-                        double availableSick = employee.SickLeaveBalance;
+                        double availableSick = (double)employee.SickLeaveBalance;
                         request.PaidDays = Math.Max(0, Math.Min(totalDays, availableSick));
                         request.UnpaidDays = Math.Max(0, totalDays - request.PaidDays);
                         request.IsUnpaid = (request.PaidDays == 0);
@@ -264,10 +264,10 @@ namespace OCC.WpfClient.Services
                     case LeaveType.CulturalObligations:
                     case LeaveType.HalfDay:
                     case LeaveType.Other:
-                        updateEmp.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - request.PaidDays);
+                        updateEmp.AnnualLeaveBalance = Math.Max(0m, emp.AnnualLeaveBalance - (decimal)request.PaidDays);
                         break;
                     case LeaveType.Sick:
-                        updateEmp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - request.PaidDays);
+                        updateEmp.SickLeaveBalance = Math.Max(0m, emp.SickLeaveBalance - (decimal)request.PaidDays);
                         break;
                     // Maternity, Study, FamilyResponsibility, Unpaid — no balance to deduct
                 }

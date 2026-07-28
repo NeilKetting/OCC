@@ -203,7 +203,7 @@ namespace OCC.WpfClient.Features.AuthHub.ViewModels
                     _localSettings.Settings.LastEmail = LoginModel.RememberMe ? LoginModel.Email : string.Empty;
                     _localSettings.Save();
 
-                    _navigationService.NavigateTo<Main.ViewModels.MainViewModel>();
+                    _navigationService.NavigateTo<MainHub.ViewModels.MainViewModel>();
                 }
                 else
                 {

@@ -8,6 +8,7 @@
                xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
                xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
                xmlns:views="clr-namespace:OCC.WpfClient.Features.HseqHub.Views"
+               xmlns:dialogs="clr-namespace:OCC.WpfClient.Features.HseqHub.Dialogs"
                xmlns:infra="clr-namespace:OCC.WpfClient.Infrastructure"
                xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
                mc:Ignorable="d" 
@@ -21,10 +22,10 @@
             <views:AuditDetailView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AuditPdfMappingViewModel}">
-            <views:AuditPdfMappingView />
+            <dialogs:AuditPdfMappingView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:DeviationDetailViewModel}">
-            <views:DeviationDetailView />
+            <dialogs:DeviationDetailView />
         </DataTemplate>
     </UserControl.Resources>
 
@@ -75,7 +76,7 @@
                             <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
 
                             <!-- New Audit Button -->
-                            <Button x:Name="NewAuditBtn" Style="{StaticResource QuickBooksToolbarButtonStyle}" Click="NewAuditButton_Click" ContextMenuService.IsEnabled="False" ToolTip="New Audit">
+                            <Button x:Name="NewAuditBtn" Style="{StaticResource QuickBooksToolbarButtonStyle}" ap:ButtonProperties.OpenContextMenuOnClick="True" ContextMenuService.IsEnabled="False" ToolTip="New Audit">
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                     <TextBlock Text="&#xE710;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource SuccessGreen}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="New Audit" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>

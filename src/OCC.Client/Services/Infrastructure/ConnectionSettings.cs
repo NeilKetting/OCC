@@ -76,7 +76,7 @@ namespace OCC.Client.Services.Infrastructure
                 if (_customLocalUrl != value)
                 {
                     _customLocalUrl = value;
-                    if (_selectedEnvironment == AppEnvironment.Local && !string.IsNullOrEmpty(value))
+                    if ((_selectedEnvironment == AppEnvironment.LocalPC || _selectedEnvironment == AppEnvironment.LocalLaptop) && !string.IsNullOrEmpty(value))
                     {
                         ApiBaseUrl = value;
                     }
@@ -87,8 +87,12 @@ namespace OCC.Client.Services.Infrastructure
 
         public enum AppEnvironment
         {
+            [Description("Live")]
             Live,
-            Local
+            [Description("Local-PC")]
+            LocalPC,
+            [Description("Local-Laptop")]
+            LocalLaptop
         }
 
         private AppEnvironment _selectedEnvironment;
@@ -105,7 +109,8 @@ namespace OCC.Client.Services.Infrastructure
                         case AppEnvironment.Live:
                             ApiBaseUrl = "https://api.origize63.co.za/";
                             break;
-                        case AppEnvironment.Local:
+                        case AppEnvironment.LocalPC:
+                        case AppEnvironment.LocalLaptop:
                             if (!string.IsNullOrEmpty(_customLocalUrl))
                             {
                                 ApiBaseUrl = _customLocalUrl;
@@ -132,8 +137,8 @@ namespace OCC.Client.Services.Infrastructure
         // Backward compatibility helper if needed, or remove if fully refactored
         public bool UseLocalDb
         {
-            get => _selectedEnvironment == AppEnvironment.Local;
-            set => SelectedEnvironment = value ? AppEnvironment.Local : AppEnvironment.Live;
+            get => _selectedEnvironment == AppEnvironment.LocalPC || _selectedEnvironment == AppEnvironment.LocalLaptop;
+            set => SelectedEnvironment = value ? AppEnvironment.LocalPC : AppEnvironment.Live;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

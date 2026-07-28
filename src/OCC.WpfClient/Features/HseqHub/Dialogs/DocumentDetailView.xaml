@@ -1,0 +1,87 @@
+<UserControl x:Class="OCC.WpfClient.Features.HseqHub.Dialogs.DocumentDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.HseqHub.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="500"
+             d:DataContext="{d:DesignInstance vm:DocumentDetailViewModel}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,30">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource PrimaryTeal}" FontSize="24" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Upload Document" FontSize="24" FontWeight="Bold" Foreground="White"/>
+            </StackPanel>
+            <TextBlock Text="Add new health &amp; safety documentation." FontSize="14" Foreground="{StaticResource TextSub}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,10,0">
+                <TextBlock Text="DOCUMENT TITLE" Style="{StaticResource FormLabelText}"/>
+                <TextBox Text="{Binding NewDocTitle}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
+
+                <TextBlock Text="CATEGORY" Style="{StaticResource FormLabelText}"/>
+                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewDocCategory}" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <!-- Associated Employee Selection -->
+                <StackPanel Visibility="{Binding IsEmployeeSelectionVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,20">
+                    <TextBlock Text="ASSOCIATED EMPLOYEE" Style="{StaticResource FormLabelText}"/>
+                    <ComboBox ItemsSource="{Binding AvailableEmployees}" SelectedItem="{Binding SelectedEmployee}" DisplayMemberPath="DisplayName" Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Issue & Expiry Dates -->
+                <StackPanel Visibility="{Binding IsDateSelectionVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="ISSUE DATE" Style="{StaticResource FormLabelText}"/>
+                            <DatePicker SelectedDate="{Binding IssueDate}" Style="{StaticResource ModernDatePicker}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="EXPIRY DATE" Style="{StaticResource FormLabelText}"/>
+                            <DatePicker SelectedDate="{Binding ExpiryDate}" Style="{StaticResource ModernDatePicker}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <TextBlock Text="ASSOCIATED PROJECT (OPTIONAL)" Style="{StaticResource FormLabelText}"/>
+                <ComboBox ItemsSource="{Binding AvailableProjects}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}" Margin="0,0,0,20" IsEnabled="{Binding IsProjectSelectionEnabled}"/>
+
+                <TextBlock Text="SELECT FILE" Style="{StaticResource FormLabelText}"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding SelectedFilePath}" Style="{StaticResource ModernInput}" IsReadOnly="True"/>
+                    <Button Grid.Column="1" Command="{Binding PickFileCommand}" Style="{StaticResource ActionButtonSecondary}" Content="BROWSE..." Margin="10,0,0,0" Width="100"/>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,20,0,0">
+            <Button Style="{StaticResource ActionButtonPrimary}" Command="{Binding UploadCommand}" Content="UPLOAD DOCUMENT" Height="45" Margin="0,0,0,10"/>
+            <Button Style="{StaticResource CancelButton}" Command="{Binding CloseCommand}" Content="CANCEL" Height="45"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

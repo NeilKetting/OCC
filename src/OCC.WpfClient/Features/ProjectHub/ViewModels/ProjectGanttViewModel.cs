@@ -666,7 +666,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Failed to save: {ex.Message}", "Save Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await _dialogService.ShowAlertAsync("Save Error", $"Failed to save: {ex.Message}");
             }
             finally
             {

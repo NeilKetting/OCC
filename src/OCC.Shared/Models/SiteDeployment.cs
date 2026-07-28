@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OCC.Shared.Models
 {
@@ -26,6 +27,14 @@ namespace OCC.Shared.Models
         /// <summary> The calendar date this crew is deployed (local date, no time component). </summary>
         public DateTime DeploymentDate { get; set; }
 
+        /// <summary> Alias property for DeploymentDate. </summary>
+        [NotMapped]
+        public DateTime StartDate
+        {
+            get => DeploymentDate;
+            set => DeploymentDate = value;
+        }
+
         /// <summary> A short descriptive label for the crew (e.g., "Crew A - Tilers", "Afternoon Painters"). </summary>
         public string Label { get; set; } = string.Empty;
 
@@ -37,6 +46,14 @@ namespace OCC.Shared.Models
         /// Populated when the SM taps "Confirm Received" on the tablet.
         /// </summary>
         public Guid? ReceivedBySiteManagerId { get; set; }
+
+        /// <summary> Alias property for ReceivedBySiteManagerId. </summary>
+        [NotMapped]
+        public Guid? SiteManagerId
+        {
+            get => ReceivedBySiteManagerId;
+            set => ReceivedBySiteManagerId = value;
+        }
 
         /// <summary> Navigation property to the receiving Site Manager. </summary>
         public virtual Employee? ReceivedBySiteManager { get; set; }

@@ -21,6 +21,19 @@ namespace OCC.Client.Converters
         {
             if (value == null) return null;
 
+            if (value is Enum enumValue)
+            {
+                var fi = enumValue.GetType().GetField(enumValue.ToString());
+                if (fi != null)
+                {
+                    var attributes = (System.ComponentModel.DescriptionAttribute[])fi.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+                    if (attributes.Length > 0)
+                    {
+                        return attributes[0].Description;
+                    }
+                }
+            }
+
             string name = value.ToString() ?? string.Empty;
             
             // Add spaces before capitals (e.g., SiteManager -> Site Manager)

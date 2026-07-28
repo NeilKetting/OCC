@@ -64,7 +64,7 @@ namespace OCC.Client.ModelWrappers
         private EmployeeRole _role = EmployeeRole.GeneralWorker;
 
         [ObservableProperty]
-        private double _hourlyRate;
+        private decimal _hourlyRate;
 
         [ObservableProperty]
         private EmploymentType _employmentType = EmploymentType.Permanent;
@@ -100,10 +100,10 @@ namespace OCC.Client.ModelWrappers
         private string? _accountType;
 
         [ObservableProperty]
-        private double _annualLeaveBalance;
+        private decimal _annualLeaveBalance;
 
         [ObservableProperty]
-        private double _sickLeaveBalance = 30;
+        private decimal _sickLeaveBalance = 30m;
 
         [ObservableProperty]
         private DateTime? _leaveCycleStartDate;

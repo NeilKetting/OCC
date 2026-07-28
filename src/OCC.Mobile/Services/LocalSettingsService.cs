@@ -2,13 +2,28 @@ using System;
 using System.IO;
 using System.Text.Json;
 
+using System.ComponentModel;
+
 namespace OCC.Mobile.Services
 {
     public enum AppEnvironment
     {
+        [Description("Live")]
         Live,
+        [Description("Test")]
         Test,
-        Local
+        [Description("Local-PC")]
+        LocalPC,
+        [Description("Local-Laptop")]
+        LocalLaptop
+    }
+
+    public static class AppEnvironmentExtensions
+    {
+        public static bool IsLocal(this AppEnvironment environment)
+        {
+            return environment == AppEnvironment.LocalPC || environment == AppEnvironment.LocalLaptop;
+        }
     }
 
     public class LocalSettings

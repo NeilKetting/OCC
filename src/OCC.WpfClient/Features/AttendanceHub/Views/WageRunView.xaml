@@ -54,7 +54,7 @@
                         <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
                     </Button>
                     <!-- Print Options Dropdown -->
-                    <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" Click="PrintButton_Click" ToolTip="Print Options"
+                    <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" ap:ButtonProperties.OpenContextMenuOnClick="True" ToolTip="Print Options"
                             Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Content="Print" ContextMenuService.IsEnabled="False">
                         <Button.ContextMenu>

@@ -20,12 +20,12 @@ namespace OCC.Shared.DTOs
         public EmploymentType EmploymentType { get; set; }
         public string Branch { get; set; } = "Johannesburg";
         public RateType RateType { get; set; }
-        public double HourlyRate { get; set; }
+        public decimal HourlyRate { get; set; }
         public TimeSpan? ShiftStartTime { get; set; }
         public TimeSpan? ShiftEndTime { get; set; }
         public string TaxNumber { get; set; } = string.Empty;
         public string? BankName { get; set; }
-        public double LeaveBalance { get; set; }
+        public decimal LeaveBalance { get; set; }
         public DateTime EmploymentDate { get; set; }
         public DateTime DoB { get; set; }
         public IdType IdType { get; set; }
@@ -62,7 +62,7 @@ namespace OCC.Shared.DTOs
         
         // Payroll/Banking (Partial for security/DPO if needed, but for now full)
         public RateType RateType { get; set; }
-        public double HourlyRate { get; set; }
+        public decimal HourlyRate { get; set; }
         public string TaxNumber { get; set; } = string.Empty;
         public string? BankName { get; set; }
         public string? AccountNumber { get; set; }
@@ -70,9 +70,9 @@ namespace OCC.Shared.DTOs
         public string? AccountType { get; set; }
         
         // Balances
-        public double AnnualLeaveBalance { get; set; }
-        public double SickLeaveBalance { get; set; }
-        public double LeaveBalance { get; set; }
+        public decimal AnnualLeaveBalance { get; set; }
+        public decimal SickLeaveBalance { get; set; }
+        public decimal LeaveBalance { get; set; }
         public DateTime? LeaveCycleStartDate { get; set; }
 
         // Next of Kin

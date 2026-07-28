@@ -62,6 +62,12 @@ namespace OCC.Shared.Models
 
         /// <summary> Expiry date/time of the password reset code. </summary>
         public DateTime? PasswordResetCodeExpiry { get; set; }
+
+        /// <summary> Number of consecutive failed login attempts for OWASP lockout protection. </summary>
+        public int AccessFailedCount { get; set; } = 0;
+
+        /// <summary> UTC timestamp until which the account is locked out. </summary>
+        public DateTime? LockoutEnd { get; set; }
         
         /// <summary> The branch this user is primarily associated with (e.g. JHB or CPT). </summary>
         public Branch? Branch { get; set; }

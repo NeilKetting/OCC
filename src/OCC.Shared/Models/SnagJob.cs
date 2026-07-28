@@ -27,6 +27,8 @@ namespace OCC.Shared.Models
         public string Title { get; set; } = string.Empty;
 
         public string? Description { get; set; }
+        public string? Location { get; set; }
+        public string? Notes { get; set; }
 
         public SnagStatus Status { get; set; } = SnagStatus.Open;
         public SnagSeverity Severity { get; set; } = SnagSeverity.Medium;
