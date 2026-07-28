@@ -361,6 +361,11 @@
                         </ComboBox>
                     </StackPanel>
 
+                    <!-- Unpaid Leave Toggle -->
+                    <CheckBox IsChecked="{Binding IsUnpaid, UpdateSourceTrigger=PropertyChanged}" 
+                              Content="Mark Leave / Half Day as Unpaid (Do not deduct annual leave)" 
+                              Style="{StaticResource ModernCheckBox}" Margin="0,0,0,16"/>
+
                     <!-- Other Duration Option (Other type only) -->
                     <StackPanel Visibility="{Binding IsOtherType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
                         <TextBlock Text="Duration Option" Style="{StaticResource LabelText}"/>

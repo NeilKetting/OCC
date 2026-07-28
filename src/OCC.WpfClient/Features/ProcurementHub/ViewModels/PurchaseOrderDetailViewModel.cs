@@ -610,20 +610,28 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             return true;
         }
 
-        [RelayCommand]
-        private async Task SaveOrderAsync()
+        /// <summary>
+        /// Saves the purchase order without closing the detail view.
+        /// </summary>
+        /// <param name="showToast">Whether to display a success toast notification.</param>
+        /// <returns>True if the order was successfully saved; otherwise false.</returns>
+        private async Task<bool> SaveOrderWithoutClosingAsync(bool showToast = true)
         {
-            if (CurrentOrder == null) return;
-            if (!ValidateAndPrepareOrderForSave()) return;
+            if (CurrentOrder == null) return false;
+            if (!ValidateAndPrepareOrderForSave()) return false;
 
             try
             {
                 IsBusy = true;
-                
+                BusyText = "Saving order...";
+
                 if (IsNewOrder)
                 {
                     var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
-                    
+                    CurrentOrder = new OrderWrapper(savedOrder);
+                    OrderId = savedOrder.Id;
+                    IsNewOrder = false;
+
                     // Update cycling list
                     if (_currentIndex == -1)
                     {
@@ -635,49 +643,53 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     await _orderService.UpdateOrderAsync(CurrentOrder.Model);
                 }
-                
-                _toastService.ShowSuccess("Order Saved", $"Purchase Order {CurrentOrder.OrderNumber} saved successfully.");
-                WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
-                WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
+
+                if (showToast)
+                {
+                    _toastService.ShowSuccess("Order Saved", $"Purchase Order {CurrentOrder.OrderNumber} saved successfully.");
+                }
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving order");
                 ErrorMessage = ex.Message;
                 _toastService.ShowError("Save Error", ex.Message);
+                return false;
             }
             finally
             {
                 IsBusy = false;
+                BusyText = string.Empty;
             }
         }
 
+        /// <summary>
+        /// Saves the purchase order and closes the view.
+        /// </summary>
+        [RelayCommand]
+        private async Task SaveOrderAsync()
+        {
+            bool saved = await SaveOrderWithoutClosingAsync(showToast: true);
+            if (saved)
+            {
+                WeakReferenceMessenger.Default.Send(new OpenHubMessage(NavigationRoutes.Procurement));
+                WeakReferenceMessenger.Default.Send(new CloseHubMessage(this));
+            }
+        }
+
+        /// <summary>
+        /// Saves the purchase order and resets to a blank order template.
+        /// </summary>
         [RelayCommand]
         private async Task SaveAndNewAsync()
         {
-            if (CurrentOrder == null) return;
-            if (!ValidateAndPrepareOrderForSave()) return;
+            bool saved = await SaveOrderWithoutClosingAsync(showToast: true);
+            if (!saved) return;
 
             try
             {
                 IsBusy = true;
-                
-                if (IsNewOrder)
-                {
-                    var savedOrder = await _orderService.CreateOrderAsync(CurrentOrder.Model);
-                    
-                    // Update cycling list for next time (even though we are resetting, it keeps the cache fresh)
-                    if (_currentIndex == -1)
-                    {
-                        _allOrderIds.Insert(0, savedOrder.Id);
-                    }
-                }
-                else
-                {
-                    await _orderService.UpdateOrderAsync(CurrentOrder.Model);
-                }
-
-                _toastService.ShowSuccess("Order Saved", $"Purchase Order {CurrentOrder.OrderNumber} saved successfully.");
 
                 // Reset to new template
                 var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
@@ -703,7 +715,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving order");
+                _logger.LogError(ex, "Error resetting order after save");
                 ErrorMessage = ex.Message;
                 _toastService.ShowError("Save Error", ex.Message);
             }
@@ -951,10 +963,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             OpenOverlay(dialog);
         }
 
+        /// <summary>
+        /// Saves the purchase order first, then generates and opens the PDF preview.
+        /// </summary>
         [RelayCommand]
         private async Task PreviewOrderAsync()
         {
             if (CurrentOrder == null) return;
+            if (!await SaveOrderWithoutClosingAsync(showToast: true)) return;
+
             try
             {
                 IsBusy = true;
@@ -976,6 +993,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
         }
 
+        /// <summary>
+        /// Saves the purchase order first, then triggers PDF generation for printing.
+        /// </summary>
         [RelayCommand]
         private async Task PrintOrderAsync()
         {
@@ -983,10 +1003,15 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             await PreviewOrderAsync();
         }
 
+        /// <summary>
+        /// Saves the purchase order first, then generates the PDF and opens the email client.
+        /// </summary>
         [RelayCommand]
         private async Task EmailOrderAsync()
         {
             if (CurrentOrder == null) return;
+            if (!await SaveOrderWithoutClosingAsync(showToast: true)) return;
+
             try
             {
                 IsBusy = true;
@@ -1043,6 +1068,44 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     IsBusy = false;
                     var tcs = new TaskCompletionSource<string?>();
                     var dialog = new SelectEmailViewModel(SelectedSupplier?.Name ?? "Supplier", emails);
+
+                    dialog.AddContactRequested += (callback) =>
+                    {
+                        var contactDialog = new AddSupplierContactViewModel(SelectedSupplier?.Name ?? "Supplier");
+                        contactDialog.Completed += async (newContact) =>
+                        {
+                            CloseOverlay();
+                            if (newContact != null && SelectedSupplier != null)
+                            {
+                                newContact.SupplierId = SelectedSupplier.Id;
+                                SelectedSupplier.Contacts ??= new List<SupplierContact>();
+                                SelectedSupplier.Contacts.Add(newContact);
+
+                                if (string.IsNullOrWhiteSpace(SelectedSupplier.Email))
+                                {
+                                    SelectedSupplier.Email = newContact.Email;
+                                }
+                                if (string.IsNullOrWhiteSpace(SelectedSupplier.ContactPerson))
+                                {
+                                    SelectedSupplier.ContactPerson = newContact.ContactName;
+                                }
+
+                                try
+                                {
+                                    await _supplierService.UpdateSupplierAsync(SelectedSupplier);
+                                    _toastService.ShowSuccess("Supplier Contact Saved", $"Saved '{newContact.ContactName}' ({newContact.Email}) to supplier {SelectedSupplier.Name}.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "Could not save supplier contact automatically");
+                                }
+                            }
+                            OpenOverlay(dialog);
+                            callback(newContact);
+                        };
+                        OpenOverlay(contactDialog);
+                    };
+
                     dialog.Completed += (selected) =>
                     {
                         CloseOverlay();

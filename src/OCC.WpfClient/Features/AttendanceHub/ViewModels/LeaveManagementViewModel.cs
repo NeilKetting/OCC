@@ -65,6 +65,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private LeaveType _selectedLeaveType = LeaveType.Annual;
 
         [ObservableProperty] private string _reason = string.Empty;
+        [ObservableProperty] private double? _hoursRequested;
+        [ObservableProperty] private bool _isUnpaid;
         [ObservableProperty] private double _calculatedDays;
         [ObservableProperty] private bool _hasBalanceWarning;
         [ObservableProperty] private string _balanceWarning = string.Empty;
@@ -73,8 +75,6 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [NotifyPropertyChangedFor(nameof(IsHourly))]
         [NotifyPropertyChangedFor(nameof(IsFullDay))]
         private LeaveDurationType _selectedDurationType = LeaveDurationType.FullDay;
-
-        [ObservableProperty] private double? _hoursRequested;
 
         // ── Doctor's Note Panel ──
         [ObservableProperty]
@@ -341,6 +341,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             SelectedLeaveType = LeaveType.Annual;
             SelectedDurationType = LeaveDurationType.FullDay;
             HoursRequested = null;
+            IsUnpaid = false;
             SelectedEmployee = Employees.FirstOrDefault();
             HasBalanceWarning = false;
             BalanceWarning = string.Empty;
@@ -360,6 +361,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             SelectedLeaveType = request.LeaveType;
             SelectedDurationType = request.DurationType;
             HoursRequested = request.HoursRequested;
+            IsUnpaid = request.IsUnpaid || request.LeaveType == LeaveType.Unpaid || request.UnpaidDays > 0;
             StartDate = request.StartDate;
             EndDate = request.EndDate;
             Reason = request.Reason;
@@ -480,17 +482,17 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 IsBusy = true;
                 double draftPaid = CalculatedDays;
                 double draftUnpaid = 0;
-                if (SelectedLeaveType == LeaveType.CulturalObligations)
+                if (IsUnpaid || SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave)
+                {
+                    draftPaid = 0;
+                    draftUnpaid = CalculatedDays;
+                }
+                else if (SelectedLeaveType == LeaveType.CulturalObligations)
                 {
                     double capped = Math.Min(3.0, CalculatedDays);
                     double availableAnnual = SelectedEmployee.LeaveBalance;
                     draftPaid = Math.Min(capped, availableAnnual);
                     draftUnpaid = CalculatedDays - draftPaid;
-                }
-                else if (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave)
-                {
-                    draftPaid = 0;
-                    draftUnpaid = CalculatedDays;
                 }
 
                 if (IsEditing)
@@ -507,7 +509,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     request.PaidDays = draftPaid;
                     request.UnpaidDays = draftUnpaid;
                     request.Reason = Reason;
-                    request.IsUnpaid = (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave);
+                    request.IsUnpaid = IsUnpaid || SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave;
 
                     var success = await _leaveService.UpdateLeaveRequestAsync(request);
                     if (success)
@@ -536,7 +538,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                         UnpaidDays = draftUnpaid,
                         Reason = Reason,
                         Status = LeaveStatus.Pending,
-                        IsUnpaid = (SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave)
+                        IsUnpaid = IsUnpaid || SelectedLeaveType == LeaveType.Unpaid || SelectedLeaveType == LeaveType.AbsentWithoutLeave
                     };
 
                     await _leaveService.SubmitLeaveRequestAsync(request);

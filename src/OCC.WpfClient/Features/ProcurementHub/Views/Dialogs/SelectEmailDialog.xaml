@@ -40,9 +40,21 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <!-- Additional / Custom Email field -->
-                <TextBlock Text="Additional Email (Optional):" Style="{StaticResource CompactLabel}" Foreground="{StaticResource TextSub}" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding CustomEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="custom@supplier.com" Margin="0,0,0,20"/>
+                <!-- Add New Contact Section -->
+                <Border Background="#10FFFFFF" CornerRadius="8" Padding="12,10" Margin="0,0,0,20" BorderBrush="#20FFFFFF" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
+                            <TextBlock Text="Need another recipient?" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                            <TextBlock Text="Add a new contact to save their details." FontSize="11" Foreground="{StaticResource TextSub}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="+ Add Contact" Command="{Binding AddContactCommand}" 
+                                Style="{StaticResource SecondaryButton}" Padding="12,6" FontSize="12" Height="32" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
 
                 <!-- Action Buttons -->
                 <Grid>

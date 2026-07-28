@@ -13,10 +13,10 @@
 		<Copyright>Copyright © 2026 Orange Circle Construction</Copyright>
 		<ApplicationIcon>Assets\Images\app.ico</ApplicationIcon>
 		<AssemblyName>OCC-ERP</AssemblyName>
-		<Version>1.1.31</Version>
+		<Version>1.1.32</Version>
 		<StartupObject>OCC.WpfClient.Program</StartupObject>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="ExcelDataReader" />
@@ -33,7 +33,7 @@
 		<PackageReference Include="Velopack" />
 		<PackageReference Include="Microsoft.Office.Interop.Outlook" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
 		<Resource Include="Assets\**" />
 	</ItemGroup>

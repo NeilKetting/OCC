@@ -239,9 +239,9 @@ namespace OCC.API.Controllers
                 {
                     allocatedPaidHours = paidFraction * 0.5 * dailyHours;
                     allocatedUnpaidHours = unpaidFraction * 0.5 * dailyHours;
-                    statusMap = allocatedPaidHours > 0 
+                    statusMap = (allocatedPaidHours > 0 && !request.IsUnpaid)
                         ? (request.LeaveType == LeaveType.Sick ? AttendanceStatus.Sick : AttendanceStatus.LeaveAuthorized) 
-                        : AttendanceStatus.UnpaidSick;
+                        : (request.LeaveType == LeaveType.Sick ? AttendanceStatus.UnpaidSick : AttendanceStatus.UnpaidHalfDay);
                 }
                 else if (request.DurationType == LeaveDurationType.Hourly)
                 {

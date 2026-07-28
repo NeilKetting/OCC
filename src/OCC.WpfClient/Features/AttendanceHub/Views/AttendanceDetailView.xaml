@@ -57,7 +57,7 @@
                 </StackPanel>
 
                 <TextBlock Text="Status" Style="{StaticResource LabelText}"/>
-                <ComboBox SelectedValue="{Binding Status}" SelectedValuePath="Tag" Style="{StaticResource ModernComboBox}" Margin="0,4,0,16">
+                <ComboBox SelectedValue="{Binding Status}" SelectedValuePath="Tag" Style="{StaticResource ModernComboBox}" Margin="0,4,0,12">
                     <ComboBoxItem Content="Present" Tag="Present"/>
                     <ComboBoxItem Content="Late" Tag="Late"/>
                     <ComboBoxItem Content="Absent" Tag="Absent"/>
@@ -68,6 +68,12 @@
                     <ComboBoxItem Content="Unpaid Leave" Tag="UnpaidLeave"/>
                     <ComboBoxItem Content="Unpaid Half Day" Tag="UnpaidHalfDay"/>
                 </ComboBox>
+
+                <!-- Unpaid Leave Toggle -->
+                <CheckBox IsChecked="{Binding IsUnpaidLeave, UpdateSourceTrigger=PropertyChanged}" 
+                          Content="Mark Leave / Half Day as Unpaid" 
+                          Style="{StaticResource ModernCheckBox}" 
+                          Margin="0,0,0,16"/>
 
                 <!-- Project Selection (visible for Present/Late/LeaveEarly) -->
                 <StackPanel Visibility="{Binding IsProjectSelectorVisible, Converter={StaticResource VisibilityConverter}}">

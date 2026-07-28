@@ -32,6 +32,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private OCC.Shared.DTOs.ProjectSummaryDto? _selectedProject;
         [ObservableProperty] private string? _customSiteName;
         [ObservableProperty] private bool _isCustomSiteVisible;
+        [ObservableProperty] private bool _isUnpaidLeave;
 
         public AttendanceStatus Status
         {
@@ -41,8 +42,35 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 if (EditingRecord.Status != value)
                 {
                     EditingRecord.Status = value;
+                    IsUnpaidLeave = (value == AttendanceStatus.UnpaidHalfDay || value == AttendanceStatus.UnpaidLeave || value == AttendanceStatus.UnpaidSick);
                     OnPropertyChanged(nameof(Status));
                     OnPropertyChanged(nameof(IsProjectSelectorVisible));
+                }
+            }
+        }
+
+        partial void OnIsUnpaidLeaveChanged(bool value)
+        {
+            if (value)
+            {
+                if (Status == AttendanceStatus.LeaveAuthorized)
+                {
+                    Status = AttendanceStatus.UnpaidHalfDay;
+                }
+                else if (Status == AttendanceStatus.Sick)
+                {
+                    Status = AttendanceStatus.UnpaidSick;
+                }
+            }
+            else
+            {
+                if (Status == AttendanceStatus.UnpaidHalfDay)
+                {
+                    Status = AttendanceStatus.LeaveAuthorized;
+                }
+                else if (Status == AttendanceStatus.UnpaidSick)
+                {
+                    Status = AttendanceStatus.Sick;
                 }
             }
         }

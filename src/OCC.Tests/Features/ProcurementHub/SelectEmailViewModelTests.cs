@@ -48,6 +48,32 @@ namespace OCC.Tests.Features.ProcurementHub
         }
 
         [Fact]
+        public void SelectEmailViewModel_AddContactCommand_RaisesAddContactRequested_AndAppendsOption()
+        {
+            // Arrange
+            var availableEmails = new List<string> { "main@supplier.com" };
+            var vm = new SelectEmailViewModel("Test Supplier", availableEmails);
+
+            vm.AddContactRequested += (callback) =>
+            {
+                callback(new SupplierContact
+                {
+                    ContactName = "Jane Doe",
+                    Email = "jane@supplier.com",
+                    Phone = "0123456789",
+                    Department = "Sales"
+                });
+            };
+
+            // Act
+            vm.AddContactCommand.Execute(null);
+
+            // Assert
+            Assert.Equal(2, vm.EmailOptions.Count);
+            Assert.Contains(vm.EmailOptions, o => o.Email == "jane@supplier.com" && o.IsSelected);
+        }
+
+        [Fact]
         public void AddSupplierContactViewModel_ValidInput_CreatesSupplierContactInstance()
         {
             // Arrange

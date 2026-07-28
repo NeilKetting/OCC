@@ -514,6 +514,44 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     IsBusy = false;
                     var tcs = new TaskCompletionSource<string?>();
                     var dialog = new SelectEmailViewModel(supplierName, emails);
+
+                    dialog.AddContactRequested += (callback) =>
+                    {
+                        var contactDialog = new AddSupplierContactViewModel(supplierName);
+                        contactDialog.Completed += async (newContact) =>
+                        {
+                            CloseOverlay();
+                            if (newContact != null && supplier != null)
+                            {
+                                newContact.SupplierId = supplier.Id;
+                                supplier.Contacts ??= new List<SupplierContact>();
+                                supplier.Contacts.Add(newContact);
+
+                                if (string.IsNullOrWhiteSpace(supplier.Email))
+                                {
+                                    supplier.Email = newContact.Email;
+                                }
+                                if (string.IsNullOrWhiteSpace(supplier.ContactPerson))
+                                {
+                                    supplier.ContactPerson = newContact.ContactName;
+                                }
+
+                                try
+                                {
+                                    await _supplierService.UpdateSupplierAsync(supplier);
+                                    _toastService.ShowSuccess("Supplier Contact Saved", $"Saved '{newContact.ContactName}' ({newContact.Email}) to supplier {supplier.Name}.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "Could not save supplier contact automatically");
+                                }
+                            }
+                            OpenOverlay(dialog);
+                            callback(newContact);
+                        };
+                        OpenOverlay(contactDialog);
+                    };
+
                     dialog.Completed += (selected) =>
                     {
                         CloseOverlay();

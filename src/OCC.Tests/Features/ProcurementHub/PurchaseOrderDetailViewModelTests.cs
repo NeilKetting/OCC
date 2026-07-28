@@ -176,5 +176,133 @@ namespace OCC.Tests.Features.ProcurementHub
                 o.Lines.Any(l => l.ItemCode == "UNPRICED-001" && l.QuantityOrdered == 0 && l.UnitPrice == 0)
             )), Times.Once);
         }
+
+        [Fact]
+        public async Task PreviewOrderCommand_SavesOrder_BeforeGeneratingPdf()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+
+            var orderId = Guid.NewGuid();
+            var existingOrder = new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-PREVIEW-001",
+                SupplierId = Guid.NewGuid(),
+                SupplierName = "Preview Supplier",
+                OrderType = OrderType.PurchaseOrder,
+                ExpectedDeliveryDate = DateTime.Today.AddDays(7),
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
+                }
+            };
+
+            _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
+            _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockPdfService.Setup(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>())).ReturnsAsync("dummy_path.pdf");
+
+            vm.OrderId = orderId;
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Act
+            await vm.PreviewOrderCommand.ExecuteAsync(null);
+
+            // Assert
+            _mockOrderService.Verify(s => s.UpdateOrderAsync(It.Is<Order>(o => o.Id == orderId)), Times.Once);
+            _mockPdfService.Verify(p => p.GenerateOrderPdfAsync(It.Is<Order>(o => o.Id == orderId), It.IsAny<bool>(), It.IsAny<string?>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task EmailOrderCommand_SavesOrder_BeforePreparingEmail()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+
+            var orderId = Guid.NewGuid();
+            var supplierId = Guid.NewGuid();
+            var existingOrder = new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-EMAIL-001",
+                SupplierId = supplierId,
+                SupplierName = "Email Supplier",
+                OrderType = OrderType.PurchaseOrder,
+                ExpectedDeliveryDate = DateTime.Today.AddDays(7),
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
+                }
+            };
+
+            _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
+            _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockPdfService.Setup(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>())).ReturnsAsync("dummy_path.pdf");
+            _mockSupplierService.Setup(s => s.GetSupplierAsync(supplierId)).ReturnsAsync(new Supplier { Id = supplierId, Name = "Email Supplier", Email = "test@supplier.com" });
+
+            vm.OrderId = orderId;
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Act
+            await vm.EmailOrderCommand.ExecuteAsync(null);
+
+            // Assert
+            _mockOrderService.Verify(s => s.UpdateOrderAsync(It.Is<Order>(o => o.Id == orderId)), Times.Once);
+            _mockPdfService.Verify(p => p.GenerateOrderPdfAsync(It.Is<Order>(o => o.Id == orderId), It.IsAny<bool>(), It.IsAny<string?>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task PrintOrderCommand_SavesOrder_BeforeGeneratingPdf()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+
+            var orderId = Guid.NewGuid();
+            var existingOrder = new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-PRINT-001",
+                SupplierId = Guid.NewGuid(),
+                SupplierName = "Print Supplier",
+                OrderType = OrderType.PurchaseOrder,
+                ExpectedDeliveryDate = DateTime.Today.AddDays(7),
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
+                }
+            };
+
+            _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
+            _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockPdfService.Setup(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>())).ReturnsAsync("dummy_path.pdf");
+
+            vm.OrderId = orderId;
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Act
+            await vm.PrintOrderCommand.ExecuteAsync(null);
+
+            // Assert
+            _mockOrderService.Verify(s => s.UpdateOrderAsync(It.Is<Order>(o => o.Id == orderId)), Times.Once);
+            _mockPdfService.Verify(p => p.GenerateOrderPdfAsync(It.Is<Order>(o => o.Id == orderId), It.IsAny<bool>(), It.IsAny<string?>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task PreviewOrderCommand_InvalidOrder_DoesNotSaveOrGeneratePdf()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+            var newTemplate = new Order { Id = Guid.NewGuid(), OrderNumber = "PO-NEW", OrderType = OrderType.PurchaseOrder, Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>() };
+            _mockOrderService.Setup(o => o.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder)).ReturnsAsync(newTemplate);
+
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Act (No supplier set)
+            await vm.PreviewOrderCommand.ExecuteAsync(null);
+
+            // Assert
+            _mockOrderService.Verify(s => s.CreateOrderAsync(It.IsAny<Order>()), Times.Never);
+            _mockPdfService.Verify(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>()), Times.Never);
+        }
     }
 }
