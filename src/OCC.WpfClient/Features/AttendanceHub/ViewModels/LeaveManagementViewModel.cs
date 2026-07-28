@@ -224,7 +224,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnStartDateChanged(DateTime value) => RecalculateDays();
         partial void OnEndDateChanged(DateTime value) => RecalculateDays();
         partial void OnSelectedEmployeeChanged(OCC.Shared.DTOs.EmployeeSummaryDto? value) => RecalculateDays();
-        partial void OnSelectedLeaveTypeChanged(LeaveType value) => RecalculateDays();
+        partial void OnSelectedLeaveTypeChanged(LeaveType value)
+        {
+            if (value != LeaveType.HalfDay)
+            {
+                IsUnpaid = false;
+            }
+            RecalculateDays();
+        }
         partial void OnSelectedDurationTypeChanged(LeaveDurationType value) => RecalculateDays();
         partial void OnHoursRequestedChanged(double? value) => RecalculateDays();
 

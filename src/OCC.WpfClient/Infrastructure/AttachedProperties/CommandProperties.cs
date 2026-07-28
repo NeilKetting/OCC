@@ -185,34 +185,29 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                         comboBox.IsDropDownOpen = true;
                                     }
 
-                                    // Create local view if needed
-                                    if (comboBox.ItemsSource != null && !(comboBox.ItemsSource is System.Windows.Data.ListCollectionView))
+                                    if (comboBox.ItemsSource != null)
                                     {
-                                        var rawSource = comboBox.ItemsSource as System.Collections.IEnumerable;
-                                        if (rawSource != null)
+                                        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(comboBox.ItemsSource);
+                                        if (view != null)
                                         {
-                                            var localView = new System.Windows.Data.ListCollectionView((System.Collections.IList)rawSource);
-                                            comboBox.ItemsSource = localView;
-                                        }
-                                    }
-
-                                    var view = comboBox.ItemsSource as System.ComponentModel.ICollectionView;
-                                    if (view != null)
-                                    {
-                                        view.Filter = item =>
-                                        {
-                                            if (string.IsNullOrEmpty(filterText)) return true;
-                                            
-                                            // Explicit type checks
-                                            if (item is OCC.Shared.Models.InventoryItem inv)
+                                            view.Filter = item =>
                                             {
-                                                return inv.Sku.Contains(filterText, System.StringComparison.OrdinalIgnoreCase) ||
-                                                       (inv.Description != null && inv.Description.Contains(filterText, System.StringComparison.OrdinalIgnoreCase));
-                                            }
-                                            if (item is OCC.Shared.DTOs.SupplierSummaryDto supp)
-                                            {
-                                                return supp.Name.Contains(filterText, System.StringComparison.OrdinalIgnoreCase);
-                                            }
+                                                if (string.IsNullOrEmpty(filterText)) return true;
+                                                
+                                                // Explicit type checks
+                                                if (item is OCC.Shared.Models.InventoryItem inv)
+                                                {
+                                                    return inv.Sku.Contains(filterText, System.StringComparison.OrdinalIgnoreCase) ||
+                                                           (inv.Description != null && inv.Description.Contains(filterText, System.StringComparison.OrdinalIgnoreCase));
+                                                }
+                                                if (item is OCC.Shared.Models.Supplier suppModel)
+                                                {
+                                                    return suppModel.Name != null && suppModel.Name.Contains(filterText, System.StringComparison.OrdinalIgnoreCase);
+                                                }
+                                                if (item is OCC.Shared.DTOs.SupplierSummaryDto supp)
+                                                {
+                                                    return supp.Name.Contains(filterText, System.StringComparison.OrdinalIgnoreCase);
+                                                }
                                             
                                             // Generic fallback based on DisplayMemberPath
                                             if (!string.IsNullOrEmpty(comboBox.DisplayMemberPath))
@@ -237,6 +232,7 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                         }
                                     }
                                 }
+                            }
                                 finally
                                 {
                                     isUpdating = false;

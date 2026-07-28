@@ -361,10 +361,11 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <!-- Unpaid Leave Toggle -->
+                    <!-- Unpaid Leave Toggle (Half Day only) -->
                     <CheckBox IsChecked="{Binding IsUnpaid, UpdateSourceTrigger=PropertyChanged}" 
-                              Content="Mark Leave / Half Day as Unpaid (Do not deduct annual leave)" 
-                              Style="{StaticResource ModernCheckBox}" Margin="0,0,0,16"/>
+                              Content="Mark Half Day as Unpaid (Do not deduct annual leave)" 
+                              Style="{StaticResource ModernCheckBox}" Margin="0,0,0,16"
+                              Visibility="{Binding IsHalfDayType, Converter={StaticResource VisibilityConverter}}"/>
 
                     <!-- Other Duration Option (Other type only) -->
                     <StackPanel Visibility="{Binding IsOtherType, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
@@ -384,7 +385,7 @@
                     <StackPanel Visibility="{Binding IsHourly, Converter={StaticResource VisibilityConverter}}" Margin="0,0,0,16">
                         <TextBlock Text="Hours Requested" Style="{StaticResource LabelText}"/>
                         <TextBox Text="{Binding HoursRequested, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ModernInput}" Margin="0,4,0,0"/>
+                                  Style="{StaticResource ModernInput}" Margin="0,4,0,0"/>
                     </StackPanel>
 
                     <!-- Reason -->
@@ -393,8 +394,14 @@
                               Style="{StaticResource ModernInput}" Height="80" TextWrapping="Wrap"
                               AcceptsReturn="True" Margin="0,4,0,24"/>
 
-                    <!-- Date Range -->
-                    <Grid Margin="0,0,0,16">
+                    <!-- Single Date (Half Day only) -->
+                    <StackPanel Margin="0,0,0,16" Visibility="{Binding IsHalfDayType, Converter={StaticResource VisibilityConverter}}">
+                        <TextBlock Text="Date" Style="{StaticResource LabelText}"/>
+                        <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Date Range (Full Day / Multi-day Leave) -->
+                    <Grid Margin="0,0,0,16" Visibility="{Binding IsHalfDayType, Converter={StaticResource VisibilityConverter}, ConverterParameter='Invert'}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>
@@ -404,7 +411,7 @@
                             <TextBlock Text="Start Date" Style="{StaticResource LabelText}"/>
                             <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="2" IsEnabled="{Binding IsFullDay}">
+                        <StackPanel Grid.Column="2">
                             <TextBlock Text="End Date" Style="{StaticResource LabelText}"/>
                             <DatePicker SelectedDate="{Binding EndDate}" Style="{StaticResource ModernDatePicker}" Margin="0,4,0,0"/>
                         </StackPanel>

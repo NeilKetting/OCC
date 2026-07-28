@@ -484,12 +484,16 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             {
                                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                                 {
-                                    if (SelectedSupplier?.Id == freshSupplier.Id)
-                                    {
-                                        SelectedSupplier = freshSupplier;
-                                        var idx = Suppliers.IndexOf(Suppliers.FirstOrDefault(s => s.Id == freshSupplier.Id));
-                                        if (idx >= 0) Suppliers[idx] = freshSupplier;
-                                    }
+                                     if (SelectedSupplier?.Id == freshSupplier.Id)
+                                     {
+                                         SelectedSupplier = freshSupplier;
+                                         var existing = Suppliers.FirstOrDefault(s => s != null && s.Id == freshSupplier.Id);
+                                         if (existing != null)
+                                         {
+                                             var idx = Suppliers.IndexOf(existing);
+                                             if (idx >= 0) Suppliers[idx] = freshSupplier;
+                                         }
+                                     }
                                 });
                             }
                         }
@@ -565,7 +569,29 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         {
             if (CurrentOrder == null) return false;
 
-            // 1. Check Supplier
+            // 1. Resolve & Check Supplier
+            if (SelectedSupplier == null)
+            {
+                if (CurrentOrder.SupplierId != null && CurrentOrder.SupplierId != Guid.Empty)
+                {
+                    SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
+                }
+
+                if (SelectedSupplier == null && !string.IsNullOrWhiteSpace(CurrentOrder.SupplierName))
+                {
+                    SelectedSupplier = Suppliers.FirstOrDefault(s => string.Equals(s.Name, CurrentOrder.SupplierName, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            if (SelectedSupplier != null)
+            {
+                CurrentOrder.SupplierId = SelectedSupplier.Id;
+                CurrentOrder.SupplierName = SelectedSupplier.Name;
+                if (string.IsNullOrWhiteSpace(CurrentOrder.EntityAddress)) CurrentOrder.EntityAddress = SelectedSupplier.Address;
+                if (string.IsNullOrWhiteSpace(CurrentOrder.EntityTel)) CurrentOrder.EntityTel = SelectedSupplier.Phone;
+                if (string.IsNullOrWhiteSpace(CurrentOrder.EntityVatNo)) CurrentOrder.EntityVatNo = SelectedSupplier.VatNumber;
+            }
+
             if (SelectedSupplier == null && (CurrentOrder.SupplierId == null || CurrentOrder.SupplierId == Guid.Empty) && string.IsNullOrWhiteSpace(CurrentOrder.SupplierName))
             {
                 _toastService.ShowError("Save Failed", "Please select a supplier for the purchase order.");
@@ -638,6 +664,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                         _allOrderIds.Insert(0, savedOrder.Id);
                         _currentIndex = 0;
                     }
+
+                    ResolveSupplierSelection(CurrentOrder.SupplierId, CurrentOrder.SupplierName);
+                    await ResolveProjectSelectionAsync(CurrentOrder.ProjectId, CurrentOrder.ProjectName);
                 }
                 else
                 {
@@ -1018,41 +1047,60 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 BusyText = "Preparing email...";
                 var path = await _pdfService.GenerateOrderPdfAsync(CurrentOrder.Model);
 
-                var emails = new List<string>();
-                if (SelectedSupplier != null)
+                // Always fetch fresh supplier from the API to ensure contacts are loaded.
+                // SelectedSupplier on the ViewModel may only hold the basic summary (no contacts)
+                // because WPF ComboBox binding only populates from the Suppliers list.
+                var supplierId = CurrentOrder?.SupplierId ?? SelectedSupplier?.Id ?? Guid.Empty;
+                Supplier? emailSupplier = null;
+
+                if (supplierId != Guid.Empty)
                 {
-                    if (SelectedSupplier.Id != Guid.Empty)
+                    try
                     {
-                        try
+                        emailSupplier = await _supplierService.GetSupplierAsync(supplierId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not fetch full supplier details for {SupplierId} when preparing email", supplierId);
+                    }
+                }
+
+                // Fall back to SelectedSupplier if the API fetch returned nothing
+                if (emailSupplier == null) emailSupplier = SelectedSupplier;
+
+                // Update SelectedSupplier so the rest of the dialog has the right reference
+                if (emailSupplier != null)
+                {
+                    SelectedSupplier = emailSupplier;
+                    var existing = Suppliers.FirstOrDefault(s => s != null && s.Id == emailSupplier.Id);
+                    if (existing != null)
+                    {
+                        var idx = Suppliers.IndexOf(existing);
+                        if (idx >= 0) Suppliers[idx] = emailSupplier;
+                    }
+                }
+
+                // Collect all valid email addresses from the supplier and its contacts
+                var emails = new List<string>();
+                if (emailSupplier != null)
+                {
+                    // Main supplier email field
+                    if (!string.IsNullOrWhiteSpace(emailSupplier.Email))
+                    {
+                        foreach (var e in EmailHelper.ParseEmailAddresses(emailSupplier.Email))
                         {
-                            var freshSupplier = await _supplierService.GetSupplierAsync(SelectedSupplier.Id);
-                            if (freshSupplier != null)
-                            {
-                                SelectedSupplier = freshSupplier;
-                                var idx = Suppliers.IndexOf(Suppliers.FirstOrDefault(s => s.Id == freshSupplier.Id));
-                                if (idx >= 0) Suppliers[idx] = freshSupplier;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Could not refresh supplier details for {SupplierId}", SelectedSupplier.Id);
+                            if (!emails.Contains(e, StringComparer.OrdinalIgnoreCase)) emails.Add(e);
                         }
                     }
 
-                    var mainEmails = EmailHelper.ParseEmailAddresses(SelectedSupplier.Email);
-                    foreach (var e in mainEmails)
+                    // Individual contacts
+                    if (emailSupplier.Contacts != null)
                     {
-                        if (!emails.Contains(e, StringComparer.OrdinalIgnoreCase)) emails.Add(e);
-                    }
-
-                    if (SelectedSupplier.Contacts != null)
-                    {
-                        foreach (var contact in SelectedSupplier.Contacts)
+                        foreach (var contact in emailSupplier.Contacts)
                         {
                             if (!string.IsNullOrWhiteSpace(contact.Email))
                             {
-                                var contactEmails = EmailHelper.ParseEmailAddresses(contact.Email);
-                                foreach (var ce in contactEmails)
+                                foreach (var ce in EmailHelper.ParseEmailAddresses(contact.Email))
                                 {
                                     if (!emails.Contains(ce, StringComparer.OrdinalIgnoreCase)) emails.Add(ce);
                                 }
@@ -1177,8 +1225,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 var contactPerson = SelectedSupplier?.ContactPerson;
                 if (string.IsNullOrWhiteSpace(contactPerson)) contactPerson = SelectedSupplier?.Name ?? "Supplier";
 
-                var subject = $"Purchase Order {CurrentOrder.OrderNumber} - Orange Circle Construction (Pty) Ltd";
-                var body = $"Dear {contactPerson},\n\nPlease find attached Purchase Order {CurrentOrder.OrderNumber}.\n\nKind regards,\nOrange Circle Construction (Pty) Ltd";
+                var orderNum = CurrentOrder?.OrderNumber ?? "PO";
+                var subject = $"Purchase Order {orderNum} - Orange Circle Construction (Pty) Ltd";
+                var body = $"Dear {contactPerson},\n\nPlease find attached Purchase Order {orderNum}.\n\nKind regards,\nOrange Circle Construction (Pty) Ltd";
 
                 bool usedOutlook = EmailHelper.OpenEmailWithAttachment(recipientEmail, subject, body, path);
 

@@ -304,5 +304,48 @@ namespace OCC.Tests.Features.ProcurementHub
             _mockOrderService.Verify(s => s.CreateOrderAsync(It.IsAny<Order>()), Times.Never);
             _mockPdfService.Verify(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>()), Times.Never);
         }
+
+        [Fact]
+        public async Task SaveOrderCommand_SelectedSupplierNullButModelHasSupplier_RecoversSupplierAndSavesSuccessfully()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+
+            var orderId = Guid.NewGuid();
+            var supplierId = Guid.NewGuid();
+            var supplier = new Supplier { Id = supplierId, Name = "Origine 63", Address = "123 Main St" };
+            vm.Suppliers.Add(supplier);
+
+            var existingOrder = new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-RECOVER-001",
+                SupplierId = supplierId,
+                SupplierName = "Origine 63",
+                OrderType = OrderType.PurchaseOrder,
+                ExpectedDeliveryDate = DateTime.Today.AddDays(7),
+                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                {
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
+                }
+            };
+
+            _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
+            _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+
+            vm.OrderId = orderId;
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Simulate WPF clearing SelectedSupplier property transiently
+            vm.SelectedSupplier = null;
+
+            // Act
+            await vm.SaveOrderCommand.ExecuteAsync(null);
+
+            // Assert
+            Assert.NotNull(vm.SelectedSupplier);
+            Assert.Equal("Origine 63", vm.SelectedSupplier!.Name);
+            _mockOrderService.Verify(s => s.UpdateOrderAsync(It.Is<Order>(o => o.SupplierName == "Origine 63")), Times.Once);
+        }
     }
 }
