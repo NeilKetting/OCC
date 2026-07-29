@@ -69,10 +69,21 @@ namespace OCC.API.Controllers
         [HttpPost]
         public async Task<ActionResult<AuditDto>> PostAudit(AuditDto auditDto)
         {
+            Guid? targetProjectId = auditDto.ProjectId;
+            if ((!targetProjectId.HasValue || targetProjectId == Guid.Empty) && !string.IsNullOrWhiteSpace(auditDto.SiteName))
+            {
+                var matchedProject = await _context.Projects
+                    .FirstOrDefaultAsync(p => p.Name.Contains(auditDto.SiteName) || auditDto.SiteName.Contains(p.Name));
+                if (matchedProject != null)
+                {
+                    targetProjectId = matchedProject.Id;
+                }
+            }
+
             var audit = new HseqAudit
             {
                 Id = auditDto.Id != Guid.Empty ? auditDto.Id : Guid.NewGuid(),
-                ProjectId = auditDto.ProjectId,
+                ProjectId = targetProjectId,
                 Date = auditDto.Date,
                 SiteName = auditDto.SiteName,
                 ScopeOfWorks = auditDto.ScopeOfWorks,

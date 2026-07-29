@@ -56,11 +56,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // Setup Trend Axes
             AuditTrendXAxes.Add(new Axis 
             { 
-                LabelsRotation = 15, 
+                LabelsRotation = 0, 
                 Labels = new List<string>(),
                 LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),
-                MinStep = 1
+                MinStep = 1,
+                ForceStepToMin = true
             });
             AuditTrendYAxes.Add(new Axis 
             { 
@@ -75,11 +76,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             CategoryXAxes.Add(new Axis 
             { 
-                LabelsRotation = 45, 
+                LabelsRotation = 90, 
                 Labels = new List<string>(),
                 LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),
                 MinStep = 1,
+                ForceStepToMin = true,
                 TextSize = 10
             });
             CategoryYAxes.Add(new Axis 

@@ -618,6 +618,25 @@ namespace OCC.Tests
         }
 
         [Fact]
+        public void DumpEngenPdfText()
+        {
+            string pdfPath = @"c:\Users\Neil\source\repos\NeilKetting\OrangeCircleConstruction-master\Engen North Ridge Audit 2.pdf";
+            if (!File.Exists(pdfPath)) return;
+
+            var sb = new StringBuilder();
+            using (var document = UglyToad.PdfPig.PdfDocument.Open(pdfPath))
+            {
+                for (int i = 1; i <= document.NumberOfPages; i++)
+                {
+                    sb.AppendLine($"--- PAGE {i} ---");
+                    sb.AppendLine(document.GetPage(i).Text);
+                }
+            }
+
+            File.WriteAllText(@"c:\Users\Neil\source\repos\NeilKetting\OrangeCircleConstruction-master\pdf_engen_dump.txt", sb.ToString());
+        }
+
+        [Fact]
         public async Task PortSuppliers()
         {
             string oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";

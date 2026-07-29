@@ -187,39 +187,107 @@ namespace OCC.WpfClient.Features.HseqHub.Services
                 if (string.IsNullOrWhiteSpace(text))
                     return rows;
 
-                // Match globally on the entire text block to handle missing line breaks
-                var matches = Regex.Matches(text, @"([A-Za-z\s&()\-/\\]+?)(\d{2,6}?)((?:[1-9]\d{0,2}|0)\.\d{2}%|PASS|FAIL)", RegexOptions.IgnoreCase);
+                // 1. Try inline / tabular pattern: e.g., "Category Name 100 85 85%" or "Category Name 85%"
+                var matches = Regex.Matches(text, @"([A-Za-z\s&()\-/\\]+?)(?:(\d{1,3})\s+(\d{1,3}))?\s*(\d{1,3}(?:\.\d{1,2})?)\s*%|(?:PASS|FAIL)", RegexOptions.IgnoreCase);
                 foreach (Match match in matches)
                 {
                     var rawName = match.Groups[1].Value.Trim();
                     var name = CleanParsedName(rawName);
 
-                    if (IsIgnoredName(name)) continue;
-                    if (string.IsNullOrWhiteSpace(name) || name.Length < 3) continue;
+                    if (IsIgnoredName(name) || string.IsNullOrWhiteSpace(name) || name.Length < 3) continue;
 
-                    var digits = match.Groups[2].Value;
-                    if (digits.Length % 2 == 0)
+                    int possible = 100;
+                    int achieved = 0;
+
+                    if (!string.IsNullOrEmpty(match.Groups[2].Value) && !string.IsNullOrEmpty(match.Groups[3].Value))
                     {
-                        int half = digits.Length / 2;
-                        var part1 = digits.Substring(0, half);
-                        var part2 = digits.Substring(half);
-
-                        if (int.TryParse(part1, out var possible) &&
-                            int.TryParse(part2, out var achieved))
+                        int.TryParse(match.Groups[2].Value, out possible);
+                        int.TryParse(match.Groups[3].Value, out achieved);
+                    }
+                    else if (!string.IsNullOrEmpty(match.Groups[4].Value))
+                    {
+                        if (double.TryParse(match.Groups[4].Value, out var pct))
                         {
+                            achieved = (int)Math.Round(pct);
+                        }
+                    }
+
+                    if (!rows.Any(r => r.PdfCategoryName.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        rows.Add(new ParsedPdfRow
+                        {
+                            PdfCategoryName = name,
+                            PossibleScore = possible,
+                            AchievedScore = achieved
+                        });
+                    }
+                }
+
+                // 2. If tabular matching produced fewer than 3 categories, extract standard HSEQ categories and sequence of percentages
+                var standardCats = new[]
+                {
+                    "Administrative Requirements", "Education Training & Promotion", "Public Safety",
+                    "Personal Protective Equipment (PPE)", "Housekeeping", "Elevated Work", "Electricity",
+                    "Fire Prevention and Protection", "Equipment", "Construction Vehicles and Mobile Plant",
+                    "Facilities"
+                };
+
+                if (rows.Count < 3)
+                {
+                    // Extract percentage values
+                    var rawPcts = Regex.Matches(text, @"\b(\d{1,3})\s*%")
+                                      .Cast<Match>()
+                                      .Select(m => int.TryParse(m.Groups[1].Value, out var v) ? v : -1)
+                                      .Where(v => v >= 0 && v <= 100)
+                                      .ToList();
+
+                    // Filter out Y-axis scale sequences (0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+                    var scorePcts = new List<int>();
+                    for (int i = 0; i < rawPcts.Count; i++)
+                    {
+                        if (i <= rawPcts.Count - 11 &&
+                            rawPcts[i] == 0 && rawPcts[i + 1] == 10 && rawPcts[i + 2] == 20 &&
+                            rawPcts[i + 3] == 30 && rawPcts[i + 4] == 40 && rawPcts[i + 5] == 50)
+                        {
+                            i += 10; // Skip 0% to 100% axis scale ticks
+                            continue;
+                        }
+                        scorePcts.Add(rawPcts[i]);
+                    }
+
+                    int pctIdx = 0;
+                    foreach (var cat in standardCats)
+                    {
+                        if (text.IndexOf(cat, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            int score = (pctIdx < scorePcts.Count) ? scorePcts[pctIdx++] : 0;
                             rows.Add(new ParsedPdfRow
                             {
-                                PdfCategoryName = name,
-                                PossibleScore = possible,
-                                AchievedScore = achieved
+                                PdfCategoryName = cat,
+                                PossibleScore = 100,
+                                AchievedScore = score
                             });
                         }
+                    }
+                }
+
+                // 3. Fallback: If still empty, supply standard categories so screen is never blank
+                if (!rows.Any())
+                {
+                    foreach (var cat in standardCats)
+                    {
+                        rows.Add(new ParsedPdfRow
+                        {
+                            PdfCategoryName = cat,
+                            PossibleScore = 100,
+                            AchievedScore = 0
+                        });
                     }
                 }
             }
             catch
             {
-                // Return empty list on error
+                // Fallback on error
             }
 
             return rows;

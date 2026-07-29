@@ -44,9 +44,19 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
-                bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
-                int days = isCpt ? 6 : 13;
-                EndDate = value.AddDays(days);
+                if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                {
+                    var firstDay = new DateTime(value.Year, value.Month, 1);
+                    var lastDay = new DateTime(value.Year, value.Month, DateTime.DaysInMonth(value.Year, value.Month));
+                    if (StartDate != firstDay) StartDate = firstDay;
+                    EndDate = lastDay;
+                }
+                else
+                {
+                    bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
+                    int days = isCpt ? 6 : 13;
+                    EndDate = value.AddDays(days);
+                }
                 IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
             }
             finally
@@ -61,9 +71,19 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
-                bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
-                int days = isCpt ? 6 : 13;
-                StartDate = value.AddDays(-days);
+                if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                {
+                    var firstDay = new DateTime(value.Year, value.Month, 1);
+                    var lastDay = new DateTime(value.Year, value.Month, DateTime.DaysInMonth(value.Year, value.Month));
+                    StartDate = firstDay;
+                    if (EndDate != lastDay) EndDate = lastDay;
+                }
+                else
+                {
+                    bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
+                    int days = isCpt ? 6 : 13;
+                    StartDate = value.AddDays(-days);
+                }
                 IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
             }
             finally
@@ -86,6 +106,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private decimal _companyHousingWashingFee = 0m;
         [ObservableProperty] private string _notes = string.Empty;
         [ObservableProperty] private bool _isSalaryVersion;
+        [ObservableProperty] private bool _excludeZeroWages;
+
+        public bool IsExcludeZeroWagesToggleVisible => string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase);
+
+        partial void OnExcludeZeroWagesChanged(bool value)
+        {
+            LinesView?.Refresh();
+            UpdateGrandTotal();
+        }
 
         public ObservableCollection<string> PayTypeOptions { get; } = new()
         {
@@ -193,6 +222,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             if (SelectedBranch != "All" && !string.Equals(line.Branch, SelectedBranch, StringComparison.OrdinalIgnoreCase))
                 return false;
 
+            // Exclude zero wages if toggle is active for Monthly Salary
+            if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase) && ExcludeZeroWages)
+            {
+                if (line.TotalRem == 0 && line.NetPay == 0)
+                    return false;
+            }
+
             // Client-side search filter
             if (string.IsNullOrWhiteSpace(SearchQuery)) return true;
 
@@ -217,6 +253,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
+                if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                {
+                    var baseDate = StartDate != default ? StartDate : DateTime.Today;
+                    StartDate = new DateTime(baseDate.Year, baseDate.Month, 1);
+                    EndDate = new DateTime(baseDate.Year, baseDate.Month, DateTime.DaysInMonth(baseDate.Year, baseDate.Month));
+                    IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+                    return;
+                }
+
                 var branchName = SelectedBranch;
                 var pastRun = PastRuns
                     .Where(r => (r.Status == WageRunStatus.Finalized || r.Status == WageRunStatus.Paid) &&
@@ -269,6 +314,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
         partial void OnSelectedPayTypeChanged(string value)
         {
+            OnPropertyChanged(nameof(IsExcludeZeroWagesToggleVisible));
+            UpdateDatesForSelectedBranch();
             LinesView?.Refresh();
             UpdateGrandTotal();
         }

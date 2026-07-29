@@ -82,7 +82,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Audit Trends -->
-                    <Border Grid.Column="0" Style="{StaticResource ToolbarBorder}" Height="380" Background="{StaticResource BackgroundDark}" Margin="0,0,8,0">
+                    <Border Grid.Column="0" Style="{StaticResource ToolbarBorder}" Height="420" Background="{StaticResource BackgroundDark}" Margin="0,0,8,0">
                         <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -99,7 +99,7 @@
                     </Border>
 
                     <!-- Category Breakdown -->
-                    <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Height="380" Background="{StaticResource BackgroundDark}" Margin="8,0,8,0">
+                    <Border Grid.Column="1" Style="{StaticResource ToolbarBorder}" Height="420" Background="{StaticResource BackgroundDark}" Margin="8,0,8,0">
                         <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -116,7 +116,7 @@
                     </Border>
 
                     <!-- Incident Distribution -->
-                    <Border Grid.Column="2" Style="{StaticResource ToolbarBorder}" Height="380" Background="{StaticResource BackgroundDark}" Margin="8,0,0,0">
+                    <Border Grid.Column="2" Style="{StaticResource ToolbarBorder}" Height="420" Background="{StaticResource BackgroundDark}" Margin="8,0,0,0">
                         <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

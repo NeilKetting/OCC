@@ -288,9 +288,20 @@ namespace OCC.API.Controllers
             var injuries = incidents.Count(i => i.Type == Shared.Enums.IncidentType.Injury);
             var environmentals = incidents.Count(i => i.Type == Shared.Enums.IncidentType.Environmental);
 
-            var audits = await _context.HseqAudits
-                .Where(a => a.ProjectId == projectId)
-                .Include(a => a.Sections)
+            var project = await _context.Projects.FindAsync(projectId);
+            var auditQuery = _context.HseqAudits.Include(a => a.Sections).AsNoTracking();
+
+            if (project != null && !string.IsNullOrWhiteSpace(project.Name))
+            {
+                var projName = project.Name;
+                auditQuery = auditQuery.Where(a => a.ProjectId == projectId || (a.SiteName != null && a.SiteName.Contains(projName)));
+            }
+            else
+            {
+                auditQuery = auditQuery.Where(a => a.ProjectId == projectId);
+            }
+
+            var audits = await auditQuery
                 .OrderBy(a => a.Date)
                 .ToListAsync();
 
