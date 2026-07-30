@@ -20,6 +20,9 @@ namespace OCC.Tests.Features.ProcurementHub
         [Fact]
         public void AddCustomProjectHistory_AddsAndDeduplicatesProjects()
         {
+            // Arrange
+            _service.Settings.CustomProjectHistory.Clear();
+
             // Act
             _service.AddCustomProjectHistory("Table Bay Site A");
             _service.AddCustomProjectHistory("Table Bay Site B");

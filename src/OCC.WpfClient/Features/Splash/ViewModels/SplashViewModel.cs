@@ -39,7 +39,7 @@ namespace OCC.WpfClient.Features.Splash.ViewModels
                 // 1. Connection check / Server handshake
                 LoadingStatus = "Connecting to Secure Server...";
                 _logger.LogInformation("Status: {Status}", LoadingStatus);
-                await Task.Delay(800);
+                await Task.Delay(400);
 
                 // 2. Update Check
                 LoadingStatus = "Verifying Version Integrity...";
@@ -61,11 +61,11 @@ namespace OCC.WpfClient.Features.Splash.ViewModels
                         
                         _logger.LogInformation("Updates downloaded. Applying and restarting...");
                         LoadingStatus = "Applying Updates... App will restart.";
-                        await Task.Delay(1500);
+                        await Task.Delay(750);
                         _updateService.ApplyUpdatesAndRestart(update);
                         
                         // Fallback: If restart doesn't trigger immediately, don't just hang
-                        await Task.Delay(5000);
+                        await Task.Delay(2500);
                         System.Windows.Application.Current.Shutdown();
                         return;
                     }
@@ -80,37 +80,37 @@ namespace OCC.WpfClient.Features.Splash.ViewModels
                 // 3. Simulated Module Loading for "Professional" feel
                 LoadingStatus = "Loading Core Architecture...";
                 _logger.LogDebug("Status: {Status}", LoadingStatus);
-                await Task.Delay(600);
+                await Task.Delay(300);
 
                 LoadingStatus = "Initializing logging...";
                 _logger.LogDebug("Status: {Status}", LoadingStatus);
-                await Task.Delay(300);
+                await Task.Delay(150);
 
                 LoadingStatus = "Initializing Feature: Error Logging...";
                 _logger.LogInformation("Status: {Status}", LoadingStatus);
-                await Task.Delay(500);
+                await Task.Delay(250);
 
                 LoadingStatus = "Initializing Feature: AuthHub...";
                 _logger.LogDebug("Status: {Status}", LoadingStatus);
-                await Task.Delay(500);
+                await Task.Delay(250);
 
                 LoadingStatus = "Initializing Feature: DataSync...";
                 _logger.LogDebug("Status: {Status}", LoadingStatus);
-                await Task.Delay(400);
+                await Task.Delay(200);
 
                 LoadingStatus = "Optimizing UI Resources...";
                 _logger.LogDebug("Status: {Status}", LoadingStatus);
-                await Task.Delay(400);
+                await Task.Delay(200);
 
                 LoadingStatus = "Systems Ready.";
                 _logger.LogInformation("Initialization sequence completed successfully.");
-                await Task.Delay(500);
+                await Task.Delay(250);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during initialization sequence.");
                 LoadingStatus = "Error during initialization. Continuing...";
-                await Task.Delay(1000);
+                await Task.Delay(500);
             }
         }
     }

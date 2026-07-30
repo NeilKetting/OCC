@@ -48,7 +48,7 @@
                                        SelectedItem="{Binding SelectedEmployee}"
                                        IsEnabled="{Binding IsEmployeeSelectionEnabled}"
                                        Style="{StaticResource ModernComboBox}"
-                                       DisplayMemberPath="DisplayName"
+                                       DisplayMemberPath="FullNameWithNumber"
                                        Margin="0,0,0,10"/>
 
                             <!-- Principal -->

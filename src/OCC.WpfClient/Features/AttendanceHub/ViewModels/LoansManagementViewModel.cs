@@ -125,7 +125,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 var employees = await _employeeService.GetEmployeesAsync();
                 Employees = new ObservableCollection<EmployeeSummaryDto>(
-                    employees.Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.LastName));
+                    employees.Where(e => e.Status != EmployeeStatus.Terminated).OrderBy(e => e.LastName).ThenBy(e => e.FirstName));
                 if (Employees.Any()) SelectedEmployee = Employees.First();
             }
             catch (Exception ex)
@@ -276,7 +276,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             IsEditing = true;
 
             // Populate form fields
-            SelectedEmployee = Employees.FirstOrDefault(e => e.Id == loan.EmployeeId);
+            var empInList = Employees.FirstOrDefault(e => e.Id == loan.EmployeeId);
+            if (empInList == null && loan.Employee != null)
+            {
+                empInList = new EmployeeSummaryDto
+                {
+                    Id = loan.Employee.Id,
+                    FirstName = loan.Employee.FirstName,
+                    LastName = loan.Employee.LastName,
+                    EmployeeNumber = loan.Employee.EmployeeNumber,
+                    Branch = loan.Employee.Branch,
+                    Status = loan.Employee.Status
+                };
+                Employees.Add(empInList);
+            }
+            SelectedEmployee = empInList;
             PrincipalAmount = loan.PrincipalAmount;
             InterestRate = loan.InterestRate;
             LoanStartDate = loan.StartDate;
@@ -637,9 +651,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             // Branch filter
             if (BranchFilter != "All" && !string.IsNullOrWhiteSpace(BranchFilter))
             {
-                var branch = loan.Employee?.Branch.ToString() ?? string.Empty;
-                if (!branch.Equals(BranchFilter, StringComparison.OrdinalIgnoreCase))
-                    return false;
+                var empBranchStr = loan.Employee?.Branch ?? string.Empty;
+                var empBranchEnum = empBranchStr.ToBranchEnum();
+                var filterEnum = BranchFilter.ToBranchEnum();
+
+                if (filterEnum.HasValue)
+                {
+                    if (empBranchEnum != filterEnum.Value)
+                        return false;
+                }
+                else
+                {
+                    if (!empBranchStr.Equals(BranchFilter, StringComparison.OrdinalIgnoreCase) &&
+                        !empBranchStr.Contains(BranchFilter, StringComparison.OrdinalIgnoreCase))
+                        return false;
+                }
             }
 
             // Status filter

@@ -445,11 +445,11 @@ namespace OCC.WpfClient.Features.Main.ViewModels
 
                 LoadWidgetLayout();
 
-                // Enforce a minimum display time of 4 seconds for the loading animation
+                // Enforce a minimum display time of 2 seconds for the loading animation
                 var elapsed = DateTime.UtcNow - startTime;
-                if (elapsed.TotalMilliseconds < 4000)
+                if (elapsed.TotalMilliseconds < 2000)
                 {
-                    var remaining = 4000 - (int)elapsed.TotalMilliseconds;
+                    var remaining = 2000 - (int)elapsed.TotalMilliseconds;
                     await Task.Delay(remaining);
                 }
             }

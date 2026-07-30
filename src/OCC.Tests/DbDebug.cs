@@ -41,6 +41,7 @@ namespace OCC.Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             string excelPath = @"c:\Users\Neil\source\repos\OCC\G. JHB 10 JUL 26 (003).xlsx";
+            if (!File.Exists(excelPath)) return;
             var excelList = new List<ExcelEmpInfo>();
 
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -157,6 +158,7 @@ namespace OCC.Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            if (!File.Exists(excelPath)) return;
             var excelList = new List<ExcelEmployeeDetails>();
 
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -497,6 +499,7 @@ namespace OCC.Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            if (!File.Exists(excelPath)) return;
             var excelList = new List<ExcelEmployeeDetails>();
 
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -1215,6 +1218,7 @@ namespace OCC.Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            if (!File.Exists(excelPath)) return;
             var excelList = new List<ExcelEmployeeDetails>();
 
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -1303,6 +1307,7 @@ namespace OCC.Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            if (!File.Exists(excelPath)) return;
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = ExcelReaderFactory.CreateReader(stream))
             {
@@ -1332,6 +1337,7 @@ namespace OCC.Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             string excelPath = @"c:\Users\Neil\source\repos\OCC\Copy of G. JHB 10 JUL 26 (003).xlsx";
+            if (!File.Exists(excelPath)) return;
             using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = ExcelReaderFactory.CreateReader(stream))
             {

@@ -11,6 +11,7 @@ namespace OCC.Shared.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string DisplayName => $"{FirstName} {LastName}".Trim();
+        public string FullNameWithNumber => string.IsNullOrEmpty(EmployeeNumber) ? DisplayName : $"{DisplayName} ({EmployeeNumber})";
         public string IdNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
