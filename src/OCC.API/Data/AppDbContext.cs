@@ -241,6 +241,17 @@ namespace OCC.API.Data
             return base.SaveChangesAsync();
         }
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+            configurationBuilder
+                .Properties<double>()
+                .HaveConversion<decimal>();
+            configurationBuilder
+                .Properties<double?>()
+                .HaveConversion<decimal>();
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
