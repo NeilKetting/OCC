@@ -64,6 +64,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 _mockDialogService.Object,
                 _mockGoogleMapsService.Object,
                 _mockSettingsService.Object,
+                new LocalSettingsService(new Mock<ILogger<LocalSettingsService>>().Object, _mockToastService.Object),
                 _mockAuthService.Object,
                 new ConnectionSettings(),
                 _mockLogger.Object);
@@ -106,14 +107,14 @@ namespace OCC.Tests.Features.ProcurementHub
             await vm.LoadDataCommand.ExecuteAsync(null);
 
             Assert.False(vm.IsNewOrder);
-            Assert.Equal(orderId, vm.CurrentOrder.Id);
-            Assert.Single(vm.CurrentOrder.Lines);
+            Assert.Equal(orderId, vm.CurrentOrder!.Id);
+            Assert.Single(vm.CurrentOrder!.Lines);
 
             // Act 2 - User clicks "+ Add Line" and enters details for line 2
             vm.AddLineCommand.Execute(null);
-            Assert.Equal(2, vm.CurrentOrder.Lines.Count);
+            Assert.Equal(2, vm.CurrentOrder!.Lines.Count);
 
-            var newLine = vm.CurrentOrder.Lines.Last();
+            var newLine = vm.CurrentOrder!.Lines.Last();
             newLine.ItemCode = "NEW-LINE-002";
             newLine.Description = "Newly Added Line Item";
             newLine.QuantityOrdered = 5;
@@ -162,7 +163,7 @@ namespace OCC.Tests.Features.ProcurementHub
 
             // Act - Add unpriced/unquantified line
             vm.AddLineCommand.Execute(null);
-            var newLine = vm.CurrentOrder.Lines.Last();
+            var newLine = vm.CurrentOrder!.Lines.Last();
             newLine.ItemCode = "UNPRICED-001";
             newLine.Description = "Draft Unpriced Item";
             newLine.QuantityOrdered = 0;

@@ -239,7 +239,7 @@ namespace OCC.Client.Features.TimeAttendanceHub.ViewModels
                   
                   // Override Salary financial values
                   decimal monthlySalary = (_attendance.CachedHourlyRate != null && _attendance.CachedHourlyRate > 0) 
-                      ? _attendance.CachedHourlyRate.Value 
+                      ? (decimal)_attendance.CachedHourlyRate.Value 
                       : (decimal)_employee.HourlyRate;
 
                   decimal dailyRate = monthlySalary / 21.67m;
@@ -273,7 +273,7 @@ namespace OCC.Client.Features.TimeAttendanceHub.ViewModels
              decimal otPay20 = accumulate ? OvertimePay20 : 0;
 
              decimal rateToUse = (_attendance.CachedHourlyRate != null && _attendance.CachedHourlyRate > 0) 
-                                 ? _attendance.CachedHourlyRate.Value 
+                                 ? (decimal)_attendance.CachedHourlyRate.Value 
                                  : (decimal)_employee.HourlyRate;
              double hourlyRate = (double)rateToUse;
              string branch = _attendance.Branch ?? _employee.Branch ?? "Johannesburg";

@@ -13,6 +13,8 @@
 6. Make sure when troubleshooting you are sure because every time we update the API the live server has to go down.
 7. Always keep code strictly organized into domain feature subfolders (e.g. HR, Projects, Operations, HSEQ, Portal, Infrastructure) across Services, Hubs, Views, and ViewModels. Avoid dumping files flatly in root feature folders.
 8. All enums displayed in ComboBoxes, dropdowns, or DataGrids in WPF UI views MUST be run through `FriendlyEnumConverter` (or formatted with friendly display names and tooltips) so raw PascalCase enum names (e.g., `AdHocAdvance`) are never displayed directly to users.
+9. Always clean up the solution/workspace of temporary test scripts, dump files, and transient test artifacts.
+10. All solution builds MUST complete with zero warnings (0 warnings).
 
 ---
 
