@@ -241,18 +241,7 @@ namespace OCC.API.Data
             return base.SaveChangesAsync();
         }
 
-        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
-        {
-            base.ConfigureConventions(configurationBuilder);
 
-            configurationBuilder
-                .Properties<double>()
-                .HaveConversion<DoubleToDecimalConverter>();
-
-            configurationBuilder
-                .Properties<double?>()
-                .HaveConversion<NullableDoubleToDecimalConverter>();
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -321,10 +310,7 @@ namespace OCC.API.Data
                 entity.Property(e => e.Price).HasPrecision(18, 2);
             });
 
-            modelBuilder.Entity<AttendanceRecord>(entity =>
-            {
-                entity.Property(e => e.CachedHourlyRate).HasPrecision(18, 2);
-            });
+
 
             modelBuilder.Entity<DailyTimesheet>(entity =>
             {
@@ -707,21 +693,5 @@ namespace OCC.API.Data
             audit.NewValues = NewValues.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(NewValues);
             return audit;
         }
-    }
-
-    public class DoubleToDecimalConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<double, decimal>
-    {
-        public DoubleToDecimalConverter() : base(
-            v => Convert.ToDecimal(v),
-            v => Convert.ToDouble(v))
-        { }
-    }
-
-    public class NullableDoubleToDecimalConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<double?, decimal?>
-    {
-        public NullableDoubleToDecimalConverter() : base(
-            v => v.HasValue ? Convert.ToDecimal(v.Value) : null,
-            v => v.HasValue ? Convert.ToDouble(v.Value) : null)
-        { }
     }
 }

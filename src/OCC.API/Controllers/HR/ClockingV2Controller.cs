@@ -86,7 +86,7 @@ namespace OCC.API.Controllers
                     ClockInTime = clockingEvent.Timestamp.TimeOfDay,
                     Status = AttendanceStatus.Present,
                     Branch = employee?.Branch ?? "Unknown",
-                    CachedHourlyRate = (decimal?)(employee?.HourlyRate ?? 0)
+                    CachedHourlyRate = employee?.HourlyRate ?? 0
                 };
                 _context.AttendanceRecords.Add(legacyRecord);
             }

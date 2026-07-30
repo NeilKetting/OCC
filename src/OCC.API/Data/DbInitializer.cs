@@ -13,6 +13,44 @@ namespace OCC.API.Data
             logger.LogInformation("Checking for pending migrations...");
             context.Database.Migrate();
 
+            // Standardize numeric column types in local SQL Server database to FLOAT to match C# double models 1-to-1
+            try
+            {
+                logger.LogInformation("Standardizing SQL column types for Employees, AttendanceRecords, and WageRunLines...");
+                context.Database.ExecuteSqlRaw(@"
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'HourlyRate')
+                        ALTER TABLE Employees ALTER COLUMN HourlyRate FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'AnnualLeaveBalance')
+                        ALTER TABLE Employees ALTER COLUMN AnnualLeaveBalance FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'SickLeaveBalance')
+                        ALTER TABLE Employees ALTER COLUMN SickLeaveBalance FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Employees') AND name = 'LeaveBalance')
+                        ALTER TABLE Employees ALTER COLUMN LeaveBalance FLOAT NOT NULL;
+
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AttendanceRecords') AND name = 'HoursWorked')
+                        ALTER TABLE AttendanceRecords ALTER COLUMN HoursWorked FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AttendanceRecords') AND name = 'CachedHourlyRate')
+                        ALTER TABLE AttendanceRecords ALTER COLUMN CachedHourlyRate FLOAT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AttendanceRecords') AND name = 'PaidLeaveHours')
+                        ALTER TABLE AttendanceRecords ALTER COLUMN PaidLeaveHours FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AttendanceRecords') AND name = 'UnpaidLeaveHours')
+                        ALTER TABLE AttendanceRecords ALTER COLUMN UnpaidLeaveHours FLOAT NOT NULL;
+
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek1')
+                        ALTER TABLE WageRunLines ALTER COLUMN DaysWorkedWeek1 FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek2')
+                        ALTER TABLE WageRunLines ALTER COLUMN DaysWorkedWeek2 FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DaysWorkedWeek3')
+                        ALTER TABLE WageRunLines ALTER COLUMN DaysWorkedWeek3 FLOAT NOT NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'TotalDaysWorked')
+                        ALTER TABLE WageRunLines ALTER COLUMN TotalDaysWorked FLOAT NOT NULL;
+                ");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Schema column standardization skipped or failed: {Message}", ex.Message);
+            }
+
             // Manual Schema Patch: Ensure new ProjectId columns exist (since EF migrations tool failed)
             try
             {
@@ -444,7 +482,7 @@ namespace OCC.API.Data
                         ClockInTime = arrival,
                         Status = (arrival > shiftStart) ? AttendanceStatus.Late : AttendanceStatus.Present,
                         Branch = emp.Branch,
-                        CachedHourlyRate = (decimal)emp.HourlyRate,
+                        CachedHourlyRate = emp.HourlyRate,
                         HoursWorked = duration
                     });
                     recordsAdded++;
