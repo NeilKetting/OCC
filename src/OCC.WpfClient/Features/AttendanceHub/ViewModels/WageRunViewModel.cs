@@ -44,18 +44,20 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
-                if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                if (SelectedPayFrequency == PayFrequency.Monthly || string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
                 {
                     var firstDay = new DateTime(value.Year, value.Month, 1);
                     var lastDay = new DateTime(value.Year, value.Month, DateTime.DaysInMonth(value.Year, value.Month));
                     if (StartDate != firstDay) StartDate = firstDay;
                     EndDate = lastDay;
                 }
-                else
+                else if (SelectedPayFrequency == PayFrequency.Weekly)
                 {
-                    bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
-                    int days = isCpt ? 6 : 13;
-                    EndDate = value.AddDays(days);
+                    EndDate = value.AddDays(6);
+                }
+                else // Fortnightly
+                {
+                    EndDate = value.AddDays(13);
                 }
                 IsDecColumnsVisible = value.Month == 12 || value.Month == 1;
             }
@@ -71,18 +73,20 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _isUpdatingDates = true;
             try
             {
-                if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                if (SelectedPayFrequency == PayFrequency.Monthly || string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
                 {
                     var firstDay = new DateTime(value.Year, value.Month, 1);
                     var lastDay = new DateTime(value.Year, value.Month, DateTime.DaysInMonth(value.Year, value.Month));
                     StartDate = firstDay;
                     if (EndDate != lastDay) EndDate = lastDay;
                 }
-                else
+                else if (SelectedPayFrequency == PayFrequency.Weekly)
                 {
-                    bool isCpt = SelectedBranch.ToBranchEnum() == Branch.CPT;
-                    int days = isCpt ? 6 : 13;
-                    StartDate = value.AddDays(-days);
+                    StartDate = value.AddDays(-6);
+                }
+                else // Fortnightly
+                {
+                    StartDate = value.AddDays(-13);
                 }
                 IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
             }
@@ -101,6 +105,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(FilteredPastRuns))]
         private string _selectedBranch = "All";
+
         [ObservableProperty] private decimal _totalGasCharge = 0m;
         [ObservableProperty] private decimal _defaultSupervisorFee = 500m;
         [ObservableProperty] private decimal _companyHousingWashingFee = 0m;
@@ -146,6 +151,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private WageRunType _selectedRunType = WageRunType.Standard;
         [ObservableProperty] private PayFrequency _selectedPayFrequency = PayFrequency.Fortnightly;
 
+        partial void OnSelectedPayFrequencyChanged(PayFrequency value)
+        {
+            OnPropertyChanged(nameof(IsWeek2ColumnVisible));
+            UpdateDatesFromPreviousRun();
+        }
+
         // ─── Live update: redistribute gas/washing/supervisor fee when inputs change
 
         partial void OnTotalGasChargeChanged(decimal value)
@@ -190,7 +201,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isSupFeeVisible = true;
         [ObservableProperty] private bool _isTotalNettVisible = true;
         [ObservableProperty] private bool _isTotalRemVisible = true;
-        [ObservableProperty] private bool _isDaysVisible = true;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsWeek2ColumnVisible))]
+        private bool _isDaysVisible = true;
+
+        public bool IsWeek2ColumnVisible => IsDaysVisible && SelectedPayFrequency != PayFrequency.Weekly;
         [ObservableProperty] private bool _isNotesVisible = true;
         [ObservableProperty] private bool _isBankVisible = true;
         [ObservableProperty] private bool _isBankAccountVisible = true;
@@ -321,7 +336,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             LinesView?.Refresh();
             UpdateGrandTotal();
 
-            UpdateDatesForSelectedBranch();
+            UpdateDatesFromPreviousRun();
 
             var branchEnum = value.ToBranchEnum();
             IsDeductionsButtonVisible = branchEnum != Branch.CPT;
@@ -334,7 +349,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         partial void OnSelectedPayTypeChanged(string value)
         {
             OnPropertyChanged(nameof(IsExcludeZeroWagesToggleVisible));
-            UpdateDatesForSelectedBranch();
+            UpdateDatesFromPreviousRun();
             LinesView?.Refresh();
             UpdateGrandTotal();
         }
@@ -542,13 +557,72 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var runs = await _wageService.GetWageRunsAsync();
                 PastRuns = new ObservableCollection<WageRun>(runs);
                 await LoadWageSettingsDefaultsAsync();
-                UpdateDatesForSelectedBranch();
+                UpdateDatesFromPreviousRun();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading past wage runs");
             }
             finally { IsBusy = false; }
+        }
+
+        private void UpdateDatesFromPreviousRun()
+        {
+            if (_isUpdatingDates) return;
+
+            var previousRun = PastRuns
+                .Where(r => (r.Status == WageRunStatus.Finalized || r.Status == WageRunStatus.Paid) &&
+                            (r.Branch == SelectedBranch || SelectedBranch == "All" ||
+                             (SelectedBranch == "Johannesburg" && (r.Branch == "JHB" || r.Branch == "Johannesburg")) ||
+                             (SelectedBranch == "Cape Town" && (r.Branch == "CPT" || r.Branch == "Cape Town"))) &&
+                            (string.IsNullOrEmpty(SelectedPayType) || r.PayType == SelectedPayType))
+                .OrderByDescending(r => r.EndDate)
+                .FirstOrDefault();
+
+            DateTime newStart;
+            if (previousRun != null && previousRun.EndDate != DateTime.MinValue)
+            {
+                newStart = previousRun.EndDate.AddDays(1).Date;
+            }
+            else
+            {
+                var today = DateTime.Today;
+                int diff = (7 + (int)(today.DayOfWeek - DayOfWeek.Saturday)) % 7;
+                newStart = today.AddDays(-diff).AddDays(SelectedPayFrequency == PayFrequency.Fortnightly ? -14 : -7).Date;
+            }
+
+            CalculateDatesForStart(newStart);
+        }
+
+        private void CalculateDatesForStart(DateTime start)
+        {
+            _isUpdatingDates = true;
+            try
+            {
+                StartDate = start.Date;
+
+                if (SelectedPayFrequency == PayFrequency.Monthly || string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                {
+                    var firstDay = new DateTime(start.Year, start.Month, 1);
+                    var lastDay = new DateTime(start.Year, start.Month, DateTime.DaysInMonth(start.Year, start.Month));
+                    if (StartDate != firstDay) StartDate = firstDay;
+                    EndDate = lastDay;
+                }
+                else if (SelectedPayFrequency == PayFrequency.Weekly)
+                {
+                    EndDate = StartDate.AddDays(6);
+                }
+                else // Fortnightly
+                {
+                    EndDate = StartDate.AddDays(13);
+                }
+
+                IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+            }
+            finally
+            {
+                _isUpdatingDates = false;
+            }
         }
 
         private async Task LoadWageSettingsDefaultsAsync()

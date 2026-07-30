@@ -553,28 +553,27 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <!-- RATE P/DAY -->
                         <DataGridTextColumn Header="RATE P/DAY" Binding="{Binding RatePDayDisplay, StringFormat='F2'}" Width="Auto" IsReadOnly="True"
                                             Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <!-- W1, W2, W3, TOT D -->
-                        <DataGridTextColumn Header="WEEK 1" Binding="{Binding DaysWeek1Display, StringFormat='0.#'}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <!-- W0 (DED), WEEK 1, WEEK 2, TOTAL DAYS -->
+                        <DataGridTextColumn Header="W0 (DED)" Binding="{Binding DaysWeek1Display, StringFormat='0.#'}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="WEEK 2" Binding="{Binding DaysWeek2Display}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Header="WEEK 1" Binding="{Binding DaysWeek2Display}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="WEEK 3" Binding="{Binding DaysWeek3Display}" Width="Auto" IsReadOnly="True"
-                                            Visibility="{Binding Data.IsDaysVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                        <DataGridTextColumn Header="WEEK 2" Binding="{Binding DaysWeek3Display}" Width="Auto" IsReadOnly="True"
+                                             Visibility="{Binding Data.IsWeek2ColumnVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>

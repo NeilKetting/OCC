@@ -245,8 +245,57 @@ namespace OCC.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Employee double properties match SQL Server FLOAT columns natively without conversion
+            modelBuilder.Entity<Employee>(entity =>
+            {
+                entity.Property(e => e.HourlyRate).HasConversion<decimal>();
+                entity.Property(e => e.AnnualLeaveBalance).HasConversion<decimal>();
+                entity.Property(e => e.SickLeaveBalance).HasConversion<decimal>();
+                entity.Property(e => e.LeaveBalance).HasConversion<decimal>();
+            });
 
+            modelBuilder.Entity<AttendanceRecord>(entity =>
+            {
+                entity.Property(a => a.HoursWorked).HasConversion<decimal>();
+                entity.Property(a => a.PaidLeaveHours).HasConversion<decimal>();
+                entity.Property(a => a.UnpaidLeaveHours).HasConversion<decimal>();
+            });
+
+            modelBuilder.Entity<LeaveRequest>(entity =>
+            {
+                entity.Property(l => l.NumberOfDays).HasConversion<decimal>();
+                entity.Property(l => l.HoursRequested).HasConversion<decimal>();
+                entity.Property(l => l.PaidDays).HasConversion<decimal>();
+                entity.Property(l => l.UnpaidDays).HasConversion<decimal>();
+            });
+
+            modelBuilder.Entity<OrderLine>(entity =>
+            {
+                entity.Property(o => o.QuantityOrdered).HasConversion<decimal>();
+                entity.Property(o => o.QuantityReceived).HasConversion<decimal>();
+            });
+
+            modelBuilder.Entity<InventoryItem>(entity =>
+            {
+                entity.Property(i => i.JhbQuantity).HasConversion<decimal>();
+                entity.Property(i => i.CptQuantity).HasConversion<decimal>();
+                entity.Property(i => i.JhbReorderPoint).HasConversion<decimal>();
+                entity.Property(i => i.CptReorderPoint).HasConversion<decimal>();
+            });
+
+            modelBuilder.Entity<WageRunLine>(entity =>
+            {
+                entity.Property(w => w.NormalHours).HasConversion<decimal>();
+                entity.Property(w => w.Overtime15Hours).HasConversion<decimal>();
+                entity.Property(w => w.SaturdayOvertimeHours).HasConversion<decimal>();
+                entity.Property(w => w.Overtime20Hours).HasConversion<decimal>();
+                entity.Property(w => w.ProjectedHours).HasConversion<decimal>();
+                entity.Property(w => w.VarianceHours).HasConversion<decimal>();
+                entity.Property(w => w.LunchDeductionHours).HasConversion<decimal>();
+                entity.Property(w => w.DaysWorkedWeek1).HasConversion<decimal>();
+                entity.Property(w => w.DaysWorkedWeek2).HasConversion<decimal>();
+                entity.Property(w => w.DaysWorkedWeek3).HasConversion<decimal>();
+                entity.Property(w => w.TotalDaysWorked).HasConversion<decimal>();
+            });
 
             modelBuilder.Entity<WageSettings>(entity =>
             {

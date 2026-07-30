@@ -379,8 +379,8 @@ namespace OCC.API.Services
                 {
                     var projectedStart = DateTime.MinValue;
                     var projectedEnd = DateTime.MinValue;
-                    int startOffset = isCapeTown ? 0 : 7;
-                    int endOffset = isCapeTown ? 6 : 13;
+                    int startOffset = (request.PayFrequency == PayFrequency.Weekly || isCapeTown) ? 0 : 7;
+                    int endOffset = (request.PayFrequency == PayFrequency.Weekly) ? 6 : (isCapeTown ? 6 : 13);
                     for (int i = startOffset; i <= endOffset; i++)
                     {
                         var date = request.StartDate.AddDays(i).Date;
@@ -410,7 +410,12 @@ namespace OCC.API.Services
                 }
 
                 int projectedDays = dailyHours > 0 ? (int)Math.Round(line.ProjectedHours / dailyHours) : 0;
-                if (isCapeTown)
+                if (request.PayFrequency == PayFrequency.Weekly)
+                {
+                    line.DaysWorkedWeek2 = distinctDaysW1.Count + distinctDaysW2.Count + projectedDays;
+                    line.DaysWorkedWeek3 = 0;
+                }
+                else if (isCapeTown)
                 {
                     line.DaysWorkedWeek2 = distinctDaysW1.Count + projectedDays;
                     line.DaysWorkedWeek3 = distinctDaysW2.Count;
