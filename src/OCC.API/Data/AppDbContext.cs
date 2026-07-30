@@ -245,13 +245,8 @@ namespace OCC.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Employee>(entity =>
-            {
-                entity.Property(e => e.HourlyRate).HasConversion<decimal>();
-                entity.Property(e => e.AnnualLeaveBalance).HasConversion<decimal>();
-                entity.Property(e => e.SickLeaveBalance).HasConversion<decimal>();
-                entity.Property(e => e.LeaveBalance).HasConversion<decimal>();
-            });
+            // Employee double properties match SQL Server FLOAT columns natively without conversion
+
 
             modelBuilder.Entity<WageSettings>(entity =>
             {
