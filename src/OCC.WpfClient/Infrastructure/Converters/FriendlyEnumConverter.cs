@@ -11,6 +11,17 @@ namespace OCC.WpfClient.Infrastructure.Converters
         {
             if (value == null) return string.Empty;
 
+            if (value is WageRunType runType)
+            {
+                return runType switch
+                {
+                    WageRunType.Standard => "Standard",
+                    WageRunType.AdHocAdvance => "Ad-Hoc Advance",
+                    WageRunType.Correction => "Correction",
+                    _ => runType.ToString()
+                };
+            }
+
             if (value is AttendanceStatus status)
             {
                 if (status == AttendanceStatus.UnpaidHalfDay)

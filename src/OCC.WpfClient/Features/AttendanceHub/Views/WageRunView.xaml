@@ -128,14 +128,28 @@
                         <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="RUN TYPE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding RunTypeOptions}" SelectedItem="{Binding SelectedRunType}"
-                                       Style="{StaticResource ModernComboBox}" Width="130"/>
+                                       Style="{StaticResource ModernComboBox}" Width="145"
+                                       ToolTip="{Binding SelectedRunType, Converter={StaticResource RunTypeToolTipConverter}}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"
+                                                   ToolTip="{Binding Converter={StaticResource RunTypeToolTipConverter}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
 
                         <!-- Frequency -->
                         <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="FREQUENCY" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding PayFrequencyOptions}" SelectedItem="{Binding SelectedPayFrequency}"
-                                       Style="{StaticResource ModernComboBox}" Width="110"/>
+                                       Style="{StaticResource ModernComboBox}" Width="110">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
 
                         <!-- Branch -->

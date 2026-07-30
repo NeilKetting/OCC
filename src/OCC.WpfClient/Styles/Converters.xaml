@@ -24,6 +24,7 @@
     <conv:OrderStatusColorConverter x:Key="OrderStatusColorConverter" />
     <conv:TodoDueDateConverter x:Key="TodoDueDateConverter" />
     <conv:AuditScoreColorConverter x:Key="AuditScoreColorConverter" />
+    <conv:RunTypeToolTipConverter x:Key="RunTypeToolTipConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
 </ResourceDictionary>
