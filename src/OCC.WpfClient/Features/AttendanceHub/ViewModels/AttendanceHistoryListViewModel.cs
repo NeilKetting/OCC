@@ -162,8 +162,27 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     to = ToDate;
                 }
 
-                _allRecords = (await _attendanceService.GetAttendanceRecordsAsync(from, to)).ToList();
-                FilterItems();
+                var fullRecords = (await _attendanceService.GetAttendanceRecordsAsync(from, to))
+                    .OrderByDescending(r => r.Date)
+                    .ToList();
+
+                if (fullRecords.Count > 100)
+                {
+                    // Step 1: Render top 100 records instantly so user can start working immediately
+                    _allRecords = fullRecords.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI instantly
+
+                    // Step 2: Hydrate full dataset in background without blocking interaction
+                    await Task.Yield();
+                    _allRecords = fullRecords;
+                    FilterItems();
+                }
+                else
+                {
+                    _allRecords = fullRecords;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {

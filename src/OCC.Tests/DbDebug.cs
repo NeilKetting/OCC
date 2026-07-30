@@ -36,7 +36,7 @@ namespace OCC.Tests
             public double NetPay { get; set; }
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task FindMissingEmployees()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -153,7 +153,7 @@ namespace OCC.Tests
             public string Comments { get; set; } = "";
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task CompareExcelWithDatabase()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -291,7 +291,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\excel_comparison_audit.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public void VerifySafeWorkingHours()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -330,7 +330,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\safe_hours_verification.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task CheckCasualRates()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -350,7 +350,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\casual_rates_check.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task CompareBankingDetails()
         {
             var oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -494,7 +494,7 @@ namespace OCC.Tests
             return oldBank; // Fallback to raw if not matched
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task UpdateEmployeeRatesFromExcel()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -583,7 +583,7 @@ namespace OCC.Tests
             _output.WriteLine(sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public void DumpPdfText()
         {
             string pdfPath = @"C:\Users\Neil\Documents\OCC\WageRuns\WageRun_Johannesburg_20260710_082216.pdf";
@@ -602,7 +602,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\pdf_text_dump.txt", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public void TestPdfParserRows()
         {
             string pdfPath = @"C:\Users\Neil\Documents\OCC Report Runs\audit_01kx34zdvw8gpf8a3m971jddj0_20260709_124054.pdf";
@@ -629,7 +629,7 @@ namespace OCC.Tests
             Assert.NotEmpty(rows);
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public void DumpEngenPdfText()
         {
             string pdfPath = @"c:\Users\Neil\source\repos\NeilKetting\OrangeCircleConstruction-master\Engen North Ridge Audit 2.pdf";
@@ -648,7 +648,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\NeilKetting\OrangeCircleConstruction-master\pdf_engen_dump.txt", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task PortSuppliers()
         {
             string oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -845,7 +845,7 @@ namespace OCC.Tests
             _output.WriteLine(sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task PortInventoryItems()
         {
             string oldConnStr = "Server=localhost\\SQLEXPRESS01;Database=OCC_Rev5_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
@@ -1055,7 +1055,7 @@ namespace OCC.Tests
             _output.WriteLine(sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task DumpEmployeeAttendance()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1105,7 +1105,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\employee_attendance_dump.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task PrintEmployeeShiftDetails()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1128,7 +1128,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\employee_shifts.txt", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task DumpCompanyProfile()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1140,7 +1140,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\company_profile.json", profile?.Value ?? "{}");
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task DumpMismatchedSaturdays()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1177,7 +1177,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\saturday_mismatches_dump.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task DumpMismatchDetails()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1213,7 +1213,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\mismatch_details_dump.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task DumpAllEmployeesDailyHours()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -1270,7 +1270,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\all_employees_hours_compare.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public async Task DumpTimothyDetails()
         {
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -1302,7 +1302,7 @@ namespace OCC.Tests
             File.WriteAllText(@"c:\Users\Neil\source\repos\OCC\timothy_details_dump.md", sb.ToString());
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public void DumpHerisExcelRow()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -1332,7 +1332,7 @@ namespace OCC.Tests
             }
         }
 
-        [Fact]
+        // [Fact] // Scratch Debug Method
         public void DumpExcelColumns()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

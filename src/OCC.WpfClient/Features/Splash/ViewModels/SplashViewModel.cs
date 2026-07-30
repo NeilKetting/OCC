@@ -61,7 +61,7 @@ namespace OCC.WpfClient.Features.Splash.ViewModels
                         
                         _logger.LogInformation("Updates downloaded. Applying and restarting...");
                         LoadingStatus = "Applying Updates... App will restart.";
-                        await Task.Delay(750);
+                        await Task.Delay(500);
                         _updateService.ApplyUpdatesAndRestart(update);
                         
                         // Fallback: If restart doesn't trigger immediately, don't just hang

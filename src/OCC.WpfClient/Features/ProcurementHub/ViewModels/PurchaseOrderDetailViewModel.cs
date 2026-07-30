@@ -1308,7 +1308,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
                 if (usedOutlook)
                 {
-                    _toastService.ShowSuccess("Email Created", $"Outlook opened with Purchase Order {CurrentOrder.OrderNumber} attached for {recipientEmail}.");
+                    _toastService.ShowSuccess("Email Created", $"Outlook opened with Purchase Order {orderNum} attached for {recipientEmail}.");
                 }
                 else
                 {

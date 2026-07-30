@@ -15,6 +15,7 @@
 8. All enums displayed in ComboBoxes, dropdowns, or DataGrids in WPF UI views MUST be run through `FriendlyEnumConverter` (or formatted with friendly display names and tooltips) so raw PascalCase enum names (e.g., `AdHocAdvance`) are never displayed directly to users.
 9. Always clean up the solution/workspace of temporary test scripts, dump files, and transient test artifacts.
 10. All solution builds MUST complete with zero warnings (0 warnings).
+11. All list views in WPF Client MUST implement progressive staged loading (rendering top 100 records instantly to unblock user interaction, then hydrating full datasets seamlessly in the background).
 
 ---
 
@@ -29,5 +30,6 @@
 - [DONE] **UI Redundant Refresh & Duplicate Save Buttons Cleaned Up**: Removed legacy refresh buttons across Dashboard, Wage Run, Attendance, Teams, Loans, and Leave views since SignalR streaming updates data automatically; removed duplicate top header Save button in WageSettingsView.
 
 ### Remaining Work [TODO]
+- [TODO] **Progressive List View Loading Expansion**: Expand progressive staged loading (initial top 100 instant load + background hydration) across all remaining WPF list views.
 - [TODO] **SignalR Delta Streaming Expansion**: Expand SignalR Delta Payload Real-Time Streaming to all remaining system modules (Projects, Procurement, HSEQ, Todo, etc.) in a future phase.
 - [TODO] **Application Framework Evaluation**: Evaluate and incorporate a suitable application framework for the app in a future phase.
