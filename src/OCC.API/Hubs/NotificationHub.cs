@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace OCC.API.Hubs
 {
-    public class NotificationHub : Hub
+    public partial class NotificationHub : Hub
     {
         // Track connected users: ConnectionId -> UserConnectionInfo
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, OCC.Shared.DTOs.UserConnectionInfo> _connectedUsers 

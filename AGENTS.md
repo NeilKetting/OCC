@@ -1,8 +1,30 @@
 # Agent Instructions & Project Notes
 
-1. All code writen needs to be production grade.
+## Core Development Guidelines
+1. All code written needs to be production grade.
 2. All code needs to be commented.
-3. All code writen needs to be unit tested.
-4. OCC.API is also running live in the cloud so remember you do not have access to the db. When you need to access the data you can ask me to copy over the db to my local pc.
-OCC.Client is an old legacy app. OCC.WPF is our new desktop app and OCC.Mobile we use for our tablets in the field (Site managers to update project progress). Lastly OCC.Portal is our website we will use for clients to log in and view the progress of their project.
-8. Make sure when we troubleshoot you are sure because everytime we update the api the live server has to go down.
+3. All code written needs to be unit tested.
+4. OCC.API is also running live in the cloud so remember you do not have access to the DB. When you need to access the data, ask to copy over the DB to local PC.
+5. Application Ecosystem:
+   - `OCC.Client`: Old legacy app.
+   - `OCC.WpfClient`: New desktop app.
+   - `OCC.Mobile`: Tablet app used in the field by Site Managers.
+   - `OCC.Portal`: Website for clients to log in and view project progress.
+6. Make sure when troubleshooting you are sure because every time we update the API the live server has to go down.
+7. Always keep code strictly organized into domain feature subfolders (e.g. HR, Projects, Operations, HSEQ, Portal, Infrastructure) across Services, Hubs, Views, and ViewModels. Avoid dumping files flatly in root feature folders.
+
+---
+
+## System Status & Task Tracker
+
+### Completed Work [DONE]
+- [DONE] **Wage System Overhaul**: Comprehensive rework of wage calculation engine, customizable BIBC rates/shift rules via `WageSettings`, dynamic pay frequencies (Weekly CPT, Fortnightly/Weekly JHB), ad-hoc "mamparra" advance run recoveries, and unpaid leave tagging non-duplication.
+- [DONE] **Time & Attendance SignalR Delta Payload Real-Time Streaming**: Implemented real-time payload streaming (`EntityChangeDto<T>`) for Employees, Attendance Records, Wage Runs, and Wage Settings across backend API controllers and WPF ViewModels.
+- [DONE] **SignalR Hub Feature Organization**: Modularized SignalR hub backend into feature-specific partial classes (`src/OCC.API/Hubs/TimeAttendanceHub.cs`).
+- [DONE] **WPF Services Feature Organization**: Organized all 33 services in `src/OCC.WpfClient/Services/` into feature subfolders (`HR/`, `Projects/`, `Operations/`, `HSEQ/`, `Portal/`, `Infrastructure/`).
+- [DONE] **User-Level Custom Project Name History & Deletable Auto-Suggestions**: Added per-user history tracking in `%APPDATA%\OCC.WpfClient\settings.json` for custom typed project names on Create Purchase Order screen, with real-time auto-suggestions and inline entry deletion.
+- [DONE] **UI Redundant Refresh & Duplicate Save Buttons Cleaned Up**: Removed legacy refresh buttons across Dashboard, Wage Run, Attendance, Teams, Loans, and Leave views since SignalR streaming updates data automatically; removed duplicate top header Save button in WageSettingsView.
+
+### Remaining Work [TODO]
+- [TODO] **SignalR Delta Streaming Expansion**: Expand SignalR Delta Payload Real-Time Streaming to all remaining system modules (Projects, Procurement, HSEQ, Todo, etc.) in a future phase.
+- [TODO] **Application Framework Evaluation**: Evaluate and incorporate a suitable application framework for the app in a future phase.

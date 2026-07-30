@@ -129,6 +129,23 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             "Cape Town"
         };
 
+        public ObservableCollection<WageRunType> RunTypeOptions { get; } = new()
+        {
+            WageRunType.Standard,
+            WageRunType.AdHocAdvance,
+            WageRunType.Correction
+        };
+
+        public ObservableCollection<PayFrequency> PayFrequencyOptions { get; } = new()
+        {
+            PayFrequency.Weekly,
+            PayFrequency.Fortnightly,
+            PayFrequency.Monthly
+        };
+
+        [ObservableProperty] private WageRunType _selectedRunType = WageRunType.Standard;
+        [ObservableProperty] private PayFrequency _selectedPayFrequency = PayFrequency.Fortnightly;
+
         // ─── Live update: redistribute gas/washing/supervisor fee when inputs change
 
         partial void OnTotalGasChargeChanged(decimal value)
@@ -263,8 +280,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 }
 
                 var branchName = SelectedBranch;
+                var payType = SelectedPayType;
                 var pastRun = PastRuns
                     .Where(r => (r.Status == WageRunStatus.Finalized || r.Status == WageRunStatus.Paid) &&
+                                (string.IsNullOrEmpty(r.PayType) || string.Equals(r.PayType, payType, StringComparison.OrdinalIgnoreCase)) &&
                                 (branchName == "All" ||
                                  string.Equals(r.Branch, branchName, StringComparison.OrdinalIgnoreCase) ||
                                  (string.Equals(branchName, "Johannesburg", StringComparison.OrdinalIgnoreCase) && string.Equals(r.Branch, "JHB", StringComparison.OrdinalIgnoreCase)) ||
@@ -409,6 +428,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
         }
 
+        private readonly ISignalRService _signalRService;
+
         public WageRunViewModel(
             IWageService wageService,
             IPdfService pdfService,
@@ -418,7 +439,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             OCC.WpfClient.Services.Infrastructure.LocalSettingsService localSettings,
             IPermissionService permissionService,
             ISettingsService settingsService,
-            IAuthService authService)
+            IAuthService authService,
+            ISignalRService signalRService)
         {
             _wageService = wageService;
             _pdfService = pdfService;
@@ -429,10 +451,45 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             _permissionService = permissionService;
             _settingsService = settingsService;
             _authService = authService;
+            _signalRService = signalRService;
             Title = "Wage Run";
 
+            _signalRService.OnWageRunChanged += (change) =>
+            {
+                if (change?.Entity != null)
+                {
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        var run = change.Entity;
+                        var existing = PastRuns.FirstOrDefault(r => r.Id == run.Id);
+                        if (existing != null)
+                        {
+                            var idx = PastRuns.IndexOf(existing);
+                            PastRuns[idx] = run;
+                        }
+                        else
+                        {
+                            PastRuns.Insert(0, run);
+                        }
+                        OnPropertyChanged(nameof(FilteredPastRuns));
+                    });
+                }
+            };
+
+            _signalRService.OnWageSettingsChanged += (change) =>
+            {
+                if (change?.Entity != null)
+                {
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        DefaultSupervisorFee = change.Entity.DefaultSupervisorFee;
+                        CompanyHousingWashingFee = change.Entity.DefaultCompanyHousingWashingFee;
+                    });
+                }
+            };
+
             IsAdminUser = authService.CurrentUser?.UserRole == UserRole.Admin;
-            _ = LoadBibcRateAsync();
+            _ = LoadWageSettingsDefaultsAsync();
 
             // Default: Saturday of previous fortnight (runs are typically generated on Wednesday of Week 2)
             var today = DateTime.Today;
@@ -484,6 +541,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 BusyText = "Loading past runs...";
                 var runs = await _wageService.GetWageRunsAsync();
                 PastRuns = new ObservableCollection<WageRun>(runs);
+                await LoadWageSettingsDefaultsAsync();
                 UpdateDatesForSelectedBranch();
             }
             catch (Exception ex)
@@ -491,6 +549,23 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 _logger.LogError(ex, "Error loading past wage runs");
             }
             finally { IsBusy = false; }
+        }
+
+        private async Task LoadWageSettingsDefaultsAsync()
+        {
+            try
+            {
+                var settings = await _wageService.GetWageSettingsAsync();
+                if (settings != null)
+                {
+                    DefaultSupervisorFee = settings.DefaultSupervisorFee;
+                    CompanyHousingWashingFee = settings.DefaultCompanyHousingWashingFee;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading wage settings defaults into WageRunViewModel");
+            }
         }
 
         [RelayCommand]
@@ -513,7 +588,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 _currentDraft = await _wageService.GenerateDraftRunAsync(
                     StartDate, EndDate, SelectedPayType, SelectedBranch,
-                    TotalGasCharge, DefaultSupervisorFee, CompanyHousingWashingFee, Notes);
+                    TotalGasCharge, DefaultSupervisorFee, CompanyHousingWashingFee, Notes,
+                    SelectedRunType, SelectedPayFrequency);
                 _currentDraftId = _currentDraft.Id;
 
                 Lines.Clear();

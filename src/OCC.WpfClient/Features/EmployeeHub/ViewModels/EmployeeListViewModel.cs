@@ -93,6 +93,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         public override IRelayCommand<object>? EditCommand => EditEmployeeCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteSelectedEmployeesCommand;
 
+        private readonly ISignalRService _signalRService;
+
         public EmployeeListViewModel(
             IEmployeeService employeeService, 
             IUserService userService, 
@@ -100,7 +102,8 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             IDialogService dialogService,
             LocalSettingsService settingsService,
             ILogger<EmployeeListViewModel> logger,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ISignalRService signalRService) : base(pdfService)
         {
             _employeeService = employeeService;
             _userService = userService;
@@ -108,10 +111,83 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = logger;
+            _signalRService = signalRService;
             Title = "Employees";
             
+            _signalRService.OnEmployeeChanged += OnEmployeeChangedReceived;
+
             LoadLayout();
             _ = LoadDataAsync();
+        }
+
+        private void OnEmployeeChangedReceived(OCC.Shared.DTOs.EntityChangeDto<Employee> change)
+        {
+            if (change == null || change.Entity == null) return;
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                var emp = change.Entity;
+                var summary = new EmployeeSummaryDto
+                {
+                    Id = emp.Id,
+                    LinkedUserId = emp.LinkedUserId,
+                    EmployeeNumber = emp.EmployeeNumber,
+                    FirstName = emp.FirstName,
+                    LastName = emp.LastName,
+                    Email = emp.Email,
+                    Phone = emp.Phone,
+                    IdNumber = emp.IdNumber,
+                    IdType = emp.IdType,
+                    Role = emp.Role,
+                    Branch = emp.Branch,
+                    EmploymentType = emp.EmploymentType,
+                    Status = emp.Status,
+                    RateType = emp.RateType,
+                    HourlyRate = emp.HourlyRate,
+                    TaxNumber = emp.TaxNumber,
+                    BankName = emp.BankName,
+                    LeaveBalance = emp.AnnualLeaveBalance,
+                    EmploymentDate = emp.EmploymentDate,
+                    ShiftStartTime = emp.ShiftStartTime,
+                    ShiftEndTime = emp.ShiftEndTime,
+                    IsBibc = emp.IsBibc
+                };
+
+                var existing = _allEmployees.FirstOrDefault(e => e.Id == change.EntityId || e.Id == emp.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null)
+                    {
+                        _allEmployees.Add(summary);
+                    }
+                    else
+                    {
+                        var idx = _allEmployees.IndexOf(existing);
+                        _allEmployees[idx] = summary;
+                    }
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null)
+                    {
+                        var idx = _allEmployees.IndexOf(existing);
+                        _allEmployees[idx] = summary;
+                    }
+                    else
+                    {
+                        _allEmployees.Add(summary);
+                    }
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null)
+                    {
+                        _allEmployees.Remove(existing);
+                    }
+                }
+
+                FilterItems();
+            });
         }
 
         private void LoadLayout()

@@ -1,0 +1,178 @@
+<UserControl x:Class="OCC.WpfClient.Features.AttendanceHub.Views.WageSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:OCC.WpfClient.Features.AttendanceHub.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1100"
+             d:DataContext="{d:DesignInstance vm:WageSettingsViewModel}">
+
+    <Grid Background="{StaticResource BackgroundDark}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Header -->
+            <RowDefinition Height="*"/>     <!-- Settings Panels -->
+            <RowDefinition Height="Auto"/>  <!-- Footer / Save Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- PAGE HEADER -->
+        <Border Grid.Row="0" Margin="24,16,24,12" Padding="0,0,0,12" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="&#xE713;" Style="{StaticResource SymbolIcon}" 
+                           Foreground="{StaticResource OrangeBrush}" FontSize="28" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Wage System Settings" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                    <TextBlock Text="Configure branch pay frequencies, BIBC rates, shift bounds, and advance recovery rules" 
+                               FontSize="13" Foreground="{StaticResource TextSub}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- SETTINGS PANELS BODY -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,0,24,16">
+
+                <!-- PANEL 1: BRANCH PAY FREQUENCIES -->
+                <Border Background="{StaticResource InputBackground}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBlock Text="&#xE81D;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="20"/>
+                            <TextBlock Text="Branch Pay Frequency Defaults" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Cape Town Default Frequency" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox SelectedItem="{Binding Settings.CptDefaultPayFrequency}" Style="{StaticResource ModernComboBox}" Margin="0,6,0,0">
+                                    <ComboBoxItem Content="Weekly"/>
+                                    <ComboBoxItem Content="Fortnightly"/>
+                                </ComboBox>
+                                <TextBlock Text="Default cycle strategy for CPT hourly workers." FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Johannesburg Default Frequency" Style="{StaticResource FormLabelText}"/>
+                                <ComboBox SelectedItem="{Binding Settings.JhbDefaultPayFrequency}" Style="{StaticResource ModernComboBox}" Margin="0,6,0,0">
+                                    <ComboBoxItem Content="Fortnightly"/>
+                                    <ComboBoxItem Content="Weekly"/>
+                                </ComboBox>
+                                <TextBlock Text="Default cycle strategy for JHB hourly workers (can be overridden on run generation)." FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- PANEL 2: BIBC & DEDUCTIONS -->
+                <Border Background="{StaticResource InputBackground}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBlock Text="&#xEABC;" Style="{StaticResource SymbolIcon}" Foreground="#FBBF24" FontSize="20"/>
+                            <TextBlock Text="BIBC Rates &amp; Default Allowances / Deductions" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="BIBC Rate Per Worked Day (R)" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Settings.BibcRatePerDay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" Margin="0,6,0,0"/>
+                                <TextBlock Text="Calculated for BIBC registered Cape Town staff." FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Default Supervisor Fee (R)" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Settings.DefaultSupervisorFee, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" Margin="0,6,0,0"/>
+                                <TextBlock Text="Incentive fee per supervisor." FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Housing Washing Fee (R)" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Settings.DefaultCompanyHousingWashingFee, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" Margin="0,6,0,0"/>
+                                <TextBlock Text="Flat washing deduction for housed staff." FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- PANEL 3: SHIFTS & LUNCH DEDUCTION -->
+                <Border Background="{StaticResource InputBackground}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBlock Text="&#xE825;" Style="{StaticResource SymbolIcon}" Foreground="#34D399" FontSize="20"/>
+                            <TextBlock Text="Shift Window &amp; Lunch Deduction Rules" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Lunch Deduction Checkout Hour (Default 13 = 13:00)" Style="{StaticResource FormLabelText}"/>
+                                <TextBox Text="{Binding Settings.LunchEndHourThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" Margin="0,6,0,0"/>
+                                <TextBlock Text="Only deducts 1 hour lunch if checkout is at/after this hour." FontSize="11" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <CheckBox IsChecked="{Binding Settings.DeductLunchOnSaturday}" Content="Deduct lunch on Saturday Overtime" Foreground="{StaticResource TextMain}" Margin="0,0,0,8"/>
+                                <CheckBox IsChecked="{Binding Settings.DeductLunchOnSunday}" Content="Deduct lunch on Sunday Overtime" Foreground="{StaticResource TextMain}" Margin="0,0,0,8"/>
+                                <CheckBox IsChecked="{Binding Settings.DeductLunchOnPublicHoliday}" Content="Deduct lunch on Public Holidays" Foreground="{StaticResource TextMain}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- PANEL 4: DRAFT RUN PROJECTIONS -->
+                <Border Background="{StaticResource InputBackground}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource SymbolIcon}" Foreground="#C084FC" FontSize="20"/>
+                            <TextBlock Text="Draft Run Projections Behavior" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,4,0,0">
+                            <CheckBox IsChecked="{Binding Settings.EnableProjectedHours}" Content="Enable Thursday &amp; Friday projected hours calculation on draft wage runs" 
+                                       Foreground="{StaticResource TextMain}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,4"/>
+                            <TextBlock Text="When enabled, draft runs generated before Friday end will project standard daily shift hours assuming full attendance." 
+                                       FontSize="11" Foreground="{StaticResource TextSub}" Margin="24,0,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- FOOTER SAVE BAR -->
+        <Border Grid.Row="2" Background="{StaticResource BackgroundDarker}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,1,0,0" Padding="24,12">
+            <Grid>
+                <TextBlock Text="Changes take effect immediately on next draft wage run generation." 
+                           Foreground="{StaticResource TextSub}" FontSize="12" VerticalAlignment="Center"/>
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding SaveSettingsCommand}" HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74E;" Style="{StaticResource SymbolIcon}" Foreground="White" FontSize="12" Margin="0,0,6,0"/>
+                        <TextBlock Text="Save Settings" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

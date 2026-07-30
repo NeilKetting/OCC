@@ -28,6 +28,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly IToastService _toastService;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly ISettingsService _settingsService;
+        private readonly OCC.WpfClient.Services.Infrastructure.LocalSettingsService _localSettingsService;
         private readonly IAuthService _authService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private readonly IDialogService _dialogService;
@@ -38,6 +39,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         [ObservableProperty]
         private bool _isOtherProjectSelected;
+
+        [ObservableProperty]
+        private bool _isCustomProjectSuggestionsOpen;
+
+        public ObservableCollection<string> CustomProjectSuggestions { get; } = new();
 
         [ObservableProperty]
         private OrderWrapper? _currentOrder;
@@ -88,6 +94,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             IDialogService dialogService,
             IGoogleMapsService googleMapsService,
             ISettingsService settingsService,
+            OCC.WpfClient.Services.Infrastructure.LocalSettingsService localSettingsService,
             IAuthService authService,
             OCC.WpfClient.Services.Infrastructure.ConnectionSettings connectionSettings,
             ILogger<PurchaseOrderDetailViewModel> logger)
@@ -102,6 +109,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _dialogService = dialogService;
             _googleMapsService = googleMapsService;
             _settingsService = settingsService;
+            _localSettingsService = localSettingsService;
             _authService = authService;
             _connectionSettings = connectionSettings;
             _logger = logger;
@@ -131,6 +139,70 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 {
                     await UpdateAddressSuggestionsAsync();
                 }
+            }
+            else if (e.PropertyName == nameof(OrderWrapper.ProjectName))
+            {
+                if (IsOtherProjectSelected && CurrentOrder != null)
+                {
+                    FilterCustomProjectSuggestions(CurrentOrder.ProjectName);
+                }
+            }
+        }
+
+        public void FilterCustomProjectSuggestions(string? searchText)
+        {
+            if (!IsOtherProjectSelected)
+            {
+                CustomProjectSuggestions.Clear();
+                IsCustomProjectSuggestionsOpen = false;
+                return;
+            }
+
+            var history = _localSettingsService.Settings.CustomProjectHistory ?? new System.Collections.Generic.List<string>();
+            if (!history.Any())
+            {
+                CustomProjectSuggestions.Clear();
+                IsCustomProjectSuggestionsOpen = false;
+                return;
+            }
+
+            var query = searchText?.Trim() ?? string.Empty;
+            var filtered = string.IsNullOrWhiteSpace(query)
+                ? history
+                : history.Where(p => p.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            CustomProjectSuggestions.Clear();
+            foreach (var item in filtered)
+            {
+                CustomProjectSuggestions.Add(item);
+            }
+
+            IsCustomProjectSuggestionsOpen = CustomProjectSuggestions.Count > 0;
+        }
+
+        [RelayCommand]
+        public void SelectCustomProjectSuggestion(string project)
+        {
+            if (CurrentOrder != null && !string.IsNullOrWhiteSpace(project))
+            {
+                CurrentOrder.ProjectName = project;
+            }
+            IsCustomProjectSuggestionsOpen = false;
+        }
+
+        [RelayCommand]
+        public void RemoveCustomProjectSuggestion(string project)
+        {
+            if (string.IsNullOrWhiteSpace(project)) return;
+            _localSettingsService.RemoveCustomProjectHistory(project);
+            FilterCustomProjectSuggestions(CurrentOrder?.ProjectName);
+        }
+
+        public void AddCurrentCustomProjectToHistory()
+        {
+            if (IsOtherProjectSelected && CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.ProjectName))
+            {
+                _localSettingsService.AddCustomProjectHistory(CurrentOrder.ProjectName);
             }
         }
 
@@ -520,6 +592,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     {
                         CurrentOrder.ProjectName = string.Empty;
                     }
+                    FilterCustomProjectSuggestions(CurrentOrder.ProjectName);
                 }
                 else
                 {
@@ -527,6 +600,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     CurrentOrder.ProjectName = value.Name;
                     CurrentOrder.Attention = value.ProjectManager ?? string.Empty;
                     IsOtherProjectSelected = false;
+                    CustomProjectSuggestions.Clear();
+                    IsCustomProjectSuggestionsOpen = false;
 
                     if (!_isPopulating)
                     {

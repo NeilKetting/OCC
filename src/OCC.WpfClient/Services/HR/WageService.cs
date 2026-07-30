@@ -85,7 +85,9 @@ namespace OCC.WpfClient.Services
             DateTime startDate, DateTime endDate,
             string? payType, string? branch,
             decimal totalGasCharge, decimal defaultSupervisorFee,
-            decimal companyHousingWashingFee, string? notes = null)
+            decimal companyHousingWashingFee, string? notes = null,
+            WageRunType runType = WageRunType.Standard,
+            PayFrequency payFrequency = PayFrequency.Fortnightly)
         {
             EnsureAuthorization();
             var request = new WageRun
@@ -97,7 +99,9 @@ namespace OCC.WpfClient.Services
                 InputTotalGasCharge = totalGasCharge,
                 InputDefaultSupervisorFee = defaultSupervisorFee,
                 InputCompanyHousingWashingFee = companyHousingWashingFee,
-                Notes = notes
+                Notes = notes,
+                RunType = runType,
+                PayFrequency = payFrequency
             };
 
             var response = await _httpClient.PostAsJsonAsync(GetFullUrl("api/WageRuns/draft"), request, _options);
@@ -108,6 +112,34 @@ namespace OCC.WpfClient.Services
             }
             return await response.Content.ReadFromJsonAsync<WageRun>(_options)
                 ?? throw new Exception("Failed to deserialize draft response.");
+        }
+
+        public async Task<WageSettings> GetWageSettingsAsync()
+        {
+            EnsureAuthorization();
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<WageSettings>(
+                    GetFullUrl("api/WageSettings"), _options) ?? new WageSettings();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching wage settings");
+                return new WageSettings();
+            }
+        }
+
+        public async Task<WageSettings> UpdateWageSettingsAsync(WageSettings settings)
+        {
+            EnsureAuthorization();
+            var response = await _httpClient.PutAsJsonAsync(GetFullUrl("api/WageSettings"), settings, _options);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception(error);
+            }
+            return await response.Content.ReadFromJsonAsync<WageSettings>(_options)
+                ?? settings;
         }
 
         public async Task<WageRun> FinalizeRunAsync(WageRun run)

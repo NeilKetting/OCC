@@ -99,13 +99,16 @@ namespace OCC.Shared.Models
         /// <summary> Deduction for PPE (Personal Protective Equipment). </summary>
         public decimal DeductionPPE { get; set; }
 
+        /// <summary> Amount deducted to recover prior ad-hoc ("Mamparra") advance payouts. </summary>
+        public decimal DeductionAdvanceRecovery { get; set; }
+
         /// <summary> Supervisor incentive fee (e.g., R500). </summary>
         public decimal IncentiveSupervisor { get; set; }
 
         /// <summary> 
         /// Final payout amount: TotalWage + Incentives - Deductions. 
         /// </summary>
-        public decimal NetPay => Math.Max(0m, (TotalWage + IncentiveSupervisor) - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + BibcAmount));
+        public decimal NetPay => Math.Max(0m, (TotalWage + IncentiveSupervisor) - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + DeductionAdvanceRecovery + BibcAmount));
 
         /// <summary> Snapshot of worked days in the first week of the cycle. </summary>
         public double DaysWorkedWeek1 { get; set; }

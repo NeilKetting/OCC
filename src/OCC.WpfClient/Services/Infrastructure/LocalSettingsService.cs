@@ -39,6 +39,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         public System.Collections.Generic.List<OCC.WpfClient.Features.Main.Models.WidgetConfig>? DashboardWidgets { get; set; }
         public bool DisableOutlookSync { get; set; } = false;
         public bool MuteOutlookReminders { get; set; } = false;
+        public System.Collections.Generic.List<string> CustomProjectHistory { get; set; } = new System.Collections.Generic.List<string>();
     }
 
     public class LocalSettingsService
@@ -78,7 +79,12 @@ namespace OCC.WpfClient.Services.Infrastructure
                 if (File.Exists(_filePath))
                 {
                     var json = File.ReadAllText(_filePath);
-                    return JsonSerializer.Deserialize<LocalSettings>(json) ?? new LocalSettings();
+                    var settings = JsonSerializer.Deserialize<LocalSettings>(json) ?? new LocalSettings();
+                    if (settings.CustomProjectHistory == null)
+                    {
+                        settings.CustomProjectHistory = new System.Collections.Generic.List<string>();
+                    }
+                    return settings;
                 }
             }
             catch (Exception ex)
@@ -100,6 +106,39 @@ namespace OCC.WpfClient.Services.Infrastructure
             {
                 _logger.LogWarning(ex, "Failed to save local settings to {FilePath}.", _filePath);
                 _toastService.ShowWarning("Settings not saved", "Your local settings could not be saved.");
+            }
+        }
+
+        public void AddCustomProjectHistory(string project)
+        {
+            if (string.IsNullOrWhiteSpace(project)) return;
+            var trimmed = project.Trim();
+            if (_settings.CustomProjectHistory == null)
+            {
+                _settings.CustomProjectHistory = new System.Collections.Generic.List<string>();
+            }
+
+            // Remove existing case-insensitive duplicate to re-insert at top
+            _settings.CustomProjectHistory.RemoveAll(p => string.Equals(p, trimmed, StringComparison.OrdinalIgnoreCase));
+            _settings.CustomProjectHistory.Insert(0, trimmed);
+
+            // Limit history to 50 items
+            if (_settings.CustomProjectHistory.Count > 50)
+            {
+                _settings.CustomProjectHistory = _settings.CustomProjectHistory.GetRange(0, 50);
+            }
+
+            Save();
+        }
+
+        public void RemoveCustomProjectHistory(string project)
+        {
+            if (string.IsNullOrWhiteSpace(project) || _settings.CustomProjectHistory == null) return;
+            var trimmed = project.Trim();
+            int removed = _settings.CustomProjectHistory.RemoveAll(p => string.Equals(p, trimmed, StringComparison.OrdinalIgnoreCase));
+            if (removed > 0)
+            {
+                Save();
             }
         }
     }

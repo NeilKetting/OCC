@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.DTOs;
+using OCC.Shared.Models;
 using OCC.WpfClient.Services.Infrastructure;
 using OCC.WpfClient.Services.Interfaces;
 using System;
@@ -27,7 +28,16 @@ namespace OCC.WpfClient.Services
         public event Action<string>? NotificationReceived;
         public event Action<DashboardUpdateDto>? DashboardUpdateReceived;
         public event Action<ChatMessageDto>? ChatMessageReceived;
+        event Action<List<UserConnectionInfo>> ISignalRService.UserListUpdated { add => UserListUpdated += value; remove => UserListUpdated -= value; }
+        event Action<string> ISignalRService.NotificationReceived { add => NotificationReceived += value; remove => NotificationReceived -= value; }
+        event Action<DashboardUpdateDto> ISignalRService.DashboardUpdateReceived { add => DashboardUpdateReceived += value; remove => DashboardUpdateReceived -= value; }
         public event Action<Guid>? SessionDeleted;
+
+        // Time & Attendance Delta Streaming Events
+        public event Action<EntityChangeDto<Employee>>? OnEmployeeChanged;
+        public event Action<EntityChangeDto<AttendanceRecord>>? OnAttendanceRecordChanged;
+        public event Action<EntityChangeDto<WageRun>>? OnWageRunChanged;
+        public event Action<EntityChangeDto<WageSettings>>? OnWageSettingsChanged;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public bool IsChatConnected => _chatHubConnection?.State == HubConnectionState.Connected;
@@ -133,6 +143,31 @@ namespace OCC.WpfClient.Services
             _hubConnection.On<DashboardUpdateDto>("DashboardUpdate", (update) =>
             {
                 DashboardUpdateReceived?.Invoke(update);
+            });
+
+            // Time & Attendance Delta Streaming Handlers
+            _hubConnection.On<EntityChangeDto<Employee>>("EmployeeChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV EmployeeChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnEmployeeChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<AttendanceRecord>>("AttendanceRecordChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV AttendanceRecordChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnAttendanceRecordChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<WageRun>>("WageRunChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV WageRunChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnWageRunChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<WageSettings>>("WageSettingsChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV WageSettingsChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnWageSettingsChanged?.Invoke(change);
             });
 
             _hubConnection.On<string, string, string>("EntityUpdate", (entityType, action, idStr) =>

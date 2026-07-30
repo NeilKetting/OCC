@@ -12,7 +12,10 @@ using OCC.API.Data;
 using OCC.Shared.Models;
 using ExcelDataReader;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Moq;
 using OCC.API.Controllers;
+using OCC.API.Hubs;
 using OCC.API.Services;
 
 namespace OCC.Tests
@@ -212,7 +215,13 @@ namespace OCC.Tests
             // Build the WageCalculationService
             var wageCalc = new WageCalculationService(new WageCalculationOptions());
             var wageRunService = new WageRunService(context, wageCalc, null!);
-            var controller = new WageRunsController(context, wageRunService);
+            var mockHub = new Mock<IHubContext<NotificationHub>>();
+            var mockClients = new Mock<IHubClients>();
+            var mockClientProxy = new Mock<IClientProxy>();
+            mockHub.Setup(h => h.Clients).Returns(mockClients.Object);
+            mockClients.Setup(c => c.All).Returns(mockClientProxy.Object);
+
+            var controller = new WageRunsController(context, wageRunService, mockHub.Object);
 
             // Generate the draft request
             var draftReq = new WageRun

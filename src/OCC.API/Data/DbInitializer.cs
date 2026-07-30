@@ -72,6 +72,75 @@ namespace OCC.API.Data
                 logger.LogWarning("Manual schema patch for SupplierContacts table skipped or failed: {Message}", ex.Message);
             }
 
+            // Manual Schema Patch: Ensure WageSettings table and Overhaul columns exist
+            try
+            {
+                logger.LogInformation("Applying manual schema patch for WageSettings table and overhaul columns...");
+                context.Database.ExecuteSqlRaw(@"
+                    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WageSettings]') AND type in (N'U'))
+                    BEGIN
+                        CREATE TABLE [dbo].[WageSettings] (
+                            [Id] UNIQUEIDENTIFIER NOT NULL,
+                            [CptDefaultPayFrequency] INT NOT NULL DEFAULT 0,
+                            [JhbDefaultPayFrequency] INT NOT NULL DEFAULT 1,
+                            [WeeklyShiftCutoffDay] INT NOT NULL DEFAULT 3,
+                            [BibcRatePerDay] DECIMAL(18,2) NOT NULL DEFAULT 28.75,
+                            [DefaultSupervisorFee] DECIMAL(18,2) NOT NULL DEFAULT 500.00,
+                            [DefaultCompanyHousingWashingFee] DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+                            [DefaultShiftStartTime] TIME(7) NOT NULL DEFAULT '07:00:00',
+                            [DefaultShiftEndTime] TIME(7) NOT NULL DEFAULT '17:00:00',
+                            [LunchEndHourThreshold] INT NOT NULL DEFAULT 13,
+                            [DeductLunchOnSaturday] BIT NOT NULL DEFAULT 0,
+                            [DeductLunchOnSunday] BIT NOT NULL DEFAULT 0,
+                            [DeductLunchOnPublicHoliday] BIT NOT NULL DEFAULT 0,
+                            [EnableProjectedHours] BIT NOT NULL DEFAULT 1,
+                            [AutoRecoverAdHocAdvances] BIT NOT NULL DEFAULT 1,
+                            [CreatedAtUtc] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                            [CreatedBy] NVARCHAR(MAX) NOT NULL DEFAULT 'System',
+                            [UpdatedAtUtc] DATETIME2 NULL,
+                            [UpdatedBy] NVARCHAR(MAX) NULL,
+                            [IsActive] BIT NOT NULL DEFAULT 1,
+                            [RowVersion] VARBINARY(MAX) NULL,
+                            CONSTRAINT [PK_WageSettings] PRIMARY KEY CLUSTERED ([Id] ASC)
+                        );
+                    END
+
+                    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'WageSettings' AND COLUMN_NAME = 'DefaultShiftStartTime' AND DATA_TYPE <> 'time')
+                    BEGIN
+                        DECLARE @Constraint1 NVARCHAR(200);
+                        SELECT @Constraint1 = d.name
+                        FROM sys.default_constraints d
+                        JOIN sys.columns c ON d.parent_column_id = c.column_id AND d.parent_object_id = c.object_id
+                        WHERE c.object_id = OBJECT_ID('WageSettings') AND c.name = 'DefaultShiftStartTime';
+
+                        IF @Constraint1 IS NOT NULL
+                            EXEC('ALTER TABLE [WageSettings] DROP CONSTRAINT [' + @Constraint1 + '];');
+
+                        DECLARE @Constraint2 NVARCHAR(200);
+                        SELECT @Constraint2 = d.name
+                        FROM sys.default_constraints d
+                        JOIN sys.columns c ON d.parent_column_id = c.column_id AND d.parent_object_id = c.object_id
+                        WHERE c.object_id = OBJECT_ID('WageSettings') AND c.name = 'DefaultShiftEndTime';
+
+                        IF @Constraint2 IS NOT NULL
+                            EXEC('ALTER TABLE [WageSettings] DROP CONSTRAINT [' + @Constraint2 + '];');
+
+                        ALTER TABLE WageSettings ALTER COLUMN DefaultShiftStartTime TIME(7) NOT NULL;
+                        ALTER TABLE WageSettings ALTER COLUMN DefaultShiftEndTime TIME(7) NOT NULL;
+
+                        ALTER TABLE WageSettings ADD CONSTRAINT DF_WageSettings_DefaultShiftStartTime DEFAULT '07:00:00' FOR DefaultShiftStartTime;
+                        ALTER TABLE WageSettings ADD CONSTRAINT DF_WageSettings_DefaultShiftEndTime DEFAULT '17:00:00' FOR DefaultShiftEndTime;
+                    END");
+
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRuns') AND name = 'RunType') ALTER TABLE WageRuns ADD RunType INT NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRuns') AND name = 'PayFrequency') ALTER TABLE WageRuns ADD PayFrequency INT NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WageRunLines') AND name = 'DeductionAdvanceRecovery') ALTER TABLE WageRunLines ADD DeductionAdvanceRecovery DECIMAL(18,2) NOT NULL DEFAULT 0;");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Manual schema patch for WageSettings skipped or failed: {Message}", ex.Message);
+            }
+
             // Standardize task IsGroup data integrity for existing/legacy database records
             try
             {

@@ -104,16 +104,6 @@
                 <!-- ══════════════════ QUICKBOOKS TOOLBAR ══════════════════ -->
                 <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorder}" BorderThickness="0,0,0,1" Padding="0,0,0,6" Margin="0,0,0,10">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Refresh Button -->
-                        <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding LoadDataCommand}" ToolTip="Refresh Data">
-                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
-                                <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" FontSize="18" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="Refresh" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <Border Width="1" Height="32" Background="#20FFFFFF" VerticalAlignment="Center" Margin="8,0"/>
-
                         <!-- Leave Application Button -->
                         <Button Style="{StaticResource QuickBooksToolbarButtonStyle}" Command="{Binding OpenApplyPanelCommand}" ToolTip="Apply for Leave">
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Center">

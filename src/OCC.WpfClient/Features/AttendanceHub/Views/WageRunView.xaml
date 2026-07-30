@@ -50,10 +50,6 @@
                     </TextBlock>
                 </StackPanel>
                 <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
-                    <!-- Refresh / Load history -->
-                    <Button Style="{StaticResource GhostButton}" Command="{Binding LoadDataCommand}" ToolTip="Refresh history" Margin="0,2,0,2">
-                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}"/>
-                    </Button>
                     <!-- Print Options Dropdown -->
                     <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" Click="PrintButton_Click" ToolTip="Print Options"
                             Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
@@ -102,24 +98,24 @@
                     <!-- Top Row: Main Filters -->
                     <WrapPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,10">
                         <!-- Start Date -->
-                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="START DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" 
-                                        Style="{StaticResource ModernDatePicker}" Width="140"/>
+                                        Style="{StaticResource ModernDatePicker}" Width="130"/>
                         </StackPanel>
 
                         <!-- End Date (auto-filled) -->
-                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="END DATE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
-                                        Style="{StaticResource ModernDatePicker}" Width="140"/>
+                                        Style="{StaticResource ModernDatePicker}" Width="130"/>
                         </StackPanel>
 
                         <!-- Salary Type -->
-                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="SALARY TYPE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding PayTypeOptions}" SelectedItem="{Binding SelectedPayType}"
-                                       Style="{StaticResource ModernComboBox}" Width="140">
+                                       Style="{StaticResource ModernComboBox}" Width="120">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
@@ -128,18 +124,32 @@
                             </ComboBox>
                         </StackPanel>
 
+                        <!-- Run Type -->
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
+                            <TextBlock Text="RUN TYPE" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding RunTypeOptions}" SelectedItem="{Binding SelectedRunType}"
+                                       Style="{StaticResource ModernComboBox}" Width="130"/>
+                        </StackPanel>
+
+                        <!-- Frequency -->
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
+                            <TextBlock Text="FREQUENCY" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding PayFrequencyOptions}" SelectedItem="{Binding SelectedPayFrequency}"
+                                       Style="{StaticResource ModernComboBox}" Width="110"/>
+                        </StackPanel>
+
                         <!-- Branch -->
-                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="BRANCH" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding BranchOptions}" SelectedItem="{Binding SelectedBranch}"
                                        Style="{StaticResource ModernComboBox}" Width="140"/>
                         </StackPanel>
 
                         <!-- Notes -->
-                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Bottom">
                             <TextBlock Text="NOTES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
-                                      Style="{StaticResource ModernInput}" Width="180"/>
+                                      Style="{StaticResource ModernInput}" Width="160"/>
                         </StackPanel>
 
                         <!-- BIBC Rate (Admin-only) -->
@@ -599,12 +609,12 @@
                           VirtualizingPanel.IsVirtualizing="True"
                           VirtualizingPanel.VirtualizationMode="Recycling">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Branch" Binding="{Binding Branch}" Width="120"/>
-                        <DataGridTextColumn Header="Pay Type" Binding="{Binding PayType}" Width="120"/>
-                        <DataGridTextColumn Header="Period Start" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="120"/>
-                        <DataGridTextColumn Header="Period End" Binding="{Binding EndDate, StringFormat='dd MMM yyyy'}" Width="120"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
-                        <DataGridTextColumn Header="Lines" Binding="{Binding Lines.Count}" Width="60">
+                            <DataGridTextColumn Header="Branch" Binding="{Binding Branch}" Width="Auto"/>
+                            <DataGridTextColumn Header="Pay Type" Binding="{Binding PayType}" Width="Auto"/>
+                            <DataGridTextColumn Header="Period Start" Binding="{Binding StartDate, StringFormat='dd MMM yyyy'}" Width="Auto"/>
+                            <DataGridTextColumn Header="Period End" Binding="{Binding EndDate, StringFormat='dd MMM yyyy'}" Width="Auto"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
+                            <DataGridTextColumn Header="Lines" Binding="{Binding Lines.Count}" Width="Auto">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Center"/></Style>
                             </DataGridTextColumn.ElementStyle>

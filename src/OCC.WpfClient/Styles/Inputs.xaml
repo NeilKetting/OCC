@@ -10,10 +10,10 @@
         <Setter Property="BorderBrush" Value="{StaticResource InputBorder}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="8,0" />
-        <Setter Property="Height" Value="35" />
+        <Setter Property="Height" Value="30" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="FontSize" Value="{StaticResource FontSizeRegular}" />
+        <Setter Property="FontSize" Value="12" />
         <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -139,9 +139,9 @@
         <Setter Property="BorderBrush" Value="{StaticResource InputBorder}" />
         <Setter Property="Foreground" Value="{StaticResource TextMain}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="FontSize" Value="{StaticResource FontSizeRegular}" />
-        <Setter Property="Padding" Value="15,0,0,0" />
-        <Setter Property="Height" Value="35" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="10,0,0,0" />
+        <Setter Property="Height" Value="30" />
         <Setter Property="IsTextSearchEnabled" Value="True" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -150,7 +150,7 @@
                     <Grid x:Name="templateRoot" SnapsToDevicePixels="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="24" />
                         </Grid.ColumnDefinitions>
                         
                         <ToggleButton x:Name="toggleButton"
@@ -433,8 +433,8 @@
         <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="8,0"/>
-        <Setter Property="Height" Value="35" />
-        <Setter Property="FontSize" Value="{StaticResource FontSizeRegular}"/>
+        <Setter Property="Height" Value="30" />
+        <Setter Property="FontSize" Value="12"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>

@@ -45,6 +45,7 @@ namespace OCC.API.Data
         public DbSet<WageRun> WageRuns { get; set; }
         public DbSet<WageRunLine> WageRunLines { get; set; }
         public DbSet<EmployeeLoan> EmployeeLoans { get; set; }
+        public DbSet<WageSettings> WageSettings { get; set; }
 
         public DbSet<ClockingEvent> ClockingEvents { get; set; }
         public DbSet<DailyTimesheet> DailyTimesheets { get; set; }
@@ -250,6 +251,12 @@ namespace OCC.API.Data
                 entity.Property(e => e.AnnualLeaveBalance).HasConversion<decimal>();
                 entity.Property(e => e.SickLeaveBalance).HasConversion<decimal>();
                 entity.Property(e => e.LeaveBalance).HasConversion<decimal>();
+            });
+
+            modelBuilder.Entity<WageSettings>(entity =>
+            {
+                entity.Property(e => e.DefaultShiftStartTime).HasColumnType("time");
+                entity.Property(e => e.DefaultShiftEndTime).HasColumnType("time");
             });
 
             // Configure relationships if needed

@@ -213,6 +213,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             set { if (Model.DeductionPPE != value) { Model.DeductionPPE = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(DeductionPPEDisplay)); } }
         }
 
+        public decimal DeductionAdvanceRecovery
+        {
+            get => Model.DeductionAdvanceRecovery;
+            set { if (Model.DeductionAdvanceRecovery != value) { Model.DeductionAdvanceRecovery = value; RecalculateAndNotify(); OnPropertyChanged(); OnPropertyChanged(nameof(DeductionAdvanceRecoveryDisplay)); } }
+        }
+
+        public string DeductionAdvanceRecoveryDisplay => DeductionAdvanceRecovery > 0 ? $"-R{DeductionAdvanceRecovery:F2}" : "-";
+
         public decimal IncentiveSupervisor
         {
             get => Model.IncentiveSupervisor;

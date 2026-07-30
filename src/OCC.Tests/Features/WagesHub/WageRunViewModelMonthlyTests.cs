@@ -55,7 +55,8 @@ namespace OCC.Tests.Features.WagesHub
                 _localSettings,
                 _mockPermissionService.Object,
                 _mockSettingsService.Object,
-                _mockAuthService.Object
+                _mockAuthService.Object,
+                new Mock<ISignalRService>().Object
             );
         }
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
 using OCC.API.Hubs;
+using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 
 namespace OCC.API.Controllers
@@ -88,6 +89,7 @@ namespace OCC.API.Controllers
                 await SyncLeaveRequestForAbsenceAsync(record);
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "AttendanceRecord", "Create", record.Id);
+                await _hubContext.Clients.All.SendAsync("AttendanceRecordChanged", new EntityChangeDto<AttendanceRecord> { Action = "Created", Entity = record, EntityId = record.Id });
                 
                 return CreatedAtAction("GetAttendanceRecord", new { id = record.Id }, record);
             }
@@ -124,6 +126,7 @@ namespace OCC.API.Controllers
                 await SyncLeaveRequestForAbsenceAsync(existingRecord);
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "AttendanceRecord", "Update", id);
+                await _hubContext.Clients.All.SendAsync("AttendanceRecordChanged", new EntityChangeDto<AttendanceRecord> { Action = "Updated", Entity = existingRecord, EntityId = id });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -171,6 +174,7 @@ namespace OCC.API.Controllers
                 }
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "AttendanceRecord", "Delete", id);
+                await _hubContext.Clients.All.SendAsync("AttendanceRecordChanged", new EntityChangeDto<AttendanceRecord> { Action = "Deleted", Entity = record, EntityId = id });
 
                 return NoContent();
             }

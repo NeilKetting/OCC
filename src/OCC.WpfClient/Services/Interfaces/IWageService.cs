@@ -19,7 +19,12 @@ namespace OCC.WpfClient.Services.Interfaces
             decimal totalGasCharge,
             decimal defaultSupervisorFee,
             decimal companyHousingWashingFee,
-            string? notes = null);
+            string? notes = null,
+            WageRunType runType = WageRunType.Standard,
+            PayFrequency payFrequency = PayFrequency.Fortnightly);
+
+        Task<WageSettings> GetWageSettingsAsync();
+        Task<WageSettings> UpdateWageSettingsAsync(WageSettings settings);
 
         /// <summary>Persists a finalized wage run to the API.</summary>
         Task<WageRun> FinalizeRunAsync(WageRun run);

@@ -42,13 +42,6 @@
                     <TextBlock Text="DASHBOARD" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
                     <TextBlock Text="{Binding TodayDate}" Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0"/>
                 </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource GhostButton}"
-                            Command="{Binding LoadDashboardDataCommand}"
-                            ToolTip="Refresh" Margin="8,0,0,0">
-                        <TextBlock Text="&#xE72C;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource AccentBlue}" FontSize="16" Margin="0,0,8,0"/>
-                    </Button>
-                </StackPanel>
             </Grid>
         </Border>
 

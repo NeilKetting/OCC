@@ -91,6 +91,20 @@
                         </StackPanel>
                     </RadioButton>
 
+                    <!-- Wage Settings -->
+                    <RadioButton Style="{StaticResource SidebarNavItem}"
+                                  GroupName="AttendanceTabs"
+                                  IsChecked="{Binding ActiveTab, Converter={StaticResource EqualityConverter}, ConverterParameter='WageSettings', Mode=TwoWay}"
+                                  Command="{Binding SetActiveTabCommand}" CommandParameter="WageSettings"
+                                  Visibility="{Binding CanAccessWages, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <TextBlock Text="&#xE713;" Style="{StaticResource SymbolIcon}"
+                                       Foreground="#F43F5E"
+                                       FontSize="16" Margin="0,0,12,0"/>
+                            <TextBlock Text="Wage Settings" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <!-- Loans -->
                     <RadioButton Style="{StaticResource SidebarNavItem}"
                                  GroupName="AttendanceTabs"

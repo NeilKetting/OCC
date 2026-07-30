@@ -81,20 +81,59 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private Dictionary<Guid, IdType> _employeeIdTypeMap = new();
         private Dictionary<Guid, string> _projectNameMap = new();
 
+        private readonly ISignalRService _signalRService;
+
         public AttendanceHistoryListViewModel(
             IAttendanceService attendanceService,
             IEmployeeService employeeService,
             IProjectService projectService,
             IDialogService dialogService,
             IPdfService pdfService,
-            ILogger<AttendanceHistoryListViewModel> logger) : base(pdfService)
+            ILogger<AttendanceHistoryListViewModel> logger,
+            ISignalRService signalRService) : base(pdfService)
         {
             _attendanceService = attendanceService;
             _employeeService = employeeService;
             _projectService = projectService;
             _dialogService = dialogService;
             _logger = logger;
+            _signalRService = signalRService;
             Title = "Attendance History";
+
+            _signalRService.OnAttendanceRecordChanged += OnAttendanceRecordChangedReceived;
+        }
+
+        private void OnAttendanceRecordChangedReceived(OCC.Shared.DTOs.EntityChangeDto<AttendanceRecord> change)
+        {
+            if (change == null || change.Entity == null) return;
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                var rec = change.Entity;
+                var existing = _allRecords.FirstOrDefault(r => r.Id == change.EntityId || r.Id == rec.Id);
+
+                if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null)
+                    {
+                        _allRecords.Remove(existing);
+                        FilterItems();
+                    }
+                }
+                else
+                {
+                    if (existing != null)
+                    {
+                        var idx = _allRecords.IndexOf(existing);
+                        _allRecords[idx] = rec;
+                    }
+                    else
+                    {
+                        _allRecords.Insert(0, rec);
+                    }
+                    FilterItems();
+                }
+            });
         }
 
         public override async Task LoadDataAsync()

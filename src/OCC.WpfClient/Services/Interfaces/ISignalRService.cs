@@ -12,6 +12,12 @@ namespace OCC.WpfClient.Services.Interfaces
         event Action<DashboardUpdateDto> DashboardUpdateReceived;
         event Action<ChatMessageDto>? ChatMessageReceived;
         event Action<Guid>? SessionDeleted;
+
+        // Time & Attendance Delta Payload Real-Time Streaming Events
+        event Action<EntityChangeDto<OCC.Shared.Models.Employee>>? OnEmployeeChanged;
+        event Action<EntityChangeDto<OCC.Shared.Models.AttendanceRecord>>? OnAttendanceRecordChanged;
+        event Action<EntityChangeDto<OCC.Shared.Models.WageRun>>? OnWageRunChanged;
+        event Action<EntityChangeDto<OCC.Shared.Models.WageSettings>>? OnWageSettingsChanged;
         
         bool IsConnected { get; }
         bool IsChatConnected { get; }

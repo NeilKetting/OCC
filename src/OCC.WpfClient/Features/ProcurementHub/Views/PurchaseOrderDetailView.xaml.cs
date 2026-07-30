@@ -71,5 +71,13 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
                 }
             }
         }
+
+        private void CustomProjectInputBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                viewModel.AddCurrentCustomProjectToHistory();
+            }
+        }
     }
 }

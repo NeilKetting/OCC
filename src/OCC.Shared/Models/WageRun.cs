@@ -37,6 +37,12 @@ namespace OCC.Shared.Models
         /// <summary> Which Branch this wage run applies to (e.g., Johannesburg, Cape Town, or All). </summary>
         public string? Branch { get; set; }
 
+        /// <summary> Classification of wage run: Standard, AdHocAdvance ("Mamparra"), or Correction. </summary>
+        public WageRunType RunType { get; set; } = WageRunType.Standard;
+
+        /// <summary> Pay cycle frequency: Weekly, Fortnightly, or Monthly. </summary>
+        public PayFrequency PayFrequency { get; set; } = PayFrequency.Fortnightly;
+
         /// <summary> Collection of individual employee wage calculations for this run. </summary>
         public List<WageRunLine> Lines { get; set; } = new();
 

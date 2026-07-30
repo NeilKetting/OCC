@@ -308,6 +308,10 @@ xmlns:todoViews="clr-namespace:OCC.WpfClient.Features.TodoHub.Views">
         <attndViews:WageRunView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type attndVm:WageSettingsViewModel}">
+        <attndViews:WageSettingsView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type attndVm:LoansManagementViewModel}">
         <attndViews:LoansManagementView />
     </DataTemplate>

@@ -18,6 +18,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private LeaveManagementViewModel _leaveView;
         [ObservableProperty] private WageRunViewModel _wagesView;
         [ObservableProperty] private LoansManagementViewModel _loansView;
+        [ObservableProperty] private WageSettingsViewModel _wageSettingsView;
 
         public AttendanceViewModel(
             AttendanceMenuViewModel menuViewModel,
@@ -26,7 +27,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             TeamManagementViewModel teamsView,
             LeaveManagementViewModel leaveView,
             WageRunViewModel wagesView,
-            LoansManagementViewModel loansView)
+            LoansManagementViewModel loansView,
+            WageSettingsViewModel wageSettingsView)
         {
             MenuViewModel = menuViewModel;
             DashboardView = dashboardView;
@@ -35,6 +37,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             LeaveView = leaveView;
             WagesView = wagesView;
             LoansView = loansView;
+            WageSettingsView = wageSettingsView;
             Title = "Time & Attendance";
 
             CurrentView = DashboardView;
@@ -66,6 +69,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 case "Wages":
                     CurrentView = WagesView;
                     WagesView.LoadDataCommand.Execute(null);
+                    break;
+                case "WageSettings":
+                    CurrentView = WageSettingsView;
+                    WageSettingsView.LoadSettingsCommand.Execute(null);
                     break;
                 case "Loans":
                     CurrentView = LoansView;

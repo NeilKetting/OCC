@@ -88,8 +88,6 @@
                             </Style>
                         </Button.Style>
                     </Button>
-                    <Button Content="Refresh" Command="{Binding RefreshCommand}" 
-                            Width="100" Height="32" Style="{StaticResource CreateIconButton}"/>
                 </StackPanel>
             </Grid>
 

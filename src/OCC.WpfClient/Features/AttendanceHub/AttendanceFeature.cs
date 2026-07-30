@@ -24,6 +24,7 @@ namespace OCC.WpfClient.Features.AttendanceHub
             services.AddTransient<TeamManagementViewModel>();
             services.AddTransient<LeaveManagementViewModel>();
             services.AddTransient<WageRunViewModel>();
+            services.AddTransient<WageSettingsViewModel>();
             services.AddTransient<LoansManagementViewModel>();
             services.AddTransient<AttendanceViewModel>();
         }

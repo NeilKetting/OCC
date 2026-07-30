@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OCC.API.Data;
+using OCC.API.Hubs;
 using OCC.API.Services;
-using OCC.Shared.Models;
 using OCC.Shared.DTOs;
+using OCC.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +21,13 @@ namespace OCC.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IWageRunService _wageRunService;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public WageRunsController(AppDbContext context, IWageRunService wageRunService)
+        public WageRunsController(AppDbContext context, IWageRunService wageRunService, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _wageRunService = wageRunService;
+            _hubContext = hubContext;
         }
 
         // GET: api/WageRuns
@@ -56,6 +60,8 @@ namespace OCC.API.Controllers
         [HttpPost("draft")]
         public async Task<ActionResult<WageRun>> GenerateDraft([FromBody] WageRun request)
         {
+            if (request == null) return BadRequest("Invalid request");
+
             try
             {
                 var draftRun = await _wageRunService.GenerateDraftAsync(request);
@@ -76,6 +82,7 @@ namespace OCC.API.Controllers
             try
             {
                 var finalizedRun = await _wageRunService.FinalizeRunAsync(run);
+                await _hubContext.Clients.All.SendAsync("WageRunChanged", new EntityChangeDto<WageRun> { Action = "Finalized", Entity = finalizedRun, EntityId = finalizedRun.Id });
                 return CreatedAtAction("GetWageRun", new { id = finalizedRun.Id }, finalizedRun);
             }
             catch (ArgumentException ex)
