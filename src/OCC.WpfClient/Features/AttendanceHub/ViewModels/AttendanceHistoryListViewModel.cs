@@ -173,10 +173,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     FilterItems();
                     IsBusy = false; // Unblock UI instantly
 
-                    // Step 2: Hydrate full dataset in background without blocking interaction
-                    await Task.Yield();
-                    _allRecords = fullRecords;
-                    FilterItems();
+                    // Step 2: Hydrate full dataset seamlessly in background after UI finishes rendering initial frame
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allRecords = fullRecords;
+                            FilterItems();
+                        });
+                    });
                 }
                 else
                 {

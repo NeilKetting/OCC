@@ -66,7 +66,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 BusyText = "Loading today's attendance...";
 
                 var employees = await _employeeService.GetEmployeesAsync();
-                var activeEmployees = employees.Where(e => e.Status == EmployeeStatus.Active).ToList();
+                var activeEmployees = employees.Where(e => e.Status != EmployeeStatus.Terminated).ToList();
 
                 var today = DateTime.Today;
                 var records = (await _attendanceService.GetTodaysAttendanceAsync())
@@ -102,14 +102,32 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     });
                 }
 
-                _allRows = rows;
-                ApplyFilter();
+                if (rows.Count > 100)
+                {
+                    // Step 1: Render top 100 rows instantly so user can start working immediately
+                    _allRows = rows.Take(100).ToList();
+                    ApplyFilter();
+                    CalculateTotals(rows);
+                    IsBusy = false; // Unblock UI
 
-                TotalExpected = rows.Count;
-                PresentCount = rows.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late);
-                LateCount = rows.Count(r => r.Status == AttendanceStatus.Late);
-                AbsentCount = rows.Count(r => r.Status == AttendanceStatus.Absent);
-                AttendanceRate = TotalExpected > 0 ? Math.Round((double)PresentCount / TotalExpected * 100, 1) : 0;
+                    // Step 2: Hydrate full dataset seamlessly in background
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allRows = rows;
+                            ApplyFilter();
+                            CalculateTotals(rows);
+                        });
+                    });
+                }
+                else
+                {
+                    _allRows = rows;
+                    ApplyFilter();
+                    CalculateTotals(rows);
+                }
             }
             catch (Exception ex)
             {
@@ -119,6 +137,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        private void CalculateTotals(List<AttendanceStatusRow> rows)
+        {
+            TotalExpected = rows.Count;
+            PresentCount = rows.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late);
+            LateCount = rows.Count(r => r.Status == AttendanceStatus.Late);
+            AbsentCount = rows.Count(r => r.Status == AttendanceStatus.Absent);
+            AttendanceRate = TotalExpected > 0 ? Math.Round((double)PresentCount / TotalExpected * 100, 1) : 0;
         }
 
         private void ApplyFilter()

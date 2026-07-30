@@ -124,8 +124,8 @@ namespace OCC.Tests
             // Act
             var path = await pdfService.GenerateProjectReportPdfAsync(model);
 
-            // Copy to workspace root for easy user visual inspection
-            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleProjectReport.pdf";
+            // Output to temp path for test verification
+            var targetPath = Path.Combine(Path.GetTempPath(), "SampleProjectReport.pdf");
             try
             {
                 if (File.Exists(targetPath))
@@ -137,7 +137,7 @@ namespace OCC.Tests
             catch { }
 
             // Assert
-            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+            Assert.True(File.Exists(path), "The PDF file was not generated.");
         }
 
         [Fact]
@@ -193,8 +193,8 @@ namespace OCC.Tests
                 "",
                 weeks);
 
-            // Copy to workspace root for user visual inspection
-            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleWeeklyAttendanceReport.pdf";
+            // Output to temp path for test verification
+            var targetPath = Path.Combine(Path.GetTempPath(), "SampleWeeklyAttendanceReport.pdf");
             try
             {
                 if (File.Exists(targetPath))
@@ -206,7 +206,7 @@ namespace OCC.Tests
             catch { }
 
             // Assert
-            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+            Assert.True(File.Exists(path), "The PDF file was not generated.");
         }
 
         [Fact]
@@ -247,8 +247,8 @@ namespace OCC.Tests
             // Act
             var path = await pdfService.GenerateEmployeeProfilePdfAsync(employee);
 
-            // Copy to workspace root for easy user visual inspection
-            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleEmployeeProfileReport.pdf";
+            // Output to temp path for test verification
+            var targetPath = Path.Combine(Path.GetTempPath(), "SampleEmployeeProfileReport.pdf");
             try
             {
                 if (File.Exists(targetPath))
@@ -260,7 +260,7 @@ namespace OCC.Tests
             catch { }
 
             // Assert
-            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+            Assert.True(File.Exists(path), "The PDF file was not generated.");
         }
 
         [Fact]
@@ -327,8 +327,8 @@ namespace OCC.Tests
             // Act
             var path = await pdfService.GenerateWageRunPdfAsync(wageRun, hideAfterComments: false);
 
-            // Copy to workspace root for easy user visual inspection
-            var targetPath = @"c:\Users\Neil\source\repos\OCC\SampleWageRunReport.pdf";
+            // Output to temp path for test verification
+            var targetPath = Path.Combine(Path.GetTempPath(), "SampleWageRunReport.pdf");
             try
             {
                 if (File.Exists(targetPath))
@@ -340,7 +340,7 @@ namespace OCC.Tests
             catch { }
 
             // Assert
-            Assert.True(File.Exists(targetPath), "The PDF file was not copied to the workspace root.");
+            Assert.True(File.Exists(path), "The PDF file was not generated.");
         }
     }
 }

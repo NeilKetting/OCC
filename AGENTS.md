@@ -28,6 +28,7 @@
 - [DONE] **WPF Services Feature Organization**: Organized all 33 services in `src/OCC.WpfClient/Services/` into feature subfolders (`HR/`, `Projects/`, `Operations/`, `HSEQ/`, `Portal/`, `Infrastructure/`).
 - [DONE] **User-Level Custom Project Name History & Deletable Auto-Suggestions**: Added per-user history tracking in `%APPDATA%\OCC.WpfClient\settings.json` for custom typed project names on Create Purchase Order screen, with real-time auto-suggestions and inline entry deletion.
 - [DONE] **UI Redundant Refresh & Duplicate Save Buttons Cleaned Up**: Removed legacy refresh buttons across Dashboard, Wage Run, Attendance, Teams, Loans, and Leave views since SignalR streaming updates data automatically; removed duplicate top header Save button in WageSettingsView.
+- [DONE] **Progressive Staged Loading for Attendance Views**: Implemented initial top 100 fast-render + background hydration for `AttendanceHistoryListView` and `AttendanceDashboardView`.
 
 ### Remaining Work [TODO]
 - [TODO] **Progressive List View Loading Expansion**: Expand progressive staged loading (initial top 100 instant load + background hydration) across all remaining WPF list views.
