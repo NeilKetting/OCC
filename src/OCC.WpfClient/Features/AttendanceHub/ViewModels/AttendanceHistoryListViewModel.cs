@@ -162,32 +162,29 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     to = ToDate;
                 }
 
-                var fullRecords = (await _attendanceService.GetAttendanceRecordsAsync(from, to))
+                // Step 1: Fetch top 100 records instantly from API so user can start working immediately
+                var initial100 = (await _attendanceService.GetAttendanceRecordsAsync(from, to, take: 100))
                     .OrderByDescending(r => r.Date)
                     .ToList();
 
-                if (fullRecords.Count > 100)
-                {
-                    // Step 1: Render top 100 records instantly so user can start working immediately
-                    _allRecords = fullRecords.Take(100).ToList();
-                    FilterItems();
-                    IsBusy = false; // Unblock UI instantly
+                _allRecords = initial100;
+                FilterItems();
+                IsBusy = false; // Unblock UI instantly!
 
-                    // Step 2: Hydrate full dataset seamlessly in background after UI finishes rendering initial frame
+                // Step 2: Hydrate full dataset seamlessly in background after UI renders initial frame
+                if (initial100.Count >= 100)
+                {
                     _ = Task.Run(async () =>
                     {
-                        await Task.Delay(200);
+                        var remaining = await _attendanceService.GetAttendanceRecordsAsync(from, to, skip: 100);
+                        var fullList = initial100.Concat(remaining).OrderByDescending(r => r.Date).ToList();
+
                         App.Current?.Dispatcher.Invoke(() =>
                         {
-                            _allRecords = fullRecords;
+                            _allRecords = fullList;
                             FilterItems();
                         });
                     });
-                }
-                else
-                {
-                    _allRecords = fullRecords;
-                    FilterItems();
                 }
             }
             catch (Exception ex)

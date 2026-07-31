@@ -89,7 +89,14 @@ namespace OCC.WpfClient.ModelWrappers
                 PlannedHours = _model.PlannedDurationHours?.TotalHours;
                 ActualHours = _model.ActualDuration?.TotalHours;
                 
-                if (string.IsNullOrEmpty(PlannedDurationText)) UpdatePlannedDurationText();
+                if (!string.IsNullOrWhiteSpace(_model.Duration))
+                {
+                    PlannedDurationText = _model.Duration;
+                }
+                else if (string.IsNullOrEmpty(PlannedDurationText))
+                {
+                    UpdatePlannedDurationText();
+                }
                 if (string.IsNullOrEmpty(ActualDurationText)) UpdateActualDurationText();
                 UpdateStatusColor();
 
@@ -124,6 +131,7 @@ namespace OCC.WpfClient.ModelWrappers
 
             _model.PlannedDurationHours = PlannedHours.HasValue ? TimeSpan.FromHours(PlannedHours.Value) : null;
             _model.ActualDuration = ActualHours.HasValue ? TimeSpan.FromHours(ActualHours.Value) : null;
+            _model.Duration = PlannedDurationText;
 
             _model.OwnerId = OwnerId;
             _model.IsReminderSet = IsReminderSet;
@@ -242,15 +250,56 @@ namespace OCC.WpfClient.ModelWrappers
         partial void OnStartDateChanged(DateTime? value)
         {
             _model.StartDate = value ?? DateTime.MinValue;
-            if (value.HasValue && FinishDate.HasValue) PlannedHours = CalculatePlannedHours(value.Value, FinishDate.Value);
-            UpdatePlannedDurationText();
+            if (_isInitializing || _isUpdatingDuration) return;
+
+            _isUpdatingDuration = true;
+            try
+            {
+                if (value.HasValue)
+                {
+                    double durationDays = ParseDurationDays(PlannedDurationText);
+                    if (durationDays > 0)
+                    {
+                        var newFinish = value.Value.Date.AddDays(durationDays > 1 ? durationDays - 1 : 0);
+                        FinishDate = newFinish;
+                        _model.FinishDate = newFinish;
+                        PlannedHours = durationDays * 8.0;
+                    }
+                    else if (FinishDate.HasValue && FinishDate.Value >= value.Value)
+                    {
+                        var days = (FinishDate.Value.Date - value.Value.Date).TotalDays + 1;
+                        PlannedDurationText = $"{days:0.#} {(days == 1 ? "day" : "days")}";
+                        PlannedHours = days * 8.0;
+                        _model.Duration = PlannedDurationText;
+                    }
+                }
+            }
+            finally
+            {
+                _isUpdatingDuration = false;
+            }
         }
 
         partial void OnFinishDateChanged(DateTime? value)
         {
             _model.FinishDate = value ?? DateTime.MinValue;
-            if (StartDate.HasValue && value.HasValue) PlannedHours = CalculatePlannedHours(StartDate.Value, value.Value);
-            UpdatePlannedDurationText();
+            if (_isInitializing || _isUpdatingDuration) return;
+
+            _isUpdatingDuration = true;
+            try
+            {
+                if (StartDate.HasValue && value.HasValue && value.Value >= StartDate.Value)
+                {
+                    var days = (value.Value.Date - StartDate.Value.Date).TotalDays + 1;
+                    PlannedDurationText = $"{days:0.#} {(days == 1 ? "day" : "days")}";
+                    PlannedHours = days * 8.0;
+                    _model.Duration = PlannedDurationText;
+                }
+            }
+            finally
+            {
+                _isUpdatingDuration = false;
+            }
         }
 
         partial void OnActualStartDateChanged(DateTime? value) { _model.ActualStartDate = value; UpdateActualDurationText(); }
@@ -274,13 +323,52 @@ namespace OCC.WpfClient.ModelWrappers
         private void UpdateStatusColor() => StatusColor = _model.StatusColor;
         private double CalculatePlannedHours(DateTime start, DateTime end) => Math.Round(((end.Date - start.Date).TotalDays + 1) * 8, 1);
 
+        private double ParseDurationDays(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text.Equals("None", StringComparison.OrdinalIgnoreCase)) return 0;
+            var numericPart = new string(text.Where(c => char.IsDigit(c) || c == '.').ToArray());
+            if (!double.TryParse(numericPart, NumberStyles.Any, CultureInfo.InvariantCulture, out double val) || val <= 0)
+            {
+                return 0;
+            }
+
+            var lower = text.ToLowerInvariant();
+            if (lower.Contains("hr") || lower.Contains("hour") || lower.EndsWith("h"))
+            {
+                return Math.Round(val / 8.0, 2); // 8 hours per workday
+            }
+            if (lower.Contains("wk") || lower.Contains("week") || lower.EndsWith("w"))
+            {
+                return val * 5.0; // 5 workdays per week
+            }
+
+            return val; // Days default
+        }
+
+        private string FormatDurationText(double days, string rawInput)
+        {
+            var lower = (rawInput ?? string.Empty).ToLowerInvariant();
+            if (lower.Contains("hr") || lower.Contains("hour") || lower.EndsWith("h"))
+            {
+                double hours = Math.Round(days * 8.0, 1);
+                return $"{hours:0.#} {(hours == 1 ? "hour" : "hours")}";
+            }
+            if (lower.Contains("wk") || lower.Contains("week") || lower.EndsWith("w"))
+            {
+                double weeks = Math.Round(days / 5.0, 1);
+                return $"{weeks:0.#} {(weeks == 1 ? "week" : "weeks")}";
+            }
+            return $"{days:0.#} {(days == 1 ? "day" : "days")}";
+        }
+
         private void UpdatePlannedDurationText()
         {
             _isUpdatingDuration = true;
             if (StartDate.HasValue && FinishDate.HasValue)
             {
                 var days = (FinishDate.Value.Date - StartDate.Value.Date).TotalDays + 1;
-                PlannedDurationText = $"{days:0.#} {(days == 1 ? "day" : "days")}";
+                PlannedDurationText = FormatDurationText(days, PlannedDurationText);
+                _model.Duration = PlannedDurationText;
             }
             else PlannedDurationText = "None";
             _isUpdatingDuration = false;
@@ -292,7 +380,7 @@ namespace OCC.WpfClient.ModelWrappers
             if (ActualStartDate.HasValue && ActualCompleteDate.HasValue)
             {
                 var days = (ActualCompleteDate.Value.Date - ActualStartDate.Value.Date).TotalDays + 1;
-                ActualDurationText = $"{days:0.#} {(days == 1 ? "day" : "days")}";
+                ActualDurationText = FormatDurationText(days, ActualDurationText);
             }
             else ActualDurationText = "None";
             _isUpdatingDuration = false;
@@ -300,15 +388,37 @@ namespace OCC.WpfClient.ModelWrappers
 
         private void FormatDuration(string value, bool isPlanned)
         {
+            if (_isInitializing) return;
             if (string.IsNullOrWhiteSpace(value) || value == "None") return;
-            var numericPart = new string(value.Where(c => char.IsDigit(c) || c == '.').ToArray());
-            if (double.TryParse(numericPart, NumberStyles.Any, CultureInfo.InvariantCulture, out double days))
+            double days = ParseDurationDays(value);
+            if (days > 0)
             {
                 _isUpdatingDuration = true;
-                var formatted = $"{days:0.#} {(days == 1 ? "day" : "days")}";
-                if (isPlanned) { PlannedDurationText = formatted; PlannedHours = days * 8.0; }
-                else { ActualDurationText = formatted; ActualHours = days * 8.0; }
-                _isUpdatingDuration = false;
+                try
+                {
+                    var formatted = FormatDurationText(days, value);
+                    if (isPlanned)
+                    {
+                        PlannedDurationText = formatted;
+                        PlannedHours = days * 8.0;
+                        _model.Duration = formatted;
+                        if (StartDate.HasValue)
+                        {
+                            var newFinish = StartDate.Value.Date.AddDays(days > 1 ? days - 1 : 0);
+                            FinishDate = newFinish;
+                            _model.FinishDate = newFinish;
+                        }
+                    }
+                    else
+                    {
+                        ActualDurationText = formatted;
+                        ActualHours = days * 8.0;
+                    }
+                }
+                finally
+                {
+                    _isUpdatingDuration = false;
+                }
             }
         }
     }

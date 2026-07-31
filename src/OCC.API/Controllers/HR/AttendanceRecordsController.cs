@@ -27,7 +27,11 @@ namespace OCC.API.Controllers
 
         // GET: api/AttendanceRecords
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AttendanceRecord>>> GetAttendanceRecords([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
+        public async Task<ActionResult<IEnumerable<AttendanceRecord>>> GetAttendanceRecords(
+            [FromQuery] DateTime? from = null, 
+            [FromQuery] DateTime? to = null,
+            [FromQuery] int? take = null,
+            [FromQuery] int? skip = null)
         {
             try
             {
@@ -42,6 +46,18 @@ namespace OCC.API.Controllers
                     var toDate = to.Value.Date;
                     query = query.Where(r => r.Date <= toDate);
                 }
+
+                query = query.OrderByDescending(r => r.Date);
+
+                if (skip.HasValue && skip.Value > 0)
+                {
+                    query = query.Skip(skip.Value);
+                }
+                if (take.HasValue && take.Value > 0)
+                {
+                    query = query.Take(take.Value);
+                }
+
                 return await query.ToListAsync();
             }
             catch (Exception ex)

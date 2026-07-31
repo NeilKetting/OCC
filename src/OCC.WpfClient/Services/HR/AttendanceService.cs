@@ -55,15 +55,18 @@ namespace OCC.WpfClient.Services
 
         // ─── Attendance Records ───────────────────────────────────────────────
 
-        public async Task<IEnumerable<AttendanceRecord>> GetAttendanceRecordsAsync(DateTime? from = null, DateTime? to = null)
+        public async Task<IEnumerable<AttendanceRecord>> GetAttendanceRecordsAsync(DateTime? from = null, DateTime? to = null, int? take = null, int? skip = null)
         {
             EnsureAuthorization();
             var url = GetFullUrl("api/AttendanceRecords");
-            if (from.HasValue || to.HasValue)
+            var qs = new List<string>();
+            if (from.HasValue) qs.Add($"from={from.Value:yyyy-MM-dd}");
+            if (to.HasValue) qs.Add($"to={to.Value:yyyy-MM-dd}");
+            if (take.HasValue) qs.Add($"take={take.Value}");
+            if (skip.HasValue) qs.Add($"skip={skip.Value}");
+            
+            if (qs.Count > 0)
             {
-                var qs = new List<string>();
-                if (from.HasValue) qs.Add($"from={from.Value:yyyy-MM-dd}");
-                if (to.HasValue) qs.Add($"to={to.Value:yyyy-MM-dd}");
                 url += "?" + string.Join("&", qs);
             }
             try

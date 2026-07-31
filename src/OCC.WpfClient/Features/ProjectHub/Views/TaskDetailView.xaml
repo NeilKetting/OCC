@@ -231,13 +231,19 @@
                                     </ProgressBar>
                                 </StackPanel>
 
-                                <!-- Dates -->
-                                <UniformGrid Columns="2" Margin="0,0,0,20">
-                                    <StackPanel Margin="0,0,10,0">
+                                <!-- Dates & Duration -->
+                                <UniformGrid Columns="3" Margin="0,0,0,20">
+                                    <StackPanel Margin="0,0,8,0">
                                         <TextBlock Text="START DATE" Style="{StaticResource LabelText}"/>
                                         <DatePicker SelectedDate="{Binding Task.StartDate}" Style="{StaticResource ModernDatePicker}"/>
                                     </StackPanel>
-                                    <StackPanel Margin="10,0,0,0">
+                                    <StackPanel Margin="4,0,4,0">
+                                        <TextBlock Text="DURATION" Style="{StaticResource LabelText}"/>
+                                        <TextBox Text="{Binding Task.PlannedDurationText, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernInput}" 
+                                                 ap:WatermarkProperties.Watermark="e.g. 2 days"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="8,0,0,0">
                                         <TextBlock Text="DUE DATE" Style="{StaticResource LabelText}"/>
                                         <DatePicker SelectedDate="{Binding Task.FinishDate}" Style="{StaticResource ModernDatePicker}"/>
                                     </StackPanel>

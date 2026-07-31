@@ -164,8 +164,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 MaxBarWidth = 40,
                 DataLabelsSize = 12,
                 DataLabelsPaint = new SolidColorPaint(SKColors.White),
-                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top,
-                DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue}%",
+                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Middle,
+                DataLabelsRotation = 270,
+                DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:F1}%",
                 Name = "Audit Score"
             });
         }
@@ -186,6 +187,12 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 Values = values,
                 Fill = new SolidColorPaint(SKColors.CornflowerBlue.WithAlpha(160)),
                 Stroke = new SolidColorPaint(SKColors.CornflowerBlue, 1),
+                MaxBarWidth = 40,
+                DataLabelsSize = 11,
+                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Middle,
+                DataLabelsRotation = 270,
+                DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:F1}%",
                 Name = "Average Score"
             });
         }

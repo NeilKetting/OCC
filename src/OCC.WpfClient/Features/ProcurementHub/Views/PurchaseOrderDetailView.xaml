@@ -426,6 +426,7 @@
                         <ComboBox x:Name="SupplierComboBox"
                                   ItemsSource="{Binding Suppliers}" 
                                   SelectedItem="{Binding SelectedSupplier}"
+                                  Text="{Binding CurrentOrder.SupplierName, UpdateSourceTrigger=PropertyChanged}"
                                   DisplayMemberPath="Name"
                                   Style="{StaticResource CompactComboBox}"
                                   IsEditable="True"
@@ -584,86 +585,75 @@
                                   SelectedItem="{Binding SelectedProject}"
                                   DisplayMemberPath="Name"
                                   Style="{StaticResource CompactComboBox}"
-                                  IsEditable="True"
-                                  IsTextSearchEnabled="True"
-                                  ap:CommandProperties.IsFiltered="True"
                                   ap:WatermarkProperties.Watermark="Link Project..."/>
-                        <Grid Visibility="{Binding IsOtherProjectSelected, Converter={StaticResource VisibilityConverter}}">
-                            <TextBox x:Name="CustomProjectInputBox" 
-                                     Text="{Binding CurrentOrder.ProjectName, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource CompactTextBox}" 
-                                     Margin="0,4,0,0"
-                                     ap:WatermarkProperties.Watermark="Enter project name..."
+                        <Grid Visibility="{Binding IsOtherProjectSelected, Converter={StaticResource VisibilityConverter}}" Margin="0,4,0,0">
+                            <TextBox x:Name="CustomProjectInputBox"
+                                     Text="{Binding CurrentOrder.ProjectName, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ModernInput}"
+                                     FontSize="12"
+                                     ap:WatermarkProperties.Watermark="Enter custom project name..."
+                                     GotFocus="CustomProjectInputBox_GotFocus"
                                      LostFocus="CustomProjectInputBox_LostFocus"/>
-                            <Popup IsOpen="{Binding IsCustomProjectSuggestionsOpen, Mode=TwoWay}" 
-                                   PlacementTarget="{Binding ElementName=CustomProjectInputBox}" 
+
+                            <Popup x:Name="CustomProjectPopup"
+                                   IsOpen="{Binding IsCustomProjectSuggestionsOpen, Mode=TwoWay}"
+                                   PlacementTarget="{Binding ElementName=CustomProjectInputBox}"
                                    Placement="Bottom"
-                                   StaysOpen="False" 
-                                   AllowsTransparency="True">
-                                <Border Background="{StaticResource BackgroundDark}" 
-                                        BorderBrush="{StaticResource GlassBorder}" 
-                                        BorderThickness="1" 
-                                        CornerRadius="6" 
-                                        Width="280" 
-                                        MaxHeight="200" 
+                                   StaysOpen="False"
+                                   AllowsTransparency="True"
+                                   PopupAnimation="Slide">
+                                <Border Background="{StaticResource CardBackground}"
+                                        BorderBrush="{StaticResource GlassBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        MinWidth="{Binding ElementName=CustomProjectInputBox, Path=ActualWidth}"
+                                        MaxHeight="180"
                                         Margin="0,2,0,0">
-                                    <ListBox ItemsSource="{Binding CustomProjectSuggestions}" 
-                                             Background="Transparent" 
-                                             BorderThickness="0"
-                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                        <ListBox.ItemContainerStyle>
-                                            <Style TargetType="ListBoxItem">
-                                                <Setter Property="Padding" Value="0"/>
-                                                <Setter Property="Margin" Value="0"/>
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="ListBoxItem">
-                                                            <Border x:Name="itemBorder" Background="{TemplateBinding Background}" Padding="8,6" CornerRadius="4">
-                                                                <ContentPresenter/>
-                                                            </Border>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="itemBorder" Property="Background" Value="#25FFFFFF"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </ListBox.ItemContainerStyle>
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid HorizontalAlignment="Stretch">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <!-- Clickable project name text -->
-                                                    <TextBlock Grid.Column="0" Text="{Binding}" Foreground="White" FontSize="11" VerticalAlignment="Center" Cursor="Hand">
-                                                        <TextBlock.InputBindings>
-                                                            <MouseBinding MouseAction="LeftClick" 
-                                                                          Command="{Binding DataContext.SelectCustomProjectSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                          CommandParameter="{Binding}"/>
-                                                        </TextBlock.InputBindings>
-                                                    </TextBlock>
-                                                    <!-- Delete button (per entry) -->
-                                                    <Button Grid.Column="1"
-                                                            Command="{Binding DataContext.RemoveCustomProjectSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Remove from history"
-                                                            Background="Transparent"
-                                                            BorderThickness="0"
-                                                            Padding="4,2"
-                                                            Margin="4,0,0,0"
-                                                            Cursor="Hand">
-                                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EF4444" FontSize="10" Opacity="0.8"/>
-                                                    </Button>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding CustomProjectSuggestions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="Transparent" Padding="8,6" CornerRadius="4">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="#2A3B5C"/>
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <Grid HorizontalAlignment="Stretch">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" 
+                                                                       Text="{Binding}" 
+                                                                       VerticalAlignment="Center" 
+                                                                       Foreground="White" 
+                                                                       FontSize="11" 
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Cursor="Hand"
+                                                                       PreviewMouseLeftButtonDown="CustomProjectItem_PreviewMouseLeftButtonDown"/>
+                                                            <Button Grid.Column="1"
+                                                                    Command="{Binding DataContext.RemoveCustomProjectSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Remove from history"
+                                                                    Background="Transparent"
+                                                                    BorderThickness="0"
+                                                                    Padding="4,2"
+                                                                    Margin="6,0,0,0"
+                                                                    Cursor="Hand"
+                                                                    Focusable="False">
+                                                                <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="#EF4444" FontSize="10" Opacity="0.8"/>
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
                                 </Border>
                             </Popup>
                         </Grid>

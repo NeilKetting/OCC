@@ -4,7 +4,7 @@ namespace OCC.WpfClient.Services.Interfaces
 {
     public interface IAttendanceService
     {
-        Task<IEnumerable<AttendanceRecord>> GetAttendanceRecordsAsync(DateTime? from = null, DateTime? to = null);
+        Task<IEnumerable<AttendanceRecord>> GetAttendanceRecordsAsync(DateTime? from = null, DateTime? to = null, int? take = null, int? skip = null);
         Task<double> GetProjectSafeHoursAsync(Guid projectId);
         Task<IEnumerable<AttendanceRecord>> GetTodaysAttendanceAsync();
         Task<AttendanceRecord?> ClockInAsync(Guid employeeId, string branch);

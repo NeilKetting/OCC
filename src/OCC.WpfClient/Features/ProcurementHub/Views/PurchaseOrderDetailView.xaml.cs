@@ -72,11 +72,35 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
             }
         }
 
+        private void CustomProjectInputBox_GotFocus(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                viewModel.LoadCustomProjectHistory();
+                if (viewModel.CustomProjectSuggestions.Count > 0)
+                {
+                    viewModel.IsCustomProjectSuggestionsOpen = true;
+                }
+            }
+        }
+
         private void CustomProjectInputBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
         {
             if (DataContext is PurchaseOrderDetailViewModel viewModel)
             {
                 viewModel.AddCurrentCustomProjectToHistory();
+            }
+        }
+
+        private void CustomProjectItem_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is System.Windows.FrameworkElement element && element.DataContext is string selectedName && DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                if (viewModel.CurrentOrder != null)
+                {
+                    viewModel.CurrentOrder.ProjectName = selectedName;
+                }
+                viewModel.IsCustomProjectSuggestionsOpen = false;
             }
         }
     }

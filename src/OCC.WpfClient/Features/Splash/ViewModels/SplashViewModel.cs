@@ -64,9 +64,13 @@ namespace OCC.WpfClient.Features.Splash.ViewModels
                         await Task.Delay(500);
                         _updateService.ApplyUpdatesAndRestart(update);
                         
-                        // Fallback: If restart doesn't trigger immediately, don't just hang
-                        await Task.Delay(2500);
-                        System.Windows.Application.Current.Shutdown();
+                        // Immediately exit process to release file locks for Velopack Update.exe
+                        try
+                        {
+                            App.Current.Dispatcher.Invoke(() => App.Current.Shutdown());
+                        }
+                        catch { }
+                        Environment.Exit(0);
                         return;
                     }
                 }

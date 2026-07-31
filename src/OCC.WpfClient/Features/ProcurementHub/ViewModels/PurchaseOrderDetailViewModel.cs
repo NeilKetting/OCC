@@ -144,50 +144,23 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 if (IsOtherProjectSelected && CurrentOrder != null)
                 {
-                    FilterCustomProjectSuggestions(CurrentOrder.ProjectName);
+                    LoadCustomProjectHistory();
                 }
             }
         }
 
-        public void FilterCustomProjectSuggestions(string? searchText)
+        public void LoadCustomProjectHistory()
         {
-            if (!IsOtherProjectSelected)
-            {
-                CustomProjectSuggestions.Clear();
-                IsCustomProjectSuggestionsOpen = false;
-                return;
-            }
-
             var history = _localSettingsService.Settings.CustomProjectHistory ?? new System.Collections.Generic.List<string>();
-            if (!history.Any())
-            {
-                CustomProjectSuggestions.Clear();
-                IsCustomProjectSuggestionsOpen = false;
-                return;
-            }
-
-            var query = searchText?.Trim() ?? string.Empty;
-            var filtered = string.IsNullOrWhiteSpace(query)
-                ? history
-                : history.Where(p => p.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-
             CustomProjectSuggestions.Clear();
-            foreach (var item in filtered)
+            foreach (var item in history)
             {
                 CustomProjectSuggestions.Add(item);
             }
-
-            IsCustomProjectSuggestionsOpen = CustomProjectSuggestions.Count > 0;
-        }
-
-        [RelayCommand]
-        public void SelectCustomProjectSuggestion(string project)
-        {
-            if (CurrentOrder != null && !string.IsNullOrWhiteSpace(project))
+            if (CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.ProjectName) && CurrentOrder.ProjectName != "Other..." && !CustomProjectSuggestions.Contains(CurrentOrder.ProjectName))
             {
-                CurrentOrder.ProjectName = project;
+                CustomProjectSuggestions.Insert(0, CurrentOrder.ProjectName);
             }
-            IsCustomProjectSuggestionsOpen = false;
         }
 
         [RelayCommand]
@@ -195,7 +168,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         {
             if (string.IsNullOrWhiteSpace(project)) return;
             _localSettingsService.RemoveCustomProjectHistory(project);
-            FilterCustomProjectSuggestions(CurrentOrder?.ProjectName);
+            LoadCustomProjectHistory();
         }
 
         public void AddCurrentCustomProjectToHistory()
@@ -203,6 +176,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             if (IsOtherProjectSelected && CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.ProjectName))
             {
                 _localSettingsService.AddCustomProjectHistory(CurrentOrder.ProjectName);
+                LoadCustomProjectHistory();
             }
         }
 
@@ -212,6 +186,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             if (IsBusy) return;
             try
             {
+                LoadCustomProjectHistory();
+
                 if (System.Windows.Application.Current?.Dispatcher != null)
                 {
                     System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
@@ -369,9 +345,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             }
                         }
                     }
-                    else if (CurrentOrder == null)
+                    else
                     {
-                        // Create new order template
+                        // Create new order template whenever OrderId is null or empty
                         var order = await _orderService.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder);
                         if (_authService.CurrentUser?.Branch != null)
                         {
@@ -387,6 +363,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                                 IsNewOrder = true;
                                 SelectedProject = null;
                                 SelectedSupplier = null;
+                                IsOtherProjectSelected = false;
                                 
                                 for (int i = 0; i < 10; i++)
                                 {
@@ -401,39 +378,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                             IsNewOrder = true;
                             SelectedProject = null;
                             SelectedSupplier = null;
+                            IsOtherProjectSelected = false;
 
                             for (int i = 0; i < 10; i++)
                             {
                                 AddLine();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // If CurrentOrder is already present, synchronize dropdowns
-                        if (System.Windows.Application.Current?.Dispatcher != null)
-                        {
-                            await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
-                            {
-                                if (SelectedSupplier == null && (CurrentOrder.SupplierId != Guid.Empty || !string.IsNullOrEmpty(CurrentOrder.SupplierName)))
-                                {
-                                    ResolveSupplierSelection(CurrentOrder.SupplierId, CurrentOrder.SupplierName);
-                                }
-                                if (SelectedProject == null && ((CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty) || !string.IsNullOrEmpty(CurrentOrder.ProjectName)))
-                                {
-                                    await ResolveProjectSelectionAsync(CurrentOrder.ProjectId, CurrentOrder.ProjectName, allProjectsList);
-                                }
-                            });
-                        }
-                        else
-                        {
-                            if (SelectedSupplier == null && (CurrentOrder.SupplierId != Guid.Empty || !string.IsNullOrEmpty(CurrentOrder.SupplierName)))
-                            {
-                                ResolveSupplierSelection(CurrentOrder.SupplierId, CurrentOrder.SupplierName);
-                            }
-                            if (SelectedProject == null && ((CurrentOrder.ProjectId.HasValue && CurrentOrder.ProjectId.Value != Guid.Empty) || !string.IsNullOrEmpty(CurrentOrder.ProjectName)))
-                            {
-                                await ResolveProjectSelectionAsync(CurrentOrder.ProjectId, CurrentOrder.ProjectName, allProjectsList);
                             }
                         }
                     }
@@ -471,6 +420,13 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         private async Task ResolveProjectSelectionAsync(Guid? projectId, string? projectName, IEnumerable<Project>? allProjectsList = null)
         {
+            _logger.LogInformation("ResolveProjectSelectionAsync: Input projectId={ProjectId}, projectName='{ProjectName}'", projectId, projectName);
+            var otherSentinel = Projects.FirstOrDefault(p => p.Id == Guid.Empty) ?? OtherProjectSentinel;
+            if (!Projects.Contains(otherSentinel))
+            {
+                Projects.Add(otherSentinel);
+            }
+
             if (projectId.HasValue && projectId.Value != Guid.Empty)
             {
                 var matchingProject = Projects.FirstOrDefault(p => p.Id == projectId.Value);
@@ -480,21 +436,32 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     var originalProject = all.FirstOrDefault(p => p.Id == projectId.Value);
                     if (originalProject != null)
                     {
-                        int otherIndex = Projects.IndexOf(OtherProjectSentinel);
+                        int otherIndex = Projects.IndexOf(otherSentinel);
                         if (otherIndex >= 0) Projects.Insert(otherIndex, originalProject);
                         else Projects.Add(originalProject);
                         matchingProject = originalProject;
                     }
                 }
                 SelectedProject = matchingProject;
+                _logger.LogInformation("ResolveProjectSelectionAsync: System project resolved to '{Name}' ({Id})", SelectedProject?.Name, SelectedProject?.Id);
             }
-            else if (!string.IsNullOrEmpty(projectName))
+            else if ((projectId.HasValue && projectId.Value == Guid.Empty) || !string.IsNullOrWhiteSpace(projectName))
             {
-                SelectedProject = OtherProjectSentinel;
+                SelectedProject = otherSentinel;
+                _logger.LogInformation("ResolveProjectSelectionAsync: Other sentinel selected. ProjectName='{Name}'", projectName);
+                if (CurrentOrder != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(projectName))
+                    {
+                        CurrentOrder.ProjectName = projectName;
+                    }
+                    LoadCustomProjectHistory();
+                }
             }
             else
             {
                 SelectedProject = null;
+                _logger.LogInformation("ResolveProjectSelectionAsync: SelectedProject set to null");
             }
         }
 
@@ -586,13 +553,20 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 if (value.Id == Guid.Empty) // "Other..." sentinel
                 {
+                    var preservedName = CurrentOrder.ProjectName;
                     CurrentOrder.ProjectId = null;
-                    IsOtherProjectSelected = true;
-                    if (CurrentOrder.ProjectName == null || CurrentOrder.ProjectName == "Other...")
+
+                    if (!string.IsNullOrWhiteSpace(preservedName) && preservedName != "Other...")
+                    {
+                        CurrentOrder.ProjectName = preservedName;
+                    }
+                    else if (CurrentOrder.ProjectName == null || CurrentOrder.ProjectName == "Other...")
                     {
                         CurrentOrder.ProjectName = string.Empty;
                     }
-                    FilterCustomProjectSuggestions(CurrentOrder.ProjectName);
+
+                    LoadCustomProjectHistory();
+                    IsOtherProjectSelected = true;
                 }
                 else
                 {
@@ -647,15 +621,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             // 1. Resolve & Check Supplier
             if (SelectedSupplier == null)
             {
-                if (CurrentOrder.SupplierId != null && CurrentOrder.SupplierId != Guid.Empty)
-                {
-                    SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == CurrentOrder.SupplierId);
-                }
-
-                if (SelectedSupplier == null && !string.IsNullOrWhiteSpace(CurrentOrder.SupplierName))
-                {
-                    SelectedSupplier = Suppliers.FirstOrDefault(s => string.Equals(s.Name, CurrentOrder.SupplierName, StringComparison.OrdinalIgnoreCase));
-                }
+                ResolveSupplierSelection(CurrentOrder.SupplierId, CurrentOrder.SupplierName);
             }
 
             if (SelectedSupplier != null)
@@ -673,8 +639,19 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 return false;
             }
 
+            // Save custom project name to history if Other project is selected
+            if (IsOtherProjectSelected && CurrentOrder != null)
+            {
+                CurrentOrder.ProjectId = null;
+                if (!string.IsNullOrWhiteSpace(CurrentOrder.ProjectName))
+                {
+                    AddCurrentCustomProjectToHistory();
+                }
+            }
+            _logger.LogInformation("ValidateAndPrepareOrderForSave: IsOtherProjectSelected={IsOther}, ProjectId={ProjectId}, ProjectName='{ProjectName}'", IsOtherProjectSelected, CurrentOrder?.ProjectId, CurrentOrder?.ProjectName);
+
             // 2. Resolve missing InventoryItemIds for typed SKUs
-            foreach (var line in CurrentOrder.Lines)
+            foreach (var line in CurrentOrder!.Lines)
             {
                 if (!string.IsNullOrWhiteSpace(line.ItemCode) && (!line.InventoryItemId.HasValue || line.InventoryItemId.Value == Guid.Empty))
                 {

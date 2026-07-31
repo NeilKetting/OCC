@@ -16,6 +16,8 @@ namespace OCC.WpfClient.Services.Infrastructure
         public bool UsePlainMenuIcons { get; set; } = false;
         public bool KeepSidebarExpanded { get; set; } = false;
         public bool AutoCheckUpdates { get; set; } = true;
+        public int FailedUpdateAttemptCount { get; set; } = 0;
+        public string LastAttemptedUpdateVersion { get; set; } = string.Empty;
         public OCC.WpfClient.Infrastructure.Models.ListLayout? EmployeeListLayout { get; set; }
 
         // Layouts for other List Views
