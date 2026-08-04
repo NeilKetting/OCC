@@ -14,6 +14,9 @@ using Xunit;
 
 namespace OCC.Tests.Features.ProcurementHub
 {
+    /// <summary>
+    /// Unit tests for <see cref="PurchaseOrderDetailViewModel"/>.
+    /// </summary>
     public class PurchaseOrderDetailViewModelTests
     {
         private readonly Mock<IOrderService> _mockOrderService;
@@ -53,11 +56,13 @@ namespace OCC.Tests.Features.ProcurementHub
 
         private PurchaseOrderDetailViewModel CreateViewModel()
         {
+            var cache = new OCC.WpfClient.Services.Infrastructure.InventoryCacheService(_mockInventoryService.Object);
             return new PurchaseOrderDetailViewModel(
                 _mockOrderService.Object,
                 _mockSupplierService.Object,
                 _mockProjectService.Object,
                 _mockInventoryService.Object,
+                cache,
                 _mockNavigationService.Object,
                 _mockPdfService.Object,
                 _mockToastService.Object,
@@ -69,6 +74,8 @@ namespace OCC.Tests.Features.ProcurementHub
                 new ConnectionSettings(),
                 _mockLogger.Object);
         }
+
+        // ─── Existing Order — Line Management ─────────────────────────────────────
 
         [Fact]
         public async Task OpenExistingOrder_AddLine_And_SaveOrderAsync_CallsUpdateOrderWithAddedLine()
@@ -85,7 +92,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 SupplierName = "Existing Supplier",
                 OrderType = OrderType.PurchaseOrder,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(7),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine
                     {
@@ -101,8 +108,9 @@ namespace OCC.Tests.Features.ProcurementHub
 
             _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
             _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
 
-            // Act 1 - Set OrderId and Load existing order
+            // Act 1 — load existing order
             vm.OrderId = orderId;
             await vm.LoadDataCommand.ExecuteAsync(null);
 
@@ -110,7 +118,7 @@ namespace OCC.Tests.Features.ProcurementHub
             Assert.Equal(orderId, vm.CurrentOrder!.Id);
             Assert.Single(vm.CurrentOrder!.Lines);
 
-            // Act 2 - User clicks "+ Add Line" and enters details for line 2
+            // Act 2 — add a line
             vm.AddLineCommand.Execute(null);
             Assert.Equal(2, vm.CurrentOrder!.Lines.Count);
 
@@ -120,7 +128,7 @@ namespace OCC.Tests.Features.ProcurementHub
             newLine.QuantityOrdered = 5;
             newLine.UnitPrice = 200;
 
-            // Act 3 - User clicks "Save & Close"
+            // Act 3 — save
             await vm.SaveOrderCommand.ExecuteAsync(null);
 
             // Assert
@@ -149,7 +157,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 SupplierName = "Supplier 200",
                 OrderType = OrderType.PurchaseOrder,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(7),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "LINE-1", Description = "Existing Line", QuantityOrdered = 2, UnitPrice = 100 }
                 }
@@ -157,11 +165,12 @@ namespace OCC.Tests.Features.ProcurementHub
 
             _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
             _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
 
             vm.OrderId = orderId;
             await vm.LoadDataCommand.ExecuteAsync(null);
 
-            // Act - Add unpriced/unquantified line
+            // Act — add zero-qty line
             vm.AddLineCommand.Execute(null);
             var newLine = vm.CurrentOrder!.Lines.Last();
             newLine.ItemCode = "UNPRICED-001";
@@ -178,6 +187,94 @@ namespace OCC.Tests.Features.ProcurementHub
             )), Times.Once);
         }
 
+        // ─── SKU / InventoryItem Resolution ───────────────────────────────────────
+
+        /// <summary>
+        /// Regression test for the primary bug: SKU codes not resolving on existing order load.
+        /// Verifies that when InventoryItems are loaded BEFORE the order's lines are populated,
+        /// UpdateLineItem correctly resolves a matching SKU.
+        /// </summary>
+        [Fact]
+        public void UpdateLineItem_MatchingSku_PopulatesLineFields()
+        {
+            // Arrange
+            var inventoryItemId = Guid.NewGuid();
+            var inventoryItem = new InventoryItem
+            {
+                Id = inventoryItemId,
+                Sku = "MAT-001",
+                Description = "Steel Beam 100x100",
+                UnitOfMeasure = "m",
+                AverageCost = 285.50m
+            };
+
+            var order = new Order { Id = Guid.NewGuid(), TaxRate = 0.15m };
+            var vm = CreateViewModel();
+            vm.InventoryItems.Add(inventoryItem);
+
+            // Simulate existing order wrapper with an unresolved line (ItemCode set, InventoryItemId not yet set)
+            var lineModel = new OrderLine { Id = Guid.NewGuid(), ItemCode = "MAT-001", InventoryItemId = null };
+            var orderWrapper = new OCC.WpfClient.Features.ProcurementHub.Models.OrderWrapper(order);
+            var lineWrapper = new OCC.WpfClient.Features.ProcurementHub.Models.OrderLineWrapper(lineModel, orderWrapper);
+            orderWrapper.Lines.Add(lineWrapper);
+
+            // Act
+            vm.UpdateLineItemCommand.Execute(lineWrapper);
+
+            // Assert
+            Assert.Equal(inventoryItemId, lineWrapper.InventoryItemId);
+            Assert.Equal("Steel Beam 100x100", lineWrapper.Description);
+            Assert.Equal("m", lineWrapper.UnitOfMeasure);
+            Assert.Equal(285.50m, lineWrapper.UnitPrice);
+            Assert.True(lineWrapper.IsItemValid);
+        }
+
+        /// <summary>
+        /// Verifies that ValidateAndPrepareOrderForSave resolves InventoryItemId for
+        /// lines that have an ItemCode but a missing InventoryItemId.
+        /// </summary>
+        [Fact]
+        public async Task SaveOrder_ResolvesInventoryItemIdForLinesWithMatchingSku()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+            var inventoryItemId = Guid.NewGuid();
+            vm.InventoryItems.Add(new InventoryItem { Id = inventoryItemId, Sku = "FIX-999", Description = "Fixture" });
+
+            var orderId = Guid.NewGuid();
+            var existingOrder = new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-SKU-001",
+                SupplierId = Guid.NewGuid(),
+                SupplierName = "Supplier A",
+                OrderType = OrderType.PurchaseOrder,
+                ExpectedDeliveryDate = DateTime.Today.AddDays(7),
+                Lines = new List<OrderLine>
+                {
+                    // InventoryItemId is null — should be resolved during save
+                    new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "FIX-999", Description = "Fixture", QuantityOrdered = 5, UnitPrice = 100, InventoryItemId = null }
+                }
+            };
+
+            _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
+            _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
+
+            vm.OrderId = orderId;
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Act
+            await vm.SaveOrderCommand.ExecuteAsync(null);
+
+            // Assert — InventoryItemId resolved during save
+            _mockOrderService.Verify(s => s.UpdateOrderAsync(It.Is<Order>(o =>
+                o.Lines.Any(l => l.ItemCode == "FIX-999" && l.InventoryItemId == inventoryItemId)
+            )), Times.Once);
+        }
+
+        // ─── PDF / Preview Commands ───────────────────────────────────────────────
+
         [Fact]
         public async Task PreviewOrderCommand_SavesOrder_BeforeGeneratingPdf()
         {
@@ -193,7 +290,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 SupplierName = "Preview Supplier",
                 OrderType = OrderType.PurchaseOrder,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(7),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
                 }
@@ -201,6 +298,7 @@ namespace OCC.Tests.Features.ProcurementHub
 
             _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
             _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
             _mockPdfService.Setup(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>())).ReturnsAsync("dummy_path.pdf");
 
             vm.OrderId = orderId;
@@ -230,7 +328,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 SupplierName = "Email Supplier",
                 OrderType = OrderType.PurchaseOrder,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(7),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
                 }
@@ -238,6 +336,7 @@ namespace OCC.Tests.Features.ProcurementHub
 
             _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
             _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
             _mockPdfService.Setup(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>())).ReturnsAsync("dummy_path.pdf");
             _mockSupplierService.Setup(s => s.GetSupplierAsync(supplierId)).ReturnsAsync(new Supplier { Id = supplierId, Name = "Email Supplier", Email = "test@supplier.com" });
 
@@ -267,7 +366,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 SupplierName = "Print Supplier",
                 OrderType = OrderType.PurchaseOrder,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(7),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
                 }
@@ -275,6 +374,7 @@ namespace OCC.Tests.Features.ProcurementHub
 
             _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
             _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
             _mockPdfService.Setup(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>())).ReturnsAsync("dummy_path.pdf");
 
             vm.OrderId = orderId;
@@ -293,18 +393,21 @@ namespace OCC.Tests.Features.ProcurementHub
         {
             // Arrange
             var vm = CreateViewModel();
-            var newTemplate = new Order { Id = Guid.NewGuid(), OrderNumber = "PO-NEW", OrderType = OrderType.PurchaseOrder, Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>() };
+            var newTemplate = new Order { Id = Guid.NewGuid(), OrderNumber = "PO-NEW", OrderType = OrderType.PurchaseOrder, Lines = new List<OrderLine>() };
             _mockOrderService.Setup(o => o.CreateNewOrderTemplateAsync(OrderType.PurchaseOrder)).ReturnsAsync(newTemplate);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order>());
 
             await vm.LoadDataCommand.ExecuteAsync(null);
 
-            // Act (No supplier set)
+            // Act (no supplier set)
             await vm.PreviewOrderCommand.ExecuteAsync(null);
 
             // Assert
             _mockOrderService.Verify(s => s.CreateOrderAsync(It.IsAny<Order>()), Times.Never);
             _mockPdfService.Verify(p => p.GenerateOrderPdfAsync(It.IsAny<Order>(), It.IsAny<bool>(), It.IsAny<string?>()), Times.Never);
         }
+
+        // ─── Supplier Recovery ────────────────────────────────────────────────────
 
         [Fact]
         public async Task SaveOrderCommand_SelectedSupplierNullButModelHasSupplier_RecoversSupplierAndSavesSuccessfully()
@@ -325,7 +428,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 SupplierName = "Origine 63",
                 OrderType = OrderType.PurchaseOrder,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(7),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-1", Description = "Line 1", QuantityOrdered = 1, UnitPrice = 10 }
                 }
@@ -333,11 +436,12 @@ namespace OCC.Tests.Features.ProcurementHub
 
             _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
             _mockOrderService.Setup(o => o.UpdateOrderAsync(It.IsAny<Order>())).Returns(Task.CompletedTask);
+            _mockOrderService.Setup(o => o.GetOrdersAsync()).ReturnsAsync(new List<Order> { existingOrder });
 
             vm.OrderId = orderId;
             await vm.LoadDataCommand.ExecuteAsync(null);
 
-            // Simulate WPF clearing SelectedSupplier property transiently
+            // Simulate WPF transiently clearing SelectedSupplier
             vm.SelectedSupplier = null;
 
             // Act
@@ -347,6 +451,44 @@ namespace OCC.Tests.Features.ProcurementHub
             Assert.NotNull(vm.SelectedSupplier);
             Assert.Equal("Origine 63", vm.SelectedSupplier!.Name);
             _mockOrderService.Verify(s => s.UpdateOrderAsync(It.Is<Order>(o => o.SupplierName == "Origine 63")), Times.Once);
+        }
+
+        // ─── Load Re-entrancy ─────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Verifies that calling LoadDataAsync concurrently does not result in double
+        /// service calls (the SemaphoreSlim guard should reject the second call).
+        /// </summary>
+        [Fact]
+        public async Task LoadDataAsync_ConcurrentCalls_OnlyFirstCallCompletes()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<bool>();
+            var callCount = 0;
+
+            _mockInventoryService.Setup(i => i.GetInventoryAsync())
+                .Returns(async () =>
+                {
+                    callCount++;
+                    // Block the first call to simulate slow API
+                    await tcs.Task;
+                    return new List<InventoryItem>();
+                });
+
+            var vm = CreateViewModel();
+
+            // Act — fire two loads "simultaneously"
+            var load1 = vm.LoadDataCommand.ExecuteAsync(null);
+            // Give the first a moment to enter the semaphore
+            await Task.Delay(20);
+            var load2 = vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Release the first load
+            tcs.SetResult(true);
+            await Task.WhenAll(load1, load2);
+
+            // Assert — only one inventory fetch happened
+            Assert.Equal(1, callCount);
         }
     }
 }

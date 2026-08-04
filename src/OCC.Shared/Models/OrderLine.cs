@@ -1,7 +1,4 @@
 using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
 
 namespace OCC.Shared.Models
 {
@@ -11,125 +8,75 @@ namespace OCC.Shared.Models
     /// </summary>
     /// <remarks>
     /// <b>Where:</b> Persisted in the <c>OrderLines</c> table.
-    /// <b>How:</b> Manages its own change interactions to update UI totals dynamically.
+    /// <b>How:</b> Totals are calculated via <see cref="CalculateTotal"/>. This model is
+    /// intentionally free of INotifyPropertyChanged — UI change notification is the
+    /// responsibility of <c>OrderLineWrapper</c> in the WPF client layer.
     /// </remarks>
-    public class OrderLine : BaseEntity, INotifyPropertyChanged
+    public class OrderLine : BaseEntity
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-        private string _itemCode = string.Empty;
-        private string _description = string.Empty;
-        private double _quantityOrdered;
-        private string _unitOfMeasure = "";
-        private decimal _unitPrice;
-        private decimal _lineTotal;
-        private string _remarks = string.Empty;
-
-
-        /// <summary> Foreign Key linking to the parent <see cref="Order"/>. </summary>
+        /// <summary>Foreign Key linking to the parent <see cref="Order"/>.</summary>
         public Guid OrderId { get; set; }
-        
-        [JsonIgnore]
-        public Order Order { get; set; } = null!;
-        
-        /// <summary> Link to the specific <see cref="InventoryItem"/>. Mandatory for all orders. </summary>
+
+        /// <summary>Link to the specific <see cref="InventoryItem"/>. Required for all orders.</summary>
         public Guid? InventoryItemId { get; set; }
-        
-        /// <summary> SKU or code identifying the item (copied from InventoryItem or entered manually). </summary>
-        public string ItemCode 
-        { 
-            get => _itemCode; 
-            set { _itemCode = value; OnPropertyChanged(); } 
-        }
 
-        /// <summary> Detailed description of the product or service. </summary>
-        public string Description 
-        { 
-            get => _description; 
-            set { _description = value; OnPropertyChanged(); } 
-        }
+        /// <summary>SKU or code identifying the item (copied from InventoryItem or entered manually).</summary>
+        public string ItemCode { get; set; } = string.Empty;
 
-        /// <summary> Grouping category (e.g., "Materials", "Labour"). </summary>
+        /// <summary>Detailed description of the product or service.</summary>
+        public string Description { get; set; } = string.Empty;
+
+        /// <summary>Grouping category (e.g., "Materials", "Labour").</summary>
         public string Category { get; set; } = "General";
-        
-        /// <summary> Quantity of units requested. </summary>
-        public double QuantityOrdered 
-        { 
-            get => _quantityOrdered; 
-            set 
-            { 
-                if (_quantityOrdered != value)
-                {
-                    _quantityOrdered = value; 
-                    OnPropertyChanged(); 
-                    OnPropertyChanged(nameof(RemainingQuantity)); 
-                    OnPropertyChanged(nameof(IsComplete));
-                    CalculateTotal(0.15m); // Default VAT 15% for immediate UI update
-                }
-            } 
-        }
 
-        /// <summary> Quantity of units already delivered or fulfilled. </summary>
+        /// <summary>Quantity of units requested.</summary>
+        public double QuantityOrdered { get; set; }
+
+        /// <summary>Quantity of units already delivered or fulfilled.</summary>
         public double QuantityReceived { get; set; }
 
-        /// <summary> Unit of measurement (e.g., "kg", "m", "hours"). </summary>
-        public string UnitOfMeasure 
-        { 
-            get => _unitOfMeasure; 
-            set { _unitOfMeasure = value; OnPropertyChanged(); } 
-        }
-        
-        /// <summary> Price per single unit (excluding VAT). </summary>
-        public decimal UnitPrice 
-        { 
-            get => _unitPrice; 
-            set 
-            {
-                if (_unitPrice != value)
-                {
-                    _unitPrice = value; 
-                    OnPropertyChanged();
-                    CalculateTotal(0.15m); // Default VAT 15%
-                }
-            } 
-        }
-        
-        /// <summary> Calculated VAT amount for this line. </summary>
-        public decimal VatAmount { get; set; } 
-        
-        /// <summary> Total cost for this line (Quantity * Unit Price) excluding VAT. </summary>
-        public decimal LineTotal 
-        { 
-            get => _lineTotal; 
-            set { _lineTotal = value; OnPropertyChanged(); } 
-        }
+        /// <summary>Unit of measurement (e.g., "kg", "m", "hours").</summary>
+        public string UnitOfMeasure { get; set; } = string.Empty;
 
-        public string Remarks 
-        { 
-            get => _remarks; 
-            set { _remarks = value; OnPropertyChanged(); } 
-        }
+        /// <summary>Price per single unit (excluding VAT).</summary>
+        public decimal UnitPrice { get; set; }
 
-        /// <summary> Calculated remaining items to be fulfilled. </summary>
+        /// <summary>Calculated VAT amount for this line.</summary>
+        public decimal VatAmount { get; set; }
+
+        /// <summary>Total cost for this line (Quantity * Unit Price) excluding VAT.</summary>
+        public decimal LineTotal { get; set; }
+
+        /// <summary>Optional free-text remarks for this line.</summary>
+        public string Remarks { get; set; } = string.Empty;
+
+        // ─── EF Core Navigation ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// EF Core reverse-navigation to the parent <see cref="OCC.Shared.Models.Order"/>.
+        /// Used by the API for queries that navigate from lines to their parent order
+        /// (e.g., filtering by order type or date). Not used by the WPF client — the
+        /// client always works with the parent <see cref="Order"/> object directly.
+        /// </summary>
+        public Order? Order { get; set; }
+
+        /// <summary>Calculated remaining items to be fulfilled.</summary>
         public double RemainingQuantity => Math.Max(0, QuantityOrdered - QuantityReceived);
 
-        /// <summary> True if the order line has been fully fulfilled. </summary>
+        /// <summary>True if the order line has been fully fulfilled.</summary>
         public bool IsComplete => QuantityReceived >= QuantityOrdered;
-        
+
         /// <summary>
-        /// Updates the LineTotal and VatAmount based on current quantity and price.
+        /// Recalculates <see cref="LineTotal"/> and <see cref="VatAmount"/> based on
+        /// current quantity and unit price.
         /// </summary>
         /// <param name="taxRate">The applicable tax rate (e.g., 0.15 for 15%).</param>
         public void CalculateTotal(decimal taxRate)
         {
             decimal qty = (decimal)QuantityOrdered;
-            decimal price = UnitPrice;
-            
-            decimal sub = qty * price;
+            decimal sub = qty * UnitPrice;
             LineTotal = Math.Round(sub, 2, MidpointRounding.AwayFromZero);
-            VatAmount = Math.Round(LineTotal * taxRate, 2, MidpointRounding.AwayFromZero); 
+            VatAmount = Math.Round(LineTotal * taxRate, 2, MidpointRounding.AwayFromZero);
         }
     }
 }

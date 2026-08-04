@@ -510,8 +510,8 @@ namespace OCC.API.Controllers
                     decimal unitPrice = item.AverageCost;
                     var lastLine = await _context.OrderLines
                         .Include(l => l.Order)
-                        .Where(l => l.InventoryItemId == item.Id && l.Order.OrderType == OrderType.PurchaseOrder)
-                        .OrderByDescending(l => l.Order.OrderDate)
+                        .Where(l => l.InventoryItemId == item.Id && l.Order != null && l.Order.OrderType == OrderType.PurchaseOrder)
+                        .OrderByDescending(l => l.Order!.OrderDate)
                         .FirstOrDefaultAsync();
 
                     if (lastLine != null && lastLine.UnitPrice > 0)
@@ -730,24 +730,22 @@ namespace OCC.API.Controllers
                 Template = dto.Template,
                 Terms = dto.Terms,
                 ReferenceNo = dto.ReferenceNo,
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>(
-                    dto.Lines.Select(l => new OrderLine
-                    {
-                        Id = l.Id,
-                        OrderId = dto.Id,
-                        InventoryItemId = l.InventoryItemId,
-                        ItemCode = l.ItemCode,
-                        Description = l.Description,
-                        Category = l.Category,
-                        QuantityOrdered = l.QuantityOrdered,
-                        QuantityReceived = l.QuantityReceived,
-                        UnitOfMeasure = l.UnitOfMeasure,
-                        UnitPrice = l.UnitPrice,
-                        VatAmount = l.VatAmount,
-                        LineTotal = l.LineTotal,
-                        Remarks = l.Remarks
-                    })
-                )
+                Lines = dto.Lines.Select(l => new OrderLine
+                {
+                    Id = l.Id,
+                    OrderId = dto.Id,
+                    InventoryItemId = l.InventoryItemId,
+                    ItemCode = l.ItemCode,
+                    Description = l.Description,
+                    Category = l.Category,
+                    QuantityOrdered = l.QuantityOrdered,
+                    QuantityReceived = l.QuantityReceived,
+                    UnitOfMeasure = l.UnitOfMeasure,
+                    UnitPrice = l.UnitPrice,
+                    VatAmount = l.VatAmount,
+                    LineTotal = l.LineTotal,
+                    Remarks = l.Remarks
+                }).ToList()
             };
         }
 

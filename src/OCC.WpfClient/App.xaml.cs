@@ -127,6 +127,9 @@ namespace OCC.WpfClient
             services.AddSingleton<ISignalRService, SignalRService>();
             services.AddSingleton<IDialogService, WpfDialogService>();
             services.AddSingleton<IInventoryService, InventoryService>();
+            // Singleton TTL cache wrapping IInventoryService — shared across all ViewModels
+            // that need inventory, preventing duplicate fetches during navigation.
+            services.AddSingleton<OCC.WpfClient.Services.Infrastructure.InventoryCacheService>();
             services.AddSingleton<IProjectTaskService, ProjectTaskService>();
             services.AddSingleton<ITaskAssignmentService, TaskAssignmentService>();
             services.AddSingleton<ITaskCommentService, TaskCommentService>();
