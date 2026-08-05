@@ -224,7 +224,7 @@ namespace OCC.Client.Features.WagesHub.ViewModels
 
         private void UpdateGrandTotal()
         {
-            GrandTotalWage = Lines.Sum(x => x.NetPay);
+            GrandTotalWage = Lines.Sum(x => x.NetPay + x.IncentiveSupervisor);
         }
 
         [RelayCommand]

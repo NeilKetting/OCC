@@ -2568,7 +2568,7 @@ namespace OCC.WpfClient.Services
                     }
                     table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? wageRun.Lines.Sum(x => x.BibcAmount).ToString("F2") : "0.00").Bold();
                     table.Cell().Element(WageTotLineStyle).AlignRight()
-                        .Text(wageRun.Lines.Sum(x => x.NetPay).ToString("F2")).Bold();
+                        .Text(wageRun.Lines.Sum(x => x.NetPay + x.IncentiveSupervisor).ToString("F2")).Bold();
 
                     static void AddWageTotalRow(TableDescriptor t, string label, List<WageRunLine> ls, bool isCpt)
                     {
@@ -2584,7 +2584,7 @@ namespace OCC.WpfClient.Services
                             t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.DeductionOther).ToString("F2"));
                         }
                         t.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? ls.Sum(x => x.BibcAmount).ToString("F2") : "0.00");
-                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.NetPay).ToString("F2"));
+                        t.Cell().Element(WageTotLineStyle).AlignRight().Text(ls.Sum(x => x.NetPay + x.IncentiveSupervisor).ToString("F2"));
                     }
 
                     static IContainer WageTotLineStyle(IContainer c) =>
@@ -2599,10 +2599,10 @@ namespace OCC.WpfClient.Services
                         columns.ConstantColumn(80);
                     });
 
-                    var permNet = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").Sum(x => x.NetPay);
-                    var casualNet = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").Sum(x => x.NetPay);
-                    var loansTotal = 0m; // Loans are already deducted from individual NetPay
-                    var grandTotal = permNet + casualNet;
+                    var permNet = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").Sum(x => x.NetPay + x.IncentiveSupervisor);
+                    var casualNet = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").Sum(x => x.NetPay + x.IncentiveSupervisor);
+                    var loansTotal = wageRun.Lines.Sum(x => x.DeductionAdvanceRecovery);
+                    var grandTotal = permNet + casualNet + (isCpt ? 0m : loansTotal);
 
                     table.Cell().Element(RowStyle).Text("Permanent Staff").Bold();
                     table.Cell().Element(RowStyle).AlignRight().Text(permNet.ToString("R #,##0.00"));

@@ -141,14 +141,14 @@ namespace OCC.API.Services
 
             // Fetch Active Loans
             var activeLoans = await _context.EmployeeLoans
-                .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate <= runDate)
+                .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate <= request.EndDate.AddDays(15))
                 .ToListAsync();
 
             // Fetch Previous Finalized Run (for Variance) - MUST BE BRANCH SPECIFIC
             var lastRun = await _context.WageRuns
                 .Include(w => w.Lines)
                 .Where(w => (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) && 
-                            w.PayType == request.PayType &&
+                            (string.IsNullOrEmpty(request.PayType) || w.PayType == request.PayType || w.PayType == null) &&
                             w.EndDate < request.StartDate &&
                             (w.Branch == request.Branch || w.Branch == BranchConstants.All ||
                              (branchEnum == Branch.JHB && (w.Branch == BranchConstants.JHB || w.Branch == BranchConstants.Johannesburg)) ||
@@ -173,14 +173,14 @@ namespace OCC.API.Services
             var prepaidEnd = request.StartDate.AddDays(-1).Date;
 
             var activeLeaveRequests = await _context.LeaveRequests
-                .Where(lr => lr.Status == LeaveStatus.Approved &&
+                .Where(lr => (lr.Status == LeaveStatus.Approved || lr.Status == LeaveStatus.Pending) &&
                              lr.StartDate <= request.EndDate.AddDays(2) &&
                              lr.EndDate >= prepaidStart.AddDays(-2))
                 .ToListAsync();
 
             var prepaidAttendanceRecords = await _context.AttendanceRecords
-                .Where(ar => ar.Date >= prepaidStart &&
-                             ar.Date <= prepaidEnd)
+                .Where(ar => ar.Date >= prepaidStart.Date &&
+                             ar.Date < prepaidEnd.Date.AddDays(1))
                 .ToListAsync();
 
             foreach (var emp in employees)
@@ -452,7 +452,9 @@ namespace OCC.API.Services
 
                 var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
                 double standardDayHours = dailyHours > 0 ? dailyHours : 8.75;
-                double maxProjectedHoursToDeduct = priorLine != null ? (double)priorLine.ProjectedHours : 0;
+                // If prior line exists and had projected hours > 0, use it.
+                // Otherwise (e.g. prior line has 0 projected hours or prior run missing), default to 2 working days (17.5 hours) for Thursday and Friday of Week 0 so unpaid leave/absences are properly deducted.
+                double maxProjectedHoursToDeduct = (priorLine != null && priorLine.ProjectedHours > 0) ? (double)priorLine.ProjectedHours : (standardDayHours * 2.0);
 
                 double remainingProjectedHours = maxProjectedHoursToDeduct;
                 var absentDatesList = new List<string>();
@@ -508,7 +510,12 @@ namespace OCC.API.Services
                                 ar.Date.Date == d.Date ||
                                 (ar.Date.Kind == DateTimeKind.Utc ? ar.Date.ToLocalTime().Date : ar.Date.Date) == d.Date);
 
-                            if (attendanceRecord != null && (attendanceRecord.Status == AttendanceStatus.Absent || attendanceRecord.Status == AttendanceStatus.UnpaidSick || attendanceRecord.Status == AttendanceStatus.UnpaidLeave))
+                            if (attendanceRecord != null && (
+                                attendanceRecord.Status == AttendanceStatus.Absent || 
+                                attendanceRecord.Status == AttendanceStatus.UnpaidSick || 
+                                attendanceRecord.Status == AttendanceStatus.UnpaidLeave || 
+                                attendanceRecord.Status == AttendanceStatus.UnpaidHalfDay ||
+                                (attendanceRecord.HoursWorked == 0 && (attendanceRecord.PaidLeaveHours == null || attendanceRecord.PaidLeaveHours == 0) && attendanceRecord.Status != AttendanceStatus.Present)))
                             {
                                 isAbsent = true;
                             }

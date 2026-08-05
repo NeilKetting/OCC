@@ -371,34 +371,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 bool hasJhb = _permissionService.CanAccess(NavigationRoutes.Feature_WagesJhb);
                 bool hasCpt = _permissionService.CanAccess(NavigationRoutes.Feature_WagesCpt);
 
-                if (!hasJhb || !hasCpt)
+                if (hasJhb && !hasCpt)
                 {
-                    if (hasJhb)
-                    {
-                        filtered = filtered.Where(r => r.Branch == "Johannesburg" || r.Branch == "JHB");
-                    }
-                    else if (hasCpt)
-                    {
-                        filtered = filtered.Where(r => r.Branch == "Cape Town" || r.Branch == "CPT");
-                    }
-                    else
-                    {
-                        return Enumerable.Empty<WageRun>();
-                    }
+                    filtered = filtered.Where(r => r.Branch.IsJohannesburg());
                 }
-                else
+                else if (hasCpt && !hasJhb)
                 {
-                    if (SelectedBranch != "All")
-                    {
-                        filtered = filtered.Where(r => r.Branch == SelectedBranch || r.Branch == (SelectedBranch == "Johannesburg" ? "JHB" : "CPT"));
-                    }
+                    filtered = filtered.Where(r => r.Branch.IsCapeTown());
+                }
+                else if (SelectedBranch != "All")
+                {
+                    filtered = filtered.Where(r => r.Branch.MatchesBranch(SelectedBranch));
                 }
 
                 if (!string.IsNullOrEmpty(SelectedPayType))
                 {
                     filtered = filtered.Where(r => r.PayType == SelectedPayType);
                 }
-                return filtered.ToList();
+                return filtered.OrderByDescending(r => r.StartDate).ToList();
             }
         }
 
@@ -1190,7 +1180,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         private void UpdateGrandTotal()
-            => GrandTotalWage = Lines.Where(x => FilterLines(x)).Sum(x => x.NetPay);
+            => GrandTotalWage = Lines.Where(x => FilterLines(x)).Sum(x => x.NetPay + x.IncentiveSupervisor);
 
         // ─── Column Selections Persistence ───────────────────────────────────
 
