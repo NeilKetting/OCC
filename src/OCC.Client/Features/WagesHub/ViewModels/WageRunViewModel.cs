@@ -153,35 +153,41 @@ namespace OCC.Client.Features.WagesHub.ViewModels
                 int index = 1;
 
                 // Robust Consolidation: Group by Name and Id to catch orphan records or inconsistent IDs
-                var consolidatedLines = _currentDraft.Lines
+                var groupedLines = _currentDraft.Lines
                     .GroupBy(l => new { Name = l.EmployeeName?.Trim(), Id = l.EmployeeId })
-                    .Select(g => 
+                    .ToList();
+
+                var consolidatedList = new List<OCC.Shared.Models.WageRunLine>();
+                foreach (var g in groupedLines)
+                {
+                    var first = g.First();
+                    if (g.Count() > 1)
                     {
-                        var first = g.First();
-                        if (g.Count() > 1)
+                        foreach (var extra in g.Skip(1))
                         {
-                            foreach (var extra in g.Skip(1))
-                            {
-                                first.TotalWage += extra.TotalWage;
-                                first.IncentiveSupervisor += extra.IncentiveSupervisor;
-                                first.DeductionLoan += extra.DeductionLoan;
-                                first.DeductionTax += extra.DeductionTax;
-                                first.DeductionWashing += extra.DeductionWashing;
-                                first.DeductionGas += extra.DeductionGas;
-                                first.DeductionOther += extra.DeductionOther;
-                                first.DeductionPPE += extra.DeductionPPE;
-                                if (!string.IsNullOrEmpty(extra.VarianceNotes))
-                                    first.VarianceNotes = (first.VarianceNotes + " " + extra.VarianceNotes).Trim();
-                                
-                                // Merge hours as well
-                                first.NormalHours += extra.NormalHours;
-                                first.Overtime15Hours += extra.Overtime15Hours;
-                                first.Overtime20Hours += extra.Overtime20Hours;
-                            }
+                            first.TotalWage += extra.TotalWage;
+                            first.IncentiveSupervisor += extra.IncentiveSupervisor;
+                            first.DeductionLoan += extra.DeductionLoan;
+                            first.DeductionTax += extra.DeductionTax;
+                            first.DeductionWashing += extra.DeductionWashing;
+                            first.DeductionGas += extra.DeductionGas;
+                            first.DeductionOther += extra.DeductionOther;
+                            first.DeductionPPE += extra.DeductionPPE;
+                            if (!string.IsNullOrEmpty(extra.VarianceNotes))
+                                first.VarianceNotes = (first.VarianceNotes + " " + extra.VarianceNotes).Trim();
+                            
+                            // Merge hours as well
+                            first.NormalHours += extra.NormalHours;
+                            first.Overtime15Hours += extra.Overtime15Hours;
+                            first.Overtime20Hours += extra.Overtime20Hours;
                         }
-                        return first;
-                    })
-                    .OrderBy(l => l.EmployeeName);
+                    }
+                    consolidatedList.Add(first);
+                }
+
+                var consolidatedLines = consolidatedList
+                    .OrderBy(l => l.EmployeeName)
+                    .ToList();
 
                 foreach (var line in consolidatedLines)
                 {

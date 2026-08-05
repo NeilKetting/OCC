@@ -92,9 +92,20 @@ namespace OCC.API.Services
             var employeesQuery = _context.Employees
                 .Where(e => e.Status == EmployeeStatus.Active && e.RateType == rateType);
                 
-            if (!string.IsNullOrEmpty(request.Branch) && request.Branch != "All")
+            if (!string.IsNullOrEmpty(request.Branch) && !request.Branch.Equals(BranchConstants.All, StringComparison.OrdinalIgnoreCase))
             {
-                employeesQuery = employeesQuery.Where(e => e.Branch == request.Branch);
+                if (branchEnum == Branch.JHB)
+                {
+                    employeesQuery = employeesQuery.Where(e => e.Branch == BranchConstants.Johannesburg || e.Branch == BranchConstants.JHB);
+                }
+                else if (branchEnum == Branch.CPT)
+                {
+                    employeesQuery = employeesQuery.Where(e => e.Branch == BranchConstants.CapeTown || e.Branch == BranchConstants.CPT);
+                }
+                else
+                {
+                    employeesQuery = employeesQuery.Where(e => e.Branch == request.Branch);
+                }
             }
 
             var employees = await employeesQuery.ToListAsync();
@@ -137,11 +148,11 @@ namespace OCC.API.Services
             var lastRun = await _context.WageRuns
                 .Include(w => w.Lines)
                 .Where(w => (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) && 
-                            (w.Branch == request.Branch || w.Branch == "All" ||
-                             (request.Branch == "Johannesburg" && (w.Branch == "JHB" || w.Branch == "Johannesburg")) ||
-                             (request.Branch == "Cape Town" && (w.Branch == "CPT" || w.Branch == "Cape Town"))) && 
                             w.PayType == request.PayType &&
-                            w.EndDate < request.StartDate)
+                            w.EndDate < request.StartDate &&
+                            (w.Branch == request.Branch || w.Branch == BranchConstants.All ||
+                             (branchEnum == Branch.JHB && (w.Branch == BranchConstants.JHB || w.Branch == BranchConstants.Johannesburg)) ||
+                             (branchEnum == Branch.CPT && (w.Branch == BranchConstants.CPT || w.Branch == BranchConstants.CapeTown))))
                 .OrderByDescending(w => w.EndDate)
                 .FirstOrDefaultAsync();
 
@@ -150,10 +161,10 @@ namespace OCC.API.Services
                 .Include(w => w.Lines)
                 .Where(w => w.RunType == WageRunType.AdHocAdvance &&
                             (w.Status == WageRunStatus.Finalized || w.Status == WageRunStatus.Paid) &&
-                            (w.Branch == request.Branch || w.Branch == "All" ||
-                             (request.Branch == "Johannesburg" && (w.Branch == "JHB" || w.Branch == "Johannesburg")) ||
-                             (request.Branch == "Cape Town" && (w.Branch == "CPT" || w.Branch == "Cape Town"))) &&
-                            w.StartDate >= (lastRun != null ? lastRun.StartDate : DateTime.MinValue))
+                            w.StartDate >= (lastRun != null ? lastRun.StartDate : DateTime.MinValue) &&
+                            (w.Branch == request.Branch || w.Branch == BranchConstants.All ||
+                             (branchEnum == Branch.JHB && (w.Branch == BranchConstants.JHB || w.Branch == BranchConstants.Johannesburg)) ||
+                             (branchEnum == Branch.CPT && (w.Branch == BranchConstants.CPT || w.Branch == BranchConstants.CapeTown))))
                 .OrderByDescending(w => w.StartDate)
                 .ToListAsync();
 
@@ -397,6 +408,9 @@ namespace OCC.API.Services
                             var dow = d.DayOfWeek;
                             if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d)) continue;
 
+                            // Do not project for dates that have already passed (actual attendance records are evaluated instead)
+                            if (d.Date < runDate) continue;
+
                             var hasUnpaidProjLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, d));
                             if (hasUnpaidProjLeave) continue;
 
@@ -438,9 +452,7 @@ namespace OCC.API.Services
 
                 var priorLine = lastRun?.Lines?.FirstOrDefault(l => l.EmployeeId == emp.Id);
                 double standardDayHours = dailyHours > 0 ? dailyHours : 8.75;
-                double maxProjectedHoursToDeduct = (priorLine != null && priorLine.ProjectedHours > 0)
-                    ? (double)priorLine.ProjectedHours
-                    : (2.0 * standardDayHours);
+                double maxProjectedHoursToDeduct = priorLine != null ? (double)priorLine.ProjectedHours : 0;
 
                 double remainingProjectedHours = maxProjectedHoursToDeduct;
                 var absentDatesList = new List<string>();

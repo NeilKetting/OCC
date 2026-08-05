@@ -645,6 +645,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [RelayCommand]
         public async Task GenerateDraftAsync()
         {
+            if (IsBusy) return;
             try
             {
                 IsBusy = true;
@@ -669,33 +670,39 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 Lines.Clear();
                 int index = 1;
 
-                // Consolidate duplicate employee lines (multi-branch edge case)
-                var consolidated = _currentDraft.Lines
+                // Consolidate duplicate employee lines safely without mutating inside lazy LINQ projections
+                var groupedLines = _currentDraft.Lines
                     .GroupBy(l => new { Name = l.EmployeeName?.Trim(), l.EmployeeId })
-                    .Select(g =>
-                    {
-                        var first = g.First();
-                        foreach (var extra in g.Skip(1))
-                        {
-                            first.TotalWage           += extra.TotalWage;
-                            first.NormalHours         += extra.NormalHours;
-                            first.Overtime15Hours     += extra.Overtime15Hours;
-                            first.Overtime20Hours     += extra.Overtime20Hours;
-                            first.IncentiveSupervisor += extra.IncentiveSupervisor;
-                            first.DeductionLoan       += extra.DeductionLoan;
-                            first.DeductionWashing    += extra.DeductionWashing;
-                            first.DeductionGas        += extra.DeductionGas;
-                            first.DeductionOther      += extra.DeductionOther;
-                            first.DeductionPPE        += extra.DeductionPPE;
-                            if (!string.IsNullOrEmpty(extra.VarianceNotes))
-                                first.VarianceNotes = (first.VarianceNotes + " " + extra.VarianceNotes).Trim();
-                        }
-                        return first;
-                    })
-                    .OrderByDescending(l => l.EmploymentType == "Permanent")
-                    .ThenBy(l => l.EmployeeName);
+                    .ToList();
 
-                foreach (var line in consolidated)
+                var consolidatedList = new List<WageRunLine>();
+                foreach (var group in groupedLines)
+                {
+                    var first = group.First();
+                    foreach (var extra in group.Skip(1))
+                    {
+                        first.TotalWage           += extra.TotalWage;
+                        first.NormalHours         += extra.NormalHours;
+                        first.Overtime15Hours     += extra.Overtime15Hours;
+                        first.Overtime20Hours     += extra.Overtime20Hours;
+                        first.IncentiveSupervisor += extra.IncentiveSupervisor;
+                        first.DeductionLoan       += extra.DeductionLoan;
+                        first.DeductionWashing    += extra.DeductionWashing;
+                        first.DeductionGas        += extra.DeductionGas;
+                        first.DeductionOther      += extra.DeductionOther;
+                        first.DeductionPPE        += extra.DeductionPPE;
+                        if (!string.IsNullOrEmpty(extra.VarianceNotes))
+                            first.VarianceNotes = (first.VarianceNotes + " " + extra.VarianceNotes).Trim();
+                    }
+                    consolidatedList.Add(first);
+                }
+
+                var sortedList = consolidatedList
+                    .OrderByDescending(l => l.EmploymentType == "Permanent")
+                    .ThenBy(l => l.EmployeeName)
+                    .ToList();
+
+                foreach (var line in sortedList)
                 {
                     // Re-apply previous manual edits
                     if (existingEdits.TryGetValue(line.EmployeeId, out var edits))

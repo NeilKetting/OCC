@@ -253,7 +253,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             if (Model == null) return;
 
             // Recalculate BIBC Amount if applicable
-            if (Model.IsBibc && (string.Equals(Model.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(Model.Branch, "CPT", StringComparison.OrdinalIgnoreCase)))
+            if (Model.IsBibc && Model.Branch.IsCapeTown())
             {
                 Model.BibcAmount = BibcRate * (decimal)Model.TotalDaysWorked;
             }

@@ -106,9 +106,10 @@ namespace OCC.Shared.Models
         public decimal IncentiveSupervisor { get; set; }
 
         /// <summary> 
-        /// Final payout amount: TotalWage + Incentives - Deductions. 
+        /// Final payout amount: TotalWage - Deductions.
+        /// (Supervisor fee and BIBC amount are excluded as BIBC/Supervisor fees are paid separately to their respective governing bodies/incentives).
         /// </summary>
-        public decimal NetPay => Math.Max(0m, (TotalWage + IncentiveSupervisor) - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + DeductionAdvanceRecovery + BibcAmount));
+        public decimal NetPay => Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + DeductionAdvanceRecovery));
 
         /// <summary> Snapshot of worked days in the first week of the cycle. </summary>
         public double DaysWorkedWeek1 { get; set; }
