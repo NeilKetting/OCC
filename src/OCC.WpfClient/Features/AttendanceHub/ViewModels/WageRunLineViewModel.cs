@@ -87,8 +87,30 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public decimal TotalRem     => Model.TotalWage;
         public decimal NetPay       => Model.NetPay;
         public decimal TotalWage    => Model.TotalWage;
-        public decimal HourlyRate   => Model.HourlyRate;
-        public double  VarianceHours => Model.VarianceHours;
+        public decimal HourlyRate
+        {
+            get => Model.HourlyRate;
+            set
+            {
+                if (Model.HourlyRate != value)
+                {
+                    Model.HourlyRate = value;
+                    RecalculateAndNotify();
+                }
+            }
+        }
+        public double VarianceHours
+        {
+            get => Model.VarianceHours;
+            set
+            {
+                if (Math.Abs(Model.VarianceHours - value) > 0.001)
+                {
+                    Model.VarianceHours = value;
+                    RecalculateAndNotify();
+                }
+            }
+        }
         public bool   HasSupervisorFee        => Model.IncentiveSupervisor > 0;
 
         // ─── Editable Properties (trigger recalc) ─────────────────────────────
@@ -268,12 +290,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 + (decimal)(Model.Overtime15Hours + Model.SaturdayOvertimeHours) * Model.HourlyRate * 1.5m
                 + (decimal)Model.Overtime20Hours * Model.HourlyRate * 2.0m;
 
-            // NetPay is a computed property on the model — re-notify all display properties
-            OnPropertyChanged(nameof(NetPay));
-            OnPropertyChanged(nameof(TotalRem));
-            OnPropertyChanged(nameof(TotalWage));
-            OnPropertyChanged(nameof(StdHoursDisplay));
-            OnPropertyChanged(nameof(BibcAmount));
+            // Re-notify all display properties to update WPF DataGrid bindings
+            OnPropertyChanged(string.Empty);
         }
 
         private void PromptReason(string hoursType, double oldValue, double newValue)

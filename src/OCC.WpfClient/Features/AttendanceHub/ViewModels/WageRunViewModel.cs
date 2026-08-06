@@ -733,6 +733,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             bool result = await _dialogService.ShowWageRunOverrideDialogAsync(line);
             if (result)
             {
+                line.Recalculate();
                 UpdateGrandTotal();
             }
         }

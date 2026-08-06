@@ -122,7 +122,7 @@ namespace OCC.WpfClient.Dialogs
             if (Math.Abs(_lineViewModel.NormalHours - newNormal) > 0.001)
             {
                 changes.Add($"Normal Hrs {_lineViewModel.NormalHours:F1} ➔ {newNormal:F1}");
-                _lineViewModel.NormalHours = newNormal;
+                _lineViewModel.Model.NormalHours = newNormal;
             }
 
             double newVariance = ParseDouble(VarianceHoursInput.Text);
@@ -136,21 +136,21 @@ namespace OCC.WpfClient.Dialogs
             if (Math.Abs(_lineViewModel.Overtime15Hours - newOt15) > 0.001)
             {
                 changes.Add($"OT1.5 {_lineViewModel.Overtime15Hours:F1} ➔ {newOt15:F1}");
-                _lineViewModel.Overtime15Hours = newOt15;
+                _lineViewModel.Model.Overtime15Hours = newOt15;
             }
 
             double newSatOt = ParseDouble(SaturdayOtInput.Text);
             if (Math.Abs(_lineViewModel.SaturdayOvertimeHours - newSatOt) > 0.001)
             {
                 changes.Add($"Sat OT {_lineViewModel.SaturdayOvertimeHours:F1} ➔ {newSatOt:F1}");
-                _lineViewModel.SaturdayOvertimeHours = newSatOt;
+                _lineViewModel.Model.SaturdayOvertimeHours = newSatOt;
             }
 
             double newOt20 = ParseDouble(Overtime20Input.Text);
             if (Math.Abs(_lineViewModel.Overtime20Hours - newOt20) > 0.001)
             {
                 changes.Add($"OT2.0 {_lineViewModel.Overtime20Hours:F1} ➔ {newOt20:F1}");
-                _lineViewModel.Overtime20Hours = newOt20;
+                _lineViewModel.Model.Overtime20Hours = newOt20;
             }
 
             decimal newRate = ParseDecimal(HourlyRateInput.Text);
@@ -164,49 +164,49 @@ namespace OCC.WpfClient.Dialogs
             if (_lineViewModel.DeductionAdvanceRecovery != newAdv)
             {
                 changes.Add($"Adv Rec R{_lineViewModel.DeductionAdvanceRecovery:F2} ➔ R{newAdv:F2}");
-                _lineViewModel.DeductionAdvanceRecovery = newAdv;
+                _lineViewModel.Model.DeductionAdvanceRecovery = newAdv;
             }
 
             decimal newLoan = ParseDecimal(DeductionLoanInput.Text);
             if (_lineViewModel.DeductionLoan != newLoan)
             {
                 changes.Add($"Loan R{_lineViewModel.DeductionLoan:F2} ➔ R{newLoan:F2}");
-                _lineViewModel.DeductionLoan = newLoan;
+                _lineViewModel.Model.DeductionLoan = newLoan;
             }
 
             decimal newWashing = ParseDecimal(DeductionWashingInput.Text);
             if (_lineViewModel.DeductionWashing != newWashing)
             {
                 changes.Add($"Washing R{_lineViewModel.DeductionWashing:F2} ➔ R{newWashing:F2}");
-                _lineViewModel.DeductionWashing = newWashing;
+                _lineViewModel.Model.DeductionWashing = newWashing;
             }
 
             decimal newGas = ParseDecimal(DeductionGasInput.Text);
             if (_lineViewModel.DeductionGas != newGas)
             {
                 changes.Add($"Gas R{_lineViewModel.DeductionGas:F2} ➔ R{newGas:F2}");
-                _lineViewModel.DeductionGas = newGas;
+                _lineViewModel.Model.DeductionGas = newGas;
             }
 
             decimal newPPE = ParseDecimal(DeductionPPEInput.Text);
             if (_lineViewModel.DeductionPPE != newPPE)
             {
                 changes.Add($"PPE R{_lineViewModel.DeductionPPE:F2} ➔ R{newPPE:F2}");
-                _lineViewModel.DeductionPPE = newPPE;
+                _lineViewModel.Model.DeductionPPE = newPPE;
             }
 
             decimal newOther = ParseDecimal(DeductionOtherInput.Text);
             if (_lineViewModel.DeductionOther != newOther)
             {
                 changes.Add($"Other R{_lineViewModel.DeductionOther:F2} ➔ R{newOther:F2}");
-                _lineViewModel.DeductionOther = newOther;
+                _lineViewModel.Model.DeductionOther = newOther;
             }
 
             decimal newSup = ParseDecimal(IncentiveSupervisorInput.Text);
             if (_lineViewModel.IncentiveSupervisor != newSup)
             {
                 changes.Add($"Sup Fee R{_lineViewModel.IncentiveSupervisor:F2} ➔ R{newSup:F2}");
-                _lineViewModel.IncentiveSupervisor = newSup;
+                _lineViewModel.Model.IncentiveSupervisor = newSup;
             }
 
             // Append override reason to line VarianceNotes
