@@ -1,0 +1,230 @@
+<Window x:Class="OCC.WpfClient.Dialogs.WageRunOverrideDialogView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ap="clr-namespace:OCC.WpfClient.Infrastructure.AttachedProperties"
+        mc:Ignorable="d"
+        Title="Override Wage Line" Height="680" Width="640"
+        WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" ResizeMode="NoResize">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/OCC-ERP;component/Styles/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource SecondaryGold}" BorderThickness="1.5" CornerRadius="12" Padding="24">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Header -->
+                <RowDefinition Height="Auto"/> <!-- Employee Info Summary Card -->
+                <RowDefinition Height="*"/>    <!-- Override Form Fields -->
+                <RowDefinition Height="Auto"/> <!-- Reason Section -->
+                <RowDefinition Height="Auto"/> <!-- Live Net Pay Preview -->
+                <RowDefinition Height="Auto"/> <!-- Action Buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- 1. Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="&#xE70F;" Style="{StaticResource SymbolIcon}" 
+                           Foreground="{StaticResource SecondaryGold}" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="OVERRIDE WAGE LINE" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="16" Foreground="White"/>
+                    <TextBlock x:Name="EmployeeSubheaderText" Style="{StaticResource LabelText}" Opacity="0.7" FontSize="11" Text="Adjust working hours, rates, deductions, or supervisor fees." Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="2" Click="Cancel_Click" Style="{StaticResource ToolbarIconButton}" ToolTip="Close" Width="30" Height="30" VerticalAlignment="Top">
+                    <TextBlock Text="&#xE8BB;" Style="{StaticResource SymbolIcon}" FontSize="14" Foreground="White"/>
+                </Button>
+            </Grid>
+
+            <!-- 2. Employee Info Card -->
+            <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="16,12" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="EMPLOYEE" Style="{StaticResource LabelText}" FontSize="10" Opacity="0.6"/>
+                        <TextBlock x:Name="EmpNameText" Text="JOHN DOE" FontWeight="Bold" Foreground="White" FontSize="13" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="EmpNumberText" Text="BAS-1002" Style="{StaticResource LabelText}" FontSize="10" Foreground="{StaticResource SecondaryGold}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="BRANCH" Style="{StaticResource LabelText}" FontSize="10" Opacity="0.6"/>
+                        <TextBlock x:Name="EmpBranchText" Text="Johannesburg" FontWeight="SemiBold" Foreground="White" FontSize="12" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="EmpRateText" Text="Rate: R45.00/hr" Style="{StaticResource LabelText}" FontSize="10"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                        <TextBlock Text="CURRENT NET PAY" Style="{StaticResource LabelText}" FontSize="10" Opacity="0.6" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="CurrentNetPayText" Text="R 0.00" FontWeight="Bold" Foreground="{StaticResource SecondaryGold}" FontSize="14" HorizontalAlignment="Right" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 3. Form Fields (Scrollable) -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,0,12">
+                <StackPanel Orientation="Vertical">
+                    <!-- Section Header: Hours & Rates -->
+                    <TextBlock Text="HOURS &amp; RATE OVERRIDES" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,0,0,8"/>
+                    
+                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                        <!-- Normal Hours -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="NORMAL HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="NormalHoursInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Variance / Adjustment Hours -->
+                        <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="VARIANCE / ADJ HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="VarianceHoursInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- OT 1.5x Hours -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="STD OT 1.5X HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="Overtime15Input" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Saturday OT Hours -->
+                        <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="SATURDAY OT HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="SaturdayOtInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- OT 2.0x Hours -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="SUN/HOL 2.0X HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="Overtime20Input" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Hourly Pay Rate -->
+                        <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="HOURLY PAY RATE (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="HourlyRateInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+                    </UniformGrid>
+
+                    <!-- Section Header: Deductions & Fees -->
+                    <TextBlock Text="DEDUCTIONS &amp; INCENTIVES OVERRIDES" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,8,0,8"/>
+
+                    <UniformGrid Columns="2">
+                        <!-- Advance Recovery Deduction -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="ADVANCE RECOVERY (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="DeductionAdvanceInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Loan Deduction -->
+                        <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="LOAN DEDUCTION (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="DeductionLoanInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Washing Fee Deduction -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="WASHING DEDUCTION (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="DeductionWashingInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Gas Fee Deduction -->
+                        <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="GAS DEDUCTION (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="DeductionGasInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- PPE Deduction -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="PPE DEDUCTION (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="DeductionPPEInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Other Deduction -->
+                        <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="OTHER DEDUCTION (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="DeductionOtherInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Supervisor Fee Incentive -->
+                        <StackPanel Margin="0,0,8,8">
+                            <TextBlock Text="SUPERVISOR FEE (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="IncentiveSupervisorInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 4. Mandatory Reason -->
+            <StackPanel Grid.Row="3" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="REASON FOR OVERRIDE" Style="{StaticResource LabelText}" FontWeight="Bold"/>
+                    <TextBlock Text=" *" Foreground="#EF4444" FontWeight="Bold"/>
+                    <TextBlock Text=" (Appended to line notes)" Style="{StaticResource LabelText}" Opacity="0.6" Margin="4,0,0,0"/>
+                </StackPanel>
+                <TextBox x:Name="ReasonInput" Style="{StaticResource ModernInput}" Height="54" TextWrapping="Wrap" AcceptsReturn="True"
+                         ap:WatermarkProperties.Watermark="Enter justification for override (e.g., Paid 2 advance days (17.5 hrs) deducted in prior run due to late finalization)..."/>
+                <TextBlock x:Name="ValidationErrorText" Text="Reason is required to apply wage line override." Foreground="#EF4444" FontSize="11" Margin="0,4,0,0" Visibility="Collapsed"/>
+            </StackPanel>
+
+            <!-- 5. Live Net Pay Preview -->
+            <Border Grid.Row="4" Style="{StaticResource GlassCard}" Padding="16,10" Margin="0,0,0,16" Background="#1A1E293B">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="ORIGINAL NET PAY" Style="{StaticResource LabelText}" FontSize="10" Opacity="0.6"/>
+                        <TextBlock x:Name="OriginalNetPayPreviewText" Text="R 0.00" FontWeight="SemiBold" Foreground="White" FontSize="13" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="1" Text="➜" Foreground="{StaticResource SecondaryGold}" FontSize="18" VerticalAlignment="Center" Margin="16,0"/>
+
+                    <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                        <TextBlock Text="NEW CALCULATED NET PAY" Style="{StaticResource LabelText}" FontSize="10" Foreground="{StaticResource SecondaryGold}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,2,0,0">
+                            <TextBlock x:Name="NewNetPayPreviewText" Text="R 0.00" FontWeight="Bold" Foreground="#34D399" FontSize="15"/>
+                            <TextBlock x:Name="NetPayDiffText" Text=" (+R 0.00)" FontWeight="SemiBold" Foreground="#34D399" FontSize="12" VerticalAlignment="Bottom" Margin="6,0,0,1"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 6. Action Buttons -->
+            <Grid Grid.Row="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="1" Click="Cancel_Click" Style="{StaticResource SecondaryButton}" Content="CANCEL" Width="110" Height="36" Margin="0,0,8,0"/>
+                <Button Grid.Column="2" Click="ApplyOverride_Click" Style="{StaticResource CreateIconButton}" Width="160" Height="36">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
+                        <TextBlock Text="APPLY OVERRIDE" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

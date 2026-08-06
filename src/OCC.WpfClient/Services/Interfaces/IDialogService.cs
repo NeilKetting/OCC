@@ -18,5 +18,6 @@ namespace OCC.WpfClient.Services.Interfaces
         string? ShowOpenFileDialog(string filter, string title);
         Task<string?> ShowInputDialogAsync(string title, string message, string defaultValue = "");
         Task<(Guid? ProjectId, string? CustomSite)?> ShowAssignProjectDialogAsync(List<OCC.Shared.DTOs.ProjectSummaryDto> projects);
+        Task<bool> ShowWageRunOverrideDialogAsync(Features.AttendanceHub.ViewModels.WageRunLineViewModel line);
     }
 }

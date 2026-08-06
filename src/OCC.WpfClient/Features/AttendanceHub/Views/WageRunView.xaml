@@ -295,6 +295,25 @@
                               ScrollViewer.IsDeferredScrollingEnabled="False"
                               FontSize="11" Margin="0">
 
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                            <MenuItem Header="Override / Adjust Employee Line..."
+                                                      Command="{Binding Data.OverrideLineCommand, Source={StaticResource Proxy}}"
+                                                      CommandParameter="{Binding}"
+                                                      Style="{StaticResource ModernMenuItem}">
+                                                <MenuItem.Icon>
+                                                    <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SecondaryGold}"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.RowStyle>
+
                     <DataGrid.Columns>
                         <!-- # -->
                         <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="Auto" IsReadOnly="True"

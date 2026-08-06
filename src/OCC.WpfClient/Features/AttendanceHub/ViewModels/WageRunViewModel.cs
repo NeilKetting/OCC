@@ -726,6 +726,18 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         [RelayCommand]
+        public async Task OverrideLineAsync(WageRunLineViewModel? line)
+        {
+            if (line == null) return;
+
+            bool result = await _dialogService.ShowWageRunOverrideDialogAsync(line);
+            if (result)
+            {
+                UpdateGrandTotal();
+            }
+        }
+
+        [RelayCommand]
         public async Task FinalizeRunAsync()
         {
             if (_currentDraftId == null || _currentDraft == null) return;

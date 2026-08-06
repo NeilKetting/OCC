@@ -78,5 +78,17 @@ namespace OCC.WpfClient.Services
 
             return Task.FromResult<(Guid? ProjectId, string? CustomSite)?>(null);
         }
+
+        public Task<bool> ShowWageRunOverrideDialogAsync(Features.AttendanceHub.ViewModels.WageRunLineViewModel line)
+        {
+            var currentWindow = Application.Current.MainWindow;
+            var dialog = new WageRunOverrideDialogView(line)
+            {
+                Owner = currentWindow
+            };
+
+            var result = dialog.ShowDialog();
+            return Task.FromResult(result == true);
+        }
     }
 }
