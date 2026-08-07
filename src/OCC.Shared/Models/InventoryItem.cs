@@ -80,6 +80,9 @@ namespace OCC.Shared.Models
         /// <summary> The type of item (Service, Stock Part, etc.) </summary>
         public ItemType Type { get; set; } = ItemType.StockPart;
 
+        /// <summary> Configures how unit price is auto-populated on purchase orders. </summary>
+        public PriceAutoFillMode PriceAutoFillMode { get; set; } = PriceAutoFillMode.None;
+
         // Status
         public InventoryStatus Status => TrackLowStock && (JhbQuantity <= JhbReorderPoint || CptQuantity <= CptReorderPoint) ? InventoryStatus.Low : InventoryStatus.OK;
         
@@ -87,6 +90,13 @@ namespace OCC.Shared.Models
         public InventoryStatus InventoryStatus => Status;
 
         public bool IsLowStock => Status == InventoryStatus.Low;
+    }
+
+    public enum PriceAutoFillMode
+    {
+        None,
+        AverageCost,
+        LastPurchasePrice
     }
 
     public enum InventoryStatus

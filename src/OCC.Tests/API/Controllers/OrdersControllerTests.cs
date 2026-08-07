@@ -59,7 +59,7 @@ namespace OCC.Tests.API.Controllers
                 SupplierName = "Test Supplier",
                 OrderDate = DateTime.UtcNow,
                 ExpectedDeliveryDate = DateTime.Today.AddDays(5),
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine
                     {
@@ -137,7 +137,7 @@ namespace OCC.Tests.API.Controllers
                 Id = orderId,
                 OrderNumber = "PO-TEST-002",
                 SupplierName = "Supplier B",
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = line1Id, OrderId = orderId, ItemCode = "LINE-1", Description = "Line 1", QuantityOrdered = 10, UnitPrice = 50 },
                     new OrderLine { Id = line2Id, OrderId = orderId, ItemCode = "LINE-2", Description = "Line 2", QuantityOrdered = 5, UnitPrice = 30 }
@@ -184,7 +184,7 @@ namespace OCC.Tests.API.Controllers
                 Id = orderId,
                 OrderNumber = "PO-TEST-003",
                 SupplierName = "Supplier C",
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-A", Description = "Item A", QuantityOrdered = 1, UnitPrice = 10 }
                 }
@@ -232,7 +232,7 @@ namespace OCC.Tests.API.Controllers
                 Id = orderId,
                 OrderNumber = "PO-TEST-004",
                 SupplierName = "Supplier D",
-                Lines = new System.Collections.ObjectModel.ObservableCollection<OrderLine>
+                Lines = new List<OrderLine>
                 {
                     new OrderLine { Id = Guid.NewGuid(), OrderId = orderId, ItemCode = "ITEM-A", Description = "Item A", QuantityOrdered = 1, UnitPrice = 10 }
                 }

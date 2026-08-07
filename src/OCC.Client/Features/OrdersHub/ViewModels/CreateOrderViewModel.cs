@@ -316,7 +316,7 @@ namespace OCC.Client.Features.OrdersHub.ViewModels
                 .Where(l => !string.IsNullOrWhiteSpace(l.ItemCode) || !string.IsNullOrWhiteSpace(l.Description))
                 .Where(l => l.QuantityOrdered > 0)
                 .ToList();
-            model.Lines = new ObservableCollection<OrderLine>(meaningfulLines);
+            model.Lines = meaningfulLines;
             return model;
         }
 

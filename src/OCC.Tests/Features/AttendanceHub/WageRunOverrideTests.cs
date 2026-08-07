@@ -102,5 +102,46 @@ namespace OCC.Tests.Features.AttendanceHub
             Assert.Contains("Paid 2 advance days (17.5 hrs) deducted in prior run due to late finalization", vm.VarianceNotes);
             Assert.StartsWith("Prior absence flagged on Tuesday.; [Override:", vm.VarianceNotes);
         }
+
+        [Fact]
+        public void Recalculate_DeductsBibcFromNetPay_ForCapeTownBranchOnly()
+        {
+            // Arrange CPT line with BIBC enabled
+            var cptLine = new WageRunLine
+            {
+                EmployeeId = Guid.NewGuid(),
+                EmployeeName = "CPT Worker",
+                Branch = "Cape Town",
+                HourlyRate = 50.00m,
+                NormalHours = 40.0, // TotalWage = R2000
+                TotalDaysWorked = 5,
+                IsBibc = true
+            };
+            var cptVm = new WageRunLineViewModel(cptLine);
+            cptVm.Recalculate();
+
+            // BIBC Amount = 28.75 * 5 = 143.75
+            // NetPay = 2000 - 143.75 = 1856.25
+            Assert.Equal(143.75m, cptVm.BibcAmount);
+            Assert.Equal(1856.25m, cptVm.NetPay);
+
+            // Arrange JHB line with BIBC enabled
+            var jhbLine = new WageRunLine
+            {
+                EmployeeId = Guid.NewGuid(),
+                EmployeeName = "JHB Worker",
+                Branch = "Johannesburg",
+                HourlyRate = 50.00m,
+                NormalHours = 40.0, // TotalWage = R2000
+                TotalDaysWorked = 5,
+                IsBibc = true
+            };
+            var jhbVm = new WageRunLineViewModel(jhbLine);
+            jhbVm.Recalculate();
+
+            // JHB: BIBC Amount = 0, NetPay = 2000
+            Assert.Equal(0m, jhbVm.BibcAmount);
+            Assert.Equal(2000.00m, jhbVm.NetPay);
+        }
     }
 }

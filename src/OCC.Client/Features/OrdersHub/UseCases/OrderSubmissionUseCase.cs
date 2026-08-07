@@ -146,7 +146,7 @@ namespace OCC.Client.Features.OrdersHub.UseCases
                 .Where(l => l.QuantityOrdered > 0)
                 .ToList();
 
-            model.Lines = new ObservableCollection<OrderLine>(meaningfulLines);
+            model.Lines = meaningfulLines;
             return model;
         }
 

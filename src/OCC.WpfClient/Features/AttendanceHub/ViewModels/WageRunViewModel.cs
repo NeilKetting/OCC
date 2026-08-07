@@ -574,6 +574,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 newStart = previousRun.EndDate.AddDays(1).Date;
             }
+            else if (SelectedPayFrequency == PayFrequency.Monthly || string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+            {
+                newStart = DateTime.Today;
+            }
             else
             {
                 var today = DateTime.Today;

@@ -66,6 +66,18 @@
                 <TextBlock Text="WAREHOUSE LOCATION" Style="{StaticResource FormLabelText}"/>
                 <TextBox Text="{Binding Item.Location}" Style="{StaticResource ModernInput}" Margin="0,0,0,20"/>
 
+                <TextBlock Text="AUTO-POPULATE PO UNIT PRICE" Style="{StaticResource FormLabelText}"/>
+                <ComboBox ItemsSource="{Binding PriceAutoFillModes}" 
+                          SelectedItem="{Binding SelectedPriceAutoFillMode}" 
+                          Style="{StaticResource ModernComboBox}" 
+                          Margin="0,0,0,20" Height="36">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource FriendlyEnumConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
                 <StackPanel Visibility="{Binding IsStockLevelVisible, Converter={StaticResource BoolToVis}}">
                     <Border Height="1" Background="{StaticResource GlassBorder}" Margin="0,10,0,25"/>
 

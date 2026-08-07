@@ -107,9 +107,16 @@ namespace OCC.Shared.Models
 
         /// <summary> 
         /// Final payout amount: TotalWage - Deductions.
-        /// (Supervisor fee and BIBC amount are excluded as BIBC/Supervisor fees are paid separately to their respective governing bodies/incentives).
+        /// (Deducts BIBC contribution from NetPay for Cape Town employees if BIBC applies).
         /// </summary>
-        public decimal NetPay => Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + DeductionAdvanceRecovery));
+        public decimal NetPay
+        {
+            get
+            {
+                decimal bibcDeduction = (IsBibc && Branch.IsCapeTown()) ? BibcAmount : 0m;
+                return Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + DeductionAdvanceRecovery + bibcDeduction));
+            }
+        }
 
         /// <summary> Snapshot of worked days in the first week of the cycle. </summary>
         public double DaysWorkedWeek1 { get; set; }

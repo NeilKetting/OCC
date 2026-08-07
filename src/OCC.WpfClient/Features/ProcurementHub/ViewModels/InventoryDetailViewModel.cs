@@ -24,6 +24,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
         public System.Collections.Generic.List<string> AvailableUOMs { get; } = new() { "ea", "m", "kg", "L", "m2", "m3", "box", "roll", "pack", "pair" };
         public ObservableCollection<ItemType> ItemTypes { get; } = new(Enum.GetValues<ItemType>());
+        public ObservableCollection<PriceAutoFillMode> PriceAutoFillModes { get; } = new(Enum.GetValues<PriceAutoFillMode>());
 
         public ItemType SelectedType
         {
@@ -35,6 +36,19 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     Item.Type = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(IsStockLevelVisible));
+                }
+            }
+        }
+
+        public PriceAutoFillMode SelectedPriceAutoFillMode
+        {
+            get => Item.PriceAutoFillMode;
+            set
+            {
+                if (Item.PriceAutoFillMode != value)
+                {
+                    Item.PriceAutoFillMode = value;
+                    OnPropertyChanged();
                 }
             }
         }
@@ -58,6 +72,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             IsEditMode = true;
             Title = $"Edit {item.Sku}";
             OnPropertyChanged(nameof(SelectedType));
+            OnPropertyChanged(nameof(SelectedPriceAutoFillMode));
             OnPropertyChanged(nameof(IsStockLevelVisible));
         }
 

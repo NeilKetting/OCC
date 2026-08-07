@@ -205,7 +205,8 @@ namespace OCC.Tests.Features.ProcurementHub
                 Sku = "MAT-001",
                 Description = "Steel Beam 100x100",
                 UnitOfMeasure = "m",
-                AverageCost = 285.50m
+                AverageCost = 285.50m,
+                PriceAutoFillMode = PriceAutoFillMode.AverageCost
             };
 
             var order = new Order { Id = Guid.NewGuid(), TaxRate = 0.15m };
@@ -236,10 +237,11 @@ namespace OCC.Tests.Features.ProcurementHub
         [Fact]
         public async Task SaveOrder_ResolvesInventoryItemIdForLinesWithMatchingSku()
         {
-            // Arrange
-            var vm = CreateViewModel();
             var inventoryItemId = Guid.NewGuid();
-            vm.InventoryItems.Add(new InventoryItem { Id = inventoryItemId, Sku = "FIX-999", Description = "Fixture" });
+            var fixtureItem = new InventoryItem { Id = inventoryItemId, Sku = "FIX-999", Description = "Fixture" };
+            _mockInventoryService.Setup(i => i.GetInventoryAsync()).ReturnsAsync(new List<InventoryItem> { fixtureItem });
+
+            var vm = CreateViewModel();
 
             var orderId = Guid.NewGuid();
             var existingOrder = new Order
@@ -272,6 +274,55 @@ namespace OCC.Tests.Features.ProcurementHub
                 o.Lines.Any(l => l.ItemCode == "FIX-999" && l.InventoryItemId == inventoryItemId)
             )), Times.Once);
         }
+
+        [Theory]
+        [InlineData(PriceAutoFillMode.None, 0)]
+        [InlineData(PriceAutoFillMode.AverageCost, 118.26)]
+        [InlineData(PriceAutoFillMode.LastPurchasePrice, 150.00)]
+        public async Task UpdateLineItem_RespectsPriceAutoFillMode(PriceAutoFillMode mode, double expectedPriceDouble)
+        {
+            // Arrange
+            decimal expectedPrice = (decimal)expectedPriceDouble;
+            var inventoryItemId = Guid.NewGuid();
+            var item = new InventoryItem
+            {
+                Id = inventoryItemId,
+                Sku = "SKU-MODE-TEST",
+                Description = "Mode Test Item",
+                AverageCost = 118.26m,
+                Price = 150.00m,
+                PriceAutoFillMode = mode
+            };
+            _mockInventoryService.Setup(i => i.GetInventoryAsync()).ReturnsAsync(new List<InventoryItem> { item });
+
+            var vm = CreateViewModel();
+            var orderId = Guid.NewGuid();
+            var existingOrder = new Order
+            {
+                Id = orderId,
+                OrderNumber = "PO-MODE-001",
+                SupplierId = Guid.NewGuid(),
+                SupplierName = "Mode Supplier",
+                OrderType = OrderType.PurchaseOrder,
+                Lines = new List<OrderLine>()
+            };
+
+            _mockOrderService.Setup(o => o.GetOrderAsync(orderId)).ReturnsAsync(existingOrder);
+            vm.OrderId = orderId;
+            await vm.LoadDataCommand.ExecuteAsync(null);
+
+            // Add line and simulate selection of SKU-MODE-TEST
+            vm.AddLineCommand.Execute(null);
+            var lineWrapper = vm.CurrentOrder!.Lines.First();
+            lineWrapper.ItemCode = "SKU-MODE-TEST";
+
+            // Act
+            vm.UpdateLineItemCommand.Execute(lineWrapper);
+
+            // Assert
+            Assert.Equal(expectedPrice, lineWrapper.UnitPrice);
+        }
+
 
         // ─── PDF / Preview Commands ───────────────────────────────────────────────
 

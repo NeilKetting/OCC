@@ -705,7 +705,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 if (isNewItem || string.IsNullOrWhiteSpace(line.UnitOfMeasure))
                     line.UnitOfMeasure = item.UnitOfMeasure;
                 if (isNewItem || line.UnitPrice == 0)
-                    line.UnitPrice = item.AverageCost;
+                {
+                    line.UnitPrice = item.PriceAutoFillMode switch
+                    {
+                        PriceAutoFillMode.AverageCost => item.AverageCost,
+                        PriceAutoFillMode.LastPurchasePrice => item.Price,
+                        _ => 0m
+                    };
+                }
 
                 line.UpdateCalculations();
             }
@@ -737,7 +744,14 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 if (isNewItem || string.IsNullOrWhiteSpace(line.UnitOfMeasure))
                     line.UnitOfMeasure = item.UnitOfMeasure;
                 if (isNewItem || line.UnitPrice == 0)
-                    line.UnitPrice = item.AverageCost;
+                {
+                    line.UnitPrice = item.PriceAutoFillMode switch
+                    {
+                        PriceAutoFillMode.AverageCost => item.AverageCost,
+                        PriceAutoFillMode.LastPurchasePrice => item.Price,
+                        _ => 0m
+                    };
+                }
 
                 line.UpdateCalculations();
             }

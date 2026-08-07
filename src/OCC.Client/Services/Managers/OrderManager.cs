@@ -378,24 +378,21 @@ namespace OCC.Client.Services.Managers
                 Notes = dto.Notes,
                 DeliveryInstructions = dto.DeliveryInstructions,
                 ScopeOfWork = dto.ScopeOfWork,
-                // Lines need to be ObservableCollection
-                Lines = new ObservableCollection<OrderLine>(
-                    dto.Lines.Select(l => new OrderLine
-                    {
-                        Id = l.Id,
-                        OrderId = dto.Id,
-                        InventoryItemId = l.InventoryItemId,
-                        ItemCode = l.ItemCode,
-                        Description = l.Description,
-                        Category = l.Category,
-                        QuantityOrdered = l.QuantityOrdered,
-                        QuantityReceived = l.QuantityReceived,
-                        UnitOfMeasure = l.UnitOfMeasure,
-                        UnitPrice = l.UnitPrice,
-                        VatAmount = l.VatAmount,
-                        LineTotal = l.LineTotal
-                    })
-                )
+                Lines = dto.Lines.Select(l => new OrderLine
+                {
+                    Id = l.Id,
+                    OrderId = dto.Id,
+                    InventoryItemId = l.InventoryItemId,
+                    ItemCode = l.ItemCode,
+                    Description = l.Description,
+                    Category = l.Category,
+                    QuantityOrdered = l.QuantityOrdered,
+                    QuantityReceived = l.QuantityReceived,
+                    UnitOfMeasure = l.UnitOfMeasure,
+                    UnitPrice = l.UnitPrice,
+                    VatAmount = l.VatAmount,
+                    LineTotal = l.LineTotal
+                }).ToList()
             };
         }
 

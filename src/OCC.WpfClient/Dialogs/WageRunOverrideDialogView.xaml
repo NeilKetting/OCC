@@ -18,7 +18,7 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource SecondaryGold}" BorderThickness="1.5" CornerRadius="12" Padding="24">
+    <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource SecondaryGold}" BorderThickness="1.5" CornerRadius="12" Padding="20,20,30,20">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/> <!-- Header -->
@@ -79,7 +79,7 @@
             </Border>
 
             <!-- 3. Form Fields (Scrollable) -->
-            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,0,12">
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,0,12" Padding="0,0,15,0">
                 <StackPanel Orientation="Vertical">
                     <!-- Section Header: Hours & Rates -->
                     <TextBlock Text="HOURS &amp; RATE OVERRIDES" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,0,0,8"/>
@@ -217,8 +217,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="1" Click="Cancel_Click" Style="{StaticResource SecondaryButton}" Content="CANCEL" Width="110" Height="36" Margin="0,0,8,0"/>
-                <Button Grid.Column="2" Click="ApplyOverride_Click" Style="{StaticResource CreateIconButton}" Width="160" Height="36">
+                <Button Grid.Column="1" Click="Cancel_Click" Style="{StaticResource SecondaryButton}" Content="CANCEL" Margin="0,0,8,0"/>
+                <Button Grid.Column="2" Click="ApplyOverride_Click" Style="{StaticResource CreateIconButton}" >
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE73E;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
                         <TextBlock Text="APPLY OVERRIDE" VerticalAlignment="Center"/>
