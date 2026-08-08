@@ -37,6 +37,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private DateTime _startDate;
         [ObservableProperty] private DateTime _endDate;
         private bool _isUpdatingDates;
+        private bool _isLoadingRun;
+
+        public bool IsEditingPastRun => _currentDraft != null && (_currentDraft.Status == WageRunStatus.Finalized || _currentDraft.Status == WageRunStatus.Paid);
+        public string FinalizeButtonText => IsEditingPastRun ? "SAVE CHANGES" : "FINALISE RUN";
+        public string FinalizeButtonIcon => IsEditingPastRun ? "\uE74E" : "\uE930";
 
         partial void OnStartDateChanged(DateTime value)
         {
@@ -558,7 +563,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private void UpdateDatesFromPreviousRun()
         {
-            if (_isUpdatingDates) return;
+            if (_isUpdatingDates || _isLoadingRun) return;
 
             var previousRun = PastRuns
                 .Where(r => (r.Status == WageRunStatus.Finalized || r.Status == WageRunStatus.Paid) &&
@@ -709,7 +714,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     vm.Recalculate();
                     vm.PropertyChanged += (s, e) =>
                     {
-                        if (e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||
+                        if (string.IsNullOrEmpty(e.PropertyName) ||
+                            e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||
+                            e.PropertyName == nameof(WageRunLineViewModel.TotalWage) ||
                             e.PropertyName == nameof(WageRunLineViewModel.IncentiveSupervisor))
                             UpdateGrandTotal();
                     };
@@ -718,6 +725,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 UpdateGrandTotal();
                 IsGenerated = true;
+                OnPropertyChanged(nameof(IsEditingPastRun));
+                OnPropertyChanged(nameof(FinalizeButtonText));
+                OnPropertyChanged(nameof(FinalizeButtonIcon));
             }
             catch (Exception ex)
             {
@@ -747,30 +757,41 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (_currentDraftId == null || _currentDraft == null) return;
 
-            var confirmed = await _dialogService.ShowConfirmationAsync(
-                "Finalize Wage Run",
-                "Are you sure you want to finalize this wage run?\n\nThis will lock attendance variances for future runs. An automatic database backup will be performed before finalizing.");
+            bool isEditing = IsEditingPastRun;
+            string confirmTitle = isEditing ? "Save Changes to Wage Run" : "Finalize Wage Run";
+            string confirmMessage = isEditing
+                ? "Are you sure you want to save changes to this wage run?"
+                : "Are you sure you want to finalize this wage run?\n\nThis will lock attendance variances for future runs. An automatic database backup will be performed before finalizing.";
 
+            var confirmed = await _dialogService.ShowConfirmationAsync(confirmTitle, confirmMessage);
             if (!confirmed) return;
 
             try
             {
                 IsBusy = true;
-                BusyText = "Finalizing run...";
+                BusyText = isEditing ? "Saving changes..." : "Finalizing run...";
 
                 _currentDraft.Lines = Lines.Select(vm => vm.Model).ToList();
                 _currentDraft.Notes = Notes;
 
                 var finalized = await _wageService.FinalizeRunAsync(_currentDraft);
 
+                string successMsg = isEditing
+                    ? $"Wage Run changes saved successfully.\nRun ID: {finalized.Id}"
+                    : $"Wage Run finalized successfully.\nRun ID: {finalized.Id}";
+
                 System.Windows.MessageBox.Show(
-                    $"Wage Run finalized successfully.\nRun ID: {finalized.Id}",
+                    successMsg,
                     "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
 
                 Lines.Clear();
                 IsGenerated = false;
                 _currentDraft = null;
                 _currentDraftId = null;
+
+                OnPropertyChanged(nameof(IsEditingPastRun));
+                OnPropertyChanged(nameof(FinalizeButtonText));
+                OnPropertyChanged(nameof(FinalizeButtonIcon));
 
                 // Refresh history list
                 await LoadDataAsync();
@@ -779,7 +800,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 _logger.LogError(ex, "Error finalizing wage run");
                 System.Windows.MessageBox.Show(
-                    $"Failed to finalize run:\n\n{ex.Message}",
+                    $"Failed to save run:\n\n{ex.Message}",
                     "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
@@ -926,35 +947,53 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
                 if (fullRun != null)
                 {
-                    _currentDraft = fullRun;
-                    _currentDraftId = fullRun.Id;
-
-                    StartDate = fullRun.StartDate;
-                    EndDate = fullRun.EndDate;
-                    SelectedBranch = fullRun.Branch ?? "All";
-                    SelectedPayType = fullRun.PayType ?? "Hourly";
-                    Notes = fullRun.Notes ?? string.Empty;
-                    TotalGasCharge = fullRun.InputTotalGasCharge;
-                    DefaultSupervisorFee = fullRun.InputDefaultSupervisorFee;
-                    CompanyHousingWashingFee = fullRun.InputCompanyHousingWashingFee;
-                    IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
-
-                    Lines.Clear();
-                    int index = 1;
-                    foreach (var line in fullRun.Lines.OrderByDescending(l => l.EmploymentType == "Permanent").ThenBy(l => l.EmployeeName))
+                    _isLoadingRun = true;
+                    _isUpdatingDates = true;
+                    try
                     {
-                        var vm = new WageRunLineViewModel(line, _dialogService) { IndexNum = index++ };
-                        vm.PropertyChanged += (s, e) =>
-                        {
-                            if (e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||
-                                e.PropertyName == nameof(WageRunLineViewModel.IncentiveSupervisor))
-                                UpdateGrandTotal();
-                        };
-                        Lines.Add(vm);
-                    }
+                        _currentDraft = fullRun;
+                        _currentDraftId = fullRun.Id;
 
-                    UpdateGrandTotal();
-                    IsGenerated = true;
+                        SelectedBranch = fullRun.Branch ?? "All";
+                        SelectedPayType = fullRun.PayType ?? "Hourly";
+
+                        StartDate = fullRun.StartDate.Date;
+                        EndDate = fullRun.EndDate.Date;
+
+                        Notes = fullRun.Notes ?? string.Empty;
+                        TotalGasCharge = fullRun.InputTotalGasCharge;
+                        DefaultSupervisorFee = fullRun.InputDefaultSupervisorFee;
+                        CompanyHousingWashingFee = fullRun.InputCompanyHousingWashingFee;
+                        IsDecColumnsVisible = StartDate.Month == 12 || StartDate.Month == 1;
+
+                        Lines.Clear();
+                        int index = 1;
+                        foreach (var line in fullRun.Lines.OrderByDescending(l => l.EmploymentType == "Permanent").ThenBy(l => l.EmployeeName))
+                        {
+                            var vm = new WageRunLineViewModel(line, _dialogService) { IndexNum = index++ };
+                            vm.PropertyChanged += (s, e) =>
+                            {
+                                if (string.IsNullOrEmpty(e.PropertyName) ||
+                                    e.PropertyName == nameof(WageRunLineViewModel.NetPay) ||
+                                    e.PropertyName == nameof(WageRunLineViewModel.TotalWage) ||
+                                    e.PropertyName == nameof(WageRunLineViewModel.IncentiveSupervisor))
+                                    UpdateGrandTotal();
+                            };
+                            Lines.Add(vm);
+                        }
+
+                        UpdateGrandTotal();
+                        IsGenerated = true;
+
+                        OnPropertyChanged(nameof(IsEditingPastRun));
+                        OnPropertyChanged(nameof(FinalizeButtonText));
+                        OnPropertyChanged(nameof(FinalizeButtonIcon));
+                    }
+                    finally
+                    {
+                        _isUpdatingDates = false;
+                        _isLoadingRun = false;
+                    }
                 }
             }
             catch (Exception ex)

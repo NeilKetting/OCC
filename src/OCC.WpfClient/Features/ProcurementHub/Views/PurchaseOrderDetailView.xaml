@@ -593,7 +593,8 @@
                                      FontSize="12"
                                      ap:WatermarkProperties.Watermark="Enter custom project name..."
                                      GotFocus="CustomProjectInputBox_GotFocus"
-                                     LostFocus="CustomProjectInputBox_LostFocus"/>
+                                     LostFocus="CustomProjectInputBox_LostFocus"
+                                     TextChanged="CustomProjectInputBox_TextChanged"/>
 
                             <Popup x:Name="CustomProjectPopup"
                                    IsOpen="{Binding IsCustomProjectSuggestionsOpen, Mode=TwoWay}"
@@ -966,6 +967,8 @@
 
                     <!-- Buttons Block (Directly below Balance Due) -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="Save &amp; Receive" Command="{Binding SaveAndReceiveCommand}" 
+                                Style="{StaticResource QuickBooksActionButtonStyle}" Margin="0,0,10,0"/>
                         <Button Content="Save &amp; Close" Command="{Binding SaveOrderCommand}" 
                                 Style="{StaticResource QuickBooksActionButtonStyle}" Margin="0,0,10,0"/>
                         <Button Content="Save &amp; New" Command="{Binding SaveAndNewCommand}" 

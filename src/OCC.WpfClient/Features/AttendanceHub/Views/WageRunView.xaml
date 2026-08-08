@@ -72,13 +72,13 @@
                             <TextBlock Text="EXPORT BANK FILE" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                         </StackPanel>
                     </Button>
-                    <!-- Finalize -->
+                    <!-- Finalize / Save -->
                     <Button Command="{Binding FinalizeRunCommand}" Margin="8,2,0,2"
                             Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource CreateIconButton}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE930;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
-                            <TextBlock Text="FINALISE RUN"/>
+                            <TextBlock Text="{Binding FinalizeButtonIcon}" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding FinalizeButtonText}"/>
                         </StackPanel>
                     </Button>
                 </WrapPanel>

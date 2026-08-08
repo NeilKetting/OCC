@@ -122,5 +122,86 @@ namespace OCC.Tests.Features.WagesHub
             Assert.Single(visibleLinesFiltered);
             Assert.Equal("ALICE", visibleLinesFiltered.First().EmployeeName);
         }
+
+        [Fact]
+        public async Task EditPastRunAsync_PreservesLoadedRunDatesAndEnablesSaveMode()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+            var runId = Guid.NewGuid();
+            var expectedStartDate = new DateTime(2026, 7, 25);
+            var expectedEndDate = new DateTime(2026, 7, 31);
+
+            var pastRun = new WageRun
+            {
+                Id = runId,
+                StartDate = expectedStartDate,
+                EndDate = expectedEndDate,
+                Branch = "Johannesburg",
+                PayType = "Hourly",
+                Status = WageRunStatus.Finalized,
+                Lines = new List<WageRunLine>
+                {
+                    new WageRunLine { Id = Guid.NewGuid(), EmployeeName = "Aaron Moselane", TotalWage = 1973.90m }
+                }
+            };
+
+            _mockWageService.Setup(w => w.GetWageRunByIdAsync(runId)).ReturnsAsync(pastRun);
+
+            // Act
+            await vm.EditPastRunCommand.ExecuteAsync(pastRun);
+
+            // Assert
+            Assert.Equal(expectedStartDate, vm.StartDate);
+            Assert.Equal(expectedEndDate, vm.EndDate);
+            Assert.Equal("Johannesburg", vm.SelectedBranch);
+            Assert.True(vm.IsEditingPastRun);
+            Assert.Equal("SAVE CHANGES", vm.FinalizeButtonText);
+            Assert.Equal("\uE74E", vm.FinalizeButtonIcon);
+        }
+
+        [Fact]
+        public async Task EditPastRunAsync_UpdatesGrandTotal_WhenLineDeductionIsModified()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+            var runId = Guid.NewGuid();
+            var pastRun = new WageRun
+            {
+                Id = runId,
+                StartDate = new DateTime(2026, 7, 25),
+                EndDate = new DateTime(2026, 7, 31),
+                Branch = "Johannesburg",
+                PayType = "Hourly",
+                Status = WageRunStatus.Finalized,
+                Lines = new List<WageRunLine>
+                {
+                    new WageRunLine
+                    {
+                        Id = Guid.NewGuid(),
+                        EmployeeName = "Andrew Masilela",
+                        HourlyRate = 42.40m,
+                        NormalHours = 43.75,
+                        SaturdayOvertimeHours = 7.0,
+                        Overtime20Hours = 5.0,
+                        TotalWage = 2724.20m,
+                        Branch = "Johannesburg"
+                    }
+                }
+            };
+
+            _mockWageService.Setup(w => w.GetWageRunByIdAsync(runId)).ReturnsAsync(pastRun);
+            await vm.EditPastRunCommand.ExecuteAsync(pastRun);
+
+            // Initial Grand Total should equal Andrew's net pay (R 2,724.20)
+            Assert.Equal(2724.20m, vm.GrandTotalWage);
+
+            // Act: Add washing deduction (R 1,000.00) to Andrew's line
+            var andrewLine = vm.Lines.First();
+            andrewLine.DeductionWashing = 1000.00m;
+
+            // Assert: Grand Total should now be R 1,724.20 (2724.20 - 1000.00)
+            Assert.Equal(1724.20m, vm.GrandTotalWage);
+        }
     }
 }

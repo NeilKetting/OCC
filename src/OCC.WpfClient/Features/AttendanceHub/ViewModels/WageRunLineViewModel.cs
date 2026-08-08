@@ -292,6 +292,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
             // Re-notify all display properties to update WPF DataGrid bindings
             OnPropertyChanged(string.Empty);
+            OnPropertyChanged(nameof(NetPay));
+            OnPropertyChanged(nameof(TotalWage));
+            OnPropertyChanged(nameof(TotalRem));
         }
 
         private void PromptReason(string hoursType, double oldValue, double newValue)

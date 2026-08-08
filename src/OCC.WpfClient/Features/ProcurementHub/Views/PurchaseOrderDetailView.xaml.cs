@@ -77,9 +77,17 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
             if (DataContext is PurchaseOrderDetailViewModel viewModel)
             {
                 viewModel.LoadCustomProjectHistory();
-                if (viewModel.CustomProjectSuggestions.Count > 0)
+            }
+        }
+
+        private void CustomProjectInputBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                if (viewModel.IsOtherProjectSelected && CustomProjectInputBox.IsKeyboardFocusWithin)
                 {
-                    viewModel.IsCustomProjectSuggestionsOpen = true;
+                    viewModel.LoadCustomProjectHistory();
+                    viewModel.IsCustomProjectSuggestionsOpen = viewModel.CustomProjectSuggestions.Count > 0;
                 }
             }
         }

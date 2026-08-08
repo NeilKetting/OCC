@@ -52,6 +52,62 @@ namespace OCC.WpfClient.Dialogs
             DeductionPPEInput.Text = _lineViewModel.DeductionPPE.ToString("F2", CultureInfo.InvariantCulture);
             DeductionOtherInput.Text = _lineViewModel.DeductionOther.ToString("F2", CultureInfo.InvariantCulture);
             IncentiveSupervisorInput.Text = _lineViewModel.IncentiveSupervisor.ToString("F2", CultureInfo.InvariantCulture);
+
+            // Advance Pay Days Checkboxes (W0 DED / DaysWorkedWeek1)
+            double daysWeek1 = _lineViewModel.Model.DaysWorkedWeek1;
+            if (daysWeek1 <= -2.0)
+            {
+                ChkThuAdvance.IsChecked = false;
+                ChkFriAdvance.IsChecked = false;
+            }
+            else if (daysWeek1 <= -1.0)
+            {
+                ChkThuAdvance.IsChecked = false;
+                ChkFriAdvance.IsChecked = true;
+            }
+            else
+            {
+                ChkThuAdvance.IsChecked = true;
+                ChkFriAdvance.IsChecked = true;
+            }
+            UpdateW0SummaryText();
+        }
+
+        private void AdvancePayCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+
+            UpdateW0SummaryText();
+
+            int absentDays = (ChkThuAdvance.IsChecked == true ? 0 : 1) + (ChkFriAdvance.IsChecked == true ? 0 : 1);
+
+            double singleDayHours = 8.5;
+            if (_lineViewModel.NormalHours > 0 && _lineViewModel.Model.DaysWorkedWeek2 > 0)
+            {
+                singleDayHours = _lineViewModel.NormalHours / _lineViewModel.Model.DaysWorkedWeek2;
+            }
+            else if (_lineViewModel.VarianceHours < 0 && _lineViewModel.Model.DaysWorkedWeek1 < 0)
+            {
+                singleDayHours = Math.Abs(_lineViewModel.VarianceHours / _lineViewModel.Model.DaysWorkedWeek1);
+            }
+
+            double newVarianceHours = -absentDays * singleDayHours;
+            VarianceHoursInput.Text = newVarianceHours.ToString("F2", CultureInfo.InvariantCulture);
+
+            RecalculateLivePreview();
+        }
+
+        private void UpdateW0SummaryText()
+        {
+            int absentDays = (ChkThuAdvance.IsChecked == true ? 0 : 1) + (ChkFriAdvance.IsChecked == true ? 0 : 1);
+            if (absentDays == 0)
+            {
+                W0DeductionSummaryText.Text = "(W0 DED: 0 days)";
+            }
+            else
+            {
+                W0DeductionSummaryText.Text = $"(W0 DED: -{absentDays} day{(absentDays > 1 ? "s" : "")})";
+            }
         }
 
         private void FieldValue_TextChanged(object sender, TextChangedEventArgs e)
@@ -117,6 +173,20 @@ namespace OCC.WpfClient.Dialogs
 
             // Track changes for note summary
             var changes = new List<string>();
+
+            int absentDays = (ChkThuAdvance.IsChecked == true ? 0 : 1) + (ChkFriAdvance.IsChecked == true ? 0 : 1);
+            double newDaysWeek1 = -absentDays;
+            if (Math.Abs(_lineViewModel.Model.DaysWorkedWeek1 - newDaysWeek1) > 0.001)
+            {
+                changes.Add($"W0 Ded {_lineViewModel.Model.DaysWorkedWeek1:0.#} ➔ {newDaysWeek1:0.#}");
+                _lineViewModel.Model.DaysWorkedWeek1 = newDaysWeek1;
+                _lineViewModel.Model.TotalDaysWorked = _lineViewModel.Model.DaysWorkedWeek1 + _lineViewModel.Model.DaysWorkedWeek2 + _lineViewModel.Model.DaysWorkedWeek3;
+
+                if (_lineViewModel.Model.IsBibc && OCC.Shared.Models.BranchExtensions.IsCapeTown(_lineViewModel.Model.Branch))
+                {
+                    _lineViewModel.Model.BibcAmount = WageRunLineViewModel.BibcRate * (decimal)_lineViewModel.Model.TotalDaysWorked;
+                }
+            }
 
             double newNormal = ParseDouble(NormalHoursInput.Text);
             if (Math.Abs(_lineViewModel.NormalHours - newNormal) > 0.001)

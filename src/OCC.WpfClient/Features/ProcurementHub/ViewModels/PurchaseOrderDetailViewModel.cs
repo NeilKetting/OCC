@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using OCC.Shared.Models;
 using OCC.Shared.Interfaces;
 using OCC.WpfClient.Features.ProcurementHub.Models;
@@ -42,6 +43,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         private readonly IAuthService _authService;
         private readonly OCC.WpfClient.Services.Infrastructure.ConnectionSettings _connectionSettings;
         private readonly IDialogService _dialogService;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<PurchaseOrderDetailViewModel> _logger;
 
         // ─── State Guards ──────────────────────────────────────────────────────────
@@ -132,6 +134,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             LocalSettingsService localSettingsService,
             IAuthService authService,
             ConnectionSettings connectionSettings,
+            IServiceProvider serviceProvider,
             ILogger<PurchaseOrderDetailViewModel> logger)
         {
             _orderService = orderService;
@@ -148,6 +151,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             _localSettingsService = localSettingsService;
             _authService = authService;
             _connectionSettings = connectionSettings;
+            _serviceProvider = serviceProvider;
             _logger = logger;
 
             Title = "Create Purchase Order";
@@ -196,14 +200,21 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         {
             var history = _localSettingsService.Settings.CustomProjectHistory ?? new System.Collections.Generic.List<string>();
             CustomProjectSuggestions.Clear();
+
+            var filter = CurrentOrder?.ProjectName?.Trim();
             foreach (var item in history)
-                CustomProjectSuggestions.Add(item);
+            {
+                if (string.IsNullOrWhiteSpace(filter) || item.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                {
+                    CustomProjectSuggestions.Add(item);
+                }
+            }
 
             // Prepend the current order's project name if it's not already in the history
             if (CurrentOrder != null
                 && !string.IsNullOrWhiteSpace(CurrentOrder.ProjectName)
                 && CurrentOrder.ProjectName != "Other..."
-                && !CustomProjectSuggestions.Contains(CurrentOrder.ProjectName))
+                && !CustomProjectSuggestions.Contains(CurrentOrder.ProjectName, StringComparer.OrdinalIgnoreCase))
             {
                 CustomProjectSuggestions.Insert(0, CurrentOrder.ProjectName);
             }
@@ -633,8 +644,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     else if (CurrentOrder.ProjectName == null || CurrentOrder.ProjectName == "Other...")
                         CurrentOrder.ProjectName = string.Empty;
 
-                    LoadCustomProjectHistory();
                     IsOtherProjectSelected = true;
+                    LoadCustomProjectHistory();
+                    IsCustomProjectSuggestionsOpen = false;
                 }
                 else
                 {
@@ -916,6 +928,63 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
         // ─── Save Commands ────────────────────────────────────────────────────────
+
+        /// <summary>Saves the purchase order and opens the Receive Stock dialog.</summary>
+        [RelayCommand]
+        private async Task SaveAndReceiveAsync()
+        {
+            bool saved = await SaveOrderWithoutClosingAsync(showToast: true);
+            if (!saved || CurrentOrder == null) return;
+
+            try
+            {
+                var fullOrder = await _orderService.GetOrderAsync(CurrentOrder.Id);
+                if (fullOrder != null)
+                {
+                    ShowReceiveStockDialog(fullOrder);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching order for receipt");
+                _toastService.ShowError("Error", "Could not load order details for receiving.");
+            }
+        }
+
+        private void ShowReceiveStockDialog(Order order)
+        {
+            var receiveVm = (ReceiveStockViewModel)System.Windows.Application.Current.Dispatcher.Invoke(() => _serviceProvider.GetRequiredService<ReceiveStockViewModel>());
+            receiveVm.LoadOrder(order);
+            receiveVm.CloseRequested += CloseOverlay;
+            receiveVm.OrderReceived += async () =>
+            {
+                CloseOverlay();
+                if (CurrentOrder != null)
+                {
+                    try
+                    {
+                        var reloaded = await _orderService.GetOrderAsync(CurrentOrder.Id);
+                        if (reloaded != null)
+                        {
+                            _isPopulating = true;
+                            try
+                            {
+                                CurrentOrder = new OrderWrapper(reloaded);
+                            }
+                            finally
+                            {
+                                _isPopulating = false;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error refreshing order after receiving");
+                    }
+                }
+            };
+            OpenOverlay(receiveVm);
+        }
 
         /// <summary>Saves the purchase order and closes the detail view.</summary>
         [RelayCommand]

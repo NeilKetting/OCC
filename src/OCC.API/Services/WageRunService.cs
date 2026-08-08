@@ -688,12 +688,27 @@ namespace OCC.API.Services
                 existing.InputDefaultSupervisorFee = run.InputDefaultSupervisorFee;
                 existing.InputCompanyHousingWashingFee = run.InputCompanyHousingWashingFee;
 
-                _context.WageRunLines.RemoveRange(existing.Lines);
-                existing.Lines = run.Lines;
-                foreach (var line in existing.Lines)
+                var incomingIds = run.Lines.Select(l => l.Id).Where(id => id != Guid.Empty).ToHashSet();
+                var linesToRemove = existing.Lines.Where(l => !incomingIds.Contains(l.Id)).ToList();
+                _context.WageRunLines.RemoveRange(linesToRemove);
+
+                foreach (var incomingLine in run.Lines)
                 {
-                    if (line.Id == Guid.Empty) line.Id = Guid.NewGuid();
-                    line.WageRunId = existing.Id;
+                    var existingLine = incomingLine.Id != Guid.Empty 
+                        ? existing.Lines.FirstOrDefault(l => l.Id == incomingLine.Id) 
+                        : null;
+
+                    if (existingLine != null)
+                    {
+                        _context.Entry(existingLine).CurrentValues.SetValues(incomingLine);
+                        existingLine.WageRunId = existing.Id;
+                    }
+                    else
+                    {
+                        if (incomingLine.Id == Guid.Empty) incomingLine.Id = Guid.NewGuid();
+                        incomingLine.WageRunId = existing.Id;
+                        existing.Lines.Add(incomingLine);
+                    }
                 }
                 run = existing;
             }

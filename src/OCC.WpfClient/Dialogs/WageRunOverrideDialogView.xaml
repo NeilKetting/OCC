@@ -81,6 +81,22 @@
             <!-- 3. Form Fields (Scrollable) -->
             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,0,12" Padding="0,0,15,0">
                 <StackPanel Orientation="Vertical">
+                    <!-- Section Header: Advance Pay Deduction (W0) -->
+                    <Border Background="#10FFFFFF" BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,12">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="ADVANCE PAY ATTENDANCE (W0 / PRIOR CYCLE)" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="W0DeductionSummaryText" Text="(W0 DED: 0 days)" Style="{StaticResource LabelText}" Foreground="{StaticResource SecondaryGold}" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <WrapPanel Orientation="Horizontal" Margin="0,4,0,4">
+                                <CheckBox x:Name="ChkThuAdvance" Content="Prior Thursday (Present)" Style="{StaticResource ModernCheckBox}" Margin="0,0,24,0" Click="AdvancePayCheckBox_Click"/>
+                                <CheckBox x:Name="ChkFriAdvance" Content="Prior Friday (Present)" Style="{StaticResource ModernCheckBox}" Margin="0,0,24,0" Click="AdvancePayCheckBox_Click"/>
+                            </WrapPanel>
+                            <TextBlock Text="* Unchecking a day flags the employee as absent for advance pay (updates W0 DED, Variance Hours &amp; BIBC)." Style="{StaticResource LabelText}" Opacity="0.5" FontSize="9" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Section Header: Hours & Rates -->
                     <TextBlock Text="HOURS &amp; RATE OVERRIDES" Style="{StaticResource LabelText}" Foreground="{StaticResource AccentBlue}" FontWeight="Bold" Margin="0,0,0,8"/>
                     

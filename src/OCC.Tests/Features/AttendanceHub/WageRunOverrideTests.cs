@@ -143,5 +143,43 @@ namespace OCC.Tests.Features.AttendanceHub
             Assert.Equal(0m, jhbVm.BibcAmount);
             Assert.Equal(2000.00m, jhbVm.NetPay);
         }
+
+        [Fact]
+        public void Recalculate_UpdatesTotalDaysWorkedAndBibc_WhenDaysWorkedWeek1IsModified()
+        {
+            // Arrange: CPT employee with -2 W0 DED (both advance days absent initially)
+            var cptLine = new WageRunLine
+            {
+                EmployeeId = Guid.NewGuid(),
+                EmployeeName = "Xavier Fester",
+                Branch = "Cape Town",
+                HourlyRate = 42.60m,
+                NormalHours = 42.50,
+                DaysWorkedWeek1 = -2.0,
+                DaysWorkedWeek2 = 5.0,
+                DaysWorkedWeek3 = 0.0,
+                TotalDaysWorked = 3.0, // -2 + 5 = 3
+                VarianceHours = -17.00,
+                IsBibc = true
+            };
+            var vm = new WageRunLineViewModel(cptLine);
+            vm.Recalculate();
+
+            // Initial: 3 days * 28.75 = 86.25 BIBC
+            Assert.Equal(3.0, vm.TotalDaysDisplay);
+            Assert.Equal(-2.0, vm.DaysWeek1Display);
+            Assert.Equal(86.25m, vm.BibcAmount);
+
+            // Act: Change DaysWorkedWeek1 to -1 (Thursday checked as present)
+            vm.Model.DaysWorkedWeek1 = -1.0;
+            vm.Model.TotalDaysWorked = vm.Model.DaysWorkedWeek1 + vm.Model.DaysWorkedWeek2 + vm.Model.DaysWorkedWeek3; // -1 + 5 = 4 days
+            vm.Model.VarianceHours = -8.50;
+            vm.Recalculate();
+
+            // Assert: TotalDays = 4, W0 DED = -1, BIBC = 4 * 28.75 = 115.00
+            Assert.Equal(4.0, vm.TotalDaysDisplay);
+            Assert.Equal(-1.0, vm.DaysWeek1Display);
+            Assert.Equal(115.00m, vm.BibcAmount);
+        }
     }
 }

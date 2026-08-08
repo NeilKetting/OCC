@@ -30,6 +30,7 @@ namespace OCC.Tests.Features.ProcurementHub
         private readonly Mock<IGoogleMapsService> _mockGoogleMapsService;
         private readonly Mock<ISettingsService> _mockSettingsService;
         private readonly Mock<IAuthService> _mockAuthService;
+        private readonly Mock<IServiceProvider> _mockServiceProvider;
         private readonly Mock<ILogger<PurchaseOrderDetailViewModel>> _mockLogger;
 
         public PurchaseOrderDetailViewModelTests()
@@ -45,6 +46,7 @@ namespace OCC.Tests.Features.ProcurementHub
             _mockGoogleMapsService = new Mock<IGoogleMapsService>();
             _mockSettingsService = new Mock<ISettingsService>();
             _mockAuthService = new Mock<IAuthService>();
+            _mockServiceProvider = new Mock<IServiceProvider>();
             _mockLogger = new Mock<ILogger<PurchaseOrderDetailViewModel>>();
 
             _mockAuthService.SetupGet(a => a.CurrentUser).Returns(new User { Branch = Branch.JHB });
@@ -72,6 +74,7 @@ namespace OCC.Tests.Features.ProcurementHub
                 new LocalSettingsService(new Mock<ILogger<LocalSettingsService>>().Object, _mockToastService.Object),
                 _mockAuthService.Object,
                 new ConnectionSettings(),
+                _mockServiceProvider.Object,
                 _mockLogger.Object);
         }
 
