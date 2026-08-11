@@ -111,7 +111,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading procurement dashboard data");
-                NotifyError("Error", "Could not load procurement overview data.");
+                var detailedMessage = ex.InnerException != null ? $"{ex.Message} ({ex.InnerException.Message})" : ex.Message;
+                NotifyError("Error", $"Could not load procurement overview data: {detailedMessage}");
             }
             finally
             {

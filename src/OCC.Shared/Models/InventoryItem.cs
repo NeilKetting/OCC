@@ -50,6 +50,7 @@ namespace OCC.Shared.Models
         public double CptQuantity { get; set; }
 
         /// <summary> Total aggregate quantity across all branches. </summary>
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public double QuantityOnHand
         {
             get => JhbQuantity + CptQuantity;
@@ -84,11 +85,14 @@ namespace OCC.Shared.Models
         public PriceAutoFillMode PriceAutoFillMode { get; set; } = PriceAutoFillMode.None;
 
         // Status
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public InventoryStatus Status => TrackLowStock && (JhbQuantity <= JhbReorderPoint || CptQuantity <= CptReorderPoint) ? InventoryStatus.Low : InventoryStatus.OK;
         
         // Alias for View Binding compatibility
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public InventoryStatus InventoryStatus => Status;
 
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool IsLowStock => Status == InventoryStatus.Low;
     }
 

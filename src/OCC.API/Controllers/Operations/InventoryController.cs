@@ -73,8 +73,39 @@ namespace OCC.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching inventory.");
-                return StatusCode(500, $"An error occurred while fetching inventory: {ex.Message} {ex.InnerException?.Message}");
+                _logger.LogWarning(ex, "Failed to query full InventoryItems entity. Attempting fallback projection for schema compatibility.");
+                try
+                {
+                    var fallbackItems = await _context.InventoryItems
+                        .AsNoTracking()
+                        .OrderBy(i => i.Description)
+                        .Select(i => new InventoryItem
+                        {
+                            Id = i.Id,
+                            Sku = i.Sku,
+                            Description = i.Description,
+                            Supplier = i.Supplier,
+                            Category = i.Category,
+                            Location = i.Location,
+                            JhbQuantity = i.JhbQuantity,
+                            CptQuantity = i.CptQuantity,
+                            JhbReorderPoint = i.JhbReorderPoint,
+                            CptReorderPoint = i.CptReorderPoint,
+                            UnitOfMeasure = i.UnitOfMeasure,
+                            AverageCost = i.AverageCost,
+                            Price = i.Price,
+                            TrackLowStock = i.TrackLowStock,
+                            Type = i.Type
+                        })
+                        .ToListAsync();
+
+                    return Ok(fallbackItems);
+                }
+                catch (Exception fallbackEx)
+                {
+                    _logger.LogError(fallbackEx, "Error occurred while fetching inventory via fallback.");
+                    return StatusCode(500, $"An error occurred while fetching inventory: {ex.Message}");
+                }
             }
         }
 

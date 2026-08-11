@@ -308,6 +308,10 @@ namespace OCC.API.Data
             {
                 entity.Property(e => e.AverageCost).HasPrecision(18, 2);
                 entity.Property(e => e.Price).HasPrecision(18, 2);
+                entity.Ignore(e => e.QuantityOnHand);
+                entity.Ignore(e => e.Status);
+                entity.Ignore(e => e.InventoryStatus);
+                entity.Ignore(e => e.IsLowStock);
             });
 
 

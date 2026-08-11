@@ -131,7 +131,7 @@
                                         BorderBrush="{StaticResource GlassBorder}"
                                         BorderThickness="1"
                                         CornerRadius="8"
-                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MinWidth="380"
                                         MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                         Margin="0,2,0,0">
                                     <ScrollViewer Margin="4" SnapsToDevicePixels="True">
@@ -416,11 +416,10 @@
                                VerticalGridLinesBrush="#33FFFFFF"
                                AlternatingRowBackground="#0AFFFFFF">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="ITEM" Width="Auto">
+                            <DataGridTemplateColumn Header="ITEM" Width="160">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ComboBox ItemsSource="{Binding DataContext.InventoryItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                  SelectedValue="{Binding ItemCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   Text="{Binding ItemCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   IsEditable="True"
                                                   IsTextSearchEnabled="True"

@@ -105,20 +105,11 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                     bool isUpdating = false;
                     comboBox.IsSynchronizedWithCurrentItem = false;
 
-                    void EnsurePrivateView()
-                    {
-                        if (comboBox.ItemsSource is System.Collections.IList list && !(comboBox.ItemsSource is System.Windows.Data.ListCollectionView))
-                        {
-                            var privateView = new System.Windows.Data.ListCollectionView(list);
-                            comboBox.ItemsSource = privateView;
-                        }
-                    }
-
                     comboBox.SelectionChanged += (s, ev) =>
                     {
-                        if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view)
+                        if (comboBox.Items.CanFilter && comboBox.Items.Filter != null)
                         {
-                            if (view.Filter != null) view.Filter = null;
+                            comboBox.Items.Filter = null;
                         }
 
                         comboBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
@@ -134,9 +125,9 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
 
                     comboBox.DropDownClosed += (s, ev) =>
                     {
-                        if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view)
+                        if (comboBox.Items.CanFilter && comboBox.Items.Filter != null)
                         {
-                            if (view.Filter != null) view.Filter = null;
+                            comboBox.Items.Filter = null;
                         }
 
                         comboBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
@@ -150,10 +141,17 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                         }));
                     };
 
+                    comboBox.DropDownOpened += (s, ev) =>
+                    {
+                        if (comboBox.Items.CanFilter && comboBox.Items.Filter != null)
+                        {
+                            comboBox.Items.Filter = null;
+                            comboBox.Items.Refresh();
+                        }
+                    };
+
                     comboBox.Loaded += (s, ev) =>
                     {
-                        EnsurePrivateView();
-
                         var textBox = comboBox.Template.FindName("PART_EditableTextBox", comboBox) as System.Windows.Controls.TextBox;
                         if (textBox != null)
                         {
@@ -161,13 +159,11 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                             {
                                 if (isUpdating) return;
 
-                                EnsurePrivateView();
-
                                 if (!comboBox.IsKeyboardFocusWithin)
                                 {
-                                    if (comboBox.ItemsSource is System.ComponentModel.ICollectionView v && v.Filter != null)
+                                    if (comboBox.Items.CanFilter && comboBox.Items.Filter != null)
                                     {
-                                        v.Filter = null;
+                                        comboBox.Items.Filter = null;
                                     }
                                     return;
                                 }
@@ -184,9 +180,9 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                         comboBox.IsDropDownOpen = true;
                                     }
 
-                                    if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view)
+                                    if (comboBox.Items.CanFilter)
                                     {
-                                        view.Filter = item =>
+                                        comboBox.Items.Filter = item =>
                                         {
                                             if (string.IsNullOrEmpty(filterText)) return true;
                                             
@@ -216,12 +212,7 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                             
                                             return true;
                                         };
-                                        view.Refresh();
-
-                                        if (!view.IsEmpty)
-                                        {
-                                            view.MoveCurrentToFirst();
-                                        }
+                                        comboBox.Items.Refresh();
                                     }
                                 }
                                 finally
@@ -236,30 +227,27 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                                 {
                                     if (!comboBox.IsDropDownOpen) comboBox.IsDropDownOpen = true;
 
-                                    if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view)
+                                    if (args.Key == System.Windows.Input.Key.Down) comboBox.Items.MoveCurrentToNext();
+                                    else comboBox.Items.MoveCurrentToPrevious();
+
+                                    if (comboBox.Items.IsCurrentAfterLast) comboBox.Items.MoveCurrentToLast();
+                                    if (comboBox.Items.IsCurrentBeforeFirst) comboBox.Items.MoveCurrentToFirst();
+
+                                    if (comboBox.Items.CurrentItem != null)
                                     {
-                                        if (args.Key == System.Windows.Input.Key.Down) view.MoveCurrentToNext();
-                                        else view.MoveCurrentToPrevious();
-
-                                        if (view.IsCurrentAfterLast) view.MoveCurrentToLast();
-                                        if (view.IsCurrentBeforeFirst) view.MoveCurrentToFirst();
-
-                                        if (view.CurrentItem != null)
-                                        {
-                                            isUpdating = true;
-                                            comboBox.SelectedItem = view.CurrentItem;
-                                            isUpdating = false;
-                                        }
+                                        isUpdating = true;
+                                        comboBox.SelectedItem = comboBox.Items.CurrentItem;
+                                        isUpdating = false;
                                     }
 
                                     args.Handled = true;
                                 }
                                 else if (args.Key == System.Windows.Input.Key.Enter)
                                 {
-                                    if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view && view.CurrentItem != null)
+                                    if (comboBox.Items.CurrentItem != null)
                                     {
                                         isUpdating = true;
-                                        comboBox.SelectedItem = view.CurrentItem;
+                                        comboBox.SelectedItem = comboBox.Items.CurrentItem;
                                         isUpdating = false;
                                         comboBox.IsDropDownOpen = false;
                                         args.Handled = true;
@@ -278,9 +266,9 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
 
                     comboBox.LostFocus += (s, ev) =>
                     {
-                        if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view && view.Filter != null)
+                        if (comboBox.Items.CanFilter && comboBox.Items.Filter != null)
                         {
-                            view.Filter = null;
+                            comboBox.Items.Filter = null;
                         }
 
                         var command = GetLostFocusCommand(comboBox);
@@ -295,9 +283,9 @@ namespace OCC.WpfClient.Infrastructure.AttachedProperties
                     {
                         if (comboBox.IsDropDownOpen == false)
                         {
-                            if (comboBox.ItemsSource is System.ComponentModel.ICollectionView view && view.Filter != null)
+                            if (comboBox.Items.CanFilter && comboBox.Items.Filter != null)
                             {
-                                view.Filter = null;
+                                comboBox.Items.Filter = null;
                             }
 
                             var command = GetSelectionChangedCommand(comboBox);

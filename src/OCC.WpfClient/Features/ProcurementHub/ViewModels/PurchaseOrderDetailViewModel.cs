@@ -305,7 +305,9 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading purchase order details data");
-                ErrorMessage = "Failed to load required data. Please try again.";
+                var detailedMessage = ex.InnerException != null ? $"{ex.Message} ({ex.InnerException.Message})" : ex.Message;
+                ErrorMessage = $"Failed to load data: {detailedMessage}";
+                _toastService.ShowError("Data Load Error", $"Failed to load purchase order details: {detailedMessage}");
             }
             finally
             {
@@ -362,6 +364,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 catch (Exception ex2)
                 {
                     _logger.LogError(ex2, "Failed to load supplier summaries fallback");
+                    var msg = ex2.InnerException != null ? $"{ex2.Message} ({ex2.InnerException.Message})" : ex2.Message;
+                    _toastService.ShowError("Supplier Load Failed", $"Could not load suppliers: {msg}");
                     return Enumerable.Empty<Supplier>();
                 }
             }
@@ -376,6 +380,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load projects");
+                var msg = ex.InnerException != null ? $"{ex.Message} ({ex.InnerException.Message})" : ex.Message;
+                _toastService.ShowError("Project Load Failed", $"Could not load projects: {msg}");
                 return Enumerable.Empty<Project>();
             }
         }
@@ -392,6 +398,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load inventory");
+                var msg = ex.InnerException != null ? $"{ex.Message} ({ex.InnerException.Message})" : ex.Message;
+                _toastService.ShowError("Inventory Load Failed", $"Could not load inventory items: {msg}");
                 return Enumerable.Empty<InventoryItem>();
             }
         }
