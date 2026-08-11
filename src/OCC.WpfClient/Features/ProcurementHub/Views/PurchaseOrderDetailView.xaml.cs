@@ -20,7 +20,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
 
             if (DataContext is PurchaseOrderDetailViewModel viewModel)
             {
-                if (viewModel.LoadDataCommand.CanExecute(null))
+                if (viewModel.CurrentOrder == null && viewModel.LoadDataCommand.CanExecute(null))
                 {
                     viewModel.LoadDataCommand.Execute(null);
                 }

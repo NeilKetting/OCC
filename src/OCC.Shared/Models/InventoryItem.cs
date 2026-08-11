@@ -82,6 +82,7 @@ namespace OCC.Shared.Models
         public ItemType Type { get; set; } = ItemType.StockPart;
 
         /// <summary> Configures how unit price is auto-populated on purchase orders. </summary>
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public PriceAutoFillMode PriceAutoFillMode { get; set; } = PriceAutoFillMode.None;
 
         // Status

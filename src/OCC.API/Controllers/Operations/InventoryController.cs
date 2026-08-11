@@ -125,8 +125,42 @@ namespace OCC.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching inventory item {ItemId}", id);
-                return StatusCode(500, "An error occurred while fetching the inventory item.");
+                _logger.LogWarning(ex, "Failed to query full InventoryItem entity for ID {ItemId}. Attempting fallback projection for schema compatibility.", id);
+                try
+                {
+                    var fallbackItem = await _context.InventoryItems
+                        .AsNoTracking()
+                        .Where(i => i.Id == id)
+                        .Select(i => new InventoryItem
+                        {
+                            Id = i.Id,
+                            Sku = i.Sku,
+                            Description = i.Description,
+                            Supplier = i.Supplier,
+                            Category = i.Category,
+                            Location = i.Location,
+                            JhbQuantity = i.JhbQuantity,
+                            CptQuantity = i.CptQuantity,
+                            JhbReorderPoint = i.JhbReorderPoint,
+                            CptReorderPoint = i.CptReorderPoint,
+                            UnitOfMeasure = i.UnitOfMeasure,
+                            AverageCost = i.AverageCost,
+                            Price = i.Price,
+                            TrackLowStock = i.TrackLowStock,
+                            Type = i.Type
+                        })
+                        .FirstOrDefaultAsync();
+
+                    if (fallbackItem == null)
+                        return NotFound();
+
+                    return Ok(fallbackItem);
+                }
+                catch (Exception fallbackEx)
+                {
+                    _logger.LogError(fallbackEx, "Error occurred while fetching inventory item {ItemId} via fallback.", id);
+                    return StatusCode(500, "An error occurred while fetching the inventory item.");
+                }
             }
         }
 

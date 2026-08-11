@@ -312,6 +312,7 @@ namespace OCC.API.Data
                 entity.Ignore(e => e.Status);
                 entity.Ignore(e => e.InventoryStatus);
                 entity.Ignore(e => e.IsLowStock);
+                entity.Ignore(e => e.PriceAutoFillMode);
             });
 
 

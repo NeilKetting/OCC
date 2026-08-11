@@ -1351,7 +1351,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                     else
                     {
                         var hub = _serviceProvider.GetRequiredService<PurchaseOrderDetailViewModel>();
-                        _ = hub.LoadOrderAsync(orderId);
+                        _ = hub.LoadOrderAsync(orderId, order);
                         OpenHubs.Add(hub);
                         ActiveHub = hub;
                     }

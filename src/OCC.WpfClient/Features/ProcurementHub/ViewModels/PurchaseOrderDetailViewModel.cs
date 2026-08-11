@@ -66,6 +66,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         /// <summary>Guards against the "Item not found" dialog being shown multiple times.</summary>
         private bool _isShowingItemNotFoundDialog;
 
+        private Order? _preloadedOrder;
+
         private static readonly Project OtherProjectSentinel = new() { Id = Guid.Empty, Name = "Other..." };
 
         // ─── Observable Properties ────────────────────────────────────────────────
@@ -272,14 +274,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 // ── Phase 2: Assign lookup collections to UI — sync only, no await inside. ──
                 SetLookupCollections(suppliers, allProjects, inventory);
 
-                // ── Phase 3: Fetch the order cycling list. ──
-                if (!_allOrderIds.Any())
-                {
-                    var allOrders = await _orderService.GetOrdersAsync();
-                    _allOrderIds = allOrders.OrderByDescending(o => o.OrderDate).Select(o => o.Id).ToList();
-                }
-
-                // ── Phase 4: Load or create the order, THEN resolve selections. ──
+                // ── Phase 3: Load or create the order, THEN resolve selections. ──
                 // _isPopulating is set before any UI assignment and cleared only AFTER
                 // all async resolution (supplier + project) has fully completed.
                 _isPopulating = true;
@@ -289,7 +284,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                     {
                         await PopulateExistingOrderAsync(OrderId.Value, allProjects);
                     }
-                    else
+                    else if (CurrentOrder == null)
                     {
                         await PopulateNewOrderAsync();
                     }
@@ -297,9 +292,31 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 finally
                 {
                     // Only release _isPopulating after all async resolution is done.
-                    // This guard prevents OnSelectedSupplierChanged / OnSelectedProjectChanged
-                    // from overwriting resolved fields mid-population.
                     _isPopulating = false;
+                }
+
+                // Unblock busy UI as soon as order details are populated!
+                SetBusy(false);
+
+                // ── Phase 4: Non-blocking background fetch of order cycling list for next/prev navigation. ──
+                if (!_allOrderIds.Any())
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var allOrders = await _orderService.GetOrdersAsync();
+                            _allOrderIds = allOrders.OrderByDescending(o => o.OrderDate).Select(o => o.Id).ToList();
+                            if (CurrentOrder != null)
+                            {
+                                _currentIndex = _allOrderIds.IndexOf(CurrentOrder.Id);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Background fetch of order cycling list failed.");
+                        }
+                    });
                 }
             }
             catch (Exception ex)
@@ -443,7 +460,8 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         /// </summary>
         private async Task PopulateExistingOrderAsync(Guid orderId, IEnumerable<Project> allProjects)
         {
-            var order = await _orderService.GetOrderAsync(orderId);
+            var order = _preloadedOrder ?? await _orderService.GetOrderAsync(orderId);
+            _preloadedOrder = null;
             if (order == null)
             {
                 _logger.LogWarning("GetOrderAsync returned null for order {OrderId}", orderId);
@@ -1130,9 +1148,13 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         }
 
         /// <summary>External entry point used by the Procurement list view to open a specific order.</summary>
-        public async Task LoadOrderAsync(Guid id)
+        public async Task LoadOrderAsync(Guid id, Order? preloadedOrder = null)
         {
             OrderId = id;
+            if (preloadedOrder != null)
+            {
+                _preloadedOrder = preloadedOrder;
+            }
             await LoadDataAsync();
         }
 
