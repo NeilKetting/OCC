@@ -44,6 +44,8 @@
             <!-- Row 2: Filters -->
             <RowDefinition Height="*"/>
             <!-- Row 3: DataGrid -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 4: Total Summary Counter Bar -->
         </Grid.RowDefinitions>
 
         <!-- ══════════════════ PAGE HEADER ══════════════════ -->
@@ -57,10 +59,12 @@
                            Foreground="#FBBF24" FontSize="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="ATTENDANCE HISTORY" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
-                    <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
+                    <TextBlock Style="{StaticResource LabelText}" Opacity="0.8" Margin="0,2,0,0">
                         <Run Text="{Binding TotalCount}"/>
-                        <Run Text=" records | "/>
-                        <Run Text="{Binding TotalHours}"/>
+                        <Run Text=" records ("/>
+                        <Run Text="{Binding TotalDaysWorked}"/>
+                        <Run Text=" days worked) | "/>
+                        <Run Text="{Binding TotalHoursDisplay, StringFormat={}{0:N2}}"/>
                         <Run Text=" hours total"/>
                     </TextBlock>
                 </StackPanel>
@@ -311,6 +315,64 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
+        </Border>
+
+        <!-- ══════════════════ TOTAL COUNTER SUMMARY FOOTER ══════════════════ -->
+        <Border Grid.Row="4" Style="{StaticResource GlassCard}" Padding="16,10" Margin="16,4,16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Records & Days Worked count -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#1E293B" CornerRadius="6" Padding="10,6" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="RECORDS: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                            <TextBlock Text="{Binding TotalCount}" FontSize="12" FontWeight="Bold" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#1E293B" CornerRadius="6" Padding="10,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="DAYS WORKED: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                            <TextBlock Text="{Binding TotalDaysWorked}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource SuccessGreen}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Detailed Hours Summary Breakdown -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="STD: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{Binding TotalNormalHours, StringFormat={}{0:N2}h}" FontSize="12" FontWeight="Bold" Foreground="White"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="STD O/T: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{Binding TotalStdOtHours, StringFormat={}{0:N2}h}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBlue}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="SAT O/T: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{Binding TotalSatOtHours, StringFormat={}{0:N2}h}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource SecondaryGold}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="SUN O/T: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{Binding TotalSunOtHours, StringFormat={}{0:N2}h}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource ErrorRed}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="HOL O/T: " FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{Binding TotalHolOtHours, StringFormat={}{0:N2}h}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource SecondaryGold}"/>
+                    </StackPanel>
+
+                    <Border Background="{StaticResource AccentBlue}" CornerRadius="6" Padding="12,6" Margin="4,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="TOTAL HOURS: " FontSize="11" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="{Binding TotalHoursDisplay, StringFormat={}{0:N2}h}" FontSize="13" FontWeight="ExtraBold" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </local:AttendanceHistoryListViewBase>

@@ -174,9 +174,8 @@
                                       Style="{StaticResource ModernInput}" Width="80"/>
                         </StackPanel>
 
-                        <!-- Exclude Zero Wages (Monthly Only) -->
-                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom"
-                                    Visibility="{Binding IsExcludeZeroWagesToggleVisible, Converter={StaticResource BoolToVis}}">
+                        <!-- Exclude Zero Wages -->
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Bottom">
                             <TextBlock Text="ZERO WAGES" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <CheckBox Content="Exclude R0 Wages" IsChecked="{Binding ExcludeZeroWages, Mode=TwoWay}"
                                       Style="{StaticResource ModernCheckBox}" Height="35" VerticalContentAlignment="Center" Margin="0,0,0,0"/>

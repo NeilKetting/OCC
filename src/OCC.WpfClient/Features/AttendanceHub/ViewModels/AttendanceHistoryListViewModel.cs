@@ -55,6 +55,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         [ObservableProperty] private int _selectedRateTypeIndex = 0; // Default: All
         [ObservableProperty] private int _totalHours;
+        [ObservableProperty] private double _totalHoursDisplay;
+        [ObservableProperty] private int _totalDaysWorked;
+        [ObservableProperty] private double _totalNormalHours;
+        [ObservableProperty] private double _totalStdOtHours;
+        [ObservableProperty] private double _totalSatOtHours;
+        [ObservableProperty] private double _totalSunOtHours;
+        [ObservableProperty] private double _totalHolOtHours;
         [ObservableProperty] private double _drawerWidth = 380.0;
 
         public bool IsCustomTimeSpan => SelectedTimeSpanIndex == 7;
@@ -325,7 +332,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
             TotalCount = result.Count;
-            TotalHours = (int)Math.Round(result.Sum(r => r.CalculateActualHours()));
+            TotalDaysWorked = result.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly);
+            TotalNormalHours = Math.Round(result.Sum(r => r.HoursWorked ?? 0), 2);
+            TotalStdOtHours = Math.Round(result.Sum(r => double.TryParse(r.StdOvertime, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
+            TotalSatOtHours = Math.Round(result.Sum(r => double.TryParse(r.OtSaturday, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
+            TotalSunOtHours = Math.Round(result.Sum(r => double.TryParse(r.OtSunday, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
+            TotalHolOtHours = Math.Round(result.Sum(r => double.TryParse(r.OtHoliday, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
+
+            double grandTotalHours = result.Sum(r => r.CalculateActualHours());
+            TotalHoursDisplay = Math.Round(grandTotalHours, 2);
+            TotalHours = (int)Math.Round(grandTotalHours);
         }
 
         public string GetEmployeeName(Guid? id) =>

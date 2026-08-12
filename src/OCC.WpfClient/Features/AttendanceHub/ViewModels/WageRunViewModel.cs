@@ -118,7 +118,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isSalaryVersion;
         [ObservableProperty] private bool _excludeZeroWages;
 
-        public bool IsExcludeZeroWagesToggleVisible => string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase);
+        public bool IsExcludeZeroWagesToggleVisible => true;
 
         partial void OnExcludeZeroWagesChanged(bool value)
         {
@@ -202,7 +202,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private bool _isOtRatesVisible = true;
         [ObservableProperty] private bool _isOtHoursVisible = true;
         [ObservableProperty] private bool _isDecColumnsVisible;
-        [ObservableProperty] private bool _isDeductionsVisible = true;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsWashingGasVisible))]
+        private bool _isDeductionsVisible = true;
         [ObservableProperty] private bool _isSupFeeVisible = true;
         [ObservableProperty] private bool _isTotalNettVisible = true;
         [ObservableProperty] private bool _isTotalRemVisible = true;
@@ -259,8 +261,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             if (SelectedBranch != "All" && !string.Equals(line.Branch, SelectedBranch, StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            // Exclude zero wages if toggle is active for Monthly Salary
-            if (string.Equals(SelectedPayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase) && ExcludeZeroWages)
+            // Exclude zero wages if toggle is active
+            if (ExcludeZeroWages)
             {
                 if (line.TotalRem == 0 && line.NetPay == 0)
                     return false;
@@ -281,7 +283,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
         public bool IsBibcColumnVisible => SelectedBranch.ToBranchEnum() == Branch.CPT;
         public bool IsBibcRateVisible => IsAdminUser && SelectedBranch.ToBranchEnum() == Branch.CPT;
-        public bool IsWashingGasVisible => SelectedBranch.ToBranchEnum() != Branch.CPT;
+        public bool IsWashingGasVisible => IsDeductionsVisible && SelectedBranch.ToBranchEnum() != Branch.CPT;
         public bool IsWeekBreakdownVisible => SelectedBranch.ToBranchEnum() != Branch.CPT;
 
         private void UpdateDatesForSelectedBranch()
@@ -1236,7 +1238,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         private void UpdateGrandTotal()
-            => GrandTotalWage = Lines.Where(x => FilterLines(x)).Sum(x => x.NetPay + x.IncentiveSupervisor);
+            => GrandTotalWage = Lines.Where(x => FilterLines(x)).Sum(x => x.NetPay);
 
         // ─── Column Selections Persistence ───────────────────────────────────
 

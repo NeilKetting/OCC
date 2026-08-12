@@ -130,10 +130,13 @@ namespace OCC.API.Services
             }
 
             // 4. Fetch Attendance for the Period and any historical unprocessed paid/leave records
+            var reqStart = request.StartDate.Date;
+            var reqEnd = request.EndDate.Date;
+
             var attendance = await _context.AttendanceRecords
-                .Where(a => a.PaidWageRunId == null && 
-                            ((a.Date >= request.StartDate && a.Date <= request.EndDate) ||
-                             (a.Date < request.StartDate && 
+                .Where(a => (a.PaidWageRunId == null || a.PaidWageRunId == request.Id) && 
+                            ((a.Date.Date >= reqStart && a.Date.Date <= reqEnd) ||
+                             (a.Date.Date < reqStart && 
                               (a.Status == AttendanceStatus.Sick || 
                                a.Status == AttendanceStatus.LeaveAuthorized || 
                                (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
@@ -377,6 +380,40 @@ namespace OCC.API.Services
                             string statusDesc = record.Status == AttendanceStatus.Sick ? "Sick" : (record.Status == AttendanceStatus.LeaveAuthorized ? "Leave" : "Worked");
                             line.VarianceNotes += $"Back-pay {record.Date:dd/MM} ({statusDesc} +{backPayHours:F1}h); ";
                         }
+                    }
+                }
+
+                // Monthly Salary Base Working Hours Fallback
+                if (emp.RateType == RateType.MonthlySalary || string.Equals(request.PayType, "MonthlySalary", StringComparison.OrdinalIgnoreCase))
+                {
+                    double monthStandardHours = 0;
+                    for (var d = reqStart; d <= reqEnd; d = d.AddDays(1))
+                    {
+                        if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
+                        {
+                            monthStandardHours += dailyHours;
+                        }
+                    }
+
+                    if (monthStandardHours > 0 && line.NormalHours < monthStandardHours)
+                    {
+                        double unpaidDeductions = 0;
+                        foreach (var record in empAttendance)
+                        {
+                            if (record.Date.Date >= reqStart && record.Date.Date <= reqEnd)
+                            {
+                                if (record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
+                                {
+                                    unpaidDeductions += dailyHours;
+                                }
+                                else if (record.Status == AttendanceStatus.UnpaidHalfDay)
+                                {
+                                    unpaidDeductions += (dailyHours / 2.0);
+                                }
+                            }
+                        }
+
+                        line.NormalHours = Math.Max(line.NormalHours, monthStandardHours - unpaidDeductions);
                     }
                 }
 
