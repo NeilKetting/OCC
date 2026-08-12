@@ -109,7 +109,7 @@ namespace OCC.API.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetInventoryItem")]
         public async Task<ActionResult<InventoryItem>> GetInventoryItem(Guid id)
         {
             try
@@ -171,6 +171,13 @@ namespace OCC.API.Controllers
             {
                 if (item == null) return BadRequest("Item data is null.");
 
+                item.Description ??= string.Empty;
+                item.Supplier ??= string.Empty;
+                item.Category ??= "General";
+                item.Location ??= "Warehouse";
+                item.UnitOfMeasure ??= "ea";
+                item.Sku ??= string.Empty;
+
                 if (!string.IsNullOrWhiteSpace(item.Sku))
                 {
                     var skuExists = await _context.InventoryItems.AnyAsync(i => i.Sku.ToLower() == item.Sku.ToLower());
@@ -196,7 +203,8 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating inventory item {Description}", item?.Description);
-                return StatusCode(500, "An error occurred while creating the inventory item.");
+                var detail = ex.InnerException != null ? $"{ex.Message} -> {ex.InnerException.Message}" : ex.Message;
+                return StatusCode(500, $"An error occurred while creating the inventory item: {detail}");
             }
         }
 
@@ -205,6 +213,13 @@ namespace OCC.API.Controllers
         {
             if (id != item.Id)
                 return BadRequest();
+
+            item.Description ??= string.Empty;
+            item.Supplier ??= string.Empty;
+            item.Category ??= "General";
+            item.Location ??= "Warehouse";
+            item.UnitOfMeasure ??= "ea";
+            item.Sku ??= string.Empty;
 
             if (!string.IsNullOrWhiteSpace(item.Sku))
             {
@@ -245,7 +260,8 @@ namespace OCC.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating inventory item {ItemId}", id);
-                return StatusCode(500, "An error occurred while updating the inventory item.");
+                var detail = ex.InnerException != null ? $"{ex.Message} -> {ex.InnerException.Message}" : ex.Message;
+                return StatusCode(500, $"An error occurred while updating the inventory item: {detail}");
             }
         }
 
