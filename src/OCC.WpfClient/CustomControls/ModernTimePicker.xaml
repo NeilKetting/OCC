@@ -56,11 +56,17 @@
                   SelectionChanged="TimePartChanged"
                   Padding="7,0,0,0">
             <ComboBoxItem Content="00"/>
+            <ComboBoxItem Content="05"/>
             <ComboBoxItem Content="10"/>
+            <ComboBoxItem Content="15"/>
             <ComboBoxItem Content="20"/>
+            <ComboBoxItem Content="25"/>
             <ComboBoxItem Content="30"/>
+            <ComboBoxItem Content="35"/>
             <ComboBoxItem Content="40"/>
+            <ComboBoxItem Content="45"/>
             <ComboBoxItem Content="50"/>
+            <ComboBoxItem Content="55"/>
         </ComboBox>
     </Grid>
 </UserControl>

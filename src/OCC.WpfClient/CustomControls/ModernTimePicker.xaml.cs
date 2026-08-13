@@ -42,9 +42,9 @@ namespace OCC.WpfClient.CustomControls
                 if (SelectedTime.HasValue)
                 {
                     HourBox.SelectedValue = SelectedTime.Value.Hours.ToString("D2");
-                    // Round minutes to nearest 10 for the selector
-                    int mins = (int)(Math.Round(SelectedTime.Value.Minutes / 10.0) * 10);
-                    if (mins == 60) mins = 50; // Clamp
+                    // Round minutes to nearest 5 for the selector
+                    int mins = (int)(Math.Round(SelectedTime.Value.Minutes / 5.0) * 5);
+                    if (mins == 60) mins = 55; // Clamp
                     MinuteBox.SelectedValue = mins.ToString("D2");
                 }
                 else

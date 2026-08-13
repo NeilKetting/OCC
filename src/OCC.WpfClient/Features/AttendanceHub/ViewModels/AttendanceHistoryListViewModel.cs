@@ -22,6 +22,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private readonly IDialogService _dialogService;
         private readonly ILogger<AttendanceHistoryListViewModel> _logger;
         private List<AttendanceRecord> _allRecords = new();
+        private readonly HashSet<Guid> _selectedRecordIds = new();
 
         public override string ReportTitle => "Attendance History Report";
         public override List<ReportColumnDefinition> ReportColumns => new()
@@ -149,6 +150,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 IsBusy = true;
                 BusyText = "Loading attendance records...";
+                _selectedRecordIds.Clear();
 
                 // Build employee name map for display
                 var employees = await _employeeService.GetEmployeesAsync();
@@ -319,27 +321,68 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             };
 
             var result = filtered
-                .Select(r => new AttendanceHistoryRow
+                .Select(r =>
                 {
-                    Record         = r,
-                    EmployeeName   = GetEmployeeName(r.EmployeeId),
-                    ProjectName    = GetProjectName(r),
-                    EmploymentType = r.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.EmployeeId.Value, out var type) ? type : "Permanent"
+                    var row = new AttendanceHistoryRow
+                    {
+                        Record         = r,
+                        EmployeeName   = GetEmployeeName(r.EmployeeId),
+                        ProjectName    = GetProjectName(r),
+                        EmploymentType = r.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.EmployeeId.Value, out var type) ? type : "Permanent",
+                        IsSelected     = _selectedRecordIds.Contains(r.Id)
+                    };
+                    row.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(AttendanceHistoryRow.IsSelected))
+                        {
+                            if (row.IsSelected)
+                                _selectedRecordIds.Add(row.Record.Id);
+                            else
+                                _selectedRecordIds.Remove(row.Record.Id);
+
+                            RecalculateTotals();
+                        }
+                    };
+                    return row;
                 })
                 .OrderByDescending(r => r.Record.Date)
                 .ThenBy(r => r.EmploymentType == "Contract")
                 .ThenBy(r => r.EmployeeName)
                 .ToList();
             Items = new ObservableCollection<AttendanceHistoryRow>(result);
-            TotalCount = result.Count;
-            TotalDaysWorked = result.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly);
-            TotalNormalHours = Math.Round(result.Sum(r => r.HoursWorked ?? 0), 2);
-            TotalStdOtHours = Math.Round(result.Sum(r => double.TryParse(r.StdOvertime, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
-            TotalSatOtHours = Math.Round(result.Sum(r => double.TryParse(r.OtSaturday, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
-            TotalSunOtHours = Math.Round(result.Sum(r => double.TryParse(r.OtSunday, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
-            TotalHolOtHours = Math.Round(result.Sum(r => double.TryParse(r.OtHoliday, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0), 2);
+            RecalculateTotals();
+        }
 
-            double grandTotalHours = result.Sum(r => r.CalculateActualHours());
+        private void RecalculateTotals()
+        {
+            List<AttendanceHistoryRow> targetRows;
+            if (_selectedRecordIds.Count > 0)
+            {
+                targetRows = _allRecords
+                    .Where(r => _selectedRecordIds.Contains(r.Id))
+                    .Select(r => new AttendanceHistoryRow
+                    {
+                        Record         = r,
+                        EmployeeName   = GetEmployeeName(r.EmployeeId),
+                        ProjectName    = GetProjectName(r),
+                        EmploymentType = r.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(r.EmployeeId.Value, out var type) ? type : "Permanent"
+                    })
+                    .ToList();
+            }
+            else
+            {
+                targetRows = Items?.ToList() ?? new List<AttendanceHistoryRow>();
+            }
+
+            TotalCount = targetRows.Count;
+            TotalDaysWorked = targetRows.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly);
+            TotalNormalHours = Math.Round(targetRows.Sum(r => r.HoursWorked ?? 0), 2);
+            TotalStdOtHours = Math.Round(targetRows.Sum(r => r.StdOvertimeHours), 2);
+            TotalSatOtHours = Math.Round(targetRows.Sum(r => r.OtSaturdayHours), 2);
+            TotalSunOtHours = Math.Round(targetRows.Sum(r => r.OtSundayHours), 2);
+            TotalHolOtHours = Math.Round(targetRows.Sum(r => r.OtHolidayHours), 2);
+
+            double grandTotalHours = targetRows.Sum(r => r.CalculateActualHours());
             TotalHoursDisplay = Math.Round(grandTotalHours, 2);
             TotalHours = (int)Math.Round(grandTotalHours);
         }
@@ -563,7 +606,21 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         private async Task AssignProject(object? parameter)
         {
             var targets = new List<AttendanceHistoryRow>();
-            if (parameter is System.Collections.IList list)
+            if (_selectedRecordIds.Count > 0)
+            {
+                var selectedRecords = _allRecords.Where(r => _selectedRecordIds.Contains(r.Id)).ToList();
+                foreach (var rec in selectedRecords)
+                {
+                    targets.Add(new AttendanceHistoryRow
+                    {
+                        Record = rec,
+                        EmployeeName = GetEmployeeName(rec.EmployeeId),
+                        ProjectName = GetProjectName(rec),
+                        EmploymentType = rec.EmployeeId.HasValue && _employeeEmploymentTypeMap.TryGetValue(rec.EmployeeId.Value, out var type) ? type : "Permanent"
+                    });
+                }
+            }
+            else if (parameter is System.Collections.IList list)
             {
                 foreach (var item in list)
                 {
@@ -613,6 +670,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 }
 
                 NotifySuccess("Assigned", targets.Count > 1 ? $"{targets.Count} records assigned to project." : "Record assigned to project.");
+                _selectedRecordIds.Clear();
                 await LoadDataAsync();
             }
             catch (Exception ex)
@@ -996,8 +1054,15 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
     /// All other properties are forwarded to the underlying record so existing
     /// XAML column bindings continue to work without modification.
     /// </summary>
-    public class AttendanceHistoryRow
+    public class AttendanceHistoryRow : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
     {
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
         public AttendanceRecord Record { get; set; } = null!;
 
         // Resolved display name (filled by the VM from _employeeNameMap)
@@ -1035,12 +1100,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
         }
 
-        public string StdOvertime
+        public double StdOvertimeHours
         {
             get
             {
                 if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
-                    return string.Empty;
+                    return 0;
 
                 var dow = Date.DayOfWeek;
                 bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
@@ -1049,12 +1114,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 if (!isWeekend && !isHoliday)
                 {
                     var actual = CalculateActualHours();
-                    double stdOt = Math.Max(0, actual - 8.75);
-                    return stdOt > 0 ? stdOt.ToString("F2") : string.Empty;
+                    return Math.Max(0, actual - 8.75);
                 }
-                return string.Empty;
+                return 0;
             }
         }
+
+        public string StdOvertime => StdOvertimeHours > 0 ? StdOvertimeHours.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
 
         public string?         Branch         => Record.Branch;
         public string?         Notes          => Record.Notes;
@@ -1084,52 +1150,55 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             return Math.Max(0, Math.Round(duration.TotalHours - lunch, 2));
         }
 
-        public string OtSaturday
+        public double OtSaturdayHours
         {
             get
             {
                 if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
-                    return string.Empty;
+                    return 0;
 
                 if (Date.DayOfWeek == DayOfWeek.Saturday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
                 {
-                    var hrs = CalculateActualHours();
-                    return hrs > 0 ? hrs.ToString("F2") : string.Empty;
+                    return CalculateActualHours();
                 }
-                return string.Empty;
+                return 0;
             }
         }
 
-        public string OtSunday
+        public string OtSaturday => OtSaturdayHours > 0 ? OtSaturdayHours.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+
+        public double OtSundayHours
         {
             get
             {
                 if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
-                    return string.Empty;
+                    return 0;
 
                 if (Date.DayOfWeek == DayOfWeek.Sunday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
                 {
-                    var hrs = CalculateActualHours();
-                    return hrs > 0 ? hrs.ToString("F2") : string.Empty;
+                    return CalculateActualHours();
                 }
-                return string.Empty;
+                return 0;
             }
         }
 
-        public string OtHoliday
+        public string OtSunday => OtSundayHours > 0 ? OtSundayHours.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+
+        public double OtHolidayHours
         {
             get
             {
                 if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
-                    return string.Empty;
+                    return 0;
 
                 if (OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
                 {
-                    var hrs = CalculateActualHours();
-                    return hrs > 0 ? hrs.ToString("F2") : string.Empty;
+                    return CalculateActualHours();
                 }
-                return string.Empty;
+                return 0;
             }
         }
+
+        public string OtHoliday => OtHolidayHours > 0 ? OtHolidayHours.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
     }
 }
