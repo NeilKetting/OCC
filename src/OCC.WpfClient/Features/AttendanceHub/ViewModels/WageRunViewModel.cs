@@ -828,7 +828,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null, excludeZeroWages: ExcludeZeroWages);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -860,7 +860,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null);
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: true, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null, excludeZeroWages: ExcludeZeroWages);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -892,7 +892,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     Lines     = LinesView.Cast<WageRunLineViewModel>().Select(l => l.Model).ToList()
                 };
 
-                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns());
+                var path = await _pdfService.GenerateWageRunPdfAsync(runToPrint, hideAfterComments: false, hideDecColumns: !IsDecColumnsVisible, visibleColumns: GetVisibleColumns(), excludeZeroWages: ExcludeZeroWages);
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
             }
             catch (Exception ex)
@@ -1057,7 +1057,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 var fullRun = await _wageService.GetWageRunByIdAsync(run.Id);
                 if (fullRun != null)
                 {
-                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null);
+                    var path = await _pdfService.GenerateWageRunPdfAsync(fullRun, hideAfterComments, hideDecColumns: !IsDecColumnsVisible, visibleColumns: null, excludeZeroWages: ExcludeZeroWages);
                     Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
                 }
             }

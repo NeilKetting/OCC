@@ -710,6 +710,20 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         }
 
         [RelayCommand]
+        private async Task OverrideRecord(object? parameter)
+        {
+            var row = parameter as AttendanceHistoryRow ?? SelectedItem;
+            var record = row?.Record;
+            if (row == null || record == null) return;
+
+            bool result = await _dialogService.ShowAttendanceOverrideDialogAsync(record, row.EmployeeName, row.Branch ?? "");
+            if (result)
+            {
+                await LoadDataAsync();
+            }
+        }
+
+        [RelayCommand]
         private async Task MarkAsAbsent(object? parameter)
         {
             var row = parameter as AttendanceHistoryRow ?? SelectedItem;

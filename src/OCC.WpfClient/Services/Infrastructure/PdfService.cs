@@ -2050,7 +2050,7 @@ namespace OCC.WpfClient.Services
         //  WAGE RUN PDF — ported from OCC.Client PdfService_WageRun.cs
         // ═══════════════════════════════════════════════════════════════════
 
-        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false, bool hideDecColumns = false, Dictionary<string, bool>? visibleColumns = null)
+        public async Task<string> GenerateWageRunPdfAsync(WageRun wageRun, bool hideAfterComments = false, bool hideDecColumns = false, Dictionary<string, bool>? visibleColumns = null, bool excludeZeroWages = false)
         {
             return await Task.Run(() =>
             {
@@ -2063,7 +2063,7 @@ namespace OCC.WpfClient.Services
                         page.DefaultTextStyle(x => x.FontSize(6.5f).FontFamily(Fonts.Arial).FontColor(Colors.Black));
 
                         page.Header().Element(c => ComposeWageHeader(c, wageRun));
-                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments, hideDecColumns, visibleColumns));
+                        page.Content().PaddingVertical(5).Element(c => ComposeWageContent(c, wageRun, hideAfterComments, hideDecColumns, visibleColumns, excludeZeroWages));
                         page.Footer().PaddingTop(5).Element(c => ComposeWageRunFooter(c));
                     });
                 });
@@ -2213,12 +2213,16 @@ namespace OCC.WpfClient.Services
             });
         }
 
-        private void ComposeWageContent(IContainer container, WageRun wageRun, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns)
+        private void ComposeWageContent(IContainer container, WageRun wageRun, bool hideAfterComments, bool hideDecColumns, Dictionary<string, bool>? visibleColumns, bool excludeZeroWages = false)
         {
             container.Column(col =>
             {
-                var permLines = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").OrderBy(l => l.EmployeeName).ToList();
-                var casualLines = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").OrderBy(l => l.EmployeeName).ToList();
+                var activeLines = excludeZeroWages 
+                    ? wageRun.Lines.Where(l => !(l.TotalWage == 0 && l.NetPay == 0)).ToList() 
+                    : wageRun.Lines;
+
+                var permLines = activeLines.Where(l => l.EmploymentType == "Permanent").OrderBy(l => l.EmployeeName).ToList();
+                var casualLines = activeLines.Where(l => l.EmploymentType != "Permanent").OrderBy(l => l.EmployeeName).ToList();
 
                 if (permLines.Any())
                 {
@@ -2236,7 +2240,7 @@ namespace OCC.WpfClient.Services
                 col.Item().ShowEntire().PaddingTop(20).Row(row =>
                 {
                     row.RelativeItem();
-                    row.ConstantItem(380).Element(c => ComposeWageTotalsTable(c, wageRun));
+                    row.ConstantItem(380).Element(c => ComposeWageTotalsTable(c, wageRun, activeLines));
                 });
             });
         }
@@ -2503,9 +2507,10 @@ namespace OCC.WpfClient.Services
 
 
 
-        private void ComposeWageTotalsTable(IContainer container, WageRun wageRun)
+        private void ComposeWageTotalsTable(IContainer container, WageRun wageRun, IEnumerable<WageRunLine>? targetLines = null)
         {
             bool isCpt = wageRun.Branch.ToBranchEnum() == Branch.CPT;
+            var lines = (targetLines ?? wageRun.Lines).ToList();
 
             container.Column(col =>
             {
@@ -2548,27 +2553,27 @@ namespace OCC.WpfClient.Services
                             c.Border(0.5f).AlignCenter().DefaultTextStyle(x => x.Bold().FontSize(6.5f));
                     });
 
-                    var permLines   = wageRun.Lines.Where(l => l.EmploymentType == "Permanent").ToList();
-                    var casualLines = wageRun.Lines.Where(l => l.EmploymentType != "Permanent").ToList();
+                    var permLines   = lines.Where(l => l.EmploymentType == "Permanent").ToList();
+                    var casualLines = lines.Where(l => l.EmploymentType != "Permanent").ToList();
 
                     AddWageTotalRow(table, "Permanent Staff", permLines, isCpt);
                     AddWageTotalRow(table, "Casual Staff",    casualLines, isCpt);
 
                     // Grand Total
                     table.Cell().Element(WageTotLineStyle).Text("Total").Bold();
-                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionLoan).ToString("F2")).Bold();
+                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(lines.Sum(x => x.DeductionLoan).ToString("F2")).Bold();
                     if (!isCpt)
                     {
-                        table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionWashing).ToString("F2")).Bold();
-                        table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionGas).ToString("F2")).Bold();
+                        table.Cell().Element(WageTotLineStyle).AlignRight().Text(lines.Sum(x => x.DeductionWashing).ToString("F2")).Bold();
+                        table.Cell().Element(WageTotLineStyle).AlignRight().Text(lines.Sum(x => x.DeductionGas).ToString("F2")).Bold();
                     }
                     else
                     {
-                        table.Cell().Element(WageTotLineStyle).AlignRight().Text(wageRun.Lines.Sum(x => x.DeductionOther).ToString("F2")).Bold();
+                        table.Cell().Element(WageTotLineStyle).AlignRight().Text(lines.Sum(x => x.DeductionOther).ToString("F2")).Bold();
                     }
-                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? wageRun.Lines.Sum(x => x.BibcAmount).ToString("F2") : "0.00").Bold();
+                    table.Cell().Element(WageTotLineStyle).AlignRight().Text(isCpt ? lines.Sum(x => x.BibcAmount).ToString("F2") : "0.00").Bold();
                     table.Cell().Element(WageTotLineStyle).AlignRight()
-                        .Text(wageRun.Lines.Sum(x => x.NetPay + x.IncentiveSupervisor).ToString("F2")).Bold();
+                        .Text(lines.Sum(x => x.NetPay + x.IncentiveSupervisor).ToString("F2")).Bold();
 
                     static void AddWageTotalRow(TableDescriptor t, string label, List<WageRunLine> ls, bool isCpt)
                     {

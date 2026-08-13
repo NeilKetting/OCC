@@ -15,9 +15,10 @@ namespace OCC.API.Services
         /// </summary>
         /// <param name="record">The attendance record to evaluate.</param>
         /// <param name="employee">The employee whose shift bounds are used.</param>
+        /// <param name="settings">Optional DB WageSettings overrides.</param>
         /// <returns>
         /// A <see cref="HoursBreakdown"/> containing all computed values.
         /// </returns>
-        HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee);
+        HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee, WageSettings? settings = null);
     }
 }

@@ -322,7 +322,7 @@ namespace OCC.API.Services
 
                 foreach (var record in empAttendance)
                 {
-                    var hours = _wageCalc.CalculateHours(record, empForCalc);
+                    var hours = _wageCalc.CalculateHours(record, empForCalc, settings);
                     if (record.Date >= request.StartDate)
                     {
                         line.NormalHours += hours.Normal;

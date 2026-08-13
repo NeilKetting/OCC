@@ -3,10 +3,19 @@ using OCC.WpfClient.Dialogs;
 using System.Threading.Tasks;
 using System.Windows;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace OCC.WpfClient.Services
 {
     public class WpfDialogService : IDialogService
     {
+        private readonly System.IServiceProvider _serviceProvider;
+
+        public WpfDialogService(System.IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
         public Task ShowAlertAsync(string title, string message)
         {
             var dialog = new CustomDialogView(title, message, "OK", null, null);
@@ -83,6 +92,21 @@ namespace OCC.WpfClient.Services
         {
             var currentWindow = Application.Current.MainWindow;
             var dialog = new WageRunOverrideDialogView(line)
+            {
+                Owner = currentWindow
+            };
+
+            var result = dialog.ShowDialog();
+            return Task.FromResult(result == true);
+        }
+
+        public Task<bool> ShowAttendanceOverrideDialogAsync(OCC.Shared.Models.AttendanceRecord record, string employeeName, string branch)
+        {
+            var currentWindow = Application.Current.MainWindow;
+            var attendanceService = _serviceProvider.GetRequiredService<IAttendanceService>();
+            var employeeService = _serviceProvider.GetRequiredService<IEmployeeService>();
+
+            var dialog = new AttendanceOverrideDialogView(record, employeeName, branch, attendanceService, employeeService)
             {
                 Owner = currentWindow
             };

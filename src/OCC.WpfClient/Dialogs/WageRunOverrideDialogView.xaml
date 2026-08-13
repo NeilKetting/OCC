@@ -125,14 +125,20 @@
                             <TextBox x:Name="SaturdayOtInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
                         </StackPanel>
 
-                        <!-- OT 2.0x Hours -->
+                        <!-- SUN OT 2.0x Hours -->
                         <StackPanel Margin="0,0,8,8">
-                            <TextBlock Text="SUN/HOL 2.0X HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBlock Text="SUN OT 2.0X HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <TextBox x:Name="Overtime20Input" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
                         </StackPanel>
 
-                        <!-- Hourly Pay Rate -->
+                        <!-- P/H OT 2.0x Hours -->
                         <StackPanel Margin="8,0,0,8">
+                            <TextBlock Text="P/H OT 2.0X HOURS" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="PublicHolidayOtInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
+                        </StackPanel>
+
+                        <!-- Hourly Pay Rate -->
+                        <StackPanel Margin="0,0,8,8">
                             <TextBlock Text="HOURLY PAY RATE (R)" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
                             <TextBox x:Name="HourlyRateInput" Style="{StaticResource ModernInput}" TextChanged="FieldValue_TextChanged"/>
                         </StackPanel>

@@ -42,6 +42,7 @@ namespace OCC.WpfClient.Dialogs
             Overtime15Input.Text = _lineViewModel.Overtime15Hours.ToString("F2", CultureInfo.InvariantCulture);
             SaturdayOtInput.Text = _lineViewModel.SaturdayOvertimeHours.ToString("F2", CultureInfo.InvariantCulture);
             Overtime20Input.Text = _lineViewModel.Overtime20Hours.ToString("F2", CultureInfo.InvariantCulture);
+            PublicHolidayOtInput.Text = _lineViewModel.PublicHolidayOvertimeHours.ToString("F2", CultureInfo.InvariantCulture);
             HourlyRateInput.Text = _lineViewModel.HourlyRate.ToString("F2", CultureInfo.InvariantCulture);
 
             // Deductions & Incentives
@@ -123,6 +124,7 @@ namespace OCC.WpfClient.Dialogs
             double ot15 = ParseDouble(Overtime15Input.Text);
             double satOt = ParseDouble(SaturdayOtInput.Text);
             double ot20 = ParseDouble(Overtime20Input.Text);
+            double phOt = ParseDouble(PublicHolidayOtInput.Text);
             decimal rate = ParseDecimal(HourlyRateInput.Text);
 
             decimal advRec = ParseDecimal(DeductionAdvanceInput.Text);
@@ -133,15 +135,15 @@ namespace OCC.WpfClient.Dialogs
             decimal other = ParseDecimal(DeductionOtherInput.Text);
             decimal supFee = ParseDecimal(IncentiveSupervisorInput.Text);
 
-            // Total Wage = (Normal + Projected + Variance) * Rate + (OT15 + SatOT) * Rate * 1.5 + OT20 * Rate * 2.0
+            // Total Wage = (Normal + Projected + Variance) * Rate + (OT15 + SatOT) * Rate * 1.5 + (OT20 + PhOT) * Rate * 2.0
             double projHours = _lineViewModel.Model.ProjectedHours;
             decimal totalWage = (decimal)(normal + projHours + variance) * rate
                               + (decimal)(ot15 + satOt) * rate * 1.5m
-                              + (decimal)ot20 * rate * 2.0m;
+                              + (decimal)(ot20 + phOt) * rate * 2.0m;
 
-            // NetPay = TotalWage - Deductions
-            decimal totalDeductions = loan + washing + gas + other + ppe + advRec;
-            decimal newNetPay = Math.Max(0m, totalWage - totalDeductions);
+            // NetPay = TotalWage + Other - Deductions
+            decimal totalDeductions = loan + washing + gas + ppe + advRec;
+            decimal newNetPay = Math.Max(0m, totalWage + other - totalDeductions);
 
             decimal diff = newNetPay - _lineViewModel.NetPay;
 
@@ -219,8 +221,15 @@ namespace OCC.WpfClient.Dialogs
             double newOt20 = ParseDouble(Overtime20Input.Text);
             if (Math.Abs(_lineViewModel.Overtime20Hours - newOt20) > 0.001)
             {
-                changes.Add($"OT2.0 {_lineViewModel.Overtime20Hours:F1} ➔ {newOt20:F1}");
+                changes.Add($"Sun OT {_lineViewModel.Overtime20Hours:F1} ➔ {newOt20:F1}");
                 _lineViewModel.Model.Overtime20Hours = newOt20;
+            }
+
+            double newPhOt = ParseDouble(PublicHolidayOtInput.Text);
+            if (Math.Abs(_lineViewModel.PublicHolidayOvertimeHours - newPhOt) > 0.001)
+            {
+                changes.Add($"P/H OT {_lineViewModel.PublicHolidayOvertimeHours:F1} ➔ {newPhOt:F1}");
+                _lineViewModel.Model.PublicHolidayOvertimeHours = newPhOt;
             }
 
             decimal newRate = ParseDecimal(HourlyRateInput.Text);

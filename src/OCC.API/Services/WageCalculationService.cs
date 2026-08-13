@@ -40,8 +40,10 @@ namespace OCC.API.Services
         }
 
         /// <inheritdoc/>
-        public HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee)
+        public HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee, WageSettings? settings = null)
         {
+            var options = settings != null ? ToOptions(settings) : _options;
+
             // If they didn't work at all and have explicit leave hours, return early
             if (record.CheckInTime == null && record.PaidLeaveHours.HasValue)
             {
@@ -52,11 +54,11 @@ namespace OCC.API.Services
             if (!record.PaidLeaveHours.HasValue && (record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized))
             {
                 // Shift bounds for this employee
-                TimeSpan leaveShiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
-                TimeSpan leaveShiftEnd   = employee.ShiftEndTime   ?? _options.DefaultShiftEnd;
+                TimeSpan leaveShiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
+                TimeSpan leaveShiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
 
                 double leaveNormal = (leaveShiftEnd - leaveShiftStart).TotalHours;
-                if (_options.UseLunchEndThreshold && leaveShiftEnd.Hours >= 13)
+                if (options.UseLunchEndThreshold && leaveShiftEnd.Hours >= 13)
                 {
                     leaveNormal -= 1.0;
                 }
@@ -66,8 +68,6 @@ namespace OCC.API.Services
             }
 
             // Guard: no check-in or absent/unpaid sick/unpaid leave → nothing to pay (unless they have explicit PaidLeaveHours).
-            // Note: If record.Status is UnpaidHalfDay with no CheckInTime, record.CheckInTime == null will safely return PaidLeaveHours (0).
-            // If UnpaidHalfDay HAS a CheckInTime, execution continues to calculate the worked hours for the half day worked.
             if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
             {
                 return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
@@ -91,11 +91,11 @@ namespace OCC.API.Services
                         return new HoursBreakdown(paidHours, 0, 0, 0);
                     }
 
-                    TimeSpan standardShiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
-                    TimeSpan standardShiftEnd   = employee.ShiftEndTime   ?? _options.DefaultShiftEnd;
+                    TimeSpan standardShiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
+                    TimeSpan standardShiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
 
                     double standardNormal = (standardShiftEnd - standardShiftStart).TotalHours;
-                    if (_options.UseLunchEndThreshold && standardShiftEnd.Hours >= 13)
+                    if (options.UseLunchEndThreshold && standardShiftEnd.Hours >= 13)
                     {
                         standardNormal -= 1.0;
                     }
@@ -120,23 +120,23 @@ namespace OCC.API.Services
             bool isSaturday = dow == DayOfWeek.Saturday;
             bool isHoliday = HolidayUtils.IsPublicHoliday(record.Date);
 
-            // ── Sunday / Public Holiday → 2.0×, NO lunch ─────────────────────
+            // ── Sunday / Public Holiday → 2.0× ──────────────────────────────
             if (isSunday || isHoliday)
             {
-                bool deductLunch = isSunday ? _options.DeductLunchOnSunday : _options.DeductLunchOnPublicHoliday;
+                bool deductLunch = isSunday ? options.DeductLunchOnSunday : options.DeductLunchOnPublicHoliday;
                 double lunch = deductLunch
-                    ? ComputeWeekdayLunch(end, record.Date)
+                    ? ComputeWeekdayLunch(end, record.Date, options)
                     : 0.0;
 
                 double extraPaid = record.PaidLeaveHours ?? 0;
                 return new HoursBreakdown(extraPaid, 0, totalDuration - lunch, lunch);
             }
 
-            // ── Saturday → 1.5×, NO lunch ────────────────────────────────────
+            // ── Saturday → 1.5× ────────────────────────────────────
             if (isSaturday)
             {
-                double lunch = _options.DeductLunchOnSaturday
-                    ? ComputeWeekdayLunch(end, record.Date)
+                double lunch = options.DeductLunchOnSaturday
+                    ? ComputeWeekdayLunch(end, record.Date, options)
                     : 0.0;
 
                 double extraPaid = record.PaidLeaveHours ?? 0;
@@ -144,14 +144,13 @@ namespace OCC.API.Services
             }
 
             // ── Weekday ───────────────────────────────────────────────────────
-            // Lunch rule: deduct 1 h ONLY if checkout is at or after LunchEndHour.
-            double lunchDeduction = _options.UseLunchEndThreshold
-                ? ComputeWeekdayLunch(end, record.Date)
+            double lunchDeduction = options.UseLunchEndThreshold
+                ? ComputeWeekdayLunch(end, record.Date, options)
                 : 0.0;
 
             // Shift bounds for this employee
-            TimeSpan shiftStart = employee.ShiftStartTime ?? _options.DefaultShiftStart;
-            TimeSpan shiftEnd   = employee.ShiftEndTime   ?? _options.DefaultShiftEnd;
+            TimeSpan shiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
+            TimeSpan shiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
 
             DateTime shiftStartDt = record.Date.Date.Add(shiftStart);
             DateTime shiftEndDt   = record.Date.Date.Add(shiftEnd);
@@ -177,16 +176,28 @@ namespace OCC.API.Services
 
         // ── Private Helpers ───────────────────────────────────────────────────
 
-        /// <summary>
-        /// Returns 1.0 if the employee's checkout is at or after the configured
-        /// lunch-end hour; otherwise 0.0.
-        /// This implements the client rule: "If they work till 13:00 and leave
-        /// we deduct the hour. If they leave before 12:00 we do not deduct."
-        /// </summary>
-        private double ComputeWeekdayLunch(DateTime checkOut, DateTime recordDate)
+        private WageCalculationOptions ToOptions(WageSettings settings)
         {
-            DateTime lunchEnd = recordDate.Date.AddHours(_options.LunchEndHour);
-            return checkOut >= lunchEnd ? (_options.LunchEndHour - _options.LunchStartHour) : 0.0;
+            return new WageCalculationOptions
+            {
+                LunchStartHour = _options.LunchStartHour,
+                LunchEndHour = settings.LunchEndHourThreshold,
+                DeductLunchOnSaturday = settings.DeductLunchOnSaturday,
+                DeductLunchOnSunday = settings.DeductLunchOnSunday,
+                DeductLunchOnPublicHoliday = settings.DeductLunchOnPublicHoliday,
+                UseLunchEndThreshold = true,
+                SaturdayOtMultiplier = _options.SaturdayOtMultiplier,
+                SundayHolidayOtMultiplier = _options.SundayHolidayOtMultiplier,
+                DefaultShiftStart = _options.DefaultShiftStart,
+                DefaultShiftEnd = _options.DefaultShiftEnd,
+                DefaultProjectedDailyHours = _options.DefaultProjectedDailyHours
+            };
+        }
+
+        private double ComputeWeekdayLunch(DateTime checkOut, DateTime recordDate, WageCalculationOptions options)
+        {
+            DateTime lunchEnd = recordDate.Date.AddHours(options.LunchEndHour);
+            return checkOut >= lunchEnd ? (options.LunchEndHour - options.LunchStartHour) : 0.0;
         }
     }
 }

@@ -19,5 +19,6 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<string?> ShowInputDialogAsync(string title, string message, string defaultValue = "");
         Task<(Guid? ProjectId, string? CustomSite)?> ShowAssignProjectDialogAsync(List<OCC.Shared.DTOs.ProjectSummaryDto> projects);
         Task<bool> ShowWageRunOverrideDialogAsync(Features.AttendanceHub.ViewModels.WageRunLineViewModel line);
+        Task<bool> ShowAttendanceOverrideDialogAsync(OCC.Shared.Models.AttendanceRecord record, string employeeName, string branch);
     }
 }
