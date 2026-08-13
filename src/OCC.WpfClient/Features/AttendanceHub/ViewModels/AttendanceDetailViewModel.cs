@@ -349,7 +349,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             var fullShiftHours = Math.Max(0, (shiftEnd - shiftStart).TotalHours - 1.0);
             if (fullShiftHours <= 0) fullShiftHours = 8.0;
 
-            if (EditingRecord.Status == AttendanceStatus.UnpaidHalfDay)
+            if (EditingRecord.Status == AttendanceStatus.Sick)
+            {
+                double sickBal = SelectedEmployee?.SickLeaveBalance ?? 0;
+                if (sickBal > 0)
+                {
+                    EditingRecord.PaidLeaveHours = fullShiftHours;
+                    EditingRecord.UnpaidLeaveHours = 0;
+                    EditingRecord.HoursWorked = fullShiftHours;
+                }
+                else
+                {
+                    EditingRecord.Status = AttendanceStatus.UnpaidSick;
+                    EditingRecord.PaidLeaveHours = 0;
+                    EditingRecord.UnpaidLeaveHours = fullShiftHours;
+                    EditingRecord.HoursWorked = 0;
+                }
+            }
+            else if (EditingRecord.Status == AttendanceStatus.UnpaidHalfDay)
             {
                 EditingRecord.UnpaidLeaveHours = fullShiftHours / 2.0;
                 EditingRecord.PaidLeaveHours = 0;
@@ -363,6 +380,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 EditingRecord.PaidLeaveHours = fullShiftHours;
                 EditingRecord.UnpaidLeaveHours = 0;
+                EditingRecord.HoursWorked = fullShiftHours;
             }
 
             // 2. Save the attendance record
@@ -375,9 +393,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 await _attendanceService.UpdateAttendanceRecordAsync(EditingRecord);
             }
 
-            // 3. Deduct sick leave balance if status changed TO Sick (and wasn't already Sick)
+            // 3. Deduct or restore sick leave balance
             bool shouldDeductSickLeave = EditingRecord.Status == AttendanceStatus.Sick &&
                 (IsNew || _previousStatus != AttendanceStatus.Sick) &&
+                EditingRecord.EmployeeId.HasValue;
+
+            bool shouldRestoreSickLeave = !IsNew && _previousStatus == AttendanceStatus.Sick &&
+                EditingRecord.Status != AttendanceStatus.Sick &&
                 EditingRecord.EmployeeId.HasValue;
 
             if (shouldDeductSickLeave)
@@ -417,6 +439,44 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     _logger.LogWarning(balEx, "Could not deduct sick leave balance for employee {Id}", EditingRecord.EmployeeId);
                     NotifySuccess(IsNew ? "Record Created" : "Record Updated",
                         $"Attendance record {(IsNew ? "created" : "saved")}. Note: sick leave balance could not be updated automatically.");
+                }
+            }
+            else if (shouldRestoreSickLeave)
+            {
+                try
+                {
+                    var emp = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId!.Value);
+                    if (emp != null)
+                    {
+                        emp.SickLeaveBalance += 1;
+                        var updateEmp = new OCC.Shared.Models.Employee
+                        {
+                            Id = emp.Id,
+                            FirstName = emp.FirstName,
+                            LastName = emp.LastName,
+                            EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
+                            IdNumber = emp.IdNumber,
+                            Email = emp.Email,
+                            Phone = emp.Phone,
+                            Branch = emp.Branch,
+                            Role = emp.Role,
+                            Status = emp.Status,
+                            HourlyRate = emp.HourlyRate,
+                            SickLeaveBalance = emp.SickLeaveBalance,
+                            AnnualLeaveBalance = emp.AnnualLeaveBalance,
+                            ShiftStartTime = emp.ShiftStartTime,
+                            ShiftEndTime = emp.ShiftEndTime,
+                            RowVersion = emp.RowVersion
+                        };
+                        await _employeeService.UpdateEmployeeAsync(updateEmp);
+                        NotifySuccess("Record Updated",
+                            $"Status changed from Sick. 1 sick day restored to {emp.FirstName} {emp.LastName}'s balance ({emp.SickLeaveBalance:F1} days remaining).");
+                    }
+                }
+                catch (Exception balEx)
+                {
+                    _logger.LogWarning(balEx, "Could not restore sick leave balance for employee {Id}", EditingRecord.EmployeeId);
+                    NotifySuccess("Record Updated", "Attendance record updated.");
                 }
             }
             else

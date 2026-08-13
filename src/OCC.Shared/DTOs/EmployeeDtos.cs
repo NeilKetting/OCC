@@ -33,6 +33,7 @@ namespace OCC.Shared.DTOs
             set => BankAccountNumber = value;
         }
         public double LeaveBalance { get; set; }
+        public double SickLeaveBalance { get; set; }
         public DateTime EmploymentDate { get; set; }
         public DateTime DoB { get; set; }
         public IdType IdType { get; set; }

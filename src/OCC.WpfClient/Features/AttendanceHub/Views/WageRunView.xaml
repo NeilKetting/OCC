@@ -522,7 +522,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding DeductionOther, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right" Foreground="White" Background="{StaticResource BackgroundMedium}"/>
+                                    <TextBox Text="{Binding DeductionOther, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right" Foreground="White" Background="{StaticResource InputBackground}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>

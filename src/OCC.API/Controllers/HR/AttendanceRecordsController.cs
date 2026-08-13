@@ -132,12 +132,25 @@ namespace OCC.API.Controllers
                 return NotFound();
             }
 
+            var prevStatus = existingRecord.Status;
             _context.Entry(existingRecord).CurrentValues.SetValues(record);
             CalculateHoursWorked(existingRecord);
 
             try
             {
                 await _context.SaveChangesAsync();
+                
+                // Handle Sick Leave balance adjustment on API backend
+                if (prevStatus == AttendanceStatus.Sick && existingRecord.Status != AttendanceStatus.Sick && existingRecord.EmployeeId.HasValue)
+                {
+                    var emp = await _context.Employees.FindAsync(existingRecord.EmployeeId.Value);
+                    if (emp != null)
+                    {
+                        emp.SickLeaveBalance += 1;
+                        await _context.SaveChangesAsync();
+                        await _hubContext.Clients.All.SendAsync("EntityUpdate", "Employee", "Update", emp.Id);
+                    }
+                }
                 
                 await SyncLeaveRequestForAbsenceAsync(existingRecord);
                 
@@ -169,9 +182,21 @@ namespace OCC.API.Controllers
                 var employeeId = record.EmployeeId;
                 var date = record.Date.Date;
                 var wasAbsent = record.Status == AttendanceStatus.Absent;
-
+                var wasSick = record.Status == AttendanceStatus.Sick;
+                
                 _context.AttendanceRecords.Remove(record);
                 await _context.SaveChangesAsync();
+                
+                if (wasSick && employeeId.HasValue)
+                {
+                    var emp = await _context.Employees.FindAsync(employeeId.Value);
+                    if (emp != null)
+                    {
+                        emp.SickLeaveBalance += 1;
+                        await _context.SaveChangesAsync();
+                        await _hubContext.Clients.All.SendAsync("EntityUpdate", "Employee", "Update", emp.Id);
+                    }
+                }
                 
                 if (wasAbsent)
                 {
@@ -281,6 +306,21 @@ namespace OCC.API.Controllers
             {
                 record.HoursWorked = 0;
                 return;
+            }
+
+            if (record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
+            {
+                if (record.PaidLeaveHours.HasValue && record.PaidLeaveHours.Value > 0)
+                {
+                    record.HoursWorked = record.PaidLeaveHours.Value;
+                    return;
+                }
+                else if (record.CheckInTime == null && record.CheckOutTime == null)
+                {
+                    record.HoursWorked = 8.75;
+                    record.PaidLeaveHours = 8.75;
+                    return;
+                }
             }
 
             if (record.CheckInTime != null && record.CheckOutTime != null)
