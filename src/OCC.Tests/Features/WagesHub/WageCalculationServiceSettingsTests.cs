@@ -159,7 +159,7 @@ namespace OCC.Tests.Features.WagesHub
             var service = new WageCalculationService(options);
             var emp = new Employee();
 
-            var date = new DateTime(2026, 8, 9); // National Women's Day (Public Holiday)
+            var date = new DateTime(2026, 8, 10); // National Women's Day (Observed - Monday)
             var record = new AttendanceRecord
             {
                 Date = date,

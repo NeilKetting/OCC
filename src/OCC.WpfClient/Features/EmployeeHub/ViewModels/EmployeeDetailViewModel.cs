@@ -19,6 +19,9 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         [ObservableProperty]
         private bool _isNew;
 
+        [ObservableProperty]
+        private string? _focusSection;
+
         public List<EmployeeRole> Roles { get; } = new(Enum.GetValues<EmployeeRole>());
         public List<EmploymentType> EmploymentTypes { get; } = new(Enum.GetValues<EmploymentType>());
         public List<EmployeeStatus> Statuses { get; } = new(Enum.GetValues<EmployeeStatus>());

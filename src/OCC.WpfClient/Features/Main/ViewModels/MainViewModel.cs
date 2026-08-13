@@ -24,7 +24,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
     /// It coordinates navigation, multi-tab (Hubs) management, real-time communications (SignalR),
     /// database health polling, user activity/inactivity session monitoring, and app-wide toasts/messages.
     /// </summary>
-    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>, IRecipient<OpenChatSessionMessage>, IRecipient<OpenProjectTaskMessage>
+    public partial class MainViewModel : ViewModelBase, IDisposable, IRecipient<ToastNotificationMessage>, IRecipient<CloseHubMessage>, IRecipient<OpenHubMessage>, IRecipient<OpenProjectMessage>, IRecipient<OpenOrderMessage>, IRecipient<StatusUpdateMessage>, IRecipient<PreferenceChangedMessage>, IRecipient<ImportProgressMessage>, IRecipient<OpenChatSessionMessage>, IRecipient<OpenProjectTaskMessage>, IRecipient<OpenEmployeeMessage>
     {
         #region Private Fields & Services
 
@@ -395,6 +395,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             WeakReferenceMessenger.Default.Register<ImportProgressMessage>(this);
             WeakReferenceMessenger.Default.Register<OpenChatSessionMessage>(this);
             WeakReferenceMessenger.Default.Register<OpenProjectTaskMessage>(this);
+            WeakReferenceMessenger.Default.Register<OpenEmployeeMessage>(this);
             
             // Connect to real-time SignalR notifications and user lists
             _signalRService.UserListUpdated += OnUserListUpdated;
@@ -1311,6 +1312,28 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                 ActiveHub = hub;
                 hub.SelectTask(taskId);
             });
+        }
+
+        /// <summary>
+        /// Handles OpenEmployeeMessages by navigating to StaffManagement, selecting the employee, and opening detail overlay.
+        /// </summary>
+        public async void Receive(OpenEmployeeMessage message)
+        {
+            var p = message.Value;
+            if (!_permissionService.CanAccess(NavigationRoutes.StaffManagement))
+            {
+                NotifyError("Access Denied", "You do not have permission to view Staff Management.");
+                return;
+            }
+
+            OpenHub(NavigationRoutes.StaffManagement);
+
+            var empListVm = ActiveHub as Features.EmployeeHub.ViewModels.EmployeeListViewModel 
+                         ?? OpenHubs.OfType<Features.EmployeeHub.ViewModels.EmployeeListViewModel>().FirstOrDefault();
+            if (empListVm != null)
+            {
+                await empListVm.FocusAndEditEmployeeAsync(p.EmployeeId, p.FocusSection);
+            }
         }
 
         /// <summary>

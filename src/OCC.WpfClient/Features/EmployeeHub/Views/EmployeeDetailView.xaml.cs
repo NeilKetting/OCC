@@ -12,6 +12,39 @@ namespace OCC.WpfClient.Features.EmployeeHub.Views
         {
             InitializeComponent();
             this.SizeChanged += EmployeeDetailView_SizeChanged;
+            this.DataContextChanged += EmployeeDetailView_DataContextChanged;
+        }
+
+        private void EmployeeDetailView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is ViewModels.EmployeeDetailViewModel vm)
+            {
+                vm.PropertyChanged += (s, args) =>
+                {
+                    if (args.PropertyName == nameof(ViewModels.EmployeeDetailViewModel.FocusSection))
+                    {
+                        ScrollToFocusedSection(vm.FocusSection);
+                    }
+                };
+                ScrollToFocusedSection(vm.FocusSection);
+            }
+        }
+
+        private void ScrollToFocusedSection(string? section)
+        {
+            if (string.Equals(section, "Banking", StringComparison.OrdinalIgnoreCase))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (BankingLeaveToggle != null && DetailScrollViewer != null)
+                    {
+                        BankingLeaveToggle.IsChecked = true;
+                        var transform = BankingLeaveToggle.TransformToVisual(DetailScrollViewer);
+                        var position = transform.Transform(new Point(0, 0));
+                        DetailScrollViewer.ScrollToVerticalOffset(Math.Max(0, DetailScrollViewer.VerticalOffset + position.Y - 20));
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         private void EmployeeDetailView_SizeChanged(object sender, SizeChangedEventArgs e)

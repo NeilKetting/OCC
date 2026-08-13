@@ -31,9 +31,9 @@ namespace OCC.API.Services
 
         /// <summary>
         /// Deduct lunch on Public Holiday shifts.
-        /// Client rule: <c>false</c> — full hours are paid on public holidays.
+        /// Client rule: <c>true</c> — deduct 1 hour lunch on public holidays if checkout >= 13:00.
         /// </summary>
-        public bool DeductLunchOnPublicHoliday { get; set; } = false;
+        public bool DeductLunchOnPublicHoliday { get; set; } = true;
 
         // ── Weekday Lunch Threshold Rule ──────────────────────────────────────
 

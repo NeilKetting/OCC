@@ -293,7 +293,7 @@ namespace OCC.API.Controllers
                     bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
                     bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
                     
-                    if (!isWeekend && !isHoliday)
+                    if (!isWeekend)
                     {
                         // Unpaid lunch is 1 hour (12:00-13:00). Deduct 1 hour only if checkout is at or after 13:00.
                         if (record.CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))

@@ -280,9 +280,9 @@ namespace OCC.Tests.API.Controllers
         // ═══════════════════════════════════════════════════════════════════════
 
         [Fact]
-        public void PublicHoliday_Christmas_07to14_NoLunch_AllOT20()
+        public void PublicHoliday_Christmas_07to14_LunchDeducted_AllOT20()
         {
-            // Christmas 2026 = Friday 25 Dec — public holiday
+            // Christmas 2026 = Friday 25 Dec — public holiday (lunch deducted)
             var svc    = CreateService();
             var emp    = DefaultEmployee();
             var record = Record(Christmas2026, new(7, 0, 0), new(14, 0, 0));
@@ -291,12 +291,12 @@ namespace OCC.Tests.API.Controllers
 
             Assert.Equal(0.0, result.Normal,     precision: 2);
             Assert.Equal(0.0, result.Overtime15, precision: 2);
-            Assert.Equal(7.0, result.Overtime20, precision: 2);
-            Assert.Equal(0.0, result.Lunch,      precision: 2);
+            Assert.Equal(6.0, result.Overtime20, precision: 2);
+            Assert.Equal(1.0, result.Lunch,      precision: 2);
         }
 
         [Fact]
-        public void PublicHoliday_WorkingThroughLunch_NoLunchDeducted()
+        public void PublicHoliday_07to16_LunchDeducted()
         {
             var svc    = CreateService();
             var emp    = DefaultEmployee();
@@ -304,8 +304,8 @@ namespace OCC.Tests.API.Controllers
 
             var result = svc.CalculateHours(record, emp);
 
-            Assert.Equal(9.0, result.Overtime20, precision: 2);
-            Assert.Equal(0.0, result.Lunch,      precision: 2);
+            Assert.Equal(8.0, result.Overtime20, precision: 2);
+            Assert.Equal(1.0, result.Lunch,      precision: 2);
         }
 
         // ═══════════════════════════════════════════════════════════════════════

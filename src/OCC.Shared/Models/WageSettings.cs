@@ -42,7 +42,7 @@ namespace OCC.Shared.Models
         public bool DeductLunchOnSunday { get; set; } = false;
 
         /// <summary> Whether to deduct lunch on Public Holiday overtime. </summary>
-        public bool DeductLunchOnPublicHoliday { get; set; } = false;
+        public bool DeductLunchOnPublicHoliday { get; set; } = true;
 
         /// <summary> Whether to enable Thursday/Friday projected hours on draft runs. </summary>
         public bool EnableProjectedHours { get; set; } = true;

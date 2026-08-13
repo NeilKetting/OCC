@@ -331,6 +331,52 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             }
         }
 
+        public async Task FocusAndEditEmployeeAsync(Guid employeeId, string? focusSection = null)
+        {
+            if (_allEmployees == null || !_allEmployees.Any())
+            {
+                await LoadDataAsync();
+            }
+
+            var target = _allEmployees?.FirstOrDefault(e => e.Id == employeeId);
+            if (target != null)
+            {
+                if (Items != null && !Items.Any(e => e.Id == employeeId))
+                {
+                    SearchQuery = string.Empty;
+                    SelectedStatusFilterIndex = 2; // All Statuses
+                }
+
+                SelectedItem = Items?.FirstOrDefault(e => e.Id == employeeId) ?? target;
+
+                try
+                {
+                    IsBusy = true;
+                    BusyText = "Loading employee details...";
+                    var dto = await _employeeService.GetEmployeeAsync(employeeId);
+                    if (dto != null)
+                    {
+                        var model = new Models.EmployeeModel(dto);
+                        var detailVm = new EmployeeDetailViewModel(model, _employeeService, _userService, _authService, _dialogService, _logger, _pdfService)
+                        {
+                            FocusSection = focusSection
+                        };
+                        OpenOverlay(detailVm, async (res) =>
+                        {
+                            if (res is bool saved && saved)
+                            {
+                                await LoadDataAsync();
+                            }
+                        });
+                    }
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
+        }
+
         [RelayCommand]
         private async Task DeleteSelectedEmployees(object? parameter)
         {

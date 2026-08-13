@@ -130,7 +130,7 @@ namespace OCC.API.Data
                             [LunchEndHourThreshold] INT NOT NULL DEFAULT 13,
                             [DeductLunchOnSaturday] BIT NOT NULL DEFAULT 0,
                             [DeductLunchOnSunday] BIT NOT NULL DEFAULT 0,
-                            [DeductLunchOnPublicHoliday] BIT NOT NULL DEFAULT 0,
+                            [DeductLunchOnPublicHoliday] BIT NOT NULL DEFAULT 1,
                             [EnableProjectedHours] BIT NOT NULL DEFAULT 1,
                             [AutoRecoverAdHocAdvances] BIT NOT NULL DEFAULT 1,
                             [CreatedAtUtc] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),

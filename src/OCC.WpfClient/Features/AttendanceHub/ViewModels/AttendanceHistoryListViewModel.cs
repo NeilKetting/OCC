@@ -962,8 +962,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                                                 double lunch = 0;
                                                 var dow = dayDate.DayOfWeek;
                                                 bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
-                                                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(dayDate);
-                                                if (!isWeekend && !isHoliday)
+                                                if (!isWeekend)
                                                 {
                                                     if (dayRow.CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))
                                                     {
@@ -1139,7 +1138,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
             bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
             
-            if (!isWeekend && !isHoliday)
+            if (!isWeekend)
             {
                 // Unpaid lunch is 1 hour (12:00-13:00). Deduct 1 hour only if checkout is at or after 13:00.
                 if (CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))

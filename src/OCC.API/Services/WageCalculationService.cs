@@ -123,7 +123,8 @@ namespace OCC.API.Services
             // ── Sunday / Public Holiday → 2.0×, NO lunch ─────────────────────
             if (isSunday || isHoliday)
             {
-                double lunch = _options.DeductLunchOnSunday || _options.DeductLunchOnPublicHoliday
+                bool deductLunch = isSunday ? _options.DeductLunchOnSunday : _options.DeductLunchOnPublicHoliday;
+                double lunch = deductLunch
                     ? ComputeWeekdayLunch(end, record.Date)
                     : 0.0;
 

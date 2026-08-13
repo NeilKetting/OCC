@@ -42,6 +42,8 @@ namespace OCC.WpfClient.Services.Infrastructure
         public bool DisableOutlookSync { get; set; } = false;
         public bool MuteOutlookReminders { get; set; } = false;
         public System.Collections.Generic.List<string> CustomProjectHistory { get; set; } = new System.Collections.Generic.List<string>();
+        public bool ActionCenterTrackPassportAlerts { get; set; } = true;
+        public bool ActionCenterTrackBankingAlerts { get; set; } = true;
     }
 
     public class LocalSettingsService

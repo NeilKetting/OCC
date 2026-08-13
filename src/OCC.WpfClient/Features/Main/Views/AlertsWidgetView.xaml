@@ -4,62 +4,155 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:OCC.WpfClient.Features.Main.ViewModels"
+             xmlns:conv="clr-namespace:OCC.WpfClient.Infrastructure.Converters"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:AlertsWidgetViewModel}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <conv:VisibilityConverter x:Key="VisibilityConverter" />
+    </UserControl.Resources>
+
     <Grid MinHeight="150">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- Header -->
         <Grid Grid.Row="0" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Action Center" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
                 <Border Background="#EF4444" CornerRadius="8" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding AlertCount}" Foreground="White" FontSize="11" FontWeight="Bold"/>
                 </Border>
             </StackPanel>
+
+            <!-- Gear Settings Button -->
+            <Button Grid.Column="1" Command="{Binding ToggleSettingsCommand}" Style="{StaticResource ToolbarIconButton}" ToolTip="Action Center Settings" VerticalAlignment="Center">
+                <TextBlock Text="&#xE713;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="16"/>
+            </Button>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <!-- Warnings List -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,15,0">
-                <ItemsControl ItemsSource="{Binding Alerts}">
+        <!-- Settings Popup Flyout -->
+        <Border Grid.Row="1" Visibility="{Binding IsSettingsOpen, Converter={StaticResource VisibilityConverter}}"
+                Background="#1E293B" BorderBrush="#30FFFFFF" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <TextBlock Text="ACTION CENTER SETTINGS" Foreground="{StaticResource AccentBlue}" FontSize="11" FontWeight="Bold"/>
+                    <Button Command="{Binding ToggleSettingsCommand}" Style="{StaticResource ToolbarIconButton}" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE711;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="12"/>
+                    </Button>
+                </Grid>
+
+                <StackPanel Visibility="{Binding CanAccessStaffManagement, Converter={StaticResource VisibilityConverter}}">
+                    <CheckBox Content="Track Passport Stamp Expirations" IsChecked="{Binding TrackPassportAlerts, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                    <CheckBox Content="Track Missing Banking Details" IsChecked="{Binding TrackBankingAlerts, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                </StackPanel>
+
+                <TextBlock Visibility="{Binding CanAccessStaffManagement, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}"
+                           Text="No configurable alert options available for your account permissions."
+                           Foreground="{StaticResource TextSub}" FontSize="11" TextWrapping="Wrap" Margin="0,4"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Grouped Alerts List -->
+        <Grid Grid.Row="2">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                <ItemsControl ItemsSource="{Binding AlertGroups}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type vm:SystemAlertItem}">
-                            <Button Command="{Binding DataContext.ResolveAlertCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,8" Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="cardBorder" Background="{Binding BackgroundColor}" CornerRadius="10" Padding="12,8" BorderThickness="1" BorderBrush="{Binding BorderBrushColor}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/> <!-- Icon -->
-                                                    <ColumnDefinition Width="*"/>    <!-- Title/Details -->
-                                                    <ColumnDefinition Width="Auto"/> <!-- Action Indicator -->
-                                                </Grid.ColumnDefinitions>
+                        <DataTemplate DataType="{x:Type vm:SystemAlertGroupItem}">
+                            <StackPanel Margin="0,0,0,10">
+                                <!-- Group Header Card -->
+                                <Button Command="{Binding ToggleExpandCommand}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Cursor="Hand">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="groupBorder" Background="{Binding BackgroundColor}" CornerRadius="10" Padding="12,10" BorderThickness="1" BorderBrush="{Binding BorderBrushColor}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/> <!-- Icon -->
+                                                        <ColumnDefinition Width="*"/>    <!-- Group Title -->
+                                                        <ColumnDefinition Width="Auto"/> <!-- Badge Count -->
+                                                        <ColumnDefinition Width="Auto"/> <!-- Expand Chevron -->
+                                                    </Grid.ColumnDefinitions>
 
-                                                <!-- Icon -->
-                                                <TextBlock Grid.Column="0" Text="{Binding Icon}" Style="{StaticResource SymbolIcon}" Foreground="{Binding IconColor}" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" Style="{StaticResource SymbolIcon}" Foreground="{Binding IconColor}" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
 
-                                                <!-- Text info -->
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Title}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding Message}" Style="{StaticResource FormLabelText}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" Opacity="0.8"/>
-                                                </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding GroupTitle}" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 
-                                                <!-- Action Indicator -->
-                                                <TextBlock Grid.Column="2" Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="cardBorder" Property="Background" Value="{Binding HoverBackgroundColor}"/>
-                                                <Setter TargetName="cardBorder" Property="BorderBrush" Value="{Binding HoverBorderColor}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                                                    <Border Grid.Column="2" Background="#30FFFFFF" CornerRadius="8" Padding="8,2" Margin="8,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding BadgeCount}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                                    </Border>
+
+                                                    <!-- Chevron Arrow -->
+                                                    <TextBlock Grid.Column="3" VerticalAlignment="Center" Foreground="{StaticResource TextSub}" FontSize="12">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock" BasedOn="{StaticResource SymbolIcon}">
+                                                                <Setter Property="Text" Value="&#xE70E;"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                                        <Setter Property="Text" Value="&#xE70D;"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="groupBorder" Property="Background" Value="{Binding HoverBackgroundColor}"/>
+                                                    <Setter TargetName="groupBorder" Property="BorderBrush" Value="{Binding HoverBorderColor}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Nested Employee Alert Items (Visible when expanded) -->
+                                <ItemsControl ItemsSource="{Binding Items}" Margin="12,6,0,0"
+                                              Visibility="{Binding IsExpanded, Converter={StaticResource VisibilityConverter}}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:SystemAlertItem}">
+                                            <Button Command="{Binding DataContext.ResolveAlertCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,6" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="itemBorder" Background="#1E293B" CornerRadius="8" Padding="10,6" BorderThickness="1" BorderBrush="#20FFFFFF">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <TextBlock Grid.Column="0" Text="{Binding Icon}" Style="{StaticResource SymbolIcon}" Foreground="{Binding IconColor}" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Title}" Foreground="White" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Text="{Binding Message}" Style="{StaticResource FormLabelText}" FontSize="10" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" Opacity="0.8"/>
+                                                                </StackPanel>
+
+                                                                <TextBlock Grid.Column="2" Text="&#xE76C;" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource TextSub}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                                            </Grid>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="itemBorder" Property="Background" Value="#33384E"/>
+                                                                <Setter TargetName="itemBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

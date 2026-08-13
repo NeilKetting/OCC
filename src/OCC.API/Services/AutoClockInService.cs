@@ -221,7 +221,7 @@ namespace OCC.API.Services
                                 bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
                                 bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(existingRecord.Date);
                                 
-                                if (!isWeekend && !isHoliday)
+                                if (!isWeekend)
                                 {
                                     if (outTime.TimeOfDay >= new TimeSpan(13, 0, 0))
                                     {

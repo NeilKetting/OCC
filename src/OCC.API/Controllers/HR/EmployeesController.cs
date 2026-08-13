@@ -318,6 +318,7 @@ namespace OCC.API.Controllers
                 ShiftEndTime = employee.ShiftEndTime,
                 TaxNumber = employee.TaxNumber,
                 BankName = employee.BankName,
+                BankAccountNumber = employee.AccountNumber,
                 LeaveBalance = employee.LeaveBalance,
                 EmploymentDate = employee.EmploymentDate,
                 DoB = employee.DoB,

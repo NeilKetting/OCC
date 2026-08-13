@@ -180,7 +180,7 @@ namespace OCC.WpfClient.Features.Main.ViewModels
             _allPossibleWidgets = new List<WidgetViewModelBase>
             {
                 new BirthdayWidgetViewModel(_employeeService, _authService),
-                new AlertsWidgetViewModel(_employeeService, _permissionService),
+                new AlertsWidgetViewModel(_employeeService, _permissionService, _localSettingsService),
                 new TasksWidgetViewModel(_taskService),
                 new TodosWidgetViewModel(_todoService),
                 new UsersWidgetViewModel(_userService),
@@ -380,39 +380,55 @@ namespace OCC.WpfClient.Features.Main.ViewModels
                         }
                     }
 
-                    var expiringPassports = employees
-                        .Where(e => e.Status == EmployeeStatus.Active && e.IdType == IdType.Passport &&
-                                    (!e.PassportStampDate.HasValue || (e.PassportStampDate.Value.Date.AddDays(90) - today).TotalDays <= 60))
-                        .ToList();
-
-                    foreach (var emp in expiringPassports)
+                    if (_permissionService.CanAccess(NavigationRoutes.StaffManagement))
                     {
-                        if (!_shownPassportEmployeeIds.Contains(emp.Id))
+                        if (_localSettingsService.Settings.ActionCenterTrackPassportAlerts)
                         {
-                            var remainingDays = emp.PassportStampDate.HasValue 
-                                ? (int)(90 - (today - emp.PassportStampDate.Value.Date).TotalDays)
-                                : 0;
+                            var passportEmployees = employees
+                                .Where(e => e.Status == EmployeeStatus.Active && e.IdType == IdType.Passport)
+                                .ToList();
 
-                            string message;
-                            if (!emp.PassportStampDate.HasValue)
+                            int expiredCount = 0;
+                            int expiringSoonCount = 0;
+
+                            foreach (var emp in passportEmployees)
                             {
-                                message = $"{emp.DisplayName} has no passport stamp date set!";
-                            }
-                            else if (remainingDays < 0)
-                            {
-                                message = $"{emp.DisplayName}'s passport stamp expired {-remainingDays} days ago (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
-                            }
-                            else if (remainingDays == 0)
-                            {
-                                message = $"{emp.DisplayName}'s passport stamp expires today (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
-                            }
-                            else
-                            {
-                                message = $"{emp.DisplayName}'s passport stamp expires in {remainingDays} days (stamped on {emp.PassportStampDate.Value:yyyy-MM-dd}).";
+                                if (!emp.PassportStampDate.HasValue)
+                                {
+                                    expiredCount++;
+                                }
+                                else
+                                {
+                                    var remainingDays = (int)(90 - (today - emp.PassportStampDate.Value.Date).TotalDays);
+                                    if (remainingDays <= 0) expiredCount++;
+                                    else if (remainingDays <= 60) expiringSoonCount++;
+                                }
                             }
 
-                            _toastService.ShowWarning("Passport Stamp Expiry Warning", message);
-                            _shownPassportEmployeeIds.Add(emp.Id);
+                            if (expiredCount > 0 && !_shownPassportEmployeeIds.Contains(Guid.Empty))
+                            {
+                                _toastService.ShowError("Passport Stamp Expiry Critical", $"{expiredCount} employee(s) have expired passport stamps.");
+                                _shownPassportEmployeeIds.Add(Guid.Empty);
+                            }
+
+                            if (expiringSoonCount > 0 && !_shownPassportEmployeeIds.Contains(Guid.Parse("00000000-0000-0000-0000-000000000001")))
+                            {
+                                _toastService.ShowWarning("Passport Stamp Expiry Warning", $"{expiringSoonCount} employee(s) have passport stamps expiring soon.");
+                                _shownPassportEmployeeIds.Add(Guid.Parse("00000000-0000-0000-0000-000000000001"));
+                            }
+                        }
+
+                        if (_localSettingsService.Settings.ActionCenterTrackBankingAlerts)
+                        {
+                            int missingBankCount = employees.Count(e => e.Status == EmployeeStatus.Active && 
+                                (string.IsNullOrWhiteSpace(e.BankName) ||
+                                 (e.BankAccountNumber != null && string.IsNullOrWhiteSpace(e.BankAccountNumber))));
+
+                            if (missingBankCount > 0 && !_shownPassportEmployeeIds.Contains(Guid.Parse("00000000-0000-0000-0000-000000000002")))
+                            {
+                                _toastService.ShowWarning("Missing Banking Details", $"{missingBankCount} employee(s) are missing bank account details.");
+                                _shownPassportEmployeeIds.Add(Guid.Parse("00000000-0000-0000-0000-000000000002"));
+                            }
                         }
                     }
                 }

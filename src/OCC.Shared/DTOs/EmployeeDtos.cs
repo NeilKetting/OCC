@@ -26,6 +26,12 @@ namespace OCC.Shared.DTOs
         public TimeSpan? ShiftEndTime { get; set; }
         public string TaxNumber { get; set; } = string.Empty;
         public string? BankName { get; set; }
+        public string? BankAccountNumber { get; set; }
+        public string? AccountNumber
+        {
+            get => BankAccountNumber;
+            set => BankAccountNumber = value;
+        }
         public double LeaveBalance { get; set; }
         public DateTime EmploymentDate { get; set; }
         public DateTime DoB { get; set; }

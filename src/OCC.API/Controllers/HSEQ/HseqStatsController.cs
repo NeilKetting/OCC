@@ -214,7 +214,7 @@ namespace OCC.API.Controllers
                         bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
                         bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
                         
-                        if (!isWeekend && !isHoliday)
+                        if (!isWeekend)
                         {
                             if (record.CheckOutTime.Value.TimeOfDay >= new TimeSpan(13, 0, 0))
                             {
