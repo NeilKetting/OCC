@@ -320,6 +320,49 @@ namespace OCC.API.Services
                     if (dailyHours < 0) dailyHours = 0;
                 }
 
+                // Pre-process Approved Leave Requests: Ensure dates covered by approved leave requests have attendance records
+                foreach (var lr in empLeaveRequests)
+                {
+                    if (lr.Status != LeaveStatus.Approved && lr.Status != LeaveStatus.Pending) continue;
+
+                    var lStart = lr.StartDate.Date < request.StartDate.Date ? request.StartDate.Date : lr.StartDate.Date;
+                    var lEnd = lr.EndDate.Date > request.EndDate.Date ? request.EndDate.Date : lr.EndDate.Date;
+
+                    for (var d = lStart; d <= lEnd; d = d.AddDays(1))
+                    {
+                        if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday) continue;
+                        if (publicHolidayDates.Contains(d)) continue;
+
+                        if (!empAttendance.Any(a => a.Date.Date == d.Date))
+                        {
+                            bool isSick = lr.LeaveType == LeaveType.Sick;
+                            bool isUnpaid = lr.IsUnpaid || (isSick && emp.SickLeaveBalance <= 0 && lr.PaidDays == 0);
+                            bool isPaidSick = isSick && !isUnpaid;
+                            bool isPaidLeave = !isSick && !isUnpaid;
+
+                            AttendanceStatus status = isPaidSick ? AttendanceStatus.Sick :
+                                                       (isPaidLeave ? AttendanceStatus.LeaveAuthorized :
+                                                       (isSick ? AttendanceStatus.UnpaidSick : AttendanceStatus.UnpaidLeave));
+
+                            empAttendance.Add(new AttendanceRecord
+                            {
+                                Id = Guid.NewGuid(),
+                                EmployeeId = emp.Id,
+                                Date = d,
+                                Status = status,
+                                Branch = emp.Branch ?? "",
+                                PaidLeaveHours = (isPaidSick || isPaidLeave) ? dailyHours : 0,
+                                Notes = $"Approved Leave ({lr.LeaveType})"
+                            });
+                        }
+                    }
+                }
+                empAttendance = empAttendance.OrderBy(a => a.Date).ToList();
+
+                var paidSickDates = new List<string>();
+                var unpaidSickDates = new List<string>();
+                var paidLeaveDates = new List<string>();
+
                 foreach (var record in empAttendance)
                 {
                     var hours = _wageCalc.CalculateHours(record, empForCalc, settings);
@@ -344,11 +387,16 @@ namespace OCC.API.Services
                         }
                         line.LunchDeductionHours += hours.Lunch;
                         
-                        if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
+                        bool isPaidAttendanceOrLeave = record.Status == AttendanceStatus.Present || 
+                                                       record.Status == AttendanceStatus.Late || 
+                                                       record.Status == AttendanceStatus.LeaveEarly ||
+                                                       ((record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized) && hours.Normal > 0);
+
+                        if (isPaidAttendanceOrLeave)
                         {
                             var hasUnpaidLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, record.Date));
 
-                            if (!hasUnpaidLeave)
+                            if (!hasUnpaidLeave || record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
                             {
                                 bool isWeekend = record.Date.DayOfWeek == DayOfWeek.Saturday || record.Date.DayOfWeek == DayOfWeek.Sunday;
                                 if (!isCapeTown || !isWeekend)
@@ -365,14 +413,32 @@ namespace OCC.API.Services
                         }
                         else if (record.Status == AttendanceStatus.Sick)
                         {
-                            line.VarianceNotes += $"{record.Date:dd/MM}: Sick; ";
+                            if (hours.Normal > 0)
+                            {
+                                paidSickDates.Add(record.Date.ToString("dd/MM"));
+                                line.VarianceNotes += $"{record.Date:dd/MM}: Paid Sick; ";
+                            }
+                            else
+                            {
+                                unpaidSickDates.Add(record.Date.ToString("dd/MM"));
+                                line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
+                            }
                         }
                         else if (record.Status == AttendanceStatus.LeaveAuthorized)
                         {
-                            line.VarianceNotes += $"{record.Date:dd/MM}: Leave; ";
+                            if (hours.Normal > 0)
+                            {
+                                paidLeaveDates.Add(record.Date.ToString("dd/MM"));
+                                line.VarianceNotes += $"{record.Date:dd/MM}: Paid Leave; ";
+                            }
+                            else
+                            {
+                                line.VarianceNotes += $"{record.Date:dd/MM}: Leave; ";
+                            }
                         }
                         else if (record.Status == AttendanceStatus.UnpaidSick)
                         {
+                            unpaidSickDates.Add(record.Date.ToString("dd/MM"));
                             line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
                         }
                         else if (record.Status == AttendanceStatus.UnpaidLeave)
@@ -394,6 +460,22 @@ namespace OCC.API.Services
                             line.VarianceNotes += $"Back-pay {record.Date:dd/MM} ({statusDesc} +{backPayHours:F1}h); ";
                         }
                     }
+                }
+
+                if (paidSickDates.Count > 0)
+                {
+                    string sickNote = $"Paid Sick Leave ({paidSickDates.Count}d: {string.Join(", ", paidSickDates)})";
+                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) ? sickNote : $"{line.Comments} | {sickNote}";
+                }
+                if (unpaidSickDates.Count > 0)
+                {
+                    string unpaidNote = $"Unpaid Sick ({unpaidSickDates.Count}d: {string.Join(", ", unpaidSickDates)} - No leave available)";
+                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) ? unpaidNote : $"{line.Comments} | {unpaidNote}";
+                }
+                if (paidLeaveDates.Count > 0)
+                {
+                    string leaveNote = $"Paid Leave ({paidLeaveDates.Count}d: {string.Join(", ", paidLeaveDates)})";
+                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) ? leaveNote : $"{line.Comments} | {leaveNote}";
                 }
 
                 // Monthly Salary Base Working Hours Fallback
