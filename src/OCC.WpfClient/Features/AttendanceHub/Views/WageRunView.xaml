@@ -343,7 +343,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding NormalHours, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
+                                    <TextBox Text="{Binding StdHoursDisplay, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>

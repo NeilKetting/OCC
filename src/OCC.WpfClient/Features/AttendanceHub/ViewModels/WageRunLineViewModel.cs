@@ -272,8 +272,25 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public double SunOt => Model.Overtime20Hours;
         public double PhOt  => Model.PublicHolidayOvertimeHours;
 
-        // ─── Standard hours = Normal + Projected + Variance (for display) ────
-        public double StdHoursDisplay => Model.NormalHours + Model.ProjectedHours + Model.VarianceHours;
+        // ─── Standard hours = Normal + Projected + Variance ────
+        public double StdHoursDisplay
+        {
+            get => Model.NormalHours + Model.ProjectedHours + Model.VarianceHours;
+            set
+            {
+                double currentTotal = Model.NormalHours + Model.ProjectedHours + Model.VarianceHours;
+                if (Math.Abs(currentTotal - value) > 0.001)
+                {
+                    double oldNormal = Model.NormalHours;
+                    double delta = value - currentTotal;
+                    Model.NormalHours += delta;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(NormalHours));
+                    PromptReason("Normal Hours", oldNormal, Model.NormalHours);
+                }
+            }
+        }
 
         // ─── Recalculation ───────────────────────────────────────────────────
 
