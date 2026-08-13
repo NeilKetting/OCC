@@ -302,6 +302,14 @@ namespace OCC.API.Controllers
 
         private void CalculateHoursWorked(AttendanceRecord record)
         {
+            bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+            if (isHoliday && record.Status == AttendanceStatus.Absent)
+            {
+                record.HoursWorked = 8.75;
+                record.PaidLeaveHours = 8.75;
+                return;
+            }
+
             if (record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
             {
                 record.HoursWorked = 0;
@@ -331,7 +339,6 @@ namespace OCC.API.Controllers
                     double lunchHours = 0;
                     var dow = record.Date.DayOfWeek;
                     bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
-                    bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
                     
                     if (!isWeekend)
                     {

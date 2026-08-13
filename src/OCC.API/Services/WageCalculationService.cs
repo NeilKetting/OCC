@@ -43,6 +43,7 @@ namespace OCC.API.Services
         public HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee, WageSettings? settings = null)
         {
             var options = settings != null ? ToOptions(settings) : _options;
+            bool isHoliday = HolidayUtils.IsPublicHoliday(record.Date);
 
             // If they didn't work at all and have explicit leave hours, return early
             if (record.CheckInTime == null && record.PaidLeaveHours.HasValue)
@@ -53,23 +54,34 @@ namespace OCC.API.Services
             // Paid leave check (only if they do not have the explicit PaidLeaveHours field): Sick or LeaveAuthorized
             if (!record.PaidLeaveHours.HasValue && (record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized))
             {
-                // Shift bounds for this employee
-                TimeSpan leaveShiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
-                TimeSpan leaveShiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
+                double leaveNormal = GetStandardDailyHours(employee, options);
+                return new HoursBreakdown(leaveNormal, 0, 0, 0);
+            }
 
-                double leaveNormal = (leaveShiftEnd - leaveShiftStart).TotalHours;
-                if (options.UseLunchEndThreshold && leaveShiftEnd.Hours >= 13)
+            // Public Holiday with Absent / Unpaid handling
+            if (isHoliday)
+            {
+                if (record.Status == AttendanceStatus.Absent)
                 {
-                    leaveNormal -= 1.0;
+                    double holidayNormal = GetStandardDailyHours(employee, options);
+                    return new HoursBreakdown(record.PaidLeaveHours ?? holidayNormal, 0, 0, 0);
                 }
 
-                if (leaveNormal < 0) leaveNormal = 0;
-                return new HoursBreakdown(leaveNormal, 0, 0, 0);
+                if (record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
+                {
+                    return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
+                }
             }
 
             // Guard: no check-in or absent/unpaid sick/unpaid leave → nothing to pay (unless they have explicit PaidLeaveHours).
             if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
             {
+                if (isHoliday && (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly))
+                {
+                    double holidayStandard = GetStandardDailyHours(employee, options);
+                    return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, holidayStandard, 0);
+                }
+
                 return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
             }
 
@@ -77,31 +89,28 @@ namespace OCC.API.Services
             if (record.CheckOutTime == null)
             {
                 double paidHours = record.PaidLeaveHours ?? 0;
-                if (record.Date.Date == DateTime.Today && 
-                    record.CheckInTime != null && 
-                    (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly))
+                double standardNormal = GetStandardDailyHours(employee, options);
+
+                if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
                 {
-                    var recordDow = record.Date.DayOfWeek;
-                    bool isRecordSunday = recordDow == DayOfWeek.Sunday;
-                    bool isRecordSaturday = recordDow == DayOfWeek.Saturday;
-                    bool isRecordHoliday = HolidayUtils.IsPublicHoliday(record.Date);
-
-                    if (isRecordSunday || isRecordSaturday || isRecordHoliday)
+                    if (isHoliday)
                     {
-                        return new HoursBreakdown(paidHours, 0, 0, 0);
+                        return new HoursBreakdown(paidHours, 0, standardNormal, 0);
                     }
 
-                    TimeSpan standardShiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
-                    TimeSpan standardShiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
-
-                    double standardNormal = (standardShiftEnd - standardShiftStart).TotalHours;
-                    if (options.UseLunchEndThreshold && standardShiftEnd.Hours >= 13)
+                    if (record.Date.Date == DateTime.Today)
                     {
-                        standardNormal -= 1.0;
-                    }
+                        var recordDow = record.Date.DayOfWeek;
+                        bool isRecordSunday = recordDow == DayOfWeek.Sunday;
+                        bool isRecordSaturday = recordDow == DayOfWeek.Saturday;
 
-                    if (standardNormal < 0) standardNormal = 0;
-                    return new HoursBreakdown(standardNormal + paidHours, 0, 0, 0);
+                        if (isRecordSunday || isRecordSaturday)
+                        {
+                            return new HoursBreakdown(paidHours, 0, 0, 0);
+                        }
+
+                        return new HoursBreakdown(standardNormal + paidHours, 0, 0, 0);
+                    }
                 }
 
                 return new HoursBreakdown(paidHours, 0, 0, 0);
@@ -112,18 +121,43 @@ namespace OCC.API.Services
 
             double totalDuration = (end - start).TotalHours;
             if (totalDuration <= 0)
+            {
+                if (isHoliday)
+                {
+                    if (record.Status == AttendanceStatus.Absent)
+                        return new HoursBreakdown(GetStandardDailyHours(employee, options), 0, 0, 0);
+                    if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
+                        return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, GetStandardDailyHours(employee, options), 0);
+                }
                 return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
+            }
 
             // ── Classify the day ──────────────────────────────────────────────
             var  dow       = record.Date.DayOfWeek;
             bool isSunday  = dow == DayOfWeek.Sunday;
             bool isSaturday = dow == DayOfWeek.Saturday;
-            bool isHoliday = HolidayUtils.IsPublicHoliday(record.Date);
 
-            // ── Sunday / Public Holiday → 2.0× ──────────────────────────────
-            if (isSunday || isHoliday)
+            // ── Public Holiday → 2.0× for Present employees ──────────────────
+            if (isHoliday)
             {
-                bool deductLunch = isSunday ? options.DeductLunchOnSunday : options.DeductLunchOnPublicHoliday;
+                if (record.Status == AttendanceStatus.Absent)
+                {
+                    return new HoursBreakdown(GetStandardDailyHours(employee, options), 0, 0, 0);
+                }
+
+                bool deductLunch = options.DeductLunchOnPublicHoliday;
+                double lunch = deductLunch
+                    ? ComputeWeekdayLunch(end, record.Date, options)
+                    : 0.0;
+
+                double extraPaid = record.PaidLeaveHours ?? 0;
+                return new HoursBreakdown(extraPaid, 0, totalDuration - lunch, lunch);
+            }
+
+            // ── Sunday → 2.0× ──────────────────────────────
+            if (isSunday)
+            {
+                bool deductLunch = options.DeductLunchOnSunday;
                 double lunch = deductLunch
                     ? ComputeWeekdayLunch(end, record.Date, options)
                     : 0.0;
@@ -175,6 +209,21 @@ namespace OCC.API.Services
         }
 
         // ── Private Helpers ───────────────────────────────────────────────────
+
+        private double GetStandardDailyHours(Employee employee, WageCalculationOptions options)
+        {
+            TimeSpan shiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
+            TimeSpan shiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
+
+            double normal = (shiftEnd - shiftStart).TotalHours;
+            if (options.UseLunchEndThreshold && shiftEnd.Hours >= 13)
+            {
+                normal -= 1.0;
+            }
+
+            if (normal < 0) normal = 0;
+            return normal;
+        }
 
         private WageCalculationOptions ToOptions(WageSettings settings)
         {

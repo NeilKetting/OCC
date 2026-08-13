@@ -1092,18 +1092,27 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public AttendanceStatus Status        => Record.Status;
         public DateTime?       CheckInTime    => Record.CheckInTime;
         public DateTime?       CheckOutTime   => Record.CheckOutTime;
-        public double?         HoursWorked
+        public double? HoursWorked
         {
             get
             {
+                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
+                if (isHoliday)
+                {
+                    if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized)
+                    {
+                        return Record.PaidLeaveHours ?? 8.75;
+                    }
+                    return null;
+                }
+
                 if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
                     return 0;
 
                 var dow = Date.DayOfWeek;
                 bool isWeekend = dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday;
-                bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
                 
-                if (isWeekend || isHoliday)
+                if (isWeekend)
                 {
                     return null;
                 }
@@ -1201,12 +1210,16 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             get
             {
-                if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized || Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
+                if (Status == AttendanceStatus.UnpaidSick || Status == AttendanceStatus.UnpaidLeave)
                     return 0;
 
                 if (OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date))
                 {
-                    return CalculateActualHours();
+                    if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized)
+                        return 0;
+
+                    var actual = CalculateActualHours();
+                    return actual > 0 ? actual : 8.75;
                 }
                 return 0;
             }

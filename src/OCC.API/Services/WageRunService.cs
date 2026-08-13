@@ -357,6 +357,25 @@ namespace OCC.API.Services
                         }
                     }
                 }
+                // Pre-process Public Holidays: Ensure weekday public holidays within period have attendance records
+                for (var d = request.StartDate.Date; d <= request.EndDate.Date; d = d.AddDays(1))
+                {
+                    if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday) continue;
+                    bool isHol = publicHolidayDates.Contains(d) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d);
+                    if (isHol && !empAttendance.Any(a => a.Date.Date == d))
+                    {
+                        empAttendance.Add(new AttendanceRecord
+                        {
+                            Id = Guid.NewGuid(),
+                            EmployeeId = emp.Id,
+                            Date = d,
+                            Status = AttendanceStatus.Absent,
+                            Branch = emp.Branch ?? "",
+                            Notes = "Public Holiday"
+                        });
+                    }
+                }
+
                 empAttendance = empAttendance.OrderBy(a => a.Date).ToList();
 
                 var paidSickDates = new List<string>();
@@ -377,7 +396,9 @@ namespace OCC.API.Services
                         {
                             line.Overtime15Hours += hours.Overtime15;
                         }
-                        if (publicHolidayDates.Contains(record.Date.Date))
+
+                        bool isHoliday = publicHolidayDates.Contains(record.Date.Date) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+                        if (isHoliday)
                         {
                             line.PublicHolidayOvertimeHours += hours.Overtime20;
                         }
@@ -390,7 +411,8 @@ namespace OCC.API.Services
                         bool isPaidAttendanceOrLeave = record.Status == AttendanceStatus.Present || 
                                                        record.Status == AttendanceStatus.Late || 
                                                        record.Status == AttendanceStatus.LeaveEarly ||
-                                                       ((record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized) && hours.Normal > 0);
+                                                       ((record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized) && hours.Normal > 0) ||
+                                                       (isHoliday && hours.Normal > 0);
 
                         if (isPaidAttendanceOrLeave)
                         {
@@ -409,7 +431,14 @@ namespace OCC.API.Services
 
                         if (record.Status == AttendanceStatus.Absent)
                         {
-                            line.VarianceNotes += $"{record.Date:dd/MM}: Absent; ";
+                            if (isHoliday)
+                            {
+                                line.VarianceNotes += $"{record.Date:dd/MM}: Paid Holiday (Absent); ";
+                            }
+                            else
+                            {
+                                line.VarianceNotes += $"{record.Date:dd/MM}: Absent; ";
+                            }
                         }
                         else if (record.Status == AttendanceStatus.Sick)
                         {

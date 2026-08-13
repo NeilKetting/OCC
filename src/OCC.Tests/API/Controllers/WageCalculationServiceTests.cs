@@ -308,6 +308,46 @@ namespace OCC.Tests.API.Controllers
             Assert.Equal(1.0, result.Lunch,      precision: 2);
         }
 
+        [Fact]
+        public void PublicHoliday_Absent_ReturnsNormalHours_1xRate()
+        {
+            // Public holiday absent -> paid full standard day (8.0h) at normal rate (1.0x)
+            var svc    = CreateService();
+            var emp    = DefaultEmployee();
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = Christmas2026,
+                Status = AttendanceStatus.Absent
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(8.0, result.Normal,     precision: 2);
+            Assert.Equal(0.0, result.Overtime20, precision: 2);
+        }
+
+        [Fact]
+        public void PublicHoliday_PresentWithoutTimes_ReturnsOvertime20_2xRate()
+        {
+            // Public holiday present without clock times -> paid full standard day (8.0h) at x2 wage (Overtime20)
+            var svc    = CreateService();
+            var emp    = DefaultEmployee();
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = Christmas2026,
+                Status = AttendanceStatus.Present
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(0.0, result.Normal,     precision: 2);
+            Assert.Equal(8.0, result.Overtime20, precision: 2);
+        }
+
         // ═══════════════════════════════════════════════════════════════════════
         // TOTAL WAGE FORMULA TESTS
         // ═══════════════════════════════════════════════════════════════════════

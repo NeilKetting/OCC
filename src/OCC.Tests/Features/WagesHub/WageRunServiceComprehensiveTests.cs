@@ -28,8 +28,8 @@ namespace OCC.Tests.Features.WagesHub
         private Mock<IWageCalculationService> GetMockWageCalculationService()
         {
             var mock = new Mock<IWageCalculationService>();
-            mock.Setup(m => m.CalculateHours(It.IsAny<AttendanceRecord>(), It.IsAny<Employee>()))
-                .Returns((AttendanceRecord rec, Employee emp) =>
+            mock.Setup(m => m.CalculateHours(It.IsAny<AttendanceRecord>(), It.IsAny<Employee>(), It.IsAny<WageSettings?>()))
+                .Returns((AttendanceRecord rec, Employee emp, WageSettings? settings) =>
                 {
                     if (rec.Status == AttendanceStatus.Present)
                         return new HoursBreakdown(9.0, 0, 0, 1.0);
