@@ -62,7 +62,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         public string DeductionLoanDisplay    => Model.DeductionLoan    > 0 ? Model.DeductionLoan.ToString("F2")    : string.Empty;
         public string DeductionWashingDisplay => Model.DeductionWashing > 0 ? Model.DeductionWashing.ToString("F2") : string.Empty;
         public string DeductionGasDisplay     => Model.DeductionGas     > 0 ? Model.DeductionGas.ToString("F2")     : string.Empty;
-        public string OtherDisplay            => Model.DeductionOther   > 0 ? Model.DeductionOther.ToString("F2")   : string.Empty;
+        public string OtherDisplay            => Model.DeductionOther   != 0 ? Model.DeductionOther.ToString("F2")   : string.Empty;
         public string DeductionPPEDisplay     => Model.DeductionPPE     > 0 ? Model.DeductionPPE.ToString("F2")     : string.Empty;
         public string BankAccountNumber       => Model.BankAccountNumber ?? string.Empty;
         public string BankName                => Model.BankName ?? string.Empty;
@@ -187,6 +187,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
         }
 
+        /// <summary>Public Holiday overtime hours (2.0×).</summary>
+        public double PublicHolidayOvertimeHours
+        {
+            get => Model.PublicHolidayOvertimeHours;
+            set
+            {
+                if (Math.Abs(Model.PublicHolidayOvertimeHours - value) > 0.001)
+                {
+                    double oldValue = Model.PublicHolidayOvertimeHours;
+                    Model.PublicHolidayOvertimeHours = value;
+                    RecalculateAndNotify();
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PhOt));
+                    PromptReason("Public Holiday OT Hours", oldValue, value);
+                }
+            }
+        }
+
         /// <summary>Saturday overtime hours (1.5×).</summary>
         public double SaturdayOvertimeHours
         {
@@ -252,6 +270,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         // ─── Std OT display (read-only summary column) ──────────────────────
         public double StdOt => Model.Overtime15Hours;
         public double SunOt => Model.Overtime20Hours;
+        public double PhOt  => Model.PublicHolidayOvertimeHours;
 
         // ─── Standard hours = Normal + Projected + Variance (for display) ────
         public double StdHoursDisplay => Model.NormalHours + Model.ProjectedHours + Model.VarianceHours;
@@ -288,7 +307,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             Model.TotalWage =
                 (decimal)(Model.NormalHours + Model.ProjectedHours + Model.VarianceHours) * Model.HourlyRate
                 + (decimal)(Model.Overtime15Hours + Model.SaturdayOvertimeHours) * Model.HourlyRate * 1.5m
-                + (decimal)Model.Overtime20Hours * Model.HourlyRate * 2.0m;
+                + (decimal)(Model.Overtime20Hours + Model.PublicHolidayOvertimeHours) * Model.HourlyRate * 2.0m;
 
             // Re-notify all display properties to update WPF DataGrid bindings
             OnPropertyChanged(string.Empty);

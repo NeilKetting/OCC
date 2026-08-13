@@ -458,6 +458,23 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
+                        <!-- P/H O/T HRS — editable -->
+                        <DataGridTemplateColumn Width="Auto"
+                                                Visibility="{Binding Data.IsOtHoursVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
+                            <DataGridTemplateColumn.Header>
+                                <TextBlock Text="P/H&#x0a;O/T" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding PublicHolidayOvertimeHours, StringFormat='F2'}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding PublicHolidayOvertimeHours, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
                         <!-- LOANS — read-only -->
                         <DataGridTemplateColumn Header="LOANS" Width="Auto" IsReadOnly="True"
                                                 Visibility="{Binding Data.IsDeductionsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
@@ -500,12 +517,12 @@
                                                 Visibility="{Binding Data.IsDeductionsVisible, Source={StaticResource Proxy}, Converter={StaticResource VisibilityConverter}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding OtherDisplay}" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="{Binding OtherDisplay}" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding DeductionOther, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right"/>
+                                    <TextBox Text="{Binding DeductionOther, UpdateSourceTrigger=LostFocus, StringFormat='F2'}" TextAlignment="Right" Foreground="White" Background="{StaticResource BackgroundMedium}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>

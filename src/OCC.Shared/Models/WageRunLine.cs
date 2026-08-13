@@ -54,8 +54,11 @@ namespace OCC.Shared.Models
         /// <summary> Total Saturday overtime hours (@ 1.5x). </summary>
         public double SaturdayOvertimeHours { get; set; }
         
-        /// <summary> Total authorized overtime hours (Sunday or Public Holiday @ 2.0x). </summary>
+        /// <summary> Total Sunday overtime hours (@ 2.0x). </summary>
         public double Overtime20Hours { get; set; }
+        
+        /// <summary> Total Public Holiday overtime hours (@ 2.0x). </summary>
+        public double PublicHolidayOvertimeHours { get; set; }
         
         /// <summary> 
         /// Hours estimated for future work within this pay cycle (used for Advance Payments).
@@ -114,7 +117,7 @@ namespace OCC.Shared.Models
             get
             {
                 decimal bibcDeduction = (IsBibc && Branch.IsCapeTown()) ? BibcAmount : 0m;
-                return Math.Max(0m, TotalWage - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionOther + DeductionPPE + DeductionAdvanceRecovery + bibcDeduction));
+                return Math.Max(0m, TotalWage + DeductionOther - (DeductionLoan + DeductionTax + DeductionWashing + DeductionGas + DeductionPPE + DeductionAdvanceRecovery + bibcDeduction));
             }
         }
 

@@ -142,6 +142,12 @@ namespace OCC.API.Services
                                (a.PaidLeaveHours != null && a.PaidLeaveHours > 0)))))
                 .ToListAsync();
 
+            var publicHolidayDates = (await _context.PublicHolidays
+                .Where(ph => ph.IsActive)
+                .Select(ph => ph.Date.Date)
+                .ToListAsync())
+                .ToHashSet();
+
             // Fetch Active Loans
             var activeLoans = await _context.EmployeeLoans
                 .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate <= request.EndDate.AddDays(15))
@@ -328,7 +334,14 @@ namespace OCC.API.Services
                         {
                             line.Overtime15Hours += hours.Overtime15;
                         }
-                        line.Overtime20Hours += hours.Overtime20;
+                        if (publicHolidayDates.Contains(record.Date.Date))
+                        {
+                            line.PublicHolidayOvertimeHours += hours.Overtime20;
+                        }
+                        else
+                        {
+                            line.Overtime20Hours += hours.Overtime20;
+                        }
                         line.LunchDeductionHours += hours.Lunch;
                         
                         if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
@@ -602,7 +615,7 @@ namespace OCC.API.Services
                 // D. Total Wage Calculation
                 var calculatedWage = (decimal)(line.NormalHours + line.ProjectedHours + line.VarianceHours) * line.HourlyRate +
                                      (decimal)(line.Overtime15Hours + line.SaturdayOvertimeHours) * line.HourlyRate * 1.5m +
-                                     (decimal)line.Overtime20Hours * line.HourlyRate * 2.0m;
+                                     (decimal)(line.Overtime20Hours + line.PublicHolidayOvertimeHours) * line.HourlyRate * 2.0m;
                 line.TotalWage = Math.Max(0m, calculatedWage);
                     
                 // E. Loans (deducted according to loan agreement frequency)
