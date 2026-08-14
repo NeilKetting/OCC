@@ -238,25 +238,8 @@ namespace OCC.WpfClient.Services
 
                 if (days <= 0) return;
 
-                var updateEmp = new Employee
-                {
-                    Id = emp.Id,
-                    FirstName = emp.FirstName,
-                    LastName = emp.LastName,
-                    EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
-                    IdNumber = emp.IdNumber,
-                    Email = emp.Email,
-                    Phone = emp.Phone,
-                    Branch = emp.Branch,
-                    Role = emp.Role,
-                    Status = emp.Status,
-                    HourlyRate = emp.HourlyRate,
-                    SickLeaveBalance = emp.SickLeaveBalance,
-                    AnnualLeaveBalance = emp.AnnualLeaveBalance,
-                    ShiftStartTime = emp.ShiftStartTime,
-                    ShiftEndTime = emp.ShiftEndTime,
-                    RowVersion = emp.RowVersion
-                };
+                var dto = await _employeeService.GetEmployeeAsync(emp.Id);
+                if (dto == null) return;
 
                 switch (request.LeaveType)
                 {
@@ -264,15 +247,16 @@ namespace OCC.WpfClient.Services
                     case LeaveType.CulturalObligations:
                     case LeaveType.HalfDay:
                     case LeaveType.Other:
-                        updateEmp.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - request.PaidDays);
+                        dto.AnnualLeaveBalance = Math.Max(0, emp.AnnualLeaveBalance - request.PaidDays);
                         break;
                     case LeaveType.Sick:
-                        updateEmp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - request.PaidDays);
+                        dto.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - request.PaidDays);
                         break;
                     // Maternity, Study, FamilyResponsibility, Unpaid — no balance to deduct
                 }
 
-                await _employeeService.UpdateEmployeeAsync(updateEmp);
+                var fullEmp = new OCC.WpfClient.Features.EmployeeHub.Models.EmployeeModel(dto).ToEntity();
+                await _employeeService.UpdateEmployeeAsync(fullEmp);
                 _logger.LogInformation("Deducted {Days} {Type} leave day(s) from employee {Id}", days, request.LeaveType, emp.Id);
             }
             catch (Exception ex)

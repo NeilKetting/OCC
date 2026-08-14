@@ -143,7 +143,7 @@
 
                             <StackPanel Margin="0,0,0,12">
                                 <TextBlock Text="ID / Passport Number" Style="{StaticResource FormLabelText}"/>
-                                <TextBox Text="{Binding Employee.IdNumber}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="13 Digit ID or Passport"/>
+                                <TextBox Text="{Binding Employee.IdNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernInput}" ap:WatermarkProperties.Watermark="13 Digit ID or Passport"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,0,12" Visibility="{Binding IsPassportFieldsVisible, Converter={StaticResource VisibilityConverter}}">
