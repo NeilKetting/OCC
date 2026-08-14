@@ -45,6 +45,42 @@ namespace OCC.API.Services
             var options = settings != null ? ToOptions(settings) : _options;
             bool isHoliday = HolidayUtils.IsPublicHoliday(record.Date);
 
+            // ── Public Holiday Handling ──────────────────────────────────────────────
+            if (isHoliday)
+            {
+                if (record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
+                {
+                    return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
+                }
+
+                if (record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
+                {
+                    double holidayNormal = GetStandardDailyHours(employee, options);
+                    double normalHours = (record.PaidLeaveHours.HasValue && record.PaidLeaveHours.Value > 0) ? record.PaidLeaveHours.Value : holidayNormal;
+                    return new HoursBreakdown(normalHours, 0, 0, 0);
+                }
+
+                if (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly)
+                {
+                    double holidayStandard = GetStandardDailyHours(employee, options);
+                    if (record.CheckInTime != null && record.CheckOutTime != null)
+                    {
+                        DateTime startDt = record.CheckInTime.Value;
+                        DateTime endDt   = record.CheckOutTime.Value;
+                        double totalDur = (endDt - startDt).TotalHours;
+                        if (totalDur > 0)
+                        {
+                            bool deductLunch = options.DeductLunchOnPublicHoliday;
+                            double lunch = deductLunch ? ComputeWeekdayLunch(endDt, record.Date, options) : 0.0;
+                            double extraPaid = record.PaidLeaveHours ?? 0;
+                            return new HoursBreakdown(extraPaid, 0, totalDur - lunch, lunch);
+                        }
+                    }
+
+                    return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, holidayStandard, 0);
+                }
+            }
+
             // If they didn't work at all and have explicit leave hours, return early
             if (record.CheckInTime == null && record.PaidLeaveHours.HasValue)
             {
@@ -58,30 +94,9 @@ namespace OCC.API.Services
                 return new HoursBreakdown(leaveNormal, 0, 0, 0);
             }
 
-            // Public Holiday with Absent / Unpaid handling
-            if (isHoliday)
-            {
-                if (record.Status == AttendanceStatus.Absent)
-                {
-                    double holidayNormal = GetStandardDailyHours(employee, options);
-                    return new HoursBreakdown(record.PaidLeaveHours ?? holidayNormal, 0, 0, 0);
-                }
-
-                if (record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
-                {
-                    return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
-                }
-            }
-
             // Guard: no check-in or absent/unpaid sick/unpaid leave → nothing to pay (unless they have explicit PaidLeaveHours).
             if (record.CheckInTime == null || record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
             {
-                if (isHoliday && (record.Status == AttendanceStatus.Present || record.Status == AttendanceStatus.Late || record.Status == AttendanceStatus.LeaveEarly))
-                {
-                    double holidayStandard = GetStandardDailyHours(employee, options);
-                    return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, holidayStandard, 0);
-                }
-
                 return new HoursBreakdown(record.PaidLeaveHours ?? 0, 0, 0, 0);
             }
 

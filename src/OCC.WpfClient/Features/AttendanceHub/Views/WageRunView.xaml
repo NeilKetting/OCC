@@ -210,27 +210,29 @@
                                 </StackPanel>
                             </ToggleButton>
                             <Popup IsOpen="{Binding IsChecked, ElementName=ColumnsToggle}" StaysOpen="False" PlacementTarget="{Binding ElementName=ColumnsToggle}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
-                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="200">
-                                    <StackPanel>
-                                        <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
-                                        <CheckBox Content="Index (#)" IsChecked="{Binding IsIndexVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="BAS" IsChecked="{Binding IsBasVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Name" IsChecked="{Binding IsNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Rate/Hr" IsChecked="{Binding IsRateHrVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="OT Hours" IsChecked="{Binding IsOtHoursVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Dec Columns" IsChecked="{Binding IsDecColumnsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Bank" IsChecked="{Binding IsBankVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Account Number" IsChecked="{Binding IsBankAccountVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Comments" IsChecked="{Binding IsCommentsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Total Rem" IsChecked="{Binding IsTotalRemVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                        <CheckBox Content="Days" IsChecked="{Binding IsDaysVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
-                                    </StackPanel>
+                                <Border Background="{StaticResource BackgroundDark}" BorderBrush="{StaticResource GlassBorder}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,5,0,0" Width="210">
+                                    <ScrollViewer MaxHeight="350" VerticalScrollBarVisibility="Auto">
+                                        <StackPanel Margin="0,0,5,0">
+                                            <TextBlock Text="DISPLAY COLUMNS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" Margin="0,0,0,8"/>
+                                            <CheckBox Content="Index (#)" IsChecked="{Binding IsIndexVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="BAS" IsChecked="{Binding IsBasVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Name" IsChecked="{Binding IsNameVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Rate/Hr" IsChecked="{Binding IsRateHrVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Hours (HRS)" IsChecked="{Binding IsHrsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="OT Rates" IsChecked="{Binding IsOtRatesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="OT Hours" IsChecked="{Binding IsOtHoursVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Dec Columns" IsChecked="{Binding IsDecColumnsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Deductions" IsChecked="{Binding IsDeductionsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Supervisor Fee" IsChecked="{Binding IsSupFeeVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Total Nett" IsChecked="{Binding IsTotalNettVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Bank" IsChecked="{Binding IsBankVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Account Number" IsChecked="{Binding IsBankAccountVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Comments" IsChecked="{Binding IsCommentsVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Notes" IsChecked="{Binding IsNotesVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Total Rem" IsChecked="{Binding IsTotalRemVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                            <CheckBox Content="Days" IsChecked="{Binding IsDaysVisible, Mode=TwoWay}" Style="{StaticResource ModernCheckBox}" Margin="0,4"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </Border>
                             </Popup>
                         </Grid>

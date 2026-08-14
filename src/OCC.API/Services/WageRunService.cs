@@ -412,7 +412,7 @@ namespace OCC.API.Services
                                                        record.Status == AttendanceStatus.Late || 
                                                        record.Status == AttendanceStatus.LeaveEarly ||
                                                        ((record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized) && hours.Normal > 0) ||
-                                                       (isHoliday && hours.Normal > 0);
+                                                       (isHoliday && record.Status != AttendanceStatus.UnpaidSick && record.Status != AttendanceStatus.UnpaidLeave);
 
                         if (isPaidAttendanceOrLeave)
                         {
