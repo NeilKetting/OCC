@@ -43,7 +43,8 @@ namespace OCC.API.Services
         public HoursBreakdown CalculateHours(AttendanceRecord record, Employee employee, WageSettings? settings = null)
         {
             var options = settings != null ? ToOptions(settings) : _options;
-            bool isHoliday = HolidayUtils.IsPublicHoliday(record.Date);
+            DateTime recDate = record.Date.Kind == DateTimeKind.Utc ? record.Date.ToLocalTime().Date : record.Date.Date;
+            bool isHoliday = HolidayUtils.IsPublicHoliday(recDate);
 
             // ── Public Holiday Handling ──────────────────────────────────────────────
             if (isHoliday)

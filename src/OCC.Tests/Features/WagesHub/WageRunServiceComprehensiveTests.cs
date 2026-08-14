@@ -417,5 +417,82 @@ namespace OCC.Tests.Features.WagesHub
             Assert.Contains("Adv Adj", line.VarianceNotes);
             Assert.Contains("Absent -2 day(s)", line.VarianceNotes);
         }
+
+        [Fact]
+        public async Task GenerateDraftAsync_PublicHoliday_AbsentEmployee_CountsInWeek1AndCalculatesFullBibc()
+        {
+            // Arrange: 08 Aug 2026 to 14 Aug 2026 (Public Holiday on Mon 10 Aug 2026)
+            using var context = GetInMemoryDbContext();
+            var realWageCalc = new WageCalculationService(new WageCalculationOptions());
+            var mockConfig = new Mock<IConfiguration>();
+
+            var empId = Guid.NewGuid();
+            var emp = new Employee
+            {
+                Id = empId,
+                FirstName = "Mphuthumi",
+                LastName = "Dododo",
+                Branch = "Cape Town",
+                IsBibc = true,
+                IsActive = true,
+                RateType = RateType.Hourly,
+                HourlyRate = 50.0
+            };
+            context.Employees.Add(emp);
+
+            context.WageSettings.Add(new WageSettings
+            {
+                Id = Guid.NewGuid(),
+                BibcRatePerDay = 28.75m
+            });
+
+            // 4 days present (Tue 11 Aug to Fri 14 Aug)
+            for (var d = new DateTime(2026, 8, 11); d <= new DateTime(2026, 8, 14); d = d.AddDays(1))
+            {
+                context.AttendanceRecords.Add(new AttendanceRecord
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = empId,
+                    Date = d,
+                    Status = AttendanceStatus.Present,
+                    CheckInTime = d.AddHours(7),
+                    CheckOutTime = d.AddHours(16.5),
+                    Branch = "Cape Town"
+                });
+            }
+
+            // 1 day absent on Public Holiday (Mon 10 Aug 2026)
+            context.AttendanceRecords.Add(new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = empId,
+                Date = new DateTime(2026, 8, 10),
+                Status = AttendanceStatus.Absent,
+                Branch = "Cape Town",
+                Notes = "Did not work on P/Holiday"
+            });
+
+            await context.SaveChangesAsync();
+
+            var service = new WageRunService(context, realWageCalc, mockConfig.Object);
+            var request = new WageRun
+            {
+                StartDate = new DateTime(2026, 8, 8),
+                EndDate = new DateTime(2026, 8, 14),
+                Branch = "Cape Town",
+                PayType = "Hourly",
+                RunType = WageRunType.Standard,
+                PayFrequency = PayFrequency.Weekly
+            };
+
+            // Act
+            var draft = await service.GenerateDraftAsync(request);
+
+            // Assert
+            var line = draft.Lines.First(l => l.EmployeeId == empId);
+            Assert.Equal(5.0, line.DaysWorkedWeek2); // DaysWorkedWeek2 maps to WEEK 1 column in UI
+            Assert.Equal(5.0, line.TotalDaysWorked); // TotalDaysWorked = 5
+            Assert.Equal(143.75m, line.BibcAmount);  // 5 days x R28.75 = R143.75
+        }
     }
 }

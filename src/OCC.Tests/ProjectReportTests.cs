@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Moq.Protected;
 using OCC.Shared.DTOs;
 using OCC.Shared.Models;
 using OCC.WpfClient.Features.ProjectHub.ViewModels;
@@ -39,8 +41,13 @@ namespace OCC.Tests
             _mockProjectReportService = new Mock<IProjectReportService>();
             _connectionSettings = new ConnectionSettings { ApiBaseUrl = "http://localhost:5237/" };
 
-            // Setup default behaviors to avoid null refs
-            _mockHttpClientFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient());
+            // Setup default behaviors with mocked HttpMessageHandler to prevent connection timeouts
+            var mockHandler = new Mock<HttpMessageHandler>();
+            mockHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+
+            _mockHttpClientFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(mockHandler.Object));
             _mockHealthSafetyService.Setup(s => s.GetAuditsAsync()).ReturnsAsync(new List<AuditSummaryDto>());
             _mockHealthSafetyService.Setup(s => s.GetIncidentsAsync()).ReturnsAsync(new List<IncidentSummaryDto>());
             _mockSubContractorService.Setup(s => s.GetSubContractorsAsync()).ReturnsAsync(new List<SubContractor>());

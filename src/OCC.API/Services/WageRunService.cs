@@ -362,17 +362,21 @@ namespace OCC.API.Services
                 {
                     if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday) continue;
                     bool isHol = publicHolidayDates.Contains(d) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d);
-                    if (isHol && !empAttendance.Any(a => a.Date.Date == d))
+                    if (isHol)
                     {
-                        empAttendance.Add(new AttendanceRecord
+                        bool exists = empAttendance.Any(a => (a.Date.Kind == DateTimeKind.Utc ? a.Date.ToLocalTime().Date : a.Date.Date) == d);
+                        if (!exists)
                         {
-                            Id = Guid.NewGuid(),
-                            EmployeeId = emp.Id,
-                            Date = d,
-                            Status = AttendanceStatus.Absent,
-                            Branch = emp.Branch ?? "",
-                            Notes = "Public Holiday"
-                        });
+                            empAttendance.Add(new AttendanceRecord
+                            {
+                                Id = Guid.NewGuid(),
+                                EmployeeId = emp.Id,
+                                Date = d,
+                                Status = AttendanceStatus.Absent,
+                                Branch = emp.Branch ?? "",
+                                Notes = "Public Holiday"
+                            });
+                        }
                     }
                 }
 
@@ -384,11 +388,12 @@ namespace OCC.API.Services
 
                 foreach (var record in empAttendance)
                 {
+                    DateTime recDate = record.Date.Kind == DateTimeKind.Utc ? record.Date.ToLocalTime().Date : record.Date.Date;
                     var hours = _wageCalc.CalculateHours(record, empForCalc, settings);
-                    if (record.Date >= request.StartDate)
+                    if (recDate >= request.StartDate.Date)
                     {
                         line.NormalHours += hours.Normal;
-                        if (record.Date.DayOfWeek == DayOfWeek.Saturday)
+                        if (recDate.DayOfWeek == DayOfWeek.Saturday)
                         {
                             line.SaturdayOvertimeHours += hours.Overtime15;
                         }
@@ -397,7 +402,7 @@ namespace OCC.API.Services
                             line.Overtime15Hours += hours.Overtime15;
                         }
 
-                        bool isHoliday = publicHolidayDates.Contains(record.Date.Date) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+                        bool isHoliday = publicHolidayDates.Contains(recDate) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(recDate);
                         if (isHoliday)
                         {
                             line.PublicHolidayOvertimeHours += hours.Overtime20;
@@ -416,15 +421,15 @@ namespace OCC.API.Services
 
                         if (isPaidAttendanceOrLeave)
                         {
-                            var hasUnpaidLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, record.Date));
+                            var hasUnpaidLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, recDate));
 
-                            if (!hasUnpaidLeave || record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
+                            if (!hasUnpaidLeave || record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized || isHoliday)
                             {
-                                bool isWeekend = record.Date.DayOfWeek == DayOfWeek.Saturday || record.Date.DayOfWeek == DayOfWeek.Sunday;
+                                bool isWeekend = recDate.DayOfWeek == DayOfWeek.Saturday || recDate.DayOfWeek == DayOfWeek.Sunday;
                                 if (!isCapeTown || !isWeekend)
                                 {
-                                    if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
-                                    else distinctDaysW2.Add(record.Date.Date);
+                                    if (recDate <= week1End.Date) distinctDaysW1.Add(recDate);
+                                    else distinctDaysW2.Add(recDate);
                                 }
                             }
                         }
