@@ -134,7 +134,7 @@ namespace OCC.Shared.Models
                     City = "Cape Town",
                     PostalCode = "7441",
                     ShiftStartTime = new TimeSpan(7,0,0),
-                    ShiftEndTime = new TimeSpan(16,45,0),
+                    ShiftEndTime = new TimeSpan(16,30,0),
                     DepartmentEmails = new()
                     {
                         new DepartmentEmail { Department = "Buying", EmailAddress = "cptbuying@orange-circle.co.za" },

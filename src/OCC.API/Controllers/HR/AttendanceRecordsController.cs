@@ -302,11 +302,12 @@ namespace OCC.API.Controllers
 
         private void CalculateHoursWorked(AttendanceRecord record)
         {
+            double defaultStandardHours = string.Equals(record.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(record.Branch, "CPT", StringComparison.OrdinalIgnoreCase) ? 8.50 : 8.75;
             bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
             if (isHoliday && record.Status == AttendanceStatus.Absent)
             {
-                record.HoursWorked = 8.75;
-                record.PaidLeaveHours = 8.75;
+                record.HoursWorked = defaultStandardHours;
+                record.PaidLeaveHours = defaultStandardHours;
                 return;
             }
 
@@ -325,8 +326,8 @@ namespace OCC.API.Controllers
                 }
                 else if (record.CheckInTime == null && record.CheckOutTime == null)
                 {
-                    record.HoursWorked = 8.75;
-                    record.PaidLeaveHours = 8.75;
+                    record.HoursWorked = defaultStandardHours;
+                    record.PaidLeaveHours = defaultStandardHours;
                     return;
                 }
             }

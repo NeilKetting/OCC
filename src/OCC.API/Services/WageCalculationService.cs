@@ -213,7 +213,23 @@ namespace OCC.API.Services
         private double GetStandardDailyHours(Employee employee, WageCalculationOptions options)
         {
             TimeSpan shiftStart = employee.ShiftStartTime ?? options.DefaultShiftStart;
-            TimeSpan shiftEnd   = employee.ShiftEndTime   ?? options.DefaultShiftEnd;
+            TimeSpan shiftEnd;
+            if (employee.ShiftEndTime.HasValue)
+            {
+                shiftEnd = employee.ShiftEndTime.Value;
+            }
+            else if (string.Equals(employee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(employee.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
+            {
+                shiftEnd = new TimeSpan(16, 30, 0);
+            }
+            else if (string.Equals(employee.Branch, "Johannesburg", StringComparison.OrdinalIgnoreCase) || string.Equals(employee.Branch, "JHB", StringComparison.OrdinalIgnoreCase))
+            {
+                shiftEnd = new TimeSpan(16, 45, 0);
+            }
+            else
+            {
+                shiftEnd = options.DefaultShiftEnd;
+            }
 
             double normal = (shiftEnd - shiftStart).TotalHours;
             if (options.UseLunchEndThreshold && shiftEnd.Hours >= 13)
