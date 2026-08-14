@@ -148,9 +148,9 @@ namespace OCC.API.Services
                 .ToListAsync())
                 .ToHashSet();
 
-            // Fetch Active Loans
+            // Fetch Active Loans that start on or before the end date of the wage run period
             var activeLoans = await _context.EmployeeLoans
-                .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate <= request.EndDate.AddDays(15))
+                .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate.Date <= request.EndDate.Date)
                 .ToListAsync();
 
             // Fetch Previous Finalized Run (for Variance) - MUST BE BRANCH SPECIFIC
@@ -734,11 +734,17 @@ namespace OCC.API.Services
                                      (decimal)(line.Overtime20Hours + line.PublicHolidayOvertimeHours) * line.HourlyRate * 2.0m;
                 line.TotalWage = Math.Max(0m, calculatedWage);
                     
-                // E. Loans (deducted according to loan agreement frequency)
+                // E. Loans (deducted according to loan agreement frequency and respecting loan start date)
                 var empLoans = activeLoans.Where(l => l.EmployeeId == emp.Id).ToList();
                 decimal totalLoanDeduction = 0;
                 foreach (var loan in empLoans)
                 {
+                    // Ensure the loan start date has arrived (on or before the pay period end date)
+                    if (loan.StartDate.Date > request.EndDate.Date)
+                    {
+                        continue;
+                    }
+
                     string loanFreq = "";
                     if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
                     {
@@ -901,13 +907,19 @@ namespace OCC.API.Services
                     }
 
                     var activeLoans = await _context.EmployeeLoans
-                        .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0)
+                        .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0 && l.StartDate.Date <= run.EndDate.Date)
                         .OrderBy(l => l.StartDate)
                         .ToListAsync();
 
                     var matchingLoans = new List<EmployeeLoan>();
                     foreach (var loan in activeLoans)
                     {
+                        // Ensure loan start date is on or before the wage run end date
+                        if (loan.StartDate.Date > run.EndDate.Date)
+                        {
+                            continue;
+                        }
+
                         string loanFreq = "";
                         if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
                         {

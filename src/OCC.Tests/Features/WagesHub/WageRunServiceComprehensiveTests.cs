@@ -494,5 +494,117 @@ namespace OCC.Tests.Features.WagesHub
             Assert.Equal(5.0, line.TotalDaysWorked); // TotalDaysWorked = 5
             Assert.Equal(143.75m, line.BibcAmount);  // 5 days x R28.75 = R143.75
         }
+
+        [Fact]
+        public async Task GenerateDraftAsync_RespectsLoanStartDate_DoesNotDeductFutureLoan()
+        {
+            // Arrange
+            using var context = GetInMemoryDbContext();
+            var mockWageCalc = GetMockWageCalculationService();
+            var mockConfig = new Mock<IConfiguration>();
+
+            var empId = Guid.NewGuid();
+            context.Employees.Add(new Employee
+            {
+                Id = empId,
+                FirstName = "Future",
+                LastName = "LoanUser",
+                EmployeeNumber = "EMP999",
+                Branch = "Cape Town",
+                Status = EmployeeStatus.Active,
+                RateType = RateType.Hourly,
+                HourlyRate = 100
+            });
+
+            // Add a loan with StartDate set in the future relative to the pay period
+            // Pay period: 2026-08-01 to 2026-08-14. Loan StartDate: 2026-08-28.
+            context.EmployeeLoans.Add(new EmployeeLoan
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = empId,
+                PrincipalAmount = 1000m,
+                MonthlyInstallment = 200m,
+                OutstandingBalance = 1000m,
+                StartDate = new DateTime(2026, 8, 28),
+                IsActive = true,
+                Notes = "[Term: Fortnightly, Installments: 5]"
+            });
+
+            await context.SaveChangesAsync();
+
+            var service = new WageRunService(context, mockWageCalc.Object, mockConfig.Object);
+            var request = new WageRun
+            {
+                StartDate = new DateTime(2026, 8, 1),
+                EndDate = new DateTime(2026, 8, 14),
+                Branch = "Cape Town",
+                PayType = "Hourly",
+                RunType = WageRunType.Standard,
+                PayFrequency = PayFrequency.Fortnightly
+            };
+
+            // Act
+            var draft = await service.GenerateDraftAsync(request);
+
+            // Assert
+            var line = draft.Lines.First(l => l.EmployeeId == empId);
+            Assert.Equal(0m, line.DeductionLoan); // Future loan must NOT be deducted
+        }
+
+        [Fact]
+        public async Task GenerateDraftAsync_RespectsLoanStartDate_DeductsActiveLoanWhenStartDateReached()
+        {
+            // Arrange
+            using var context = GetInMemoryDbContext();
+            var mockWageCalc = GetMockWageCalculationService();
+            var mockConfig = new Mock<IConfiguration>();
+
+            var empId = Guid.NewGuid();
+            context.Employees.Add(new Employee
+            {
+                Id = empId,
+                FirstName = "Started",
+                LastName = "LoanUser",
+                EmployeeNumber = "EMP888",
+                Branch = "Cape Town",
+                Status = EmployeeStatus.Active,
+                RateType = RateType.Hourly,
+                HourlyRate = 100
+            });
+
+            // Add a loan with StartDate set on or before the pay period end date
+            // Pay period: 2026-08-15 to 2026-08-28. Loan StartDate: 2026-08-28.
+            context.EmployeeLoans.Add(new EmployeeLoan
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = empId,
+                PrincipalAmount = 1000m,
+                MonthlyInstallment = 200m,
+                OutstandingBalance = 1000m,
+                StartDate = new DateTime(2026, 8, 28),
+                IsActive = true,
+                Notes = "[Term: Fortnightly, Installments: 5]"
+            });
+
+            await context.SaveChangesAsync();
+
+            var service = new WageRunService(context, mockWageCalc.Object, mockConfig.Object);
+            var request = new WageRun
+            {
+                StartDate = new DateTime(2026, 8, 15),
+                EndDate = new DateTime(2026, 8, 28),
+                Branch = "Cape Town",
+                PayType = "Hourly",
+                RunType = WageRunType.Standard,
+                PayFrequency = PayFrequency.Fortnightly
+            };
+
+            // Act
+            var draft = await service.GenerateDraftAsync(request);
+
+            // Assert
+            var line = draft.Lines.First(l => l.EmployeeId == empId);
+            Assert.Equal(200m, line.DeductionLoan); // Started loan MUST be deducted
+        }
     }
 }
