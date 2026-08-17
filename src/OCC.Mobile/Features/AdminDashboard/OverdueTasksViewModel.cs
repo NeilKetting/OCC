@@ -34,7 +34,7 @@ namespace OCC.Mobile.Features.AdminDashboard
         {
             IsBusy = true;
             var tasks = await _taskService.GetTasksAsync();
-            var overdue = tasks.Where(t => t.IsOverdue).ToList();
+            var overdue = tasks.Where(t => !t.IsGroup && t.IsOverdue).ToList();
             
             GroupedTasks.Clear();
             var groups = overdue.GroupBy(t => t.Project?.Name ?? "Unknown Project");

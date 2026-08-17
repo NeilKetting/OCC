@@ -4,9 +4,9 @@
     <TargetFramework>net10.0-android</TargetFramework>
     <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <ApplicationId>OrangeCircleConstruction.Mobile.Fresh</ApplicationId>
-    <ApplicationVersion>13</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0.13</ApplicationDisplayVersion>
-    <Version>1.0.13</Version>
+    <ApplicationVersion>14</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0.14</ApplicationDisplayVersion>
+    <Version>1.0.14</Version>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
     <!-- Modern AOT and runtime settings -->

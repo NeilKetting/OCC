@@ -185,21 +185,29 @@ namespace OCC.Mobile.Features.Shell
                     DownloadStatus = "Launching Installer...";
                     DownloadProgress = 1.0;
                     
-                    // Small delay to ensure UI updates before we lose focus
+                    // Small delay to ensure UI updates before focus switch
                     await Task.Delay(1000);
                     
-                    await _appInstaller.InstallPackageAsync(localPath);
+                    var installerLaunched = await _appInstaller.InstallPackageAsync(localPath);
+                    if (!installerLaunched)
+                    {
+                        DownloadStatus = "Permission needed in Settings. Tap Update again after allowing.";
+                        await Task.Delay(3500);
+                        IsUpdateAvailable = true;
+                    }
                 }
                 else
                 {
                     DownloadStatus = "Download failed: Empty path";
                     await Task.Delay(3000);
+                    IsUpdateAvailable = true;
                 }
             }
             catch (Exception ex)
             {
                 DownloadStatus = $"Error: {ex.Message}";
-                await Task.Delay(5000);
+                await Task.Delay(4000);
+                IsUpdateAvailable = true;
                 System.Diagnostics.Debug.WriteLine($"Update failed: {ex.Message}");
             }
             finally

@@ -31,8 +31,8 @@ namespace OCC.Mobile.Features.Dashboard
 
         public string TaskProgressString => Project.TaskProgressString;
 
-        public int DueToday => Project.Tasks.Count(t => !t.IsComplete && t.FinishDate.Date == DateTime.Today);
-        public int Overdue => Project.Tasks.Count(t => t.IsOverdue);
+        public int DueToday => Project.Tasks.Count(t => !t.IsGroup && !t.IsComplete && t.FinishDate.Date == DateTime.Today);
+        public int Overdue => Project.Tasks.Count(t => !t.IsGroup && t.IsOverdue);
         public int TeamCount => Project.TeamMembers.Count;
         public string StartDate => Project.StartDate.ToString("dd MMM yyyy");
         public string EndDate => Project.EndDate != default ? Project.EndDate.ToString("dd MMM yyyy") : "—";

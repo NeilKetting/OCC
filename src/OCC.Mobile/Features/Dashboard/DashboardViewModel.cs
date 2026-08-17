@@ -266,20 +266,20 @@ namespace OCC.Mobile.Features.Dashboard
 
                 foreach (var p in projectList)
                 {
-                    // Daily stats: Tasks due today OR tasks actually completed today
-                    var todayTasks = p.Tasks.Where(t => 
+                    // Daily stats: Tasks due today OR tasks actually completed today (actionable leaf tasks only)
+                    var todayTasks = p.Tasks.Where(t => !t.IsGroup && (
                         t.FinishDate.Date == DateTime.Today || 
                         (t.ActualCompleteDate.HasValue && t.ActualCompleteDate.Value.ToLocalTime().Date == DateTime.Today) ||
                         (t.IsComplete && t.UpdatedAtUtc?.ToLocalTime().Date == DateTime.Today)
-                    ).ToList();
+                    )).ToList();
                     dailyTotal += todayTasks.Count;
                     dailyCompleted += todayTasks.Count(t => t.IsComplete);
                     
-                    // Overall stats
-                    overallTotal += p.Tasks.Count;
-                    overallCompleted += p.Tasks.Count(t => t.IsComplete);
+                    // Overall stats (actionable leaf tasks only)
+                    overallTotal += p.Tasks.Count(t => !t.IsGroup);
+                    overallCompleted += p.Tasks.Count(t => !t.IsGroup && t.IsComplete);
                     
-                    overdueCount += p.Tasks.Count(t => t.IsOverdue);
+                    overdueCount += p.Tasks.Count(t => !t.IsGroup && t.IsOverdue);
                 }
 
                 var progressValue = dailyTotal > 0 ? (double)dailyCompleted / dailyTotal * 100 : 0;
@@ -327,8 +327,8 @@ namespace OCC.Mobile.Features.Dashboard
                     etaStat = "Project Complete";
                 }
 
-                // Query collections for redesign dashboard
-                var overdueList = projectList.SelectMany(p => p.Tasks.Where(t => t.IsOverdue)
+                // Query collections for redesign dashboard (actionable leaf tasks only)
+                var overdueList = projectList.SelectMany(p => p.Tasks.Where(t => !t.IsGroup && t.IsOverdue)
                     .Select(t => new DashboardTaskViewModel
                     {
                         Id = t.Id.ToString(),
@@ -342,7 +342,7 @@ namespace OCC.Mobile.Features.Dashboard
                     .ToList();
 
                 var todayRemainingList = projectList.SelectMany(p => p.Tasks
-                    .Where(t => !t.IsComplete && t.FinishDate.Date == DateTime.Today)
+                    .Where(t => !t.IsGroup && !t.IsComplete && t.FinishDate.Date == DateTime.Today)
                     .Select(t => new DashboardTaskViewModel
                     {
                         Id = t.Id.ToString(),
@@ -354,7 +354,7 @@ namespace OCC.Mobile.Features.Dashboard
                     .ToList();
 
                 var next7DaysTasks = projectList.SelectMany(p => p.Tasks
-                    .Where(t => !t.IsComplete && t.FinishDate.Date > DateTime.Today && t.FinishDate.Date <= DateTime.Today.AddDays(7))
+                    .Where(t => !t.IsGroup && !t.IsComplete && t.FinishDate.Date > DateTime.Today && t.FinishDate.Date <= DateTime.Today.AddDays(7))
                     .Select(t => new { Task = t, Project = p }))
                     .GroupBy(x => x.Task.FinishDate.Date)
                     .OrderBy(g => g.Key)

@@ -80,7 +80,7 @@ namespace OCC.Mobile.Features.AdminDashboard
                 ActiveProjectsCount = activeProjects.Count.ToString();
                 
                 var tasks = (await _taskService.GetTasksAsync()).ToList();
-                var overdue = tasks.Count(t => t.IsOverdue);
+                var overdue = tasks.Count(t => !t.IsGroup && t.IsOverdue);
                 OverdueTasksCount = overdue.ToString();
 
                 if (allProjects.Any())

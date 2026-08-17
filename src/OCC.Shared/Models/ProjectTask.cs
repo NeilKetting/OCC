@@ -200,7 +200,7 @@ namespace OCC.Shared.Models
         }
 
         [NotMapped]
-        public bool IsOverdue => !IsComplete && FinishDate.Date < DateTime.Today && Status != "Cancelled";
+        public bool IsOverdue => !IsGroup && !IsComplete && FinishDate.Date < DateTime.Today && Status != "Cancelled" && Status != "On Hold" && !IsOnHold;
 
         [NotMapped]
         public string StatusColor 

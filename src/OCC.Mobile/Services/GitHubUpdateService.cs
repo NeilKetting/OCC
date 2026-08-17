@@ -45,10 +45,13 @@ namespace OCC.Mobile.Services
                 if (release == null || string.IsNullOrEmpty(release.TagName))
                     return new UpdateCheckResult { IsUpdateAvailable = false };
 
-                var latestVersionStr = release.TagName.TrimStart('v');
-                if (Version.TryParse(latestVersionStr, out var latestVersion) && 
-                    Version.TryParse(CurrentVersion, out var currentVersion))
+                var latestVersionStr = release.TagName.TrimStart('v').Trim();
+                if (Version.TryParse(latestVersionStr, out var rawLatest) && 
+                    Version.TryParse(CurrentVersion, out var rawCurrent))
                 {
+                    var latestVersion = NormalizeVersion(rawLatest);
+                    var currentVersion = NormalizeVersion(rawCurrent);
+
                     if (latestVersion > currentVersion)
                     {
                         // Find the APK asset
@@ -71,6 +74,13 @@ namespace OCC.Mobile.Services
                 _logger.LogError(ex, "Error checking for updates.");
                 return new UpdateCheckResult { IsUpdateAvailable = false };
             }
+        }
+
+        private static Version NormalizeVersion(Version v)
+        {
+            int build = v.Build < 0 ? 0 : v.Build;
+            int revision = v.Revision < 0 ? 0 : v.Revision;
+            return new Version(v.Major, v.Minor, build, revision);
         }
 
         public async Task<string> DownloadUpdateAsync(UpdateCheckResult update, Action<double> progress)

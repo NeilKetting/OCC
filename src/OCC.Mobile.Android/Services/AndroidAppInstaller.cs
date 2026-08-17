@@ -25,22 +25,58 @@ namespace OCC.Mobile.Android.Services
             return MainActivity.Instance ?? _context;
         }
 
-        public async Task InstallPackageAsync(string localPath)
+        public async Task<bool> InstallPackageAsync(string localPath)
         {
             try
             {
                 var bestContext = GetBestContext();
-                global::Android.Widget.Toast.MakeText(bestContext, "Triggering System Installer...", global::Android.Widget.ToastLength.Short)?.Show();
 
                 if (!File.Exists(localPath))
                 {
-                    global::Android.Widget.Toast.MakeText(bestContext, "Error: APK not found!", global::Android.Widget.ToastLength.Long)?.Show();
-                    return;
+                    global::Android.Widget.Toast.MakeText(bestContext, "Error: APK download file not found!", global::Android.Widget.ToastLength.Long)?.Show();
+                    return false;
                 }
 
-                // Copy to External Cache for maximal system accessibility
-                var externalDir = bestContext.ExternalCacheDir;
-                var externalPath = Path.Combine(externalDir!.AbsolutePath, "update_install.apk");
+                // Android 8.0 (API 26+) requires explicit 'Install unknown apps' permission per app
+#pragma warning disable CA1416
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+                {
+                    var packageManager = bestContext.PackageManager;
+                    if (packageManager != null && !packageManager.CanRequestPackageInstalls())
+                    {
+                        global::Android.Widget.Toast.MakeText(
+                            bestContext,
+                            "Please enable 'Allow from this source' for OCC Field Hub in Settings, then tap Update again.",
+                            global::Android.Widget.ToastLength.Long)?.Show();
+
+                        try
+                        {
+                            var settingsIntent = new Intent(global::Android.Provider.Settings.ActionManageUnknownAppSources);
+                            settingsIntent.SetData(global::Android.Net.Uri.Parse($"package:{bestContext.PackageName}"));
+                            settingsIntent.AddFlags(ActivityFlags.NewTask);
+                            bestContext.StartActivity(settingsIntent);
+                        }
+                        catch (Exception settingsEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Failed to launch unknown sources settings: {settingsEx.Message}");
+                        }
+
+                        return false;
+                    }
+                }
+#pragma warning restore CA1416
+
+                global::Android.Widget.Toast.MakeText(bestContext, "Triggering System Installer...", global::Android.Widget.ToastLength.Short)?.Show();
+
+                // Copy to External Cache or Cache for maximal system file provider accessibility
+                var targetDir = bestContext.ExternalCacheDir ?? bestContext.CacheDir;
+                if (targetDir == null)
+                {
+                    global::Android.Widget.Toast.MakeText(bestContext, "Error: Cache directory inaccessible!", global::Android.Widget.ToastLength.Long)?.Show();
+                    return false;
+                }
+
+                var externalPath = Path.Combine(targetDir.AbsolutePath, "update_install.apk");
                 
                 if (File.Exists(externalPath)) File.Delete(externalPath);
                 using (var source = File.OpenRead(localPath))
@@ -50,32 +86,29 @@ namespace OCC.Mobile.Android.Services
                 }
 
                 var file = new Java.IO.File(externalPath);
-                // Authority is now all-lowercase and standardized
+                // Authority matches AndroidManifest.xml provider
                 var apkUri = FileProvider.GetUriForFile(bestContext, "com.occ.fieldhub.fileprovider", file);
                 
                 var intent = new Intent(Intent.ActionView);
                 intent.SetDataAndType(apkUri, "application/vnd.android.package-archive");
-                
-                if (bestContext is not Activity)
-                {
-                    intent.AddFlags(ActivityFlags.NewTask);
-                }
-                
                 intent.AddFlags(ActivityFlags.GrantReadUriPermission);
                 intent.AddFlags(ActivityFlags.GrantWriteUriPermission);
                 intent.AddFlags(ActivityFlags.ClearTop);
+                intent.AddFlags(ActivityFlags.NewTask);
                 
-                // Extra metadata to help the installer
+                // Extra metadata to help system installer resolution
                 intent.PutExtra(Intent.ExtraNotUnknownSource, true);
                 intent.PutExtra(Intent.ExtraReturnResult, true);
 
                 bestContext.StartActivity(intent);
+                return true;
             }
             catch (Exception ex)
             {
                 var bestContext = GetBestContext();
                 global::Android.Widget.Toast.MakeText(bestContext, $"Fatal Install Error: {ex.Message}", global::Android.Widget.ToastLength.Long)?.Show();
                 System.Diagnostics.Debug.WriteLine($"Install failed: {ex.Message}");
+                return false;
             }
         }
 

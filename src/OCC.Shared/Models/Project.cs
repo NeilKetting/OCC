@@ -182,19 +182,27 @@ namespace OCC.Shared.Models
         public virtual ICollection<ProjectVariationOrder> VariationOrders { get; set; } = new List<ProjectVariationOrder>();
         
         /// <summary>
-        /// Calculated progress percentage based on task completion.
+        /// Calculated progress percentage based on actionable leaf task completion (excluding group headers).
         /// </summary>
-        public double Progress => Tasks != null && Tasks.Any(t => t != null) ? Tasks.Where(t => t != null).Average(t => t.PercentComplete) : 0;
+        public double Progress
+        {
+            get
+            {
+                if (Tasks == null) return 0;
+                var leafTasks = Tasks.Where(t => t != null && !t.IsGroup).ToList();
+                return leafTasks.Any() ? leafTasks.Average(t => (double)t.PercentComplete) : 0;
+            }
+        }
 
         /// <summary>
-        /// Total number of tasks in this project.
+        /// Total number of actionable tasks in this project (excluding group headers).
         /// </summary>
-        public int TotalTaskCount => Tasks?.Count(t => t != null) ?? 0;
+        public int TotalTaskCount => Tasks?.Count(t => t != null && !t.IsGroup) ?? 0;
 
         /// <summary>
-        /// Number of completed tasks.
+        /// Number of completed actionable tasks.
         /// </summary>
-        public int CompletedTaskCount => Tasks?.Count(t => t != null && t.IsComplete) ?? 0;
+        public int CompletedTaskCount => Tasks?.Count(t => t != null && !t.IsGroup && t.IsComplete) ?? 0;
 
         /// <summary>
         /// Formatted task progress (e.g., "20 / 55").
