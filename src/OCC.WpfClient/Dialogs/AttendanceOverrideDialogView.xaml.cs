@@ -249,26 +249,14 @@ namespace OCC.WpfClient.Dialogs
 
         private async Task UpdateEmployeeBalanceAsync(OCC.Shared.DTOs.EmployeeDto emp)
         {
-            var updateEmp = new OCC.Shared.Models.Employee
+            var dto = await _employeeService.GetEmployeeAsync(emp.Id);
+            if (dto != null)
             {
-                Id = emp.Id,
-                FirstName = emp.FirstName,
-                LastName = emp.LastName,
-                EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
-                IdNumber = emp.IdNumber,
-                Email = emp.Email,
-                Phone = emp.Phone,
-                Branch = emp.Branch,
-                Role = emp.Role,
-                Status = emp.Status,
-                HourlyRate = emp.HourlyRate,
-                SickLeaveBalance = emp.SickLeaveBalance,
-                AnnualLeaveBalance = emp.AnnualLeaveBalance,
-                ShiftStartTime = emp.ShiftStartTime,
-                ShiftEndTime = emp.ShiftEndTime,
-                RowVersion = emp.RowVersion
-            };
-            await _employeeService.UpdateEmployeeAsync(updateEmp);
+                dto.SickLeaveBalance = emp.SickLeaveBalance;
+                dto.AnnualLeaveBalance = emp.AnnualLeaveBalance;
+                var fullEmp = new OCC.WpfClient.Features.EmployeeHub.Models.EmployeeModel(dto).ToEntity();
+                await _employeeService.UpdateEmployeeAsync(fullEmp);
+            }
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

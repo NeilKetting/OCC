@@ -329,6 +329,50 @@ namespace OCC.Tests.API.Controllers
         }
 
         [Fact]
+        public void PublicHoliday_Absent_CapeTown_Returns850NormalHours()
+        {
+            var svc    = CreateService();
+            var emp    = DefaultEmployee();
+            emp.Branch = "Cape Town";
+            emp.ShiftEndTime = null;
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = Christmas2026,
+                Status = AttendanceStatus.Absent,
+                Branch = "Cape Town"
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(8.50, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime20, precision: 2);
+        }
+
+        [Fact]
+        public void PublicHoliday_Absent_Johannesburg_Returns875NormalHours()
+        {
+            var svc    = CreateService();
+            var emp    = DefaultEmployee();
+            emp.Branch = "Johannesburg";
+            emp.ShiftEndTime = null;
+            var record = new AttendanceRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = emp.Id,
+                Date = Christmas2026,
+                Status = AttendanceStatus.Absent,
+                Branch = "Johannesburg"
+            };
+
+            var result = svc.CalculateHours(record, emp);
+
+            Assert.Equal(8.75, result.Normal, precision: 2);
+            Assert.Equal(0.0, result.Overtime20, precision: 2);
+        }
+
+        [Fact]
         public void PublicHoliday_PresentWithoutTimes_ReturnsOvertime20_2xRate()
         {
             // Public holiday present without clock times -> paid full standard day (8.0h) at x2 wage (Overtime20)

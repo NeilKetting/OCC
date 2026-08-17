@@ -134,6 +134,19 @@ namespace OCC.API.Controllers
                 return NotFound();
             }
 
+            // Preserve existing core fields if incoming payload has default/null values (prevents partial update overwrites)
+            if (employee.EmploymentDate == default) employee.EmploymentDate = existingEmployee.EmploymentDate;
+            if (employee.LeaveCycleStartDate == null) employee.LeaveCycleStartDate = existingEmployee.LeaveCycleStartDate;
+            if (employee.DoB == default) employee.DoB = existingEmployee.DoB;
+            if (string.IsNullOrWhiteSpace(employee.FirstName)) employee.FirstName = existingEmployee.FirstName;
+            if (string.IsNullOrWhiteSpace(employee.LastName)) employee.LastName = existingEmployee.LastName;
+            if (string.IsNullOrWhiteSpace(employee.IdNumber)) employee.IdNumber = existingEmployee.IdNumber;
+            if (string.IsNullOrWhiteSpace(employee.TaxNumber)) employee.TaxNumber = existingEmployee.TaxNumber;
+            if (string.IsNullOrWhiteSpace(employee.BankName)) employee.BankName = existingEmployee.BankName;
+            if (string.IsNullOrWhiteSpace(employee.AccountNumber)) employee.AccountNumber = existingEmployee.AccountNumber;
+            if (string.IsNullOrWhiteSpace(employee.BranchCode)) employee.BranchCode = existingEmployee.BranchCode;
+            if (string.IsNullOrWhiteSpace(employee.AccountType)) employee.AccountType = existingEmployee.AccountType;
+
             _context.Entry(existingEmployee).CurrentValues.SetValues(employee);
 
             try

@@ -375,7 +375,11 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             }
 
             TotalCount = targetRows.Count;
-            TotalDaysWorked = targetRows.Count(r => r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly);
+            TotalDaysWorked = targetRows.Count(r => r.Status == AttendanceStatus.Present || 
+                                                    r.Status == AttendanceStatus.Late || 
+                                                    r.Status == AttendanceStatus.LeaveEarly ||
+                                                    (OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(r.Date) && r.Status != AttendanceStatus.UnpaidSick && r.Status != AttendanceStatus.UnpaidLeave) ||
+                                                    ((r.Status == AttendanceStatus.Sick || r.Status == AttendanceStatus.LeaveAuthorized) && (r.HoursWorked ?? 0) > 0));
             TotalNormalHours = Math.Round(targetRows.Sum(r => r.HoursWorked ?? 0), 2);
             TotalStdOtHours = Math.Round(targetRows.Sum(r => r.StdOvertimeHours), 2);
             TotalSatOtHours = Math.Round(targetRows.Sum(r => r.OtSaturdayHours), 2);
@@ -1096,12 +1100,13 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             get
             {
+                double standardWorkdayHours = string.Equals(Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(Branch, "CPT", StringComparison.OrdinalIgnoreCase) ? 8.50 : 8.75;
                 bool isHoliday = OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(Date);
                 if (isHoliday)
                 {
                     if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized)
                     {
-                        return Record.PaidLeaveHours ?? 8.75;
+                        return Record.PaidLeaveHours ?? standardWorkdayHours;
                     }
                     return null;
                 }
@@ -1118,7 +1123,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 }
 
                 var actual = CalculateActualHours();
-                return actual > 0 ? Math.Min(8.75, actual) : 0;
+                return actual > 0 ? Math.Min(standardWorkdayHours, actual) : 0;
             }
         }
 
@@ -1135,8 +1140,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 if (!isWeekend && !isHoliday)
                 {
+                    double standardWorkdayHours = string.Equals(Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(Branch, "CPT", StringComparison.OrdinalIgnoreCase) ? 8.50 : 8.75;
                     var actual = CalculateActualHours();
-                    return Math.Max(0, actual - 8.75);
+                    return Math.Max(0, actual - standardWorkdayHours);
                 }
                 return 0;
             }
@@ -1218,8 +1224,9 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     if (Status == AttendanceStatus.Absent || Status == AttendanceStatus.Sick || Status == AttendanceStatus.LeaveAuthorized)
                         return 0;
 
+                    double standardWorkdayHours = string.Equals(Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(Branch, "CPT", StringComparison.OrdinalIgnoreCase) ? 8.50 : 8.75;
                     var actual = CalculateActualHours();
-                    return actual > 0 ? actual : 8.75;
+                    return actual > 0 ? actual : standardWorkdayHours;
                 }
                 return 0;
             }

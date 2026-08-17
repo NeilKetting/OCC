@@ -406,32 +406,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 try
                 {
-                    var emp = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId!.Value);
-                    if (emp != null)
+                    var dto = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId!.Value);
+                    if (dto != null)
                     {
-                        emp.SickLeaveBalance = Math.Max(0, emp.SickLeaveBalance - 1);
-                        var updateEmp = new OCC.Shared.Models.Employee
-                        {
-                            Id = emp.Id,
-                            FirstName = emp.FirstName,
-                            LastName = emp.LastName,
-                            EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
-                            IdNumber = emp.IdNumber,
-                            Email = emp.Email,
-                            Phone = emp.Phone,
-                            Branch = emp.Branch,
-                            Role = emp.Role,
-                            Status = emp.Status,
-                            HourlyRate = emp.HourlyRate,
-                            SickLeaveBalance = emp.SickLeaveBalance,
-                            AnnualLeaveBalance = emp.AnnualLeaveBalance,
-                            ShiftStartTime = emp.ShiftStartTime,
-                            ShiftEndTime = emp.ShiftEndTime,
-                            RowVersion = emp.RowVersion
-                        };
-                        await _employeeService.UpdateEmployeeAsync(updateEmp);
+                        dto.SickLeaveBalance = Math.Max(0, dto.SickLeaveBalance - 1);
+                        var fullEmp = new OCC.WpfClient.Features.EmployeeHub.Models.EmployeeModel(dto).ToEntity();
+                        await _employeeService.UpdateEmployeeAsync(fullEmp);
                         NotifySuccess(IsNew ? "Record Created" : "Record Updated",
-                            $"Status set to Sick. 1 sick day deducted from {emp.FirstName} {emp.LastName}'s balance ({emp.SickLeaveBalance:F1} days remaining).");
+                            $"Status set to Sick. 1 sick day deducted from {dto.FirstName} {dto.LastName}'s balance ({dto.SickLeaveBalance:F1} days remaining).");
                     }
                 }
                 catch (Exception balEx)
@@ -445,32 +427,14 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             {
                 try
                 {
-                    var emp = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId!.Value);
-                    if (emp != null)
+                    var dto = await _employeeService.GetEmployeeAsync(EditingRecord.EmployeeId!.Value);
+                    if (dto != null)
                     {
-                        emp.SickLeaveBalance += 1;
-                        var updateEmp = new OCC.Shared.Models.Employee
-                        {
-                            Id = emp.Id,
-                            FirstName = emp.FirstName,
-                            LastName = emp.LastName,
-                            EmployeeNumber = emp.EmployeeNumber ?? string.Empty,
-                            IdNumber = emp.IdNumber,
-                            Email = emp.Email,
-                            Phone = emp.Phone,
-                            Branch = emp.Branch,
-                            Role = emp.Role,
-                            Status = emp.Status,
-                            HourlyRate = emp.HourlyRate,
-                            SickLeaveBalance = emp.SickLeaveBalance,
-                            AnnualLeaveBalance = emp.AnnualLeaveBalance,
-                            ShiftStartTime = emp.ShiftStartTime,
-                            ShiftEndTime = emp.ShiftEndTime,
-                            RowVersion = emp.RowVersion
-                        };
-                        await _employeeService.UpdateEmployeeAsync(updateEmp);
+                        dto.SickLeaveBalance += 1;
+                        var fullEmp = new OCC.WpfClient.Features.EmployeeHub.Models.EmployeeModel(dto).ToEntity();
+                        await _employeeService.UpdateEmployeeAsync(fullEmp);
                         NotifySuccess("Record Updated",
-                            $"Status changed from Sick. 1 sick day restored to {emp.FirstName} {emp.LastName}'s balance ({emp.SickLeaveBalance:F1} days remaining).");
+                            $"Status changed from Sick. 1 sick day restored to {dto.FirstName} {dto.LastName}'s balance ({dto.SickLeaveBalance:F1} days remaining).");
                     }
                 }
                 catch (Exception balEx)

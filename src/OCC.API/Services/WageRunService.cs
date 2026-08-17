@@ -148,9 +148,9 @@ namespace OCC.API.Services
                 .ToListAsync())
                 .ToHashSet();
 
-            // Fetch Active Loans
+            // Fetch Active Loans that start on or before the end date of the wage run period
             var activeLoans = await _context.EmployeeLoans
-                .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate <= request.EndDate.AddDays(15))
+                .Where(l => l.IsActive && l.OutstandingBalance > 0 && l.StartDate.Date <= request.EndDate.Date)
                 .ToListAsync();
 
             // Fetch Previous Finalized Run (for Variance) - MUST BE BRANCH SPECIFIC
@@ -362,17 +362,21 @@ namespace OCC.API.Services
                 {
                     if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday) continue;
                     bool isHol = publicHolidayDates.Contains(d) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d);
-                    if (isHol && !empAttendance.Any(a => a.Date.Date == d))
+                    if (isHol)
                     {
-                        empAttendance.Add(new AttendanceRecord
+                        bool exists = empAttendance.Any(a => (a.Date.Kind == DateTimeKind.Utc ? a.Date.ToLocalTime().Date : a.Date.Date) == d);
+                        if (!exists)
                         {
-                            Id = Guid.NewGuid(),
-                            EmployeeId = emp.Id,
-                            Date = d,
-                            Status = AttendanceStatus.Absent,
-                            Branch = emp.Branch ?? "",
-                            Notes = "Public Holiday"
-                        });
+                            empAttendance.Add(new AttendanceRecord
+                            {
+                                Id = Guid.NewGuid(),
+                                EmployeeId = emp.Id,
+                                Date = d,
+                                Status = AttendanceStatus.Absent,
+                                Branch = emp.Branch ?? "",
+                                Notes = "Public Holiday"
+                            });
+                        }
                     }
                 }
 
@@ -384,11 +388,12 @@ namespace OCC.API.Services
 
                 foreach (var record in empAttendance)
                 {
+                    DateTime recDate = record.Date.Kind == DateTimeKind.Utc ? record.Date.ToLocalTime().Date : record.Date.Date;
                     var hours = _wageCalc.CalculateHours(record, empForCalc, settings);
-                    if (record.Date >= request.StartDate)
+                    if (recDate >= request.StartDate.Date)
                     {
                         line.NormalHours += hours.Normal;
-                        if (record.Date.DayOfWeek == DayOfWeek.Saturday)
+                        if (recDate.DayOfWeek == DayOfWeek.Saturday)
                         {
                             line.SaturdayOvertimeHours += hours.Overtime15;
                         }
@@ -397,7 +402,7 @@ namespace OCC.API.Services
                             line.Overtime15Hours += hours.Overtime15;
                         }
 
-                        bool isHoliday = publicHolidayDates.Contains(record.Date.Date) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date);
+                        bool isHoliday = publicHolidayDates.Contains(recDate) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(recDate);
                         if (isHoliday)
                         {
                             line.PublicHolidayOvertimeHours += hours.Overtime20;
@@ -412,19 +417,19 @@ namespace OCC.API.Services
                                                        record.Status == AttendanceStatus.Late || 
                                                        record.Status == AttendanceStatus.LeaveEarly ||
                                                        ((record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized) && hours.Normal > 0) ||
-                                                       (isHoliday && hours.Normal > 0);
+                                                       (isHoliday && record.Status != AttendanceStatus.UnpaidSick && record.Status != AttendanceStatus.UnpaidLeave);
 
                         if (isPaidAttendanceOrLeave)
                         {
-                            var hasUnpaidLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, record.Date));
+                            var hasUnpaidLeave = empLeaveRequests.Any(lr => IsUnpaidLeaveForDate(lr, recDate));
 
-                            if (!hasUnpaidLeave || record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized)
+                            if (!hasUnpaidLeave || record.Status == AttendanceStatus.Sick || record.Status == AttendanceStatus.LeaveAuthorized || isHoliday)
                             {
-                                bool isWeekend = record.Date.DayOfWeek == DayOfWeek.Saturday || record.Date.DayOfWeek == DayOfWeek.Sunday;
+                                bool isWeekend = recDate.DayOfWeek == DayOfWeek.Saturday || recDate.DayOfWeek == DayOfWeek.Sunday;
                                 if (!isCapeTown || !isWeekend)
                                 {
-                                    if (record.Date.Date <= week1End.Date) distinctDaysW1.Add(record.Date.Date);
-                                    else distinctDaysW2.Add(record.Date.Date);
+                                    if (recDate <= week1End.Date) distinctDaysW1.Add(recDate);
+                                    else distinctDaysW2.Add(recDate);
                                 }
                             }
                         }
@@ -729,11 +734,17 @@ namespace OCC.API.Services
                                      (decimal)(line.Overtime20Hours + line.PublicHolidayOvertimeHours) * line.HourlyRate * 2.0m;
                 line.TotalWage = Math.Max(0m, calculatedWage);
                     
-                // E. Loans (deducted according to loan agreement frequency)
+                // E. Loans (deducted according to loan agreement frequency and respecting loan start date)
                 var empLoans = activeLoans.Where(l => l.EmployeeId == emp.Id).ToList();
                 decimal totalLoanDeduction = 0;
                 foreach (var loan in empLoans)
                 {
+                    // Ensure the loan start date has arrived (on or before the pay period end date)
+                    if (loan.StartDate.Date > request.EndDate.Date)
+                    {
+                        continue;
+                    }
+
                     string loanFreq = "";
                     if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
                     {
@@ -896,13 +907,19 @@ namespace OCC.API.Services
                     }
 
                     var activeLoans = await _context.EmployeeLoans
-                        .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0)
+                        .Where(l => l.EmployeeId == line.EmployeeId && l.IsActive && l.OutstandingBalance > 0 && l.StartDate.Date <= run.EndDate.Date)
                         .OrderBy(l => l.StartDate)
                         .ToListAsync();
 
                     var matchingLoans = new List<EmployeeLoan>();
                     foreach (var loan in activeLoans)
                     {
+                        // Ensure loan start date is on or before the wage run end date
+                        if (loan.StartDate.Date > run.EndDate.Date)
+                        {
+                            continue;
+                        }
+
                         string loanFreq = "";
                         if (!string.IsNullOrEmpty(loan.Notes) && loan.Notes.StartsWith("[Term:") && loan.Notes.Contains("]"))
                         {

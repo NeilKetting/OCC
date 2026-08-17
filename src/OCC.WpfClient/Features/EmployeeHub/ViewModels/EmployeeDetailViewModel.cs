@@ -117,19 +117,30 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         {
             if (value != null)
             {
+                // Initial DOB calculation on load if ID number exists
+                if (!string.IsNullOrWhiteSpace(value.IdNumber))
+                {
+                    CalculateDoBFromRsaId(value.IdNumber);
+                }
+
                 value.PropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName == nameof(EmployeeModel.IdNumber))
                     {
-                        if (Employee.IdType == IdType.RSAId)
-                            CalculateDoBFromRsaId(Employee.IdNumber);
+                        CalculateDoBFromRsaId(Employee.IdNumber);
                     }
                     else if (e.PropertyName == nameof(EmployeeModel.IdType))
                     {
                         OnPropertyChanged(nameof(IsPassportVisible));
                         OnPropertyChanged(nameof(IsPassportFieldsVisible));
-                        if (Employee.IdType == IdType.RSAId)
-                            CalculateDoBFromRsaId(Employee.IdNumber);
+                        CalculateDoBFromRsaId(Employee.IdNumber);
+                    }
+                    else if (e.PropertyName == nameof(EmployeeModel.EmploymentDate))
+                    {
+                        if (Employee != null)
+                        {
+                            Employee.LeaveCycleStartDate = Employee.EmploymentDate;
+                        }
                     }
                     else if (e.PropertyName == nameof(EmployeeModel.Branch))
                     {
@@ -163,13 +174,26 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
         private void CalculateDoBFromRsaId(string id)
         {
             if (string.IsNullOrWhiteSpace(id) || id.Length < 6) return;
-            string datePart = id.Substring(0, 6);
-            
-            if (DateTime.TryParseExact(datePart, "yyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dob))
+            string digitsOnly = new string(id.Where(char.IsDigit).ToArray());
+            if (digitsOnly.Length < 6) return;
+
+            string datePart = digitsOnly.Substring(0, 6);
+            if (int.TryParse(datePart.Substring(0, 2), out int yy) &&
+                int.TryParse(datePart.Substring(2, 2), out int mm) &&
+                int.TryParse(datePart.Substring(4, 2), out int dd))
             {
-                // Simple assumption for century (current window is 1920-2019)
-                if (dob > DateTime.Now) dob = dob.AddYears(-100);
-                Employee.DoB = dob;
+                if (mm >= 1 && mm <= 12)
+                {
+                    int currentTwoDigitYear = DateTime.Today.Year % 100;
+                    int century = (yy <= currentTwoDigitYear) ? 2000 : 1900;
+                    int fullYear = century + yy;
+                    int daysInMonth = DateTime.DaysInMonth(fullYear, mm);
+                    if (dd >= 1 && dd <= daysInMonth)
+                    {
+                        var dob = new DateTime(fullYear, mm, dd);
+                        Employee.DoB = dob;
+                    }
+                }
             }
         }
 

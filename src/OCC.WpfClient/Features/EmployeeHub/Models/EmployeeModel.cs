@@ -67,6 +67,11 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
         [ObservableProperty]
         private DateTime _employmentDate = DateTime.Today;
 
+        partial void OnEmploymentDateChanged(DateTime value)
+        {
+            LeaveCycleStartDate = value;
+        }
+
         [ObservableProperty]
         private DateTime _doB = new DateTime(1990, 1, 1);
 
@@ -156,7 +161,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.Models
             AccountType = dto.AccountType;
             AnnualLeaveBalance = dto.AnnualLeaveBalance;
             SickLeaveBalance = dto.SickLeaveBalance;
-            LeaveCycleStartDate = dto.LeaveCycleStartDate;
+            LeaveCycleStartDate = dto.LeaveCycleStartDate.HasValue && dto.LeaveCycleStartDate.Value > DateTime.MinValue ? dto.LeaveCycleStartDate.Value : dto.EmploymentDate;
             TaxNumber = dto.TaxNumber;
             LivesInCompanyHousing = dto.LivesInCompanyHousing;
             IsBibc = dto.IsBibc;
