@@ -27,7 +27,7 @@ Write-Host "========================================================"
 # 1. Clean and Build APK
 Write-Host "[BUILD] Compiling Android APK..."
 # We use -r android-arm64 for modern tablets. You can add more RIDs if needed.
-dotnet publish $Project -c Release -f net10.0-android -r android-arm64 --self-contained true -p:Version=$Version -p:ApplicationVersion=1 -o $OutputFolder
+dotnet publish $Project -c Release -f net10.0-android -r android-arm64 --self-contained true -p:Version=$Version -o $OutputFolder
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "[ERROR] Build failed."

@@ -22,7 +22,20 @@ namespace OCC.Mobile
         public static IServiceProvider? Services { get; private set; }
 
         public static Action<IServiceCollection>? RegisterPlatformServices { get; set; }
-        public static string AppVersion { get; set; } = "1.0.0";
+        private static string? _appVersion;
+        public static string AppVersion
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_appVersion))
+                {
+                    var asmVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                    _appVersion = asmVersion != null ? $"{asmVersion.Major}.{asmVersion.Minor}.{asmVersion.Build}" : "1.0.16";
+                }
+                return _appVersion;
+            }
+            set => _appVersion = value;
+        }
 
         public override void Initialize()
         {

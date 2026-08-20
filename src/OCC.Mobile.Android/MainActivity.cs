@@ -23,7 +23,7 @@ namespace OCC.Mobile.Android
         Theme = "@style/MyTheme.NoActionBar",
         Icon = "@mipmap/occ_branded_icon",
         MainLauncher = true,
-        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode,
+        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.SmallestScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.UiMode | ConfigChanges.Density,
         WindowSoftInputMode = SoftInput.AdjustResize,
         Exported = true)]
     public class MainActivity : AvaloniaMainActivity
@@ -177,14 +177,22 @@ namespace OCC.Mobile.Android
 
         public override void OnCreate()
         {
+            try
+            {
+                // Set the static app version BEFORE base.OnCreate() initializes Avalonia & ViewModels
+                var packageInfo = PackageManager?.GetPackageInfo(PackageName ?? "", 0);
+                var version = packageInfo?.VersionName;
+                if (!string.IsNullOrEmpty(version))
+                {
+                    OCC.Mobile.App.AppVersion = version;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AndroidApp] Error reading PackageInfo version: {ex.Message}");
+            }
+
             base.OnCreate();
-            
-            // Get the actual version from the Android Package Manager
-            var packageInfo = PackageManager?.GetPackageInfo(PackageName ?? "", 0);
-            var version = packageInfo?.VersionName ?? "1.0.0";
-            
-            // Set the static app version
-            OCC.Mobile.App.AppVersion = version;
         }
     }
 }

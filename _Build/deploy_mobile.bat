@@ -8,12 +8,14 @@ set "CommonPath=..\src\OCC.Mobile\OCC.Mobile.csproj"
 set "ReleaseDir=releases_mobile"
 set "CONFIG=Debug"
 
-:: Extract version from the Android project file and trim whitespace
+:: Extract version and application version from the Android project file and trim whitespace
 for /f "tokens=3 delims=><" %%a in ('findstr /i "<Version>" "%ProjectPath%"') do set VERSION=%%a
 set VERSION=%VERSION: =%
+for /f "tokens=3 delims=><" %%a in ('findstr /i "<ApplicationVersion>" "%ProjectPath%"') do set APP_VERSION=%%a
+set APP_VERSION=%APP_VERSION: =%
 
 echo ========================================================
-echo [MOBILE] ANDROID APK BUILD AUTOMATION (v%VERSION%)
+echo [MOBILE] ANDROID APK BUILD AUTOMATION (v%VERSION% / Build %APP_VERSION%)
 echo ========================================================
 
 :: Ensure we are in the script directory
@@ -26,7 +28,7 @@ if exist "bin_mobile" rd /s /q "bin_mobile"
 :: Note: Building in DEBUG mode ensures the APK is auto-signed with a 
 :: debug key so it can be installed on your tablet for testing.
 :: We remove a single RID to build a universal APK that supports all tablet types.
-dotnet publish "%ProjectPath%" -c %CONFIG% -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidCreatePackagePerAbi=false --self-contained true -o "bin_mobile" /p:Version=%VERSION%
+dotnet publish "%ProjectPath%" -c %CONFIG% -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidCreatePackagePerAbi=false --self-contained true -o "bin_mobile" /p:Version=%VERSION% /p:ApplicationVersion=%APP_VERSION% /p:ApplicationDisplayVersion=%VERSION%
 
 if %errorlevel% neq 0 (
     echo [ERROR] Build failed. Deployment aborted.

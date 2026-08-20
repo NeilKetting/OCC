@@ -1,16 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-android</TargetFramework>
     <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <ApplicationId>OrangeCircleConstruction.Mobile.Fresh</ApplicationId>
-    <ApplicationVersion>15</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0.15</ApplicationDisplayVersion>
-    <Version>1.0.15</Version>
+    <ApplicationVersion>18</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0.18</ApplicationDisplayVersion>
+    <Version>1.0.18</Version>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
     <!-- Modern AOT and runtime settings -->
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <!-- Shared Signing Keystore - Guarantees identical APK signature across Desktop, Laptop, and CI/CD -->
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>occ_mobile.keystore</AndroidSigningKeyStore>
+    <AndroidSigningStorePass>OrangeCircle2026!</AndroidSigningStorePass>
+    <AndroidSigningKeyAlias>occ_mobile</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>OrangeCircle2026!</AndroidSigningKeyPass>
   </PropertyGroup>
 
   <!-- Stable Build Settings (Reverted from Optimizations) -->

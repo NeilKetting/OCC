@@ -13,7 +13,7 @@ namespace OCC.Client.Android
         Theme = "@style/MyTheme.NoActionBar",
         Icon = "@drawable/occ_app_icon",
         MainLauncher = true,
-        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.SmallestScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.UiMode | ConfigChanges.Density)]
     public class MainActivity : AvaloniaMainActivity<App>
     {
         protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
