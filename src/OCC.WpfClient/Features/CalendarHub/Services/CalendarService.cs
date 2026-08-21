@@ -36,6 +36,7 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
         private readonly IEmployeeService    _employeeService;
         private readonly IHolidayService     _holidayService;
         private readonly ILeaveService       _leaveService;
+        private readonly IOrderService       _orderService;
         private readonly ILogger<CalendarService> _logger;
 
 
@@ -53,6 +54,7 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
             IEmployeeService         employeeService,
             IHolidayService          holidayService,
             ILeaveService            leaveService,
+            IOrderService            orderService,
             ILogger<CalendarService> logger)
         {
             _taskService      = taskService;
@@ -60,6 +62,7 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
             _employeeService  = employeeService;
             _holidayService   = holidayService;
             _leaveService     = leaveService;
+            _orderService     = orderService;
             _logger           = logger;
         }
 
@@ -77,17 +80,19 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
 
             // Run independent data fetches concurrently to reduce total wait time.
             // Task fetching is intentionally separate because it can be filtered by projectIds.
-            var holidaysTask   = FetchHolidaysAsync(start, end);
-            var birthdaysTask  = FetchBirthdaysAsync(start, end);
-            var leaveTask      = FetchLeaveAsync(start, end);
-            var tasksTask      = FetchTasksAsync(start, end, projectIds);
+            var holidaysTask    = FetchHolidaysAsync(start, end);
+            var birthdaysTask   = FetchBirthdaysAsync(start, end);
+            var leaveTask       = FetchLeaveAsync(start, end);
+            var tasksTask       = FetchTasksAsync(start, end, projectIds);
+            var procurementTask = FetchProcurementDeliveriesAsync(start, end, projectIds);
 
-            await Task.WhenAll(holidaysTask, birthdaysTask, leaveTask, tasksTask);
+            await Task.WhenAll(holidaysTask, birthdaysTask, leaveTask, tasksTask, procurementTask);
 
             events.AddRange(await tasksTask);
             events.AddRange(await holidaysTask);
             events.AddRange(await birthdaysTask);
             events.AddRange(await leaveTask);
+            events.AddRange(await procurementTask);
 
             return events;
         }
@@ -299,6 +304,64 @@ namespace OCC.WpfClient.Features.CalendarHub.Services
 
         #endregion
 
+        #region Private — Procurement Delivery Fetching
 
+        /// <summary>
+        /// Fetches purchase orders with expected delivery dates that overlap the visible window.
+        /// </summary>
+        private async Task<IEnumerable<CalendarEvent>> FetchProcurementDeliveriesAsync(
+            DateTime start,
+            DateTime end,
+            IEnumerable<Guid>? projectIds)
+        {
+            try
+            {
+                var projectIdSet = projectIds?.ToHashSet();
+                var orders = await _orderService.GetOrdersAsync();
+
+                return orders
+                    .Where(o =>
+                    {
+                        var deliveryDate = o.ExpectedDeliveryDate ?? o.OrderDate;
+                        if (deliveryDate.Date < start.Date || deliveryDate.Date > end.Date)
+                            return false;
+
+                        if (projectIdSet != null && projectIdSet.Count > 0)
+                        {
+                            if (o.ProjectId.HasValue && !projectIdSet.Contains(o.ProjectId.Value))
+                                return false;
+                        }
+
+                        return true;
+                    })
+                    .Select(o =>
+                    {
+                        var deliveryDate = o.ExpectedDeliveryDate ?? o.OrderDate;
+                        var isStockOrder = !o.ProjectId.HasValue || string.IsNullOrWhiteSpace(o.ProjectName);
+                        var labelPrefix = isStockOrder ? "Stock Delivery" : $"Delivery ({o.ProjectName})";
+
+                        return new CalendarEvent
+                        {
+                            Id             = o.Id,
+                            Type           = CalendarEventType.OrderDelivery,
+                            Title          = $"{labelPrefix}: PO #{o.OrderNumber} ({o.SupplierName ?? "Supplier"})",
+                            Description    = $"Expected Delivery for PO #{o.OrderNumber} - Supplier: {o.SupplierName ?? "N/A"}",
+                            StartDate      = deliveryDate,
+                            EndDate        = deliveryDate,
+                            Color          = "#F59E0B",
+                            IsCompleted    = o.Status == OrderStatus.Completed || o.Status == OrderStatus.Finalised,
+                            ProjectName    = o.ProjectName ?? string.Empty,
+                            OriginalSource = o
+                        };
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching procurement deliveries for calendar.");
+                return Enumerable.Empty<CalendarEvent>();
+            }
+        }
+
+        #endregion
     }
 }

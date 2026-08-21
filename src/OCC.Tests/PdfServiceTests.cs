@@ -282,6 +282,10 @@ namespace OCC.Tests
                         EmploymentType = "Permanent",
                         HourlyRate = 33.00m,
                         NormalHours = 78.75,
+                        Overtime15Hours = 5.0,
+                        SaturdayOvertimeHours = 4.0,
+                        Overtime20Hours = 2.0,
+                        PublicHolidayOvertimeHours = 7.5,
                         DeductionLoan = 322.50m,
                         TotalWage = 3597.75m,
                         BankName = "Nedbank",
@@ -294,6 +298,7 @@ namespace OCC.Tests
                         EmploymentType = "Permanent",
                         HourlyRate = 33.92m,
                         NormalHours = 70.00,
+                        PublicHolidayOvertimeHours = 8.0,
                         TotalWage = 2374.40m,
                         BankName = "Capitec Bank",
                         BankAccountNumber = "1788824397"
@@ -324,23 +329,29 @@ namespace OCC.Tests
                 }
             };
 
-            // Act
-            var path = await pdfService.GenerateWageRunPdfAsync(wageRun, hideAfterComments: false);
-
-            // Output to temp path for test verification
-            var targetPath = Path.Combine(Path.GetTempPath(), "SampleWageRunReport.pdf");
-            try
+            // Act - Standard Version
+            var pathStandard = await pdfService.GenerateWageRunPdfAsync(wageRun, hideAfterComments: false);
+            
+            // Act - Filtered Columns Version (with OtHours enabled)
+            var visibleCols = new Dictionary<string, bool>
             {
-                if (File.Exists(targetPath))
-                {
-                    File.Delete(targetPath);
-                }
-                File.Copy(path, targetPath);
-            }
-            catch { }
+                { "Index", true },
+                { "Bas", true },
+                { "Name", true },
+                { "RateHr", true },
+                { "Hrs", true },
+                { "OtHours", true },
+                { "TotalNett", true }
+            };
+            var pathFiltered = await pdfService.GenerateWageRunPdfAsync(wageRun, hideAfterComments: false, hideDecColumns: true, visibleColumns: visibleCols);
+
+            // Act - Salary Version
+            var pathSalary = await pdfService.GenerateWageRunPdfAsync(wageRun, hideAfterComments: true);
 
             // Assert
-            Assert.True(File.Exists(path), "The PDF file was not generated.");
+            Assert.True(File.Exists(pathStandard), "Standard Wage Run PDF was not generated.");
+            Assert.True(File.Exists(pathFiltered), "Filtered Wage Run PDF was not generated.");
+            Assert.True(File.Exists(pathSalary), "Salary Version Wage Run PDF was not generated.");
         }
     }
 }

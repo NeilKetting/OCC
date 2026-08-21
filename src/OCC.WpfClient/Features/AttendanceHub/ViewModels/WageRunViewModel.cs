@@ -192,6 +192,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         [ObservableProperty] private ObservableCollection<WageRunLineViewModel> _lines = new();
         [ObservableProperty] private decimal _grandTotalWage;
         [ObservableProperty] private bool _isGenerated;
+        [ObservableProperty] private int _selectedViewTab; // 0 = Past Runs History, 1 = Active Draft / Editor
+        [ObservableProperty] private string _activeDraftStatusText = "No Active Draft";
 
         // Column Visibility
         [ObservableProperty] private bool _isIndexVisible = true;
@@ -727,6 +729,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                 UpdateGrandTotal();
                 IsGenerated = true;
+                ActiveDraftStatusText = $"Draft Active ({StartDate:dd MMM} - {EndDate:dd MMM yyyy})";
+                SelectedViewTab = 1;
                 OnPropertyChanged(nameof(IsEditingPastRun));
                 OnPropertyChanged(nameof(FinalizeButtonText));
                 OnPropertyChanged(nameof(FinalizeButtonIcon));
@@ -790,6 +794,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                 IsGenerated = false;
                 _currentDraft = null;
                 _currentDraftId = null;
+                ActiveDraftStatusText = "No Active Draft";
+                SelectedViewTab = 0;
 
                 OnPropertyChanged(nameof(IsEditingPastRun));
                 OnPropertyChanged(nameof(FinalizeButtonText));
@@ -806,6 +812,35 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
                     "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        public void ReturnToHistory()
+        {
+            SelectedViewTab = 0;
+        }
+
+        [RelayCommand]
+        public async Task CloseDraftAsync()
+        {
+            if (IsGenerated && Lines.Any())
+            {
+                bool confirmed = await _dialogService.ShowConfirmationAsync(
+                    "Close Active Draft",
+                    "Are you sure you want to close this active draft / editing view?\nAny unsaved changes in the draft will be cleared.");
+                if (!confirmed) return;
+            }
+
+            Lines.Clear();
+            IsGenerated = false;
+            _currentDraft = null;
+            _currentDraftId = null;
+            ActiveDraftStatusText = "No Active Draft";
+            SelectedViewTab = 0;
+
+            OnPropertyChanged(nameof(IsEditingPastRun));
+            OnPropertyChanged(nameof(FinalizeButtonText));
+            OnPropertyChanged(nameof(FinalizeButtonIcon));
         }
 
         [RelayCommand]
@@ -986,6 +1021,8 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
                         UpdateGrandTotal();
                         IsGenerated = true;
+                        ActiveDraftStatusText = $"Editing Run ({StartDate:dd MMM} - {EndDate:dd MMM yyyy})";
+                        SelectedViewTab = 1;
 
                         OnPropertyChanged(nameof(IsEditingPastRun));
                         OnPropertyChanged(nameof(FinalizeButtonText));

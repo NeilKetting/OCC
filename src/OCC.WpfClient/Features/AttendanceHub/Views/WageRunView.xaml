@@ -41,15 +41,63 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="&#xE7C0;" Style="{StaticResource SymbolIcon}" 
                            Foreground="#FB923C" FontSize="36" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="WAGES" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
-                    <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
-                        <Run Text="{Binding StartDate, StringFormat='dd MMM yyyy'}"/>
-                        <Run Text=" — "/>
-                        <Run Text="{Binding EndDate, StringFormat='dd MMM yyyy'}"/>
-                    </TextBlock>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,24,0">
+                        <TextBlock Text="WAGES" Style="{StaticResource HeaderText}" FontFamily="{StaticResource MichromaFont}" FontSize="20" Foreground="White"/>
+                        <TextBlock Style="{StaticResource LabelText}" Opacity="0.7" Margin="0,2,0,0">
+                            <Run Text="{Binding StartDate, StringFormat='dd MMM yyyy'}"/>
+                            <Run Text=" — "/>
+                            <Run Text="{Binding EndDate, StringFormat='dd MMM yyyy'}"/>
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- View Mode Sub-Tabs -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton Style="{StaticResource PremiumRadioButtonStyle}"
+                                     GroupName="WageRunTabs"
+                                     IsChecked="{Binding SelectedViewTab, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=TwoWay}"
+                                     Padding="12,6" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE81C;" Style="{StaticResource SymbolButtonIcon}" Foreground="#FBBF24" Margin="0,0,6,0"/>
+                                <TextBlock Text="Past Runs History" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource PremiumRadioButtonStyle}"
+                                     GroupName="WageRunTabs"
+                                     IsChecked="{Binding SelectedViewTab, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=TwoWay}"
+                                     IsEnabled="{Binding IsGenerated}"
+                                     Padding="12,6">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE70F;" Style="{StaticResource SymbolButtonIcon}" Foreground="#38BDF8" Margin="0,0,6,0"/>
+                                <TextBlock Text="Active Wage Run" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
+                                <Border BorderBrush="White" BorderThickness="1" CornerRadius="8" Padding="6,1" Margin="8,0,0,0"
+                                        Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding ActiveDraftStatusText}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
                 </StackPanel>
+
                 <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
+                    <!-- Return to Past Runs History -->
+                    <Button Command="{Binding ReturnToHistoryCommand}" ToolTip="Return to Past Runs History view"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource SecondaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72B;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}" Margin="0,0,6,0"/>
+                            <TextBlock Text="BACK TO HISTORY" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+                    <!-- Close / Discard Draft -->
+                    <Button Command="{Binding CloseDraftCommand}" ToolTip="Close and Discard Active Draft"
+                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource SecondaryButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE10A;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource ErrorRed}" Margin="0,0,6,0"/>
+                            <TextBlock Text="CLOSE DRAFT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
                     <!-- Print Options Dropdown -->
                     <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" Click="PrintButton_Click" ToolTip="Print Options"
                             Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
@@ -284,8 +332,8 @@
         <!-- ══════════════════ MAIN CONTENT AREA ══════════════════ -->
         <Border Grid.Row="2" Style="{StaticResource GlassCard}" Margin="16,0,16,16" Padding="1" CornerRadius="0">
             <Grid>
-                <!-- If no lines generated yet, show history -->
-                <Grid Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}}">
+                <!-- Active Wage Run DataGrid (Tab 1) -->
+                <Grid Visibility="{Binding SelectedViewTab, Converter={StaticResource EqualityConverter}, ConverterParameter=1}">
                     <!-- Wage Run Spreadsheet DataGrid -->
                     <DataGrid ItemsSource="{Binding LinesView}"
                               AutoGenerateColumns="False"
@@ -639,8 +687,8 @@
                 </DataGrid>
             </Grid>
 
-            <!-- Past Runs (when no draft generated) -->
-            <Grid Visibility="{Binding IsGenerated, Converter={StaticResource VisibilityConverter}, ConverterParameter=Invert}">
+            <!-- Past Runs (Tab 0) -->
+            <Grid Visibility="{Binding SelectedViewTab, Converter={StaticResource EqualityConverter}, ConverterParameter=0}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -725,7 +773,7 @@
         <!-- ══════════════════ GRAND TOTAL FOOTER ══════════════════ -->
         <Border Grid.Row="3" Padding="16,10" Background="#0AFFFFFF"
                 BorderBrush="{StaticResource GlassBorderUltraLight}" BorderThickness="0,1,0,0"
-                Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                Visibility="{Binding SelectedViewTab, Converter={StaticResource EqualityConverter}, ConverterParameter=1}">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="GRAND TOTAL NET PAY:" Style="{StaticResource LabelText}" 
                            VerticalAlignment="Center" Margin="0,0,16,0" Opacity="0.7"/>

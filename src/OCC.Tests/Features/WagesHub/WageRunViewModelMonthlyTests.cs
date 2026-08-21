@@ -203,5 +203,64 @@ namespace OCC.Tests.Features.WagesHub
             // Assert: Grand Total should now be R 1,724.20 (2724.20 - 1000.00)
             Assert.Equal(1724.20m, vm.GrandTotalWage);
         }
+
+        [Fact]
+        public void ReturnToHistoryCommand_SwitchesSelectedViewTabToZero()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+            vm.SelectedViewTab = 1;
+
+            // Act
+            vm.ReturnToHistoryCommand.Execute(null);
+
+            // Assert
+            Assert.Equal(0, vm.SelectedViewTab);
+        }
+
+        [Fact]
+        public async Task CloseDraftCommand_ClearsLinesAndResetsViewTabToZero()
+        {
+            // Arrange
+            var vm = CreateViewModel();
+            _mockDialogService.Setup(d => d.ShowConfirmationAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+            
+            var draftRun = new WageRun
+            {
+                Id = Guid.NewGuid(),
+                StartDate = DateTime.Today.AddDays(-7),
+                EndDate = DateTime.Today,
+                Branch = "Johannesburg",
+                Lines = new List<WageRunLine>
+                {
+                    new WageRunLine { EmployeeName = "Test Employee", TotalWage = 1000m }
+                }
+            };
+            _mockWageService.Setup(w => w.GenerateDraftRunAsync(
+                It.IsAny<DateTime>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<decimal>(),
+                It.IsAny<decimal>(),
+                It.IsAny<decimal>(),
+                It.IsAny<string?>(),
+                It.IsAny<WageRunType>(),
+                It.IsAny<PayFrequency>()))
+                            .ReturnsAsync(draftRun);
+
+            await vm.GenerateDraftCommand.ExecuteAsync(null);
+            Assert.True(vm.IsGenerated);
+            Assert.Equal(1, vm.SelectedViewTab);
+
+            // Act
+            await vm.CloseDraftCommand.ExecuteAsync(null);
+
+            // Assert
+            Assert.False(vm.IsGenerated);
+            Assert.Empty(vm.Lines);
+            Assert.Equal(0, vm.SelectedViewTab);
+            Assert.Equal("No Active Draft", vm.ActiveDraftStatusText);
+        }
     }
 }

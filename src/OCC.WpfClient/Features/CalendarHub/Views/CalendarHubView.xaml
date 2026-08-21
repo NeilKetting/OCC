@@ -102,6 +102,9 @@
                     <CheckBox Content="Leave / Absence"
                               Style="{StaticResource FilterCheckBox}"
                               IsChecked="{Binding ShowLeave}"/>
+                    <CheckBox Content="Procurement / Deliveries"
+                              Style="{StaticResource FilterCheckBox}"
+                              IsChecked="{Binding ShowProcurement}"/>
 
                     <Separator Margin="0,16" Background="#252D3D"/>
 
@@ -128,9 +131,14 @@
                             <TextBlock Text="Birthday" FontSize="11" Foreground="#D0D5E0"
                                        VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <Border Width="12" Height="12" Background="#10B981" CornerRadius="2"/>
                             <TextBlock Text="Leave / Absence" FontSize="11" Foreground="#D0D5E0"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="12" Height="12" Background="#F59E0B" CornerRadius="2"/>
+                            <TextBlock Text="Procurement Delivery" FontSize="11" Foreground="#D0D5E0"
                                        VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </StackPanel>

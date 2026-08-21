@@ -296,5 +296,37 @@ namespace OCC.Tests.API.Controllers
             Assert.Equal(0, returnDto.Lines.First().QuantityOrdered);
             Assert.Equal(0, returnDto.Lines.First().UnitPrice);
         }
+
+        [Fact]
+        public async Task GetOrders_ReturnsOrdersWithProjectId()
+        {
+            // Arrange
+            using var context = new AppDbContext(_dbOptions);
+            var controller = new OrdersController(context, _mockLogger.Object, _mockHubContext.Object, _mockStockService.Object);
+
+            var projectId = Guid.NewGuid();
+            context.Orders.Add(new Order
+            {
+                Id = Guid.NewGuid(),
+                OrderNumber = "PO-PROJ-001",
+                SupplierName = "Project Supplier",
+                OrderDate = DateTime.UtcNow,
+                ExpectedDeliveryDate = DateTime.Today.AddDays(5),
+                ProjectId = projectId,
+                ProjectName = "Test Project"
+            });
+            await context.SaveChangesAsync();
+
+            // Act
+            var result = await controller.GetOrders();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var summaries = Assert.IsAssignableFrom<IEnumerable<OrderSummaryDto>>(okResult.Value);
+            var orderSummary = summaries.FirstOrDefault(o => o.OrderNumber == "PO-PROJ-001");
+            Assert.NotNull(orderSummary);
+            Assert.Equal(projectId, orderSummary!.ProjectId);
+            Assert.Equal("Test Project", orderSummary.ProjectName);
+        }
     }
 }

@@ -2290,7 +2290,7 @@ namespace OCC.WpfClient.Services
             if (IsColVisible("Hrs")) visibleColCountBeforeNett++;
             if (IsColVisible("OtRates")) visibleColCountBeforeNett += 3;
             if (IsColVisible("DecColumns")) visibleColCountBeforeNett += 3;
-            if (IsColVisible("OtHours")) visibleColCountBeforeNett += 3;
+            if (IsColVisible("OtHours")) visibleColCountBeforeNett += 4;
             if (IsColVisible("Loans")) visibleColCountBeforeNett++;
             if (IsColVisible("Washing")) visibleColCountBeforeNett++;
             if (IsColVisible("Gas")) visibleColCountBeforeNett++;
@@ -2331,6 +2331,7 @@ namespace OCC.WpfClient.Services
                         columns.RelativeColumn(0.7f); // STD O/T HRS
                         columns.RelativeColumn(0.7f); // SAT O/T HRS
                         columns.RelativeColumn(0.7f); // SUN O/T HRS
+                        columns.RelativeColumn(0.7f); // P/H O/T HRS
                     }
                     if (IsColVisible("Loans")) columns.RelativeColumn(0.9f);
                     if (IsColVisible("Washing")) columns.RelativeColumn(0.9f);
@@ -2377,6 +2378,7 @@ namespace OCC.WpfClient.Services
                         header.Cell().Element(WageHeaderStyle).Text("STD\nO/T");
                         header.Cell().Element(WageHeaderStyle).Text("SAT\nO/T");
                         header.Cell().Element(WageHeaderStyle).Text("SUN\nO/T");
+                        header.Cell().Element(WageHeaderStyle).Text("P/H\nO/T");
                     }
                     if (IsColVisible("Loans")) header.Cell().Element(WageHeaderStyle).Text("LOANS");
                     if (IsColVisible("Washing")) header.Cell().Element(WageHeaderStyle).Text("WASH-\nING");
@@ -2434,6 +2436,7 @@ namespace OCC.WpfClient.Services
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime15Hours.ToString("F2"));
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.SaturdayOvertimeHours.ToString("F2"));
                         table.Cell().Element(WageCellStyle).AlignCenter().Text(line.Overtime20Hours.ToString("F2"));
+                        table.Cell().Element(WageCellStyle).AlignCenter().Text(line.PublicHolidayOvertimeHours.ToString("F2"));
                     }
                     if (IsColVisible("Loans")) table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionLoan.ToString("F2"));
                     if (IsColVisible("Washing")) table.Cell().Element(WageCellStyle).AlignRight().Text(line.DeductionWashing.ToString("F2"));

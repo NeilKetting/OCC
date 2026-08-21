@@ -1,6 +1,6 @@
 using System;
 using System.Globalization;
-using System.Linq;
+using System.Windows;
 using System.Windows.Data;
 
 namespace OCC.WpfClient.Infrastructure.Converters
@@ -9,26 +9,47 @@ namespace OCC.WpfClient.Infrastructure.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null && parameter == null) return true;
-            if (value == null || parameter == null) return false;
+            bool isEqual;
+            if (value == null && parameter == null) isEqual = true;
+            else if (value == null || parameter == null) isEqual = false;
+            else isEqual = string.Equals(value.ToString(), parameter.ToString(), StringComparison.OrdinalIgnoreCase);
 
-            return value.Equals(parameter);
+            if (targetType == typeof(Visibility))
+            {
+                return isEqual ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            return isEqual;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is bool b && b ? parameter : Binding.DoNothing;
+            if (value is bool b && b && parameter != null)
+            {
+                if (targetType == typeof(int) || targetType == typeof(int?))
+                {
+                    if (int.TryParse(parameter.ToString(), out int intVal)) return intVal;
+                }
+                return parameter;
+            }
+            return Binding.DoNothing;
         }
 
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             if (values == null || values.Length < 2) return false;
             
-            // Handle nulls
-            if (values[0] == null && values[1] == null) return true;
-            if (values[0] == null || values[1] == null) return false;
+            bool isEqual;
+            if (values[0] == null && values[1] == null) isEqual = true;
+            else if (values[0] == null || values[1] == null) isEqual = false;
+            else isEqual = string.Equals(values[0].ToString(), values[1].ToString(), StringComparison.OrdinalIgnoreCase);
 
-            return values[0].Equals(values[1]);
+            if (targetType == typeof(Visibility))
+            {
+                return isEqual ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            return isEqual;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

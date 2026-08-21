@@ -58,6 +58,7 @@ namespace OCC.WpfClient.Services
                     OrderDate = s.OrderDate, 
                     ExpectedDeliveryDate = s.ExpectedDeliveryDate,
                     SupplierName = s.SupplierName,
+                    ProjectId = s.ProjectId,
                     ProjectName = s.ProjectName,
                     Status = s.Status,
                     SupplierId = s.SupplierId,

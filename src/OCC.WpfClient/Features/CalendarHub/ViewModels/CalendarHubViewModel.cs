@@ -105,6 +105,10 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
         [ObservableProperty]
         private bool _showLeave = true;
 
+        /// <summary>When <c>true</c>, procurement order delivery events are shown on the calendar.</summary>
+        [ObservableProperty]
+        private bool _showProcurement = true;
+
         #endregion
 
         #region Project Filter Properties
@@ -157,6 +161,7 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
             _showPublicHolidays = _settingsService.Settings.CalendarShowPublicHolidays;
             _showBirthdays = _settingsService.Settings.CalendarShowBirthdays;
             _showLeave = _settingsService.Settings.CalendarShowLeave;
+            _showProcurement = _settingsService.Settings.CalendarShowProcurement;
 
             // Subscribe to real-time task updates so the grid stays current
             // without requiring a manual refresh from the user.
@@ -308,6 +313,11 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
             SaveSettings();
             _ = GenerateCalendarAsync();
         }
+        partial void OnShowProcurementChanged(bool value)
+        {
+            SaveSettings();
+            _ = GenerateCalendarAsync();
+        }
 
         #endregion
 
@@ -321,6 +331,7 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
             _settingsService.Settings.CalendarShowPublicHolidays = ShowPublicHolidays;
             _settingsService.Settings.CalendarShowBirthdays = ShowBirthdays;
             _settingsService.Settings.CalendarShowLeave = ShowLeave;
+            _settingsService.Settings.CalendarShowProcurement = ShowProcurement;
             _settingsService.Settings.CalendarSelectedProjectIds = AvailableProjects
                 .Where(p => p.IsSelected)
                 .Select(p => p.Id)
@@ -384,7 +395,8 @@ namespace OCC.WpfClient.Features.CalendarHub.ViewModels
                     (e.Type == CalendarEventType.Task          && ShowTasks)          ||
                     (e.Type == CalendarEventType.PublicHoliday && ShowPublicHolidays) ||
                     (e.Type == CalendarEventType.Birthday       && ShowBirthdays)      ||
-                    (e.Type == CalendarEventType.Leave          && ShowLeave)
+                    (e.Type == CalendarEventType.Leave          && ShowLeave)          ||
+                    (e.Type == CalendarEventType.OrderDelivery && ShowProcurement)
                 ).ToList();
 
                 // ── Step 5: Assign span metadata and populate day cells ────────

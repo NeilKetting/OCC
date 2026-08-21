@@ -12,6 +12,7 @@ namespace OCC.Shared.DTOs
         public DateTime? ExpectedDeliveryDate { get; set; }
         public string SupplierName { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;
+        public Guid? ProjectId { get; set; }
         public OrderStatus Status { get; set; }
         public decimal TotalAmount { get; set; }
         public string Branch { get; set; } = string.Empty;
