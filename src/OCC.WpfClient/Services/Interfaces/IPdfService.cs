@@ -25,6 +25,11 @@ namespace OCC.WpfClient.Services.Interfaces
         Task<string> GenerateProjectReportPdfAsync(ProjectReportPrintModel model);
 
         /// <summary>
+        /// Generates an Executive Modern Project Report PDF with updated HSEQ compliance and multi-page variation order layout.
+        /// </summary>
+        Task<string> GenerateModernProjectReportPdfAsync(ProjectReportPrintModel model);
+
+        /// <summary>
         /// Generates a printable portrait A4 leave application form with OCC branding and employee/manager signature blocks.
         /// </summary>
         Task<string> GenerateLeaveFormPdfAsync(OCC.Shared.Models.LeaveRequest request);
@@ -159,5 +164,29 @@ namespace OCC.WpfClient.Services.Interfaces
         public string Audit1 { get; set; } = string.Empty;
         public string Audit2 { get; set; } = string.Empty;
         public string Audit3 { get; set; } = string.Empty;
+
+        public string AvgScore
+        {
+            get
+            {
+                var scores = new List<double>();
+                if (TryParseScore(Audit1, out double val1)) scores.Add(val1);
+                if (TryParseScore(Audit2, out double val2)) scores.Add(val2);
+                if (TryParseScore(Audit3, out double val3)) scores.Add(val3);
+
+                if (scores.Count > 0)
+                    return $"{scores.Average():F2}%";
+
+                return "-";
+            }
+        }
+
+        private static bool TryParseScore(string? input, out double score)
+        {
+            score = 0;
+            if (string.IsNullOrWhiteSpace(input) || input.Trim() == "-") return false;
+            var clean = input.Replace("%", "").Replace(",", ".").Trim();
+            return double.TryParse(clean, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out score);
+        }
     }
 }

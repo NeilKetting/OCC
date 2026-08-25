@@ -59,11 +59,26 @@
                             <TextBlock Text="Save Changes" Foreground="White" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding PrintCommand}" Style="{StaticResource CreateIconButton}">
+                    <Button Click="PrintButton_Click" ContextMenuService.IsEnabled="False" Style="{StaticResource CreateIconButton}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="" Style="{StaticResource SymbolButtonIcon}"/>
                             <TextBlock Text="Generate PDF" Style="{StaticResource ButtonTextStyle}" />
+                            <TextBlock Text=" ▾" Foreground="White" FontSize="11" VerticalAlignment="Center" Margin="4,0,0,0"/>
                         </StackPanel>
+                        <Button.ContextMenu>
+                            <ContextMenu Style="{StaticResource ModernContextMenu}">
+                                <MenuItem Header="Modern Executive Report (New Layout)" Command="{Binding PrintModernCommand}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="{StaticResource SecondaryGold}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Standard Site Report (Classic Layout)" Command="{Binding PrintCommand}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="" Style="{StaticResource SymbolIcon}" Foreground="White"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
                     </Button>
                 </StackPanel>
             </Grid>

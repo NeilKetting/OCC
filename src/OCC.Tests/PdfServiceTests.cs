@@ -141,6 +141,103 @@ namespace OCC.Tests
         }
 
         [Fact]
+        public async Task GenerateModernProjectReportPdfAsync_ShouldCreatePdfFile()
+        {
+            // Arrange
+            var pdfService = new PdfService();
+            
+            var model = new ProjectReportPrintModel
+            {
+                Project = new Project
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Orange Circle Project B",
+                    Customer = "Engen",
+                    Status = "In Progress",
+                    StartDate = DateTime.Today.AddDays(-60),
+                    EndDate = DateTime.Today.AddDays(120)
+                },
+                WeekNumber = 8,
+                TotalTasks = 75,
+                InProgressTasks = 20,
+                CompletedTasks = 45,
+                OverallProgress = 62.5,
+                PowPercentRequired = 65.0,
+                DelayDays = 2,
+                SafeWorkingHours = 3450,
+                ThisWeekMilestones = new List<MilestonePrintModel>
+                {
+                    new MilestonePrintModel
+                    {
+                        Name = "Roof Truss Installation",
+                        PlannedDate = DateTime.Today.AddDays(1),
+                        Progress = 90,
+                        Status = "In Progress",
+                        IsComplete = false
+                    }
+                },
+                OverdueMilestones = new List<MilestonePrintModel>(),
+                GeneralWasteTon = "18.2",
+                RubbleM3 = "60.0",
+                ScrapMetalsTon = "5.0",
+                AsbestosTon = "0.0",
+                StatusSummary = "Work is progressing well on modern executive building layout.",
+                VendorReportRows = new List<ProjectReportPrintVendorRow>
+                {
+                    new ProjectReportPrintVendorRow
+                    {
+                        VendorName = "Orange Circle Construction",
+                        Scope = "Primary Contractor",
+                        Audit1 = "100,00%",
+                        Audit2 = "94,25%",
+                        Audit3 = "99,48%"
+                    },
+                    new ProjectReportPrintVendorRow
+                    {
+                        VendorName = "Volt Tech Electrical",
+                        Scope = "Electrical Contracting",
+                        Audit1 = "90,00%",
+                        Audit2 = "92,00%",
+                        Audit3 = "-"
+                    }
+                },
+                VariationOrders = new List<ProjectVariationOrder>
+                {
+                    new ProjectVariationOrder
+                    {
+                        Date = DateTime.Today.AddDays(-3),
+                        Description = "Additional site lighting setup for night shift works",
+                        ApprovedBy = "Site Manager",
+                        Status = "Approved",
+                        AdditionalComments = "Completed as requested."
+                    }
+                },
+                IncidentPhotoPaths = new List<string>()
+            };
+
+            // Act
+            var path = await pdfService.GenerateModernProjectReportPdfAsync(model);
+
+            // Assert
+            Assert.True(File.Exists(path), "The modern executive PDF file was not generated.");
+        }
+
+        [Fact]
+        public void VendorReportRow_AvgScore_CalculatesCorrectly()
+        {
+            // Arrange
+            var row = new ProjectReportPrintVendorRow
+            {
+                Audit1 = "100,00%",
+                Audit2 = "94,25%",
+                Audit3 = "99,48%"
+            };
+
+            // Act & Assert
+            Assert.Equal("97,91%", row.AvgScore.Replace(".", ","));
+        }
+
+        [Fact]
         public async Task GenerateWeeklyAttendanceReportPdfAsync_ShouldCreatePdfFile()
         {
             // Arrange

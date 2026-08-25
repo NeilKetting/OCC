@@ -707,6 +707,17 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
         public override async Task PrintAsync()
         {
+            await GeneratePdfInternalAsync(isModern: false);
+        }
+
+        [RelayCommand]
+        public async Task PrintModernAsync()
+        {
+            await GeneratePdfInternalAsync(isModern: true);
+        }
+
+        private async Task GeneratePdfInternalAsync(bool isModern)
+        {
             try
             {
                 IsBusy = true;
@@ -720,7 +731,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 await LoadReportDataAsync(ProjectId);
 
                 IsBusy = true;
-                BusyText = "Generating Project Report PDF...";
+                BusyText = isModern ? "Generating Executive Project Report PDF..." : "Generating Project Report PDF...";
 
                 if (_pdfService == null)
                 {
@@ -859,7 +870,9 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                         IncidentPhotoPaths = localPhotoPaths
                     };
 
-                    var path = await _pdfService.GenerateProjectReportPdfAsync(model);
+                    var path = isModern
+                        ? await _pdfService.GenerateModernProjectReportPdfAsync(model)
+                        : await _pdfService.GenerateProjectReportPdfAsync(model);
 
                     // Save report PDF to Report History on server
                     try
@@ -1167,6 +1180,30 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
         public string Audit1 { get; set; } = string.Empty;
         public string Audit2 { get; set; } = string.Empty;
         public string Audit3 { get; set; } = string.Empty;
+
+        public string AvgScore
+        {
+            get
+            {
+                var scores = new List<double>();
+                if (TryParseScore(Audit1, out double val1)) scores.Add(val1);
+                if (TryParseScore(Audit2, out double val2)) scores.Add(val2);
+                if (TryParseScore(Audit3, out double val3)) scores.Add(val3);
+
+                if (scores.Count > 0)
+                    return $"{scores.Average():F2}%";
+
+                return "-";
+            }
+        }
+
+        private static bool TryParseScore(string? input, out double score)
+        {
+            score = 0;
+            if (string.IsNullOrWhiteSpace(input) || input.Trim() == "-") return false;
+            var clean = input.Replace("%", "").Replace(",", ".").Trim();
+            return double.TryParse(clean, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out score);
+        }
     }
 
     public class LocalProjectReportData
