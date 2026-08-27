@@ -98,12 +98,12 @@ namespace OCC.API.Controllers
 
                 if (existingRequest.Status == LeaveStatus.Approved)
                 {
-                    await RemoveAttendanceRecordsForLeaveAsync(existingRequest.Id);
+                    await RemoveAttendanceRecordsForLeaveAsync(existingRequest);
                     await GenerateAttendanceRecordsForLeaveAsync(existingRequest);
                 }
                 else if (oldStatus == LeaveStatus.Approved && existingRequest.Status != LeaveStatus.Approved)
                 {
-                    await RemoveAttendanceRecordsForLeaveAsync(existingRequest.Id);
+                    await RemoveAttendanceRecordsForLeaveAsync(existingRequest);
                 }
 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "LeaveRequest", "Update", id);
@@ -124,10 +124,7 @@ namespace OCC.API.Controllers
             var request = await _context.LeaveRequests.FindAsync(id);
             if (request == null) return NotFound();
 
-            if (request.Status == LeaveStatus.Approved)
-            {
-                await RemoveAttendanceRecordsForLeaveAsync(request.Id);
-            }
+            await RemoveAttendanceRecordsForLeaveAsync(request);
 
             _context.LeaveRequests.Remove(request);
             await _context.SaveChangesAsync();
@@ -311,18 +308,56 @@ namespace OCC.API.Controllers
             await _context.SaveChangesAsync();
         }
 
-        private async Task RemoveAttendanceRecordsForLeaveAsync(Guid requestId)
+        private async Task RemoveAttendanceRecordsForLeaveAsync(LeaveRequest request)
         {
-            var notesToken = $"[LeaveRequest:{requestId}]";
-            var recordsToRemove = await _context.AttendanceRecords
-                .Where(a => a.Notes != null && a.Notes.Contains(notesToken))
+            var notesToken = $"[LeaveRequest:{request.Id}]";
+            var startDate = request.StartDate.Date;
+            var endDate = request.EndDate.Date;
+
+            // Find all records explicitly linked via token OR on the leave date range for this employee with leave status/hours/note
+            var recordsToClean = await _context.AttendanceRecords
+                .Where(a => a.EmployeeId == request.EmployeeId &&
+                            ((a.Notes != null && a.Notes.Contains(notesToken)) ||
+                             (a.Date >= startDate && a.Date <= endDate &&
+                              (a.Status == AttendanceStatus.Sick || 
+                               a.Status == AttendanceStatus.LeaveAuthorized || 
+                               a.Status == AttendanceStatus.UnpaidSick || 
+                               a.Status == AttendanceStatus.UnpaidLeave || 
+                               a.Status == AttendanceStatus.UnpaidHalfDay ||
+                               (a.PaidLeaveHours.HasValue && a.PaidLeaveHours > 0) ||
+                               (a.UnpaidLeaveHours.HasValue && a.UnpaidLeaveHours > 0) ||
+                               !string.IsNullOrEmpty(a.DoctorsNoteImagePath)))))
                 .ToListAsync();
+
+            if (!recordsToClean.Any()) return;
+
+            var recordsToRemove = new List<AttendanceRecord>();
+
+            foreach (var record in recordsToClean)
+            {
+                if (record.CheckInTime == null || record.HoursWorked == 0 || record.IsAutoClockIn)
+                {
+                    recordsToRemove.Add(record);
+                }
+                else
+                {
+                    record.Status = AttendanceStatus.Present;
+                    record.PaidLeaveHours = null;
+                    record.UnpaidLeaveHours = null;
+                    record.DoctorsNoteImagePath = null;
+                    if (!string.IsNullOrEmpty(record.Notes))
+                    {
+                        record.Notes = record.Notes.Replace(notesToken, "").Replace($"Approved Leave: {request.LeaveType} ({request.DurationType}).", "").Trim();
+                    }
+                }
+            }
 
             if (recordsToRemove.Any())
             {
                 _context.AttendanceRecords.RemoveRange(recordsToRemove);
-                await _context.SaveChangesAsync();
             }
+
+            await _context.SaveChangesAsync();
         }
     }
 }
