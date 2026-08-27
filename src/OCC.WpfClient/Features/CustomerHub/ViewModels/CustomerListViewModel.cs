@@ -80,23 +80,56 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         /// <summary>
         /// Initializes the customer list view model, loads layout preferences, and starts background data load.
         /// </summary>
+        private readonly ISignalRService? _signalRService;
+
         public CustomerListViewModel(
             ICustomerService customerService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
             ILogger<CustomerListViewModel> logger,
             IPdfService pdfService,
-            ConnectionSettings connectionSettings) : base(pdfService)
+            ConnectionSettings connectionSettings,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _customerService = customerService;
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = logger;
             _connectionSettings = connectionSettings;
+            _signalRService = signalRService;
             Title = "Customer Management";
             
+            if (_signalRService != null)
+            {
+                _signalRService.OnCustomerChanged += OnCustomerChangedReceived;
+            }
+
             LoadLayout();
             _ = LoadDataAsync();
+        }
+
+        private void OnCustomerChangedReceived(EntityChangeDto<CustomerSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = _allCustomers.FirstOrDefault(c => c.Id == change.EntityId || c.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allCustomers.Add(change.Entity);
+                    else _allCustomers[_allCustomers.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allCustomers[_allCustomers.IndexOf(existing)] = change.Entity;
+                    else _allCustomers.Add(change.Entity);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allCustomers.Remove(existing);
+                }
+                FilterItems();
+            });
         }
 
         #endregion
@@ -215,7 +248,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
         #region Methods
 
         /// <summary>
-        /// Asynchronously fetches customer summary records from the database and triggers display filtering.
+        /// Asynchronously fetches customer summary records from the database using progressive staged loading.
         /// </summary>
         public override async Task LoadDataAsync()
         {
@@ -224,10 +257,31 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 IsBusy = true;
                 BusyText = "Loading customers...";
                 
-                var customers = await _customerService.GetCustomerSummariesAsync();
-                _allCustomers = customers.OrderBy(c => c.Name).ToList();
-                
-                FilterItems();
+                var customers = (await _customerService.GetCustomerSummariesAsync()).OrderBy(c => c.Name).ToList();
+
+                if (customers.Count > 100)
+                {
+                    // Step 1: Render top 100 rows instantly so user can start working immediately
+                    _allCustomers = customers.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Hydrate full dataset seamlessly in background
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allCustomers = customers;
+                            FilterItems();
+                        });
+                    });
+                }
+                else
+                {
+                    _allCustomers = customers;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {
@@ -238,6 +292,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         /// <summary>
         /// Filters the cached list of customers based on the user's active search query.

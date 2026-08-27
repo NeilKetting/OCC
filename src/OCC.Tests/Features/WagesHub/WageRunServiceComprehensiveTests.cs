@@ -606,5 +606,67 @@ namespace OCC.Tests.Features.WagesHub
             var line = draft.Lines.First(l => l.EmployeeId == empId);
             Assert.Equal(200m, line.DeductionLoan); // Started loan MUST be deducted
         }
+
+        [Fact]
+        public async Task GenerateDraftAsync_HalfDayLeave_FormatsNotesAndCommentsWithPeriodAndPaidState()
+        {
+            // Arrange
+            using var context = GetInMemoryDbContext();
+            var mockWageCalc = new Mock<IWageCalculationService>();
+            var mockConfig = new Mock<IConfiguration>();
+
+            var empId = Guid.NewGuid();
+            context.Employees.Add(new Employee
+            {
+                Id = empId,
+                FirstName = "Nathan",
+                LastName = "Stemmet",
+                EmployeeNumber = "467",
+                Branch = "Cape Town",
+                Status = EmployeeStatus.Active,
+                RateType = RateType.Hourly,
+                HourlyRate = 100
+            });
+
+            var leaveDate = new DateTime(2026, 8, 28);
+
+            context.LeaveRequests.Add(new LeaveRequest
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = empId,
+                StartDate = leaveDate,
+                EndDate = leaveDate,
+                DurationType = LeaveDurationType.MorningHalfDay,
+                LeaveType = LeaveType.Annual,
+                Status = LeaveStatus.Approved,
+                PaidDays = 0.5,
+                NumberOfDays = 0.5,
+                IsUnpaid = false
+            });
+
+            mockWageCalc.Setup(m => m.CalculateHours(It.IsAny<AttendanceRecord>(), It.IsAny<Employee>(), It.IsAny<WageSettings?>()))
+                .Returns(new HoursBreakdown(4.25, 0, 0, 0));
+
+            await context.SaveChangesAsync();
+
+            var service = new WageRunService(context, mockWageCalc.Object, mockConfig.Object);
+            var request = new WageRun
+            {
+                StartDate = new DateTime(2026, 8, 15),
+                EndDate = new DateTime(2026, 8, 28),
+                Branch = "Cape Town",
+                PayType = "Hourly",
+                RunType = WageRunType.Standard,
+                PayFrequency = PayFrequency.Fortnightly
+            };
+
+            // Act
+            var draft = await service.GenerateDraftAsync(request);
+
+            // Assert
+            var line = draft.Lines.First(l => l.EmployeeId == empId);
+            Assert.Contains("28/08: Paid Leave - Half Day (Morning);", line.VarianceNotes);
+            Assert.Contains("Paid Leave - Half Day (Morning) (0.5d: 28/08)", line.Comments);
+        }
     }
 }

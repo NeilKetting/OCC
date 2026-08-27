@@ -85,6 +85,11 @@
         <GradientStop Offset="1.0" Color="#0EA5E9" />
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="AccentBlueGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#0284C7" Offset="0.0" />
+        <GradientStop Color="#0EA5E9" Offset="1.0" />
+    </LinearGradientBrush>
+
     <LinearGradientBrush x:Key="ModernPrimaryButtonBackgroundGradient" StartPoint="0.5,0.5" EndPoint="1.5,1.5">
         <GradientStop Color="#093C5D" Offset="0.0" />
         <GradientStop Color="#6EADBC" Offset="1.0" />

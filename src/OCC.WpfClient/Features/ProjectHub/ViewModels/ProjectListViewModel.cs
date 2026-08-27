@@ -57,6 +57,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
 
 
+        private readonly ISignalRService? _signalRService;
+
         public ProjectListViewModel(
             IProjectService projectService,
             ICustomerService customerService,
@@ -65,7 +67,8 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IToastService toastService,
             IServiceProvider serviceProvider,
             LocalSettingsService settingsService,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _projectService = projectService;
             _customerService = customerService;
@@ -74,12 +77,43 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             _toastService = toastService;
             _serviceProvider = serviceProvider;
             _settingsService = settingsService;
+            _signalRService = signalRService;
 
             Title = "Projects";
+
+            if (_signalRService != null)
+            {
+                _signalRService.OnProjectChanged += OnProjectChangedReceived;
+            }
+
             LoadLayout();
             _ = LoadDataAsync();
             WeakReferenceMessenger.Default.Register<ProjectUpdatedMessage>(this);
             WeakReferenceMessenger.Default.Register<TaskUpdatedMessage>(this);
+        }
+
+        private void OnProjectChangedReceived(EntityChangeDto<ProjectSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = _allProjects.FirstOrDefault(p => p.Id == change.EntityId || p.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allProjects.Add(change.Entity);
+                    else _allProjects[_allProjects.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allProjects[_allProjects.IndexOf(existing)] = change.Entity;
+                    else _allProjects.Add(change.Entity);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allProjects.Remove(existing);
+                }
+                FilterItems();
+            });
         }
 
         private void LoadLayout()
@@ -125,9 +159,31 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IsBusy = true;
             try
             {
-                var projects = await _projectService.GetProjectSummariesAsync(ShowDeleted);
-                _allProjects = projects.OrderBy(p => p.Name).ToList();
-                FilterItems();
+                var projects = (await _projectService.GetProjectSummariesAsync(ShowDeleted)).OrderBy(p => p.Name).ToList();
+
+                if (projects.Count > 100)
+                {
+                    // Step 1: Fast render top 100 records
+                    _allProjects = projects.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Background hydration of full dataset
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allProjects = projects;
+                            FilterItems();
+                        });
+                    });
+                }
+                else
+                {
+                    _allProjects = projects;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {
@@ -139,6 +195,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         [RelayCommand]
         private void AddProject()

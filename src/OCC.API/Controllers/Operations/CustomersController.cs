@@ -102,6 +102,8 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Create", customer.Id);
+                var summary = new CustomerSummaryDto { Id = customer.Id, Name = customer.Name, Header = customer.Header, Email = customer.Email, Phone = customer.Phone, Address = customer.Address, LogoUrl = customer.LogoUrl };
+                await _hubContext.Clients.All.SendAsync("CustomerChanged", new EntityChangeDto<CustomerSummaryDto> { Action = "Created", Entity = summary, EntityId = customer.Id });
 
                 return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
             }
@@ -143,6 +145,8 @@ namespace OCC.API.Controllers
 
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Update", id);
+                var summary = new CustomerSummaryDto { Id = customer.Id, Name = customer.Name, Header = customer.Header, Email = customer.Email, Phone = customer.Phone, Address = customer.Address, LogoUrl = customer.LogoUrl };
+                await _hubContext.Clients.All.SendAsync("CustomerChanged", new EntityChangeDto<CustomerSummaryDto> { Action = "Updated", Entity = summary, EntityId = id });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -169,6 +173,7 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Customer", "Delete", id);
+                await _hubContext.Clients.All.SendAsync("CustomerChanged", new EntityChangeDto<CustomerSummaryDto> { Action = "Deleted", Entity = new CustomerSummaryDto { Id = id }, EntityId = id });
 
                 return NoContent();
             }

@@ -119,6 +119,8 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Supplier", "Create", supplier.Id);
+                var summary = new SupplierSummaryDto { Id = supplier.Id, Name = supplier.Name, Email = supplier.Email ?? string.Empty, Phone = supplier.Phone ?? string.Empty, Branch = supplier.Branch?.ToString(), VatNumber = supplier.VatNumber ?? string.Empty, ContactPerson = supplier.ContactPerson ?? string.Empty, Address = supplier.Address ?? string.Empty, City = supplier.City ?? string.Empty, PostalCode = supplier.PostalCode ?? string.Empty, BankName = supplier.BankName ?? string.Empty, BankAccountNumber = supplier.BankAccountNumber ?? string.Empty, BranchCode = supplier.BranchCode ?? string.Empty, SupplierAccountNumber = supplier.SupplierAccountNumber ?? string.Empty };
+                await _hubContext.Clients.All.SendAsync("SupplierChanged", new EntityChangeDto<SupplierSummaryDto> { Action = "Created", Entity = summary, EntityId = supplier.Id });
 
                 return CreatedAtAction("GetSupplier", new { id = supplier.Id }, supplier);
             }
@@ -160,6 +162,8 @@ namespace OCC.API.Controllers
             {
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Supplier", "Update", id);
+                var summary = new SupplierSummaryDto { Id = supplier.Id, Name = supplier.Name, Email = supplier.Email ?? string.Empty, Phone = supplier.Phone ?? string.Empty, Branch = supplier.Branch?.ToString(), VatNumber = supplier.VatNumber ?? string.Empty, ContactPerson = supplier.ContactPerson ?? string.Empty, Address = supplier.Address ?? string.Empty, City = supplier.City ?? string.Empty, PostalCode = supplier.PostalCode ?? string.Empty, BankName = supplier.BankName ?? string.Empty, BankAccountNumber = supplier.BankAccountNumber ?? string.Empty, BranchCode = supplier.BranchCode ?? string.Empty, SupplierAccountNumber = supplier.SupplierAccountNumber ?? string.Empty };
+                await _hubContext.Clients.All.SendAsync("SupplierChanged", new EntityChangeDto<SupplierSummaryDto> { Action = "Updated", Entity = summary, EntityId = id });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -186,6 +190,7 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Supplier", "Delete", id);
+                await _hubContext.Clients.All.SendAsync("SupplierChanged", new EntityChangeDto<SupplierSummaryDto> { Action = "Deleted", Entity = new SupplierSummaryDto { Id = id }, EntityId = id });
 
                 return NoContent();
             }

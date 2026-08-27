@@ -129,10 +129,31 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 IsBusy = true;
                 BusyText = "Loading users...";
                 
-                var users = await _userService.GetUsersAsync();
-                _allUsers = users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
+                var users = (await _userService.GetUsersAsync()).OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList();
                 
-                FilterItems();
+                if (users.Count > 100)
+                {
+                    // Step 1: Fast render top 100
+                    _allUsers = users.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Background hydration
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allUsers = users;
+                            FilterItems();
+                        });
+                    });
+                }
+                else
+                {
+                    _allUsers = users;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {
@@ -143,6 +164,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
                 IsBusy = false;
             }
         }
+
 
         [RelayCommand]
         public void AddUser()

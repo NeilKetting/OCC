@@ -99,6 +99,8 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "SubContractor", "Create", subContractor.Id);
+                var summary = new SubContractorSummaryDto { Id = subContractor.Id, Name = subContractor.Name, Email = subContractor.Email, Phone = subContractor.Phone, Specialties = subContractor.Specialties, Branch = subContractor.Branch, PerformanceTier = subContractor.PerformanceTier, ColorTheme = subContractor.ColorTheme };
+                await _hubContext.Clients.All.SendAsync("SubContractorChanged", new EntityChangeDto<SubContractorSummaryDto> { Action = "Created", Entity = summary, EntityId = subContractor.Id });
 
                 return CreatedAtAction("GetSubContractor", new { id = subContractor.Id }, subContractor);
             }
@@ -124,6 +126,8 @@ namespace OCC.API.Controllers
                 
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "SubContractor", "Update", id);
+                var summary = new SubContractorSummaryDto { Id = subContractor.Id, Name = subContractor.Name, Email = subContractor.Email, Phone = subContractor.Phone, Specialties = subContractor.Specialties, Branch = subContractor.Branch, PerformanceTier = subContractor.PerformanceTier, ColorTheme = subContractor.ColorTheme };
+                await _hubContext.Clients.All.SendAsync("SubContractorChanged", new EntityChangeDto<SubContractorSummaryDto> { Action = "Updated", Entity = summary, EntityId = id });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -150,6 +154,7 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "SubContractor", "Delete", id);
+                await _hubContext.Clients.All.SendAsync("SubContractorChanged", new EntityChangeDto<SubContractorSummaryDto> { Action = "Deleted", Entity = new SubContractorSummaryDto { Id = id }, EntityId = id });
 
                 return NoContent();
             }

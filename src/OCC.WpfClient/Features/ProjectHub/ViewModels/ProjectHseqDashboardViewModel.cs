@@ -66,7 +66,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             AuditTrendYAxes.Add(new Axis 
             { 
                 MinLimit = 0, 
-                MaxLimit = 100, 
+                MaxLimit = 115, 
                 Labeler = v => $"{v}%",
                 LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),
@@ -87,7 +87,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             CategoryYAxes.Add(new Axis 
             { 
                 MinLimit = 0, 
-                MaxLimit = 100, 
+                MaxLimit = 115, 
                 Labeler = v => $"{v}%",
                 LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),

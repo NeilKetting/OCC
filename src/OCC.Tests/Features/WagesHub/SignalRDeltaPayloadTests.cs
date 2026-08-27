@@ -75,5 +75,97 @@ namespace OCC.Tests.Features.WagesHub
             Assert.Equal("Updated", changeDto.Action);
             Assert.Equal(35.00m, changeDto.Entity.BibcRatePerDay);
         }
+
+        [Fact]
+        public void EntityChangeDto_ProjectSummaryPayload_ConstructsCorrectly()
+        {
+            var projectId = Guid.NewGuid();
+            var summary = new ProjectSummaryDto
+            {
+                Id = projectId,
+                Name = "Cape Town Warehouse Expansion",
+                Status = "In Progress",
+                Priority = "High"
+            };
+
+            var changeDto = new EntityChangeDto<ProjectSummaryDto>
+            {
+                Action = "Created",
+                EntityId = projectId,
+                Entity = summary
+            };
+
+            Assert.Equal("Created", changeDto.Action);
+            Assert.Equal(projectId, changeDto.EntityId);
+            Assert.Equal("Cape Town Warehouse Expansion", changeDto.Entity.Name);
+        }
+
+        [Fact]
+        public void EntityChangeDto_CustomerSummaryPayload_ConstructsCorrectly()
+        {
+            var customerId = Guid.NewGuid();
+            var summary = new CustomerSummaryDto
+            {
+                Id = customerId,
+                Name = "Acme Builders",
+                Email = "info@acme.co.za"
+            };
+
+            var changeDto = new EntityChangeDto<CustomerSummaryDto>
+            {
+                Action = "Updated",
+                EntityId = customerId,
+                Entity = summary
+            };
+
+            Assert.Equal("Updated", changeDto.Action);
+            Assert.Equal("Acme Builders", changeDto.Entity.Name);
+        }
+
+        [Fact]
+        public void EntityChangeDto_SupplierSummaryPayload_ConstructsCorrectly()
+        {
+            var supplierId = Guid.NewGuid();
+            var summary = new SupplierSummaryDto
+            {
+                Id = supplierId,
+                Name = "Cape Steel Suppliers",
+                Email = "steel@cape.co.za"
+
+            };
+
+            var changeDto = new EntityChangeDto<SupplierSummaryDto>
+            {
+                Action = "Updated",
+                EntityId = supplierId,
+                Entity = summary
+            };
+
+            Assert.Equal("Updated", changeDto.Action);
+            Assert.Equal("Cape Steel Suppliers", changeDto.Entity.Name);
+        }
+
+        [Fact]
+        public void EntityChangeDto_SubContractorSummaryPayload_ConstructsCorrectly()
+        {
+            var subId = Guid.NewGuid();
+            var summary = new SubContractorSummaryDto
+            {
+                Id = subId,
+                Name = "Apex Electrical",
+                Specialties = "Electrical"
+            };
+
+            var changeDto = new EntityChangeDto<SubContractorSummaryDto>
+            {
+                Action = "Created",
+                EntityId = subId,
+                Entity = summary
+            };
+
+            Assert.Equal("Created", changeDto.Action);
+            Assert.Equal("Apex Electrical", changeDto.Entity.Name);
+        }
     }
 }
+

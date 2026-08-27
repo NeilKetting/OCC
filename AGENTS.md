@@ -30,7 +30,8 @@
 - [DONE] **UI Redundant Refresh & Duplicate Save Buttons Cleaned Up**: Removed legacy refresh buttons across Dashboard, Wage Run, Attendance, Teams, Loans, and Leave views since SignalR streaming updates data automatically; removed duplicate top header Save button in WageSettingsView.
 - [DONE] **Progressive Staged Loading for Attendance Views**: Implemented initial top 100 fast-render + background hydration for `AttendanceHistoryListView` and `AttendanceDashboardView`.
 
+- [DONE] **Progressive List View Loading Expansion**: Expanded progressive staged loading (initial top 100 instant load + background hydration) across all WPF list views (Projects, Customers, Suppliers, SubContractors, Snags, Incidents, Audits, Training, Users, Inventory).
+- [DONE] **SignalR Delta Payload Streaming Expansion**: Extended real-time `EntityChangeDto<T>` streaming across Projects, Procurement/Orders, Customers, SubContractors, and HSEQ (Incidents, Audits, Training) backend controllers and client ViewModels with zero full-page refreshes.
+
 ### Remaining Work [TODO]
-- [TODO] **Progressive List View Loading Expansion**: Expand progressive staged loading (initial top 100 instant load + background hydration) across all remaining WPF list views.
-- [TODO] **SignalR Delta Streaming Expansion**: Expand SignalR Delta Payload Real-Time Streaming to all remaining system modules (Projects, Procurement, HSEQ, Todo, etc.) in a future phase.
-- [TODO] **Application Framework Evaluation**: Evaluate and incorporate a suitable application framework for the app in a future phase.
+- [TODO] **Application Framework Evaluation**: Evaluate and incorporate a suitable application framework for the app in a future phase.

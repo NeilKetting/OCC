@@ -47,18 +47,51 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             new() { Header = "Status", PropertyName = "Status", Width = 1.2 }
         };
 
+        private readonly ISignalRService? _signalRService;
+
         public AuditListViewModel(
             IHealthSafetyService hseqService, 
             IServiceProvider serviceProvider,
             IPdfService pdfService,
-            IDialogService dialogService) : base(pdfService)
+            IDialogService dialogService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _hseqService = hseqService;
             _serviceProvider = serviceProvider;
             _dialogService = dialogService;
+            _signalRService = signalRService;
             Title = "Audits";
 
+            if (_signalRService != null)
+            {
+                _signalRService.OnAuditChanged += OnAuditChangedReceived;
+            }
+
             _ = LoadDataAsync();
+        }
+
+        private void OnAuditChangedReceived(EntityChangeDto<AuditSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = _allAudits.FirstOrDefault(a => a.Id == change.EntityId || a.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allAudits.Add(change.Entity);
+                    else _allAudits[_allAudits.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allAudits[_allAudits.IndexOf(existing)] = change.Entity;
+                    else _allAudits.Add(change.Entity);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allAudits.Remove(existing);
+                }
+                FilterItems();
+            });
         }
 
         public override async Task LoadDataAsync()
@@ -73,8 +106,31 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var data = await _hseqService.GetAuditsAsync(ProjectId);
                 if (data != null)
                 {
-                    _allAudits = data.OrderByDescending(a => a.Date).ToList();
-                    FilterItems();
+                    var sorted = data.OrderByDescending(a => a.Date).ToList();
+
+                    if (sorted.Count > 100)
+                    {
+                        // Step 1: Fast render top 100
+                        _allAudits = sorted.Take(100).ToList();
+                        FilterItems();
+                        IsBusy = false; // Unblock UI
+
+                        // Step 2: Background hydration
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(200);
+                            App.Current?.Dispatcher.Invoke(() =>
+                            {
+                                _allAudits = sorted;
+                                FilterItems();
+                            });
+                        });
+                    }
+                    else
+                    {
+                        _allAudits = sorted;
+                        FilterItems();
+                    }
                 }
             }
             catch (Exception ex)
@@ -87,6 +143,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         protected override void FilterItems()
         {

@@ -79,29 +79,40 @@
                     </StackPanel>
                 </StackPanel>
 
-                <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
-                    <!-- Return to Past Runs History -->
-                    <Button Command="{Binding ReturnToHistoryCommand}" ToolTip="Return to Past Runs History view"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource SecondaryButton}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE72B;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource AccentBlue}" Margin="0,0,6,0"/>
-                            <TextBlock Text="BACK TO HISTORY" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                        </StackPanel>
-                    </Button>
-                    <!-- Close / Discard Draft -->
-                    <Button Command="{Binding CloseDraftCommand}" ToolTip="Close and Discard Active Draft"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource SecondaryButton}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE10A;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource ErrorRed}" Margin="0,0,6,0"/>
-                            <TextBlock Text="CLOSE DRAFT" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                        </StackPanel>
-                    </Button>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
                     <!-- Print Options Dropdown -->
-                    <Button x:Name="PrintBtn" Style="{StaticResource PrintButton}" Click="PrintButton_Click" ToolTip="Print Options"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Content="Print" ContextMenuService.IsEnabled="False">
+                    <Button x:Name="PrintBtn" Click="PrintButton_Click" ToolTip="Print Options"
+                            Margin="8,0,0,0" Height="34" Padding="14,0"
+                            Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
+                            ContextMenuService.IsEnabled="False">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#1AFFFFFF"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource SecondaryGold}"/>
+                                <Setter Property="BorderThickness" Value="1.5"/>
+                                <Setter Property="Foreground" Value="{StaticResource SecondaryGold}"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="{StaticResource SecondaryGold}"/>
+                                                    <Setter Property="Foreground" Value="#0F172A"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE749;" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Print" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <Button.ContextMenu>
                             <ContextMenu Style="{StaticResource ModernContextMenu}">
                                 <MenuItem Header="Standard Wage Run PDF" Command="{Binding PrintPdfCommand}" Style="{StaticResource ModernMenuItem}"/>
@@ -111,27 +122,45 @@
                             </ContextMenu>
                         </Button.ContextMenu>
                     </Button>
-                    <!-- Export Draft Bank File -->
-                    <Button Command="{Binding ExportDraftRunBankFileCommand}" ToolTip="Export Draft Bank File"
-                            Margin="8,2,0,2" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource SecondaryButton}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE15C;" Style="{StaticResource SymbolButtonIcon}" Foreground="{StaticResource SecondaryGold}" Margin="0,0,6,0"/>
-                            <TextBlock Text="EXPORT BANK FILE" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
-                        </StackPanel>
-                    </Button>
+
                     <!-- Finalize / Save -->
-                    <Button Command="{Binding FinalizeRunCommand}" Margin="8,2,0,2"
-                            Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource CreateIconButton}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding FinalizeButtonIcon}" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding FinalizeButtonText}"/>
+                    <Button Command="{Binding FinalizeRunCommand}" Margin="8,0,0,0" Height="34" Padding="14,0"
+                            Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVis}}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="{StaticResource AccentBlueGradient}"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                                <Border.Effect>
+                                                    <DropShadowEffect BlurRadius="8" ShadowDepth="0" Color="#0284C7" Opacity="0.4"/>
+                                                </Border.Effect>
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="{StaticResource AccentBlueHover}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding FinalizeButtonIcon}" Style="{StaticResource SymbolButtonIcon}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding FinalizeButtonText}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                </WrapPanel>
+                </StackPanel>
             </Grid>
         </Border>
+
 
         <!-- ══════════════════ CONFIG BAR ══════════════════ -->
         <Border Grid.Row="1" Style="{StaticResource GlassCard}" Padding="16,10" Margin="16,6,16,10">

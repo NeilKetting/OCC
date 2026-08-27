@@ -18,6 +18,17 @@ namespace OCC.WpfClient.Services.Interfaces
         event Action<EntityChangeDto<OCC.Shared.Models.AttendanceRecord>>? OnAttendanceRecordChanged;
         event Action<EntityChangeDto<OCC.Shared.Models.WageRun>>? OnWageRunChanged;
         event Action<EntityChangeDto<OCC.Shared.Models.WageSettings>>? OnWageSettingsChanged;
+
+        // Expanded Delta Payload Streaming Events
+        event Action<EntityChangeDto<ProjectSummaryDto>>? OnProjectChanged;
+        event Action<EntityChangeDto<SupplierSummaryDto>>? OnSupplierChanged;
+        event Action<EntityChangeDto<CustomerSummaryDto>>? OnCustomerChanged;
+        event Action<EntityChangeDto<SubContractorSummaryDto>>? OnSubContractorChanged;
+        event Action<EntityChangeDto<OCC.Shared.Models.SnagJob>>? OnSnagJobChanged;
+        event Action<EntityChangeDto<IncidentSummaryDto>>? OnIncidentChanged;
+        event Action<EntityChangeDto<AuditSummaryDto>>? OnAuditChanged;
+        event Action<EntityChangeDto<HseqTrainingSummaryDto>>? OnTrainingChanged;
+
         
         bool IsConnected { get; }
         bool IsChatConnected { get; }

@@ -102,16 +102,40 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 _logger.LogInformation("Loading inventory items...");
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = true);
                 
-                var inventory = await _inventoryService.GetInventoryAsync();
-                _allInventory = inventory.OrderBy(i => i.Sku).ToList();
+                var inventory = (await _inventoryService.GetInventoryAsync()).OrderBy(i => i.Sku).ToList();
 
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                if (inventory.Count > 100)
                 {
-                    FilterItems();
-                    LowStockCount = _allInventory.Count(i => i.IsLowStock);
-                });
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _allInventory = inventory.Take(100).ToList();
+                        FilterItems();
+                        LowStockCount = inventory.Count(i => i.IsLowStock);
+                        IsBusy = false; // Unblock UI
+                    });
+
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _allInventory = inventory;
+                            FilterItems();
+                            LowStockCount = _allInventory.Count(i => i.IsLowStock);
+                        });
+                    });
+                }
+                else
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _allInventory = inventory;
+                        FilterItems();
+                        LowStockCount = _allInventory.Count(i => i.IsLowStock);
+                    });
+                }
                 
-                _logger.LogInformation("Successfully loaded {Count} inventory items", _allInventory.Count);
+                _logger.LogInformation("Successfully loaded {Count} inventory items", inventory.Count);
             }
             catch (Exception ex)
             {
@@ -124,6 +148,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsBusy = false);
             }
         }
+
 
         protected override void FilterItems()
         {

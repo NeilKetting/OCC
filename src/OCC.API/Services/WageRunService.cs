@@ -382,9 +382,7 @@ namespace OCC.API.Services
 
                 empAttendance = empAttendance.OrderBy(a => a.Date).ToList();
 
-                var paidSickDates = new List<string>();
-                var unpaidSickDates = new List<string>();
-                var paidLeaveDates = new List<string>();
+                var leaveDetails = new List<(string Label, string DateStr, double Days)>();
 
                 foreach (var record in empAttendance)
                 {
@@ -445,43 +443,27 @@ namespace OCC.API.Services
                                 line.VarianceNotes += $"{record.Date:dd/MM}: Absent; ";
                             }
                         }
-                        else if (record.Status == AttendanceStatus.Sick)
+                        else
                         {
-                            if (hours.Normal > 0)
+                            var matchingLeave = empLeaveRequests.FirstOrDefault(lr => 
+                                (lr.Status == LeaveStatus.Approved || lr.Status == LeaveStatus.Pending) && 
+                                lr.StartDate.Date <= recDate && lr.EndDate.Date >= recDate);
+
+                            bool isLeaveRecord = record.Status == AttendanceStatus.Sick || 
+                                                 record.Status == AttendanceStatus.LeaveAuthorized || 
+                                                 record.Status == AttendanceStatus.UnpaidSick || 
+                                                 record.Status == AttendanceStatus.UnpaidLeave || 
+                                                 record.Status == AttendanceStatus.UnpaidHalfDay || 
+                                                 (record.PaidLeaveHours.HasValue && record.PaidLeaveHours.Value > 0) ||
+                                                 (record.UnpaidLeaveHours.HasValue && record.UnpaidLeaveHours.Value > 0) ||
+                                                 matchingLeave != null;
+
+                            if (isLeaveRecord)
                             {
-                                paidSickDates.Add(record.Date.ToString("dd/MM"));
-                                line.VarianceNotes += $"{record.Date:dd/MM}: Paid Sick; ";
+                                var (label, days) = GetLeaveDetail(record, matchingLeave, dailyHours, hours);
+                                line.VarianceNotes += $"{record.Date:dd/MM}: {label}; ";
+                                leaveDetails.Add((label, recDate.ToString("dd/MM"), days));
                             }
-                            else
-                            {
-                                unpaidSickDates.Add(record.Date.ToString("dd/MM"));
-                                line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
-                            }
-                        }
-                        else if (record.Status == AttendanceStatus.LeaveAuthorized)
-                        {
-                            if (hours.Normal > 0)
-                            {
-                                paidLeaveDates.Add(record.Date.ToString("dd/MM"));
-                                line.VarianceNotes += $"{record.Date:dd/MM}: Paid Leave; ";
-                            }
-                            else
-                            {
-                                line.VarianceNotes += $"{record.Date:dd/MM}: Leave; ";
-                            }
-                        }
-                        else if (record.Status == AttendanceStatus.UnpaidSick)
-                        {
-                            unpaidSickDates.Add(record.Date.ToString("dd/MM"));
-                            line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Sick; ";
-                        }
-                        else if (record.Status == AttendanceStatus.UnpaidLeave)
-                        {
-                            line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Leave; ";
-                        }
-                        else if (record.Status == AttendanceStatus.UnpaidHalfDay)
-                        {
-                            line.VarianceNotes += $"{record.Date:dd/MM}: Unpaid Half Day; ";
                         }
                     }
                     else
@@ -496,20 +478,27 @@ namespace OCC.API.Services
                     }
                 }
 
-                if (paidSickDates.Count > 0)
+                if (leaveDetails.Count > 0)
                 {
-                    string sickNote = $"Paid Sick Leave ({paidSickDates.Count}d: {string.Join(", ", paidSickDates)})";
-                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) ? sickNote : $"{line.Comments} | {sickNote}";
-                }
-                if (unpaidSickDates.Count > 0)
-                {
-                    string unpaidNote = $"Unpaid Sick ({unpaidSickDates.Count}d: {string.Join(", ", unpaidSickDates)} - No leave available)";
-                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) ? unpaidNote : $"{line.Comments} | {unpaidNote}";
-                }
-                if (paidLeaveDates.Count > 0)
-                {
-                    string leaveNote = $"Paid Leave ({paidLeaveDates.Count}d: {string.Join(", ", paidLeaveDates)})";
-                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) ? leaveNote : $"{line.Comments} | {leaveNote}";
+                    var groupedNotes = leaveDetails
+                        .GroupBy(x => x.Label)
+                        .Select(g => 
+                        {
+                            double totalDays = g.Sum(x => x.Days);
+                            var dateList = g.Select(x => x.DateStr).Distinct();
+                            string datesFormatted = string.Join(", ", dateList);
+                            string daysFormatted = totalDays % 1 == 0 
+                                ? $"{totalDays:F0}d" 
+                                : $"{totalDays.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}d";
+                            string extraInfo = g.Key.StartsWith("Unpaid Sick", StringComparison.OrdinalIgnoreCase) ? " - No leave available" : "";
+                            
+                            return $"{g.Key} ({daysFormatted}: {datesFormatted}{extraInfo})";
+                        });
+
+                    string leaveSummary = string.Join(" | ", groupedNotes);
+                    line.Comments = string.IsNullOrWhiteSpace(line.Comments) 
+                        ? leaveSummary 
+                        : $"{line.Comments} | {leaveSummary}";
                 }
 
                 // Monthly Salary Base Working Hours Fallback
@@ -1020,6 +1009,80 @@ namespace OCC.API.Services
                    lr.LeaveType == LeaveType.AbsentWithoutLeave ||
                    lr.UnpaidDays > 0 ||
                    (lr.LeaveType != LeaveType.Annual && lr.LeaveType != LeaveType.Sick && lr.PaidDays == 0);
+        }
+
+        private static (string Label, double Days) GetLeaveDetail(AttendanceRecord record, LeaveRequest? matchingLeave, double dailyHours, HoursBreakdown hours)
+        {
+            bool isSick = record.Status == AttendanceStatus.Sick 
+                       || record.Status == AttendanceStatus.UnpaidSick 
+                       || (matchingLeave != null && matchingLeave.LeaveType == LeaveType.Sick);
+
+            bool isUnpaid = record.Status == AttendanceStatus.UnpaidLeave 
+                         || record.Status == AttendanceStatus.UnpaidSick 
+                         || record.Status == AttendanceStatus.UnpaidHalfDay 
+                         || (matchingLeave != null && matchingLeave.IsUnpaid)
+                         || (isSick && hours.Normal == 0 && (!record.PaidLeaveHours.HasValue || record.PaidLeaveHours.Value == 0));
+
+            bool isPaid = !isUnpaid;
+
+            string baseCategory = isSick 
+                ? (isPaid ? "Paid Sick" : "Unpaid Sick") 
+                : (isPaid ? "Paid Leave" : "Unpaid Leave");
+
+            string periodModifier = string.Empty;
+            double daysCount = 1.0;
+
+            if (matchingLeave != null)
+            {
+                if (matchingLeave.DurationType == LeaveDurationType.MorningHalfDay)
+                {
+                    periodModifier = " - Half Day (Morning)";
+                    daysCount = 0.5;
+                }
+                else if (matchingLeave.DurationType == LeaveDurationType.AfternoonHalfDay)
+                {
+                    periodModifier = " - Half Day (Afternoon)";
+                    daysCount = 0.5;
+                }
+                else if (matchingLeave.LeaveType == LeaveType.HalfDay || matchingLeave.NumberOfDays == 0.5)
+                {
+                    periodModifier = " - Half Day";
+                    daysCount = 0.5;
+                }
+                else if (matchingLeave.DurationType == LeaveDurationType.Hourly)
+                {
+                    periodModifier = matchingLeave.HoursRequested.HasValue ? $" - Hourly ({matchingLeave.HoursRequested.Value:F1}h)" : " - Hourly";
+                    daysCount = (matchingLeave.HoursRequested ?? 0) / (dailyHours > 0 ? dailyHours : 8.5);
+                }
+            }
+
+            if (string.IsNullOrEmpty(periodModifier))
+            {
+                string notes = record.Notes ?? string.Empty;
+                if (notes.Contains("MorningHalfDay", StringComparison.OrdinalIgnoreCase) || notes.Contains("Morning", StringComparison.OrdinalIgnoreCase))
+                {
+                    periodModifier = " - Half Day (Morning)";
+                    daysCount = 0.5;
+                }
+                else if (notes.Contains("AfternoonHalfDay", StringComparison.OrdinalIgnoreCase) || notes.Contains("Afternoon", StringComparison.OrdinalIgnoreCase))
+                {
+                    periodModifier = " - Half Day (Afternoon)";
+                    daysCount = 0.5;
+                }
+                else if (record.Status == AttendanceStatus.UnpaidHalfDay 
+                      || notes.Contains("HalfDay", StringComparison.OrdinalIgnoreCase) 
+                      || notes.Contains("Half Day", StringComparison.OrdinalIgnoreCase)
+                      || notes.Contains("Partial Leave", StringComparison.OrdinalIgnoreCase)
+                      || (record.HoursWorked > 0 && ((record.PaidLeaveHours ?? 0) > 0 || (record.UnpaidLeaveHours ?? 0) > 0 || record.Status == AttendanceStatus.LeaveAuthorized || record.Status == AttendanceStatus.Sick))
+                      || (record.PaidLeaveHours.HasValue && record.PaidLeaveHours.Value > 0 && record.PaidLeaveHours.Value < dailyHours * 0.9)
+                      || (record.UnpaidLeaveHours.HasValue && record.UnpaidLeaveHours.Value > 0 && record.UnpaidLeaveHours.Value < dailyHours * 0.9))
+                {
+                    periodModifier = " - Half Day";
+                    daysCount = 0.5;
+                }
+            }
+
+            return ($"{baseCategory}{periodModifier}", daysCount);
         }
     }
 }

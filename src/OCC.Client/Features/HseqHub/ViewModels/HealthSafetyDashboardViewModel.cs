@@ -46,7 +46,7 @@ namespace OCC.Client.Features.HseqHub.ViewModels
             
             // Initial Axis Setup
             AuditXAxes.Add(new Axis { LabelsRotation = 0, Labels = new List<string>() });
-            AuditYAxes.Add(new Axis { MinLimit = 0, MaxLimit = 100, Labeler = v => $"{v}%" });
+            AuditYAxes.Add(new Axis { MinLimit = 0, MaxLimit = 115, Labeler = v => $"{v}%" });
 
             IncidentXAxes.Add(new Axis { Labels = new[] { "Incidents", "Near Misses", "Injuries" } });
             IncidentYAxes.Add(new Axis { MinLimit = 0, MinStep = 1 });

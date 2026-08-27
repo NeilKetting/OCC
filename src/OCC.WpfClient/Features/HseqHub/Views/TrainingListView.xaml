@@ -140,7 +140,7 @@
                         <DataGridTemplateColumn Header="Expiry Date" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="4" Padding="8,2" Background="{Binding Summary.DateCompleted, Converter={StaticResource ExpiryColorConverter}}" Margin="5">
+                                    <Border CornerRadius="4" Padding="8,2" Background="{Binding ValidUntil, Converter={StaticResource ExpiryColorConverter}}" Margin="5">
                                         <TextBlock Text="{Binding ValidUntil, StringFormat='dd MMM yyyy'}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
                                     </Border>
                                 </DataTemplate>

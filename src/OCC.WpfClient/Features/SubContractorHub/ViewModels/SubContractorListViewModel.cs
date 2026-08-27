@@ -54,23 +54,56 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         public override IRelayCommand<object> EditCommand => EditSubContractorCommand;
         public override IRelayCommand<object> DeleteCommand => DeleteSubContractorCommand;
 
+        private readonly ISignalRService? _signalRService;
+
         public SubContractorListViewModel(
             ISubContractorService subContractorService,
             IUserService userService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
             ILogger<SubContractorListViewModel> logger,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _subContractorService = subContractorService;
             _userService = userService;
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = logger;
+            _signalRService = signalRService;
             Title = "Sub-Contractor Management";
+
+            if (_signalRService != null)
+            {
+                _signalRService.OnSubContractorChanged += OnSubContractorChangedReceived;
+            }
             
             LoadLayout();
             _ = LoadDataAsync();
+        }
+
+        private void OnSubContractorChangedReceived(EntityChangeDto<SubContractorSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = _allContractors.FirstOrDefault(c => c.Id == change.EntityId || c.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allContractors.Add(change.Entity);
+                    else _allContractors[_allContractors.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allContractors[_allContractors.IndexOf(existing)] = change.Entity;
+                    else _allContractors.Add(change.Entity);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allContractors.Remove(existing);
+                }
+                FilterItems();
+            });
         }
 
         private void LoadLayout()
@@ -129,24 +162,45 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 IsBusy = true;
                 BusyText = "Loading sub-contractors...";
                 
-                var contractors = await _subContractorService.GetSubContractorSummariesAsync();
-                _allContractors = contractors.OrderBy(c => c.Name).ToList();
+                var contractors = (await _subContractorService.GetSubContractorSummariesAsync()).OrderBy(c => c.Name).ToList();
 
                 // Build lookup lists for filters
                 var branchList = new List<string> { "All Branches" };
-                branchList.AddRange(_allContractors.Select(c => c.Branch).Where(b => !string.IsNullOrEmpty(b)).Distinct().OrderBy(b => b));
+                branchList.AddRange(contractors.Select(c => c.Branch).Where(b => !string.IsNullOrEmpty(b)).Distinct().OrderBy(b => b!));
                 Branches = new ObservableCollection<string>(branchList);
 
                 var specialtyList = new List<string> { "All Specialties" };
-                var allSpecs = _allContractors
+                var allSpecs = contractors
                     .Where(c => !string.IsNullOrEmpty(c.Specialties))
                     .SelectMany(c => c.Specialties!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     .Distinct()
                     .OrderBy(s => s);
                 specialtyList.AddRange(allSpecs);
                 Specialties = new ObservableCollection<string>(specialtyList);
-                
-                FilterItems();
+
+                if (contractors.Count > 100)
+                {
+                    // Step 1: Fast render top 100 records
+                    _allContractors = contractors.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Background hydration of full dataset
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allContractors = contractors;
+                            FilterItems();
+                        });
+                    });
+                }
+                else
+                {
+                    _allContractors = contractors;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {
@@ -157,6 +211,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         [RelayCommand]
         private void AddSubContractor()

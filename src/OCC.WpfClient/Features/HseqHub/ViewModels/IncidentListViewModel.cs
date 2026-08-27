@@ -37,14 +37,51 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
         public override IRelayCommand<object>? EditCommand => EditIncidentCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteSelectedIncidentsCommand;
 
-        public IncidentListViewModel(IHealthSafetyService hseqService, IServiceProvider serviceProvider, IPdfService pdfService, IDialogService dialogService) : base(pdfService)
+        private readonly ISignalRService? _signalRService;
+
+        public IncidentListViewModel(
+            IHealthSafetyService hseqService,
+            IServiceProvider serviceProvider,
+            IPdfService pdfService,
+            IDialogService dialogService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _hseqService = hseqService;
             _serviceProvider = serviceProvider;
             _dialogService = dialogService;
+            _signalRService = signalRService;
             Title = "Incidents";
             
+            if (_signalRService != null)
+            {
+                _signalRService.OnIncidentChanged += OnIncidentChangedReceived;
+            }
+
             _ = LoadDataAsync();
+        }
+
+        private void OnIncidentChangedReceived(EntityChangeDto<IncidentSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = _allIncidents.FirstOrDefault(i => i.Id == change.EntityId || i.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allIncidents.Add(change.Entity);
+                    else _allIncidents[_allIncidents.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allIncidents[_allIncidents.IndexOf(existing)] = change.Entity;
+                    else _allIncidents.Add(change.Entity);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allIncidents.Remove(existing);
+                }
+                FilterItems();
+            });
         }
 
         public override async Task LoadDataAsync()
@@ -56,10 +93,34 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var data = await _hseqService.GetIncidentsAsync();
                 if (data != null)
                 {
-                    _allIncidents = data.OrderByDescending(i => i.Date).ToList();
-                    FilterItems();
+                    var sorted = data.OrderByDescending(i => i.Date).ToList();
+
+                    if (sorted.Count > 100)
+                    {
+                        // Step 1: Fast render top 100 records
+                        _allIncidents = sorted.Take(100).ToList();
+                        FilterItems();
+                        IsBusy = false; // Unblock UI
+
+                        // Step 2: Background hydration of full dataset
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(200);
+                            App.Current?.Dispatcher.Invoke(() =>
+                            {
+                                _allIncidents = sorted;
+                                FilterItems();
+                            });
+                        });
+                    }
+                    else
+                    {
+                        _allIncidents = sorted;
+                        FilterItems();
+                    }
                 }
             }
+
             catch (Exception ex)
             {
                 NotifyError("Error", "Failed to load incidents.");

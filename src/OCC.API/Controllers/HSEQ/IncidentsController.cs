@@ -5,6 +5,9 @@ using OCC.Shared.Models;
 using OCC.Shared.Enums;
 using OCC.Shared.DTOs;
 
+using Microsoft.AspNetCore.SignalR;
+using OCC.API.Hubs;
+
 namespace OCC.API.Controllers
 {
     [Route("api/[controller]")]
@@ -12,10 +15,12 @@ namespace OCC.API.Controllers
     public class IncidentsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public IncidentsController(AppDbContext context)
+        public IncidentsController(AppDbContext context, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [HttpGet]
@@ -54,6 +59,8 @@ namespace OCC.API.Controllers
             _context.Incidents.Add(incident);
             await _context.SaveChangesAsync();
 
+            await _hubContext.Clients.All.SendAsync("IncidentChanged", new EntityChangeDto<IncidentSummaryDto> { Action = "Created", Entity = ToSummaryDto(incident), EntityId = incident.Id });
+
             return CreatedAtAction("GetIncident", new { id = incident.Id }, ToDetailDto(incident));
         }
 
@@ -76,6 +83,7 @@ namespace OCC.API.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                await _hubContext.Clients.All.SendAsync("IncidentChanged", new EntityChangeDto<IncidentSummaryDto> { Action = "Updated", Entity = ToSummaryDto(incident), EntityId = id });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -103,6 +111,8 @@ namespace OCC.API.Controllers
 
             _context.Incidents.Remove(incident); // Soft delete handled by context
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("IncidentChanged", new EntityChangeDto<IncidentSummaryDto> { Action = "Deleted", Entity = new IncidentSummaryDto { Id = id }, EntityId = id });
 
             return NoContent();
         }

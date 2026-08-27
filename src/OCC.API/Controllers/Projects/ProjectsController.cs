@@ -266,6 +266,8 @@ namespace OCC.API.Controllers
                 await _context.SaveChangesAsync();
                 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Create", project.Id);
+                var summary = new ProjectSummaryDto { Id = project.Id, Name = project.Name, Status = project.Status, ProjectManager = project.ProjectManager, StartDate = project.StartDate, SiteManagerId = project.SiteManagerId, IsActive = project.IsActive, Priority = project.Priority };
+                await _hubContext.Clients.All.SendAsync("ProjectChanged", new EntityChangeDto<ProjectSummaryDto> { Action = "Created", Entity = summary, EntityId = project.Id });
 
                 // Notify Site Manager if assigned during creation
                 if (project.SiteManagerId.HasValue)
@@ -306,6 +308,8 @@ namespace OCC.API.Controllers
             {
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+                var summary = new ProjectSummaryDto { Id = project.Id, Name = project.Name, Status = project.Status, ProjectManager = project.ProjectManager, StartDate = project.StartDate, SiteManagerId = project.SiteManagerId, IsActive = project.IsActive, Priority = project.Priority };
+                await _hubContext.Clients.All.SendAsync("ProjectChanged", new EntityChangeDto<ProjectSummaryDto> { Action = "Updated", Entity = summary, EntityId = id });
 
                 // Notify if Site Manager was changed during this edit
                 if (siteManagerChanged && project.SiteManagerId.HasValue)
@@ -462,6 +466,7 @@ namespace OCC.API.Controllers
                 }
 
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Delete", id);
+                await _hubContext.Clients.All.SendAsync("ProjectChanged", new EntityChangeDto<ProjectSummaryDto> { Action = "Deleted", Entity = new ProjectSummaryDto { Id = id }, EntityId = id });
                 return NoContent();
             }
             catch (Exception ex)
@@ -488,6 +493,8 @@ namespace OCC.API.Controllers
 
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("EntityUpdate", "Project", "Update", id);
+                var summary = new ProjectSummaryDto { Id = project.Id, Name = project.Name, Status = project.Status, ProjectManager = project.ProjectManager, StartDate = project.StartDate, SiteManagerId = project.SiteManagerId, IsActive = project.IsActive, Priority = project.Priority };
+                await _hubContext.Clients.All.SendAsync("ProjectChanged", new EntityChangeDto<ProjectSummaryDto> { Action = "Updated", Entity = summary, EntityId = id });
 
                 return Ok(project);
             }

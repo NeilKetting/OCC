@@ -6,6 +6,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using OCC.Shared.Models;
+using OCC.Shared.DTOs;
+
 using OCC.WpfClient.Infrastructure;
 using OCC.WpfClient.Infrastructure.Messages;
 using OCC.WpfClient.Services.Interfaces;
@@ -51,6 +53,8 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
         [ObservableProperty] private bool _isProjectVisible = true;
         [ObservableProperty] private bool _isDueDateVisible = true;
 
+        private readonly ISignalRService? _signalRService;
+
         public SnagListViewModel(
             ISnagService snagService,
             IProjectService projectService,
@@ -59,7 +63,8 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             IProjectTaskService taskService,
             IServiceProvider serviceProvider,
             ILogger<SnagListViewModel> logger,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _snagService = snagService;
             _projectService = projectService;
@@ -68,11 +73,39 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             _taskService = taskService;
             _serviceProvider = serviceProvider;
             _logger = logger;
+            _signalRService = signalRService;
             Title = "Snag Management";
             
+            if (_signalRService != null)
+            {
+                _signalRService.OnSnagJobChanged += OnSnagJobChangedReceived;
+            }
+
             _ = InitializeAsync();
             
             WeakReferenceMessenger.Default.Register(this);
+        }
+
+        private void OnSnagJobChangedReceived(EntityChangeDto<SnagJob> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = Items?.FirstOrDefault(s => s.Id == change.EntityId || s.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null && Items != null) Items.Add(change.Entity);
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null && Items != null) Items[Items.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null && Items != null) Items.Remove(existing);
+                }
+                TotalCount = Items?.Count ?? 0;
+            });
         }
 
         public void Receive(CloseOverlayMessage message)
@@ -124,8 +157,29 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                     list = list.Where(s => s.Status.ToString() == SelectedStatus).ToList();
                 }
 
-                Items = new ObservableCollection<SnagJob>(list);
-                TotalCount = list.Count;
+                if (list.Count > 100)
+                {
+                    // Step 1: Fast render top 100
+                    Items = new ObservableCollection<SnagJob>(list.Take(100));
+                    TotalCount = list.Count;
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Background hydration
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            Items = new ObservableCollection<SnagJob>(list);
+                            TotalCount = list.Count;
+                        });
+                    });
+                }
+                else
+                {
+                    Items = new ObservableCollection<SnagJob>(list);
+                    TotalCount = list.Count;
+                }
             }
             catch (Exception ex)
             {
@@ -136,6 +190,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         [RelayCommand]
         private void AddSnag()

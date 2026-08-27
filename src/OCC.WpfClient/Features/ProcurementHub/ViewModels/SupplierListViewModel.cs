@@ -55,21 +55,54 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         public override IRelayCommand<object>? EditCommand => EditSupplierCommand;
         public override IRelayCommand<object>? DeleteCommand => DeleteSelectedSuppliersCommand;
 
+        private readonly ISignalRService? _signalRService;
+
         public SupplierListViewModel(
             ISupplierService supplierService,
             IDialogService dialogService,
             LocalSettingsService settingsService,
             ILogger<SupplierListViewModel> logger,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _supplierService = supplierService;
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = logger;
+            _signalRService = signalRService;
             Title = "Supplier Management";
+
+            if (_signalRService != null)
+            {
+                _signalRService.OnSupplierChanged += OnSupplierChangedReceived;
+            }
 
             LoadLayout();
             _ = LoadDataAsync();
+        }
+
+        private void OnSupplierChangedReceived(EntityChangeDto<SupplierSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var existing = _allSuppliers.FirstOrDefault(s => s.Id == change.EntityId || s.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allSuppliers.Add(change.Entity);
+                    else _allSuppliers[_allSuppliers.IndexOf(existing)] = change.Entity;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allSuppliers[_allSuppliers.IndexOf(existing)] = change.Entity;
+                    else _allSuppliers.Add(change.Entity);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allSuppliers.Remove(existing);
+                }
+                FilterItems();
+            });
         }
 
         private void LoadLayout()
@@ -149,10 +182,31 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsBusy = true;
                 BusyText = "Loading suppliers...";
 
-                var suppliers = await _supplierService.GetSupplierSummariesAsync();
-                _allSuppliers = suppliers.OrderBy(s => s.Name).ToList();
+                var suppliers = (await _supplierService.GetSupplierSummariesAsync()).OrderBy(s => s.Name).ToList();
 
-                FilterItems();
+                if (suppliers.Count > 100)
+                {
+                    // Step 1: Fast render top 100 records
+                    _allSuppliers = suppliers.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Background hydration of full dataset
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allSuppliers = suppliers;
+                            FilterItems();
+                        });
+                    });
+                }
+                else
+                {
+                    _allSuppliers = suppliers;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {
@@ -164,6 +218,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         [RelayCommand]
         private void AddSupplier()

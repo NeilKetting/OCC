@@ -59,7 +59,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             AuditYAxes.Add(new Axis 
             { 
                 MinLimit = 0, 
-                MaxLimit = 100, 
+                MaxLimit = 115, 
                 Labeler = v => $"{v}%",
                 LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 SeparatorsPaint = new SolidColorPaint(SKColors.DarkGray.WithAlpha(30)),

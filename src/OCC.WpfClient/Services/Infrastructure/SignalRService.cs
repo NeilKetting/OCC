@@ -39,6 +39,17 @@ namespace OCC.WpfClient.Services
         public event Action<EntityChangeDto<WageRun>>? OnWageRunChanged;
         public event Action<EntityChangeDto<WageSettings>>? OnWageSettingsChanged;
 
+        // Expanded Delta Payload Streaming Events
+        public event Action<EntityChangeDto<ProjectSummaryDto>>? OnProjectChanged;
+        public event Action<EntityChangeDto<SupplierSummaryDto>>? OnSupplierChanged;
+        public event Action<EntityChangeDto<CustomerSummaryDto>>? OnCustomerChanged;
+        public event Action<EntityChangeDto<SubContractorSummaryDto>>? OnSubContractorChanged;
+        public event Action<EntityChangeDto<SnagJob>>? OnSnagJobChanged;
+        public event Action<EntityChangeDto<IncidentSummaryDto>>? OnIncidentChanged;
+        public event Action<EntityChangeDto<AuditSummaryDto>>? OnAuditChanged;
+        public event Action<EntityChangeDto<HseqTrainingSummaryDto>>? OnTrainingChanged;
+
+
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public bool IsChatConnected => _chatHubConnection?.State == HubConnectionState.Connected;
         public int OnlineCount => OnlineUsers.Count;
@@ -169,6 +180,56 @@ namespace OCC.WpfClient.Services
                 DebugLog($"[SignalR] RECV WageSettingsChanged: {change?.Action} | {change?.EntityId}");
                 if (change != null) OnWageSettingsChanged?.Invoke(change);
             });
+
+            // Expanded Delta Streaming Handlers
+            _hubConnection.On<EntityChangeDto<ProjectSummaryDto>>("ProjectChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV ProjectChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnProjectChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<SupplierSummaryDto>>("SupplierChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV SupplierChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnSupplierChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<CustomerSummaryDto>>("CustomerChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV CustomerChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnCustomerChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<SubContractorSummaryDto>>("SubContractorChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV SubContractorChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnSubContractorChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<SnagJob>>("SnagJobChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV SnagJobChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnSnagJobChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<IncidentSummaryDto>>("IncidentChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV IncidentChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnIncidentChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<AuditSummaryDto>>("AuditChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV AuditChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnAuditChanged?.Invoke(change);
+            });
+
+            _hubConnection.On<EntityChangeDto<HseqTrainingSummaryDto>>("TrainingChanged", (change) =>
+            {
+                DebugLog($"[SignalR] RECV TrainingChanged: {change?.Action} | {change?.EntityId}");
+                if (change != null) OnTrainingChanged?.Invoke(change);
+            });
+
 
             _hubConnection.On<string, string, string>("EntityUpdate", (entityType, action, idStr) =>
             {

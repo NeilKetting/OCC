@@ -44,6 +44,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
         public ObservableCollection<string> Categories { get; } = new() { "All", "Training", "Medicals" };
 
+        private readonly ISignalRService? _signalRService;
+
         public TrainingListViewModel(
             IHealthSafetyService hseqService, 
             IDialogService dialogService, 
@@ -51,7 +53,8 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             IExportService exportService,
             IServiceProvider serviceProvider,
             ConnectionSettings settings,
-            IPdfService pdfService) : base(pdfService)
+            IPdfService pdfService,
+            ISignalRService? signalRService = null) : base(pdfService)
         {
             _hseqService = hseqService;
             _dialogService = dialogService;
@@ -59,10 +62,42 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
             _exportService = exportService;
             _serviceProvider = serviceProvider;
             _settings = settings;
+            _signalRService = signalRService;
             Title = "Training";
             
+            if (_signalRService != null)
+            {
+                _signalRService.OnTrainingChanged += OnTrainingChangedReceived;
+            }
+
             _ = LoadDataAsync();
         }
+
+        private void OnTrainingChangedReceived(EntityChangeDto<HseqTrainingSummaryDto> change)
+        {
+            if (change?.Entity == null) return;
+            App.Current?.Dispatcher.Invoke(() =>
+            {
+                var row = new TrainingRecordViewModel(change.Entity);
+                var existing = _allRecords.FirstOrDefault(t => t.Id == change.EntityId || t.Id == change.Entity.Id);
+                if (change.Action == "Created" || change.Action == "Create")
+                {
+                    if (existing == null) _allRecords.Add(row);
+                    else _allRecords[_allRecords.IndexOf(existing)] = row;
+                }
+                else if (change.Action == "Updated" || change.Action == "Update")
+                {
+                    if (existing != null) _allRecords[_allRecords.IndexOf(existing)] = row;
+                    else _allRecords.Add(row);
+                }
+                else if (change.Action == "Deleted" || change.Action == "Delete")
+                {
+                    if (existing != null) _allRecords.Remove(existing);
+                }
+                FilterItems();
+            });
+        }
+
 
         public override async Task LoadDataAsync()
         {
@@ -79,8 +114,31 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 var summaries = summariesTask.Result;
                 _allEmployees = employeesTask.Result.OrderBy(e => e.FirstName).ThenBy(e => e.LastName).ToList();
 
-                _allRecords = summaries.Select(r => new TrainingRecordViewModel(r)).ToList();
-                FilterItems();
+                var records = summaries.Select(r => new TrainingRecordViewModel(r)).ToList();
+
+                if (records.Count > 100)
+                {
+                    // Step 1: Fast render top 100
+                    _allRecords = records.Take(100).ToList();
+                    FilterItems();
+                    IsBusy = false; // Unblock UI
+
+                    // Step 2: Background hydration
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(200);
+                        App.Current?.Dispatcher.Invoke(() =>
+                        {
+                            _allRecords = records;
+                            FilterItems();
+                        });
+                    });
+                }
+                else
+                {
+                    _allRecords = records;
+                    FilterItems();
+                }
             }
             catch (Exception ex)
             {
@@ -92,6 +150,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
                 IsBusy = false;
             }
         }
+
 
         protected override void FilterItems()
         {
