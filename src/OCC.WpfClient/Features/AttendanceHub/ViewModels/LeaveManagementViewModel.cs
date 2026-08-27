@@ -424,17 +424,24 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
         private double GetEmployeeDailyShiftHours()
         {
-            double dailyHours = 9.0;
-            if (SelectedEmployee != null && SelectedEmployee.ShiftStartTime.HasValue && SelectedEmployee.ShiftEndTime.HasValue)
+            if (SelectedEmployee == null) return 8.75;
+
+            if (SelectedEmployee.ShiftStartTime.HasValue && SelectedEmployee.ShiftEndTime.HasValue)
             {
-                dailyHours = (SelectedEmployee.ShiftEndTime.Value - SelectedEmployee.ShiftStartTime.Value).TotalHours;
+                double dailyHours = (SelectedEmployee.ShiftEndTime.Value - SelectedEmployee.ShiftStartTime.Value).TotalHours;
                 if (SelectedEmployee.ShiftEndTime.Value.Hours >= 13)
                 {
                     dailyHours -= 1.0;
                 }
-                if (dailyHours < 0) dailyHours = 0;
+                if (dailyHours > 0) return dailyHours;
             }
-            return dailyHours <= 0 ? 9.0 : dailyHours;
+
+            if (string.Equals(SelectedEmployee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(SelectedEmployee.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
+            {
+                return 8.5;
+            }
+
+            return 8.75;
         }
 
         private void CheckBalance()

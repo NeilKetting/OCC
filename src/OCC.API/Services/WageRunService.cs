@@ -309,7 +309,7 @@ namespace OCC.API.Services
                     }
                 }
 
-                double dailyHours = 9.0;
+                double dailyHours;
                 if (empForCalc.ShiftStartTime.HasValue && empForCalc.ShiftEndTime.HasValue)
                 {
                     dailyHours = (empForCalc.ShiftEndTime.Value - empForCalc.ShiftStartTime.Value).TotalHours;
@@ -318,6 +318,14 @@ namespace OCC.API.Services
                         dailyHours -= 1.0;
                     }
                     if (dailyHours < 0) dailyHours = 0;
+                }
+                else if (string.Equals(empForCalc.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(empForCalc.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
+                {
+                    dailyHours = 8.5;
+                }
+                else
+                {
+                    dailyHours = 8.75;
                 }
 
                 // Pre-process Approved Leave Requests: Ensure dates covered by approved leave requests have attendance records

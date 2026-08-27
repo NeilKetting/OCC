@@ -175,7 +175,7 @@ namespace OCC.API.Controllers
             }
             
             // Standard shift hours calculation (as confirmed by client/wage runs)
-            double dailyHours = 9.0;
+            double dailyHours;
             if (employee.ShiftStartTime.HasValue && employee.ShiftEndTime.HasValue)
             {
                 dailyHours = (employee.ShiftEndTime.Value - employee.ShiftStartTime.Value).TotalHours;
@@ -184,6 +184,14 @@ namespace OCC.API.Controllers
                     dailyHours -= 1.0;
                 }
                 if (dailyHours < 0) dailyHours = 0;
+            }
+            else if (string.Equals(employee.Branch, "Cape Town", StringComparison.OrdinalIgnoreCase) || string.Equals(employee.Branch, "CPT", StringComparison.OrdinalIgnoreCase))
+            {
+                dailyHours = 8.5;
+            }
+            else
+            {
+                dailyHours = 8.75;
             }
 
             // Fractions for allocation
