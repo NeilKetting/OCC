@@ -280,11 +280,7 @@ namespace OCC.WpfClient.Features.Admin.Users.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(u => 
-                    (u.FirstName?.ToLower().Contains(query) ?? false) ||
-                    (u.LastName?.ToLower().Contains(query) ?? false) ||
-                    (u.Email?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(u => SearchUtils.MatchesQuery(SearchQuery, u.FirstName, u.LastName, u.Email, u.Branch?.ToString()));
             }
 
             var result = filtered.ToList();

@@ -285,11 +285,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var q = SearchQuery.ToLower();
-                filtered = filtered.Where(r =>
-                    (r.Employee != null && $"{r.Employee.FirstName} {r.Employee.LastName}".ToLower().Contains(q)) ||
-                    r.LeaveType.ToString().ToLower().Contains(q) ||
-                    r.Reason.ToLower().Contains(q));
+                filtered = filtered.Where(r => SearchUtils.MatchesQuery(SearchQuery, r.Employee?.FirstName, r.Employee?.LastName, r.Employee?.EmployeeNumber, r.LeaveType.ToString(), r.Reason));
             }
 
             filtered = SelectedFilterIndex switch

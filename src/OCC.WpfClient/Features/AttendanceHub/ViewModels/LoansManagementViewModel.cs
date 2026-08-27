@@ -640,11 +640,10 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
         {
             if (obj is not EmployeeLoan loan) return false;
 
-            // Search query (Employee Name)
+            // Search query (Employee Name, Number, Notes)
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var name = loan.Employee?.DisplayName ?? string.Empty;
-                if (!name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
+                if (!SearchUtils.MatchesQuery(SearchQuery, loan.Employee?.FirstName, loan.Employee?.LastName, loan.Employee?.EmployeeNumber, loan.Notes))
                     return false;
             }
 

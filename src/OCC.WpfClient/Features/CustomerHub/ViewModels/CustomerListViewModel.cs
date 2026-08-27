@@ -303,11 +303,7 @@ namespace OCC.WpfClient.Features.CustomerHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(c => 
-                    (c.Name?.ToLower().Contains(query) ?? false) ||
-                    (c.Email?.ToLower().Contains(query) ?? false) ||
-                    (c.Address?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(c => SearchUtils.MatchesQuery(SearchQuery, c.Name, c.Email, c.Address, c.Phone));
             }
 
             var result = filtered.ToList();

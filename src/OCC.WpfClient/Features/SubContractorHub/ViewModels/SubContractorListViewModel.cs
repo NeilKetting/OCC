@@ -304,12 +304,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
             // 1. Search Query
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(c => 
-                    (c.Name?.ToLower().Contains(query) ?? false) ||
-                    (c.Email?.ToLower().Contains(query) ?? false) ||
-                    (c.Specialties?.ToLower().Contains(query) ?? false) ||
-                    (c.Phone?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(c => SearchUtils.MatchesQuery(SearchQuery, c.Name, c.Email, c.Specialties, c.Phone, c.Branch));
             }
 
             // 2. Branch Filter

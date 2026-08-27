@@ -156,11 +156,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(i => 
-                    (i.Sku?.ToLower().Contains(query) ?? false) ||
-                    (i.Description?.ToLower().Contains(query) ?? false) ||
-                    (i.Category?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(i => SearchUtils.MatchesQuery(SearchQuery, i.Sku, i.Description, i.Category, i.UnitOfMeasure));
             }
 
             if (SelectedCategoryFilter != "All Categories" && !string.IsNullOrWhiteSpace(SelectedCategoryFilter))

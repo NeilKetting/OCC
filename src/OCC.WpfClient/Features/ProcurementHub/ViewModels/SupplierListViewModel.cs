@@ -316,12 +316,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(s =>
-                    (s.Name?.ToLower().Contains(query) ?? false) ||
-                    (s.Email?.ToLower().Contains(query) ?? false) ||
-                    (s.Phone?.ToLower().Contains(query) ?? false) ||
-                    (s.VatNumber?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(s => SearchUtils.MatchesQuery(SearchQuery, s.Name, s.Email, s.Phone, s.VatNumber, s.Address, s.Branch));
             }
 
             if (SelectedBranchFilter != "All" && Enum.TryParse<Branch>(SelectedBranchFilter, out var branch))

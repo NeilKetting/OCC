@@ -80,10 +80,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IEnumerable<SelectableEmployee> filtered = _allEmployees;
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var q = SearchQuery.ToLower();
-                filtered = filtered.Where(e =>
-                    e.FullName.ToLower().Contains(q) ||
-                    e.Role.ToLower().Contains(q));
+                filtered = filtered.Where(e => SearchUtils.MatchesQuery(SearchQuery, e.FullName, e.Role));
             }
             AvailableEmployees = new ObservableCollection<SelectableEmployee>(filtered);
         }

@@ -272,10 +272,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
             // Client-side search filter
             if (string.IsNullOrWhiteSpace(SearchQuery)) return true;
-
-            var q = SearchQuery.Trim();
-            return (line.EmployeeName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (line.EmployeeNumber?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false);
+            return SearchUtils.MatchesQuery(SearchQuery, line.EmployeeName, line.EmployeeNumber, line.VarianceNotes, line.Comments);
         }
 
         partial void OnSearchQueryChanged(string value)

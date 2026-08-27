@@ -196,11 +196,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             IEnumerable<SelectableDailyEmployee> filtered = _allEmployees;
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var q = SearchQuery.ToLower();
-                filtered = filtered.Where(e =>
-                    (e.FullName?.ToLower().Contains(q) ?? false) ||
-                    (e.Role?.ToLower().Contains(q) ?? false) ||
-                    (e.AssignmentStatusText?.ToLower().Contains(q) ?? false));
+                filtered = filtered.Where(e => SearchUtils.MatchesQuery(SearchQuery, e.FullName, e.Role, e.AssignmentStatusText));
             }
             AvailableEmployees = new ObservableCollection<SelectableDailyEmployee>(filtered);
             OnPropertyChanged(nameof(SelectedCount));

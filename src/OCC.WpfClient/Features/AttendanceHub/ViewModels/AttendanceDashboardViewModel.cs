@@ -169,11 +169,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             // Search query
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var q = SearchQuery.ToLower();
-                filtered = filtered.Where(r => 
-                    r.EmployeeName.ToLower().Contains(q) || 
-                    r.EmployeeNumber.ToLower().Contains(q) || 
-                    r.Role.ToLower().Contains(q));
+                filtered = filtered.Where(r => SearchUtils.MatchesQuery(SearchQuery, r.EmployeeName, r.EmployeeNumber, r.Role, r.Branch));
             }
 
             // Branch filter

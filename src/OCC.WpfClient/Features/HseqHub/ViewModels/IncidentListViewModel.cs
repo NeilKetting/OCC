@@ -138,12 +138,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(i =>
-                    (i.Location?.ToLower().Contains(query) ?? false) ||
-                    (i.Type.ToString().ToLower().Contains(query)) ||
-                    (i.Severity.ToString().ToLower().Contains(query)) ||
-                    (i.Status.ToString().ToLower().Contains(query)));
+                filtered = filtered.Where(i => SearchUtils.MatchesQuery(SearchQuery, i.Location, i.Type.ToString(), i.Severity.ToString(), i.Status.ToString()));
             }
 
             var result = filtered.ToList();

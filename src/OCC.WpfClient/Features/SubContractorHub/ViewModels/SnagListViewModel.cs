@@ -221,13 +221,7 @@ namespace OCC.WpfClient.Features.SubContractorHub.ViewModels
                 return;
             }
 
-            var query = SearchQuery.ToLower();
-            var filtered = Items.Where(s => 
-                (s.Title?.ToLower().Contains(query) ?? false) ||
-                (s.Description?.ToLower().Contains(query) ?? false) ||
-                (s.SubContractor?.Name?.ToLower().Contains(query) ?? false) ||
-                (s.Project?.Name?.ToLower().Contains(query) ?? false));
-
+            var filtered = Items.Where(s => SearchUtils.MatchesQuery(SearchQuery, s.Title, s.Description, s.SubContractor?.Name, s.Project?.Name, s.Status.ToString()));
             Items = new ObservableCollection<SnagJob>(filtered);
         }
     }

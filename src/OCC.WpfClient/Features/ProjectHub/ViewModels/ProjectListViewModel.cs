@@ -332,11 +332,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(p => 
-                    (p.Name?.ToLower().Contains(query) ?? false) ||
-                    (p.ProjectManager?.ToLower().Contains(query) ?? false) ||
-                    (p.SiteManagerName?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(p => SearchUtils.MatchesQuery(SearchQuery, p.Name, p.ProjectManager, p.SiteManagerName));
             }
 
             Items = new ObservableCollection<ProjectSummaryDto>(filtered.ToList());

@@ -32,6 +32,8 @@
 
 - [DONE] **Progressive List View Loading Expansion**: Expanded progressive staged loading (initial top 100 instant load + background hydration) across all WPF list views (Projects, Customers, Suppliers, SubContractors, Snags, Incidents, Audits, Training, Users, Inventory).
 - [DONE] **SignalR Delta Payload Streaming Expansion**: Extended real-time `EntityChangeDto<T>` streaming across Projects, Procurement/Orders, Customers, SubContractors, and HSEQ (Incidents, Audits, Training) backend controllers and client ViewModels with zero full-page refreshes.
+- [DONE] **Robust Attendance Record Cleanup on Leave Deletion/Update**: Fixed `LeaveRequestsController` to clean up or revert attendance records even when leave notes do not contain explicit token tags.
+- [DONE] **Unified Multi-Token Space-Delimited Search Engine across WPF Client**: Created `SearchUtils.MatchesQuery` supporting queries like `"Lucky M"` across Employee Management, Wage Run, Attendance, Projects, Customers, Suppliers, SubContractors, Inventory, Incidents, Audits, Training, and User Management list views.
 
 ### Remaining Work [TODO]
 - [TODO] **Application Framework Evaluation**: Evaluate and incorporate a suitable application framework for the app in a future phase.

@@ -285,13 +285,12 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var q = SearchQuery.ToLower();
                 filtered = filtered.Where(r =>
-                    (r.Branch?.ToLower().Contains(q) ?? false) ||
-                    (r.EmployeeId.HasValue && _employeeNameMap.TryGetValue(r.EmployeeId.Value, out var name) && name.ToLower().Contains(q)) ||
-                    (r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var projName) && projName.ToLower().Contains(q)) ||
-                    (r.CustomSite != null && r.CustomSite.ToLower().Contains(q)) ||
-                    (r.Notes != null && r.Notes.ToLower().Contains(q) && (r.Status == AttendanceStatus.Present || r.Status == AttendanceStatus.Late || r.Status == AttendanceStatus.LeaveEarly)));
+                {
+                    var empName = r.EmployeeId.HasValue && _employeeNameMap.TryGetValue(r.EmployeeId.Value, out var name) ? name : "";
+                    var projName = r.ProjectId.HasValue && _projectNameMap.TryGetValue(r.ProjectId.Value, out var pName) ? pName : "";
+                    return SearchUtils.MatchesQuery(SearchQuery, empName, projName, r.Branch, r.CustomSite, r.Notes);
+                });
             }
 
             filtered = SelectedBranchIndex switch

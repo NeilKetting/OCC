@@ -82,10 +82,7 @@ namespace OCC.WpfClient.Features.AttendanceHub.ViewModels
             var filtered = _allTeams.AsEnumerable();
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var q = SearchQuery.ToLower();
-                filtered = filtered.Where(t =>
-                    t.Name.ToLower().Contains(q) ||
-                    t.Description.ToLower().Contains(q));
+                filtered = filtered.Where(t => SearchUtils.MatchesQuery(SearchQuery, t.Name, t.Description));
             }
             var result = filtered.OrderBy(t => t.Name).ToList();
             Items = new ObservableCollection<Team>(result);

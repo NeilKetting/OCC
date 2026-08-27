@@ -109,11 +109,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(o =>
-                    (o.Description?.ToLower().Contains(query) ?? false) ||
-                    (o.ApprovedBy?.ToLower().Contains(query) ?? false) ||
-                    (o.Status?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(o => SearchUtils.MatchesQuery(SearchQuery, o.Description, o.ApprovedBy, o.Status));
             }
 
             var list = filtered.ToList();

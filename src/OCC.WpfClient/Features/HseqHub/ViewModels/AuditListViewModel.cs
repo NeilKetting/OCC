@@ -151,12 +151,7 @@ namespace OCC.WpfClient.Features.HseqHub.ViewModels
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(a =>
-                    (a.AuditNumber?.ToLower().Contains(query) ?? false) ||
-                    (a.SiteName?.ToLower().Contains(query) ?? false) ||
-                    (a.HseqConsultant?.ToLower().Contains(query) ?? false) ||
-                    (a.Status.ToString().ToLower().Contains(query)));
+                filtered = filtered.Where(a => SearchUtils.MatchesQuery(SearchQuery, a.AuditNumber, a.SiteName, a.HseqConsultant, a.Status.ToString()));
             }
 
             var result = filtered.ToList();

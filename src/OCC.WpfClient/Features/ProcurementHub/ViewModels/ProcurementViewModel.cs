@@ -151,11 +151,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             // 3. Filter by Search Query (Order #, Supplier name, or Project name)
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(o =>
-                    (o.OrderNumber?.ToLower().Contains(query) ?? false) ||
-                    (o.SupplierName?.ToLower().Contains(query) ?? false) ||
-                    (o.ProjectName?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(o => SearchUtils.MatchesQuery(SearchQuery, o.OrderNumber, o.SupplierName, o.ProjectName));
             }
 
             DisplayOrders.Clear();

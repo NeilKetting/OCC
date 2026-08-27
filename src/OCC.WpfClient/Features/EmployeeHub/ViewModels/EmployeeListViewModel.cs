@@ -579,11 +579,7 @@ namespace OCC.WpfClient.Features.EmployeeHub.ViewModels
             // Search Query
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(e => 
-                    (e.FirstName?.ToLower().Contains(query) ?? false) ||
-                    (e.LastName?.ToLower().Contains(query) ?? false) ||
-                    (e.EmployeeNumber?.ToLower().Contains(query) ?? false));
+                filtered = filtered.Where(e => SearchUtils.MatchesQuery(SearchQuery, e.FirstName, e.LastName, e.EmployeeNumber, e.Role.ToString(), e.Branch));
             }
 
             // Employment Type Filter

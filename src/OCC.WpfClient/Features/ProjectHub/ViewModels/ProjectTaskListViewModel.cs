@@ -289,8 +289,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // If it's a group and we're filtering by subbie, we might want to hide it if no children match
             // But usually we show the hierarchy.
             
-            bool matchesSearch = string.IsNullOrWhiteSpace(SearchQuery) || 
-                task.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
+            bool matchesSearch = SearchUtils.MatchesQuery(SearchQuery, task.Name, task.Status);
 
             bool matchesStage = SelectedStageFilter == "All Stages" || 
                 (SelectedStageFilter == "In Progress"
@@ -425,8 +424,7 @@ namespace OCC.WpfClient.Features.ProjectHub.ViewModels
             // We'll use the IsVisible property on the SelectionViewModel for simplicity in the ListBox
             foreach (var sc in AvailableSubContractors)
             {
-                bool matchesSearch = string.IsNullOrWhiteSpace(SubContractorSearchQuery) || 
-                    sc.Name.Contains(SubContractorSearchQuery, StringComparison.OrdinalIgnoreCase);
+                bool matchesSearch = SearchUtils.MatchesQuery(SubContractorSearchQuery, sc.Name, sc.Specialty);
                 
                 bool matchesSpecialty = SelectedSpecialtyFilter == "All Specialties" || 
                     (sc.Specialty != null && sc.Specialty.Contains(SelectedSpecialtyFilter, StringComparison.OrdinalIgnoreCase));
