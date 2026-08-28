@@ -668,5 +668,51 @@ namespace OCC.Tests.Features.WagesHub
             Assert.Contains("28/08: Paid Leave - Half Day (Morning);", line.VarianceNotes);
             Assert.Contains("Paid Leave - Half Day (Morning) (0.5d: 28/08)", line.Comments);
         }
+
+        [Fact]
+        public async Task GenerateDraftAsync_MonthlySalary_PublicHolidayAbsent_IncludesFullMonthPay()
+        {
+            // Arrange: 01 Aug 2026 to 31 Aug 2026 (21 weekdays, Mon 10 Aug is Women's Day observed Public Holiday)
+            using var context = GetInMemoryDbContext();
+            var realWageCalc = new WageCalculationService(new WageCalculationOptions());
+            var mockConfig = new Mock<IConfiguration>();
+
+            var empId = Guid.NewGuid();
+            var emp = new Employee
+            {
+                Id = empId,
+                FirstName = "Mercy",
+                LastName = "Ndlovu",
+                EmployeeNumber = "NOB",
+                Branch = "Johannesburg",
+                Status = EmployeeStatus.Active,
+                RateType = RateType.MonthlySalary,
+                HourlyRate = 32.04
+            };
+            context.Employees.Add(emp);
+            await context.SaveChangesAsync();
+
+            var service = new WageRunService(context, realWageCalc, mockConfig.Object);
+            var request = new WageRun
+            {
+                Id = Guid.NewGuid(),
+                StartDate = new DateTime(2026, 8, 1),
+                EndDate = new DateTime(2026, 8, 31),
+                Branch = "Johannesburg",
+                PayType = "MonthlySalary",
+                RunType = WageRunType.Standard,
+                PayFrequency = PayFrequency.Monthly
+            };
+
+            // Act
+            var draft = await service.GenerateDraftAsync(request);
+
+            // Assert
+            var line = draft.Lines.First(l => l.EmployeeId == empId);
+            // 21 weekdays * 8.75 hours = 183.75 hours
+            Assert.Equal(183.75, line.NormalHours);
+            // 183.75 * 32.04 = 5887.35
+            Assert.Equal(5887.35m, line.TotalWage);
+        }
     }
 }

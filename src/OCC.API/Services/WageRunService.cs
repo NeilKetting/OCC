@@ -515,7 +515,7 @@ namespace OCC.API.Services
                     double monthStandardHours = 0;
                     for (var d = reqStart; d <= reqEnd; d = d.AddDays(1))
                     {
-                        if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday && !OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(d))
+                        if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday)
                         {
                             monthStandardHours += dailyHours;
                         }
@@ -528,13 +528,17 @@ namespace OCC.API.Services
                         {
                             if (record.Date.Date >= reqStart && record.Date.Date <= reqEnd)
                             {
-                                if (record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
+                                bool isHoliday = publicHolidayDates.Contains(record.Date.Date) || OCC.Shared.Utils.HolidayUtils.IsPublicHoliday(record.Date.Date);
+                                if (!isHoliday)
                                 {
-                                    unpaidDeductions += dailyHours;
-                                }
-                                else if (record.Status == AttendanceStatus.UnpaidHalfDay)
-                                {
-                                    unpaidDeductions += (dailyHours / 2.0);
+                                    if (record.Status == AttendanceStatus.Absent || record.Status == AttendanceStatus.UnpaidSick || record.Status == AttendanceStatus.UnpaidLeave)
+                                    {
+                                        unpaidDeductions += dailyHours;
+                                    }
+                                    else if (record.Status == AttendanceStatus.UnpaidHalfDay)
+                                    {
+                                        unpaidDeductions += (dailyHours / 2.0);
+                                    }
                                 }
                             }
                         }
