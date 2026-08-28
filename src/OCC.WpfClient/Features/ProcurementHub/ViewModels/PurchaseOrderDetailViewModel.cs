@@ -81,6 +81,11 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
         public ObservableCollection<string> CustomProjectSuggestions { get; } = new();
 
         [ObservableProperty]
+        private bool _isScopeOfWorkSuggestionsOpen;
+
+        public ObservableCollection<string> ScopeOfWorkSuggestions { get; } = new();
+
+        [ObservableProperty]
         private OrderWrapper? _currentOrder;
 
         [ObservableProperty]
@@ -243,6 +248,52 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             }
         }
 
+        // ─── Scope of Work History ───────────────────────────────────────────────
+
+        /// <summary>Loads the user's scope of work history into suggestions, filtered by user input.</summary>
+        public void LoadScopeOfWorkHistory()
+        {
+            var history = _localSettingsService.Settings.ScopeOfWorkHistory ?? new System.Collections.Generic.List<string>();
+            ScopeOfWorkSuggestions.Clear();
+
+            var filter = CurrentOrder?.ScopeOfWork?.Trim();
+            foreach (var item in history)
+            {
+                if (string.IsNullOrWhiteSpace(filter) || item.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                {
+                    ScopeOfWorkSuggestions.Add(item);
+                }
+            }
+
+            if (CurrentOrder != null
+                && !string.IsNullOrWhiteSpace(CurrentOrder.ScopeOfWork)
+                && !ScopeOfWorkSuggestions.Contains(CurrentOrder.ScopeOfWork, StringComparer.OrdinalIgnoreCase)
+                && (string.IsNullOrWhiteSpace(filter) || CurrentOrder.ScopeOfWork.Contains(filter, StringComparison.OrdinalIgnoreCase)))
+            {
+                ScopeOfWorkSuggestions.Insert(0, CurrentOrder.ScopeOfWork);
+            }
+        }
+
+        [RelayCommand]
+        public void RemoveScopeOfWorkSuggestion(string scope)
+        {
+            if (string.IsNullOrWhiteSpace(scope)) return;
+            _localSettingsService.RemoveScopeOfWorkHistory(scope);
+            LoadScopeOfWorkHistory();
+        }
+
+        /// <summary>
+        /// Persists the current Scope of Work to local history.
+        /// </summary>
+        public void AddCurrentScopeOfWorkToHistory()
+        {
+            if (CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.ScopeOfWork))
+            {
+                _localSettingsService.AddScopeOfWorkHistory(CurrentOrder.ScopeOfWork);
+                LoadScopeOfWorkHistory();
+            }
+        }
+
         // ─── Main Load Command ────────────────────────────────────────────────────
 
         /// <summary>
@@ -265,6 +316,7 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 SetBusy(true);
                 LoadCustomProjectHistory();
+                LoadScopeOfWorkHistory();
 
                 // ── Phase 1: Fetch all lookup data in parallel on a background thread. ──
                 // All three fetches run concurrently. InventoryItems is ALWAYS refreshed so
@@ -843,12 +895,17 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 return false;
             }
 
-            // 2. Persist custom project name to local history
+            // 2. Persist custom project name and scope of work to local history
             if (IsOtherProjectSelected && CurrentOrder != null)
             {
                 CurrentOrder.ProjectId = null;
                 if (!string.IsNullOrWhiteSpace(CurrentOrder.ProjectName))
                     AddCurrentCustomProjectToHistory();
+            }
+
+            if (CurrentOrder != null && !string.IsNullOrWhiteSpace(CurrentOrder.ScopeOfWork))
+            {
+                AddCurrentScopeOfWorkToHistory();
             }
 
             _logger.LogInformation(

@@ -34,6 +34,7 @@
 - [DONE] **SignalR Delta Payload Streaming Expansion**: Extended real-time `EntityChangeDto<T>` streaming across Projects, Procurement/Orders, Customers, SubContractors, and HSEQ (Incidents, Audits, Training) backend controllers and client ViewModels with zero full-page refreshes.
 - [DONE] **Robust Attendance Record Cleanup on Leave Deletion/Update**: Fixed `LeaveRequestsController` to clean up or revert attendance records even when leave notes do not contain explicit token tags.
 - [DONE] **Unified Multi-Token Space-Delimited Search Engine across WPF Client**: Created `SearchUtils.MatchesQuery` supporting queries like `"Lucky M"` across Employee Management, Wage Run, Attendance, Projects, Customers, Suppliers, SubContractors, Inventory, Incidents, Audits, Training, and User Management list views.
+- [DONE] **User-Level Scope of Work History & Real-Time Auto-Suggestions**: Added per-user history tracking in `%APPDATA%\OCC.WpfClient\settings.json` for Scope of Work entries on Purchase Order screen, with real-time filtering from the first letter typed and inline deletion (`x`).
 
 ### Remaining Work [TODO]
 - [TODO] **Application Framework Evaluation**: Evaluate and incorporate a suitable application framework for the app in a future phase.

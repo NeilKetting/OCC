@@ -111,5 +111,45 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
                 viewModel.IsCustomProjectSuggestionsOpen = false;
             }
         }
+
+        private void ScopeOfWorkInputBox_GotFocus(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                viewModel.LoadScopeOfWorkHistory();
+            }
+        }
+
+        private void ScopeOfWorkInputBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                if (ScopeOfWorkInputBox.IsKeyboardFocusWithin)
+                {
+                    viewModel.LoadScopeOfWorkHistory();
+                    viewModel.IsScopeOfWorkSuggestionsOpen = viewModel.ScopeOfWorkSuggestions.Count > 0;
+                }
+            }
+        }
+
+        private void ScopeOfWorkInputBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                viewModel.AddCurrentScopeOfWorkToHistory();
+            }
+        }
+
+        private void ScopeOfWorkItem_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is System.Windows.FrameworkElement element && element.DataContext is string selectedScope && DataContext is PurchaseOrderDetailViewModel viewModel)
+            {
+                if (viewModel.CurrentOrder != null)
+                {
+                    viewModel.CurrentOrder.ScopeOfWork = selectedScope;
+                }
+                viewModel.IsScopeOfWorkSuggestionsOpen = false;
+            }
+        }
     }
 }

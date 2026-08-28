@@ -43,6 +43,7 @@ namespace OCC.WpfClient.Services.Infrastructure
         public bool DisableOutlookSync { get; set; } = false;
         public bool MuteOutlookReminders { get; set; } = false;
         public System.Collections.Generic.List<string> CustomProjectHistory { get; set; } = new System.Collections.Generic.List<string>();
+        public System.Collections.Generic.List<string> ScopeOfWorkHistory { get; set; } = new System.Collections.Generic.List<string>();
         public bool ActionCenterTrackPassportAlerts { get; set; } = true;
         public bool ActionCenterTrackBankingAlerts { get; set; } = true;
     }
@@ -88,6 +89,10 @@ namespace OCC.WpfClient.Services.Infrastructure
                     if (settings.CustomProjectHistory == null)
                     {
                         settings.CustomProjectHistory = new System.Collections.Generic.List<string>();
+                    }
+                    if (settings.ScopeOfWorkHistory == null)
+                    {
+                        settings.ScopeOfWorkHistory = new System.Collections.Generic.List<string>();
                     }
                     return settings;
                 }
@@ -141,6 +146,39 @@ namespace OCC.WpfClient.Services.Infrastructure
             if (string.IsNullOrWhiteSpace(project) || _settings.CustomProjectHistory == null) return;
             var trimmed = project.Trim();
             int removed = _settings.CustomProjectHistory.RemoveAll(p => string.Equals(p, trimmed, StringComparison.OrdinalIgnoreCase));
+            if (removed > 0)
+            {
+                Save();
+            }
+        }
+
+        public void AddScopeOfWorkHistory(string scope)
+        {
+            if (string.IsNullOrWhiteSpace(scope)) return;
+            var trimmed = scope.Trim();
+            if (_settings.ScopeOfWorkHistory == null)
+            {
+                _settings.ScopeOfWorkHistory = new System.Collections.Generic.List<string>();
+            }
+
+            // Remove existing case-insensitive duplicate to re-insert at top
+            _settings.ScopeOfWorkHistory.RemoveAll(s => string.Equals(s, trimmed, StringComparison.OrdinalIgnoreCase));
+            _settings.ScopeOfWorkHistory.Insert(0, trimmed);
+
+            // Limit history to 50 items
+            if (_settings.ScopeOfWorkHistory.Count > 50)
+            {
+                _settings.ScopeOfWorkHistory = _settings.ScopeOfWorkHistory.GetRange(0, 50);
+            }
+
+            Save();
+        }
+
+        public void RemoveScopeOfWorkHistory(string scope)
+        {
+            if (string.IsNullOrWhiteSpace(scope) || _settings.ScopeOfWorkHistory == null) return;
+            var trimmed = scope.Trim();
+            int removed = _settings.ScopeOfWorkHistory.RemoveAll(s => string.Equals(s, trimmed, StringComparison.OrdinalIgnoreCase));
             if (removed > 0)
             {
                 Save();
