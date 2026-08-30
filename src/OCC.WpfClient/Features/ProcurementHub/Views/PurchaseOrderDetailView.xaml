@@ -26,6 +26,8 @@
 
         <conv:VisibilityConverter x:Key="VisibilityConverter"/>
         <conv:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         
         <!-- QuickBooks style: Invisible when empty, shows on hover/focus -->
         <Style x:Key="QuickBooksComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource CompactComboBox}">
@@ -400,7 +402,142 @@
                         <Button Content="PRINT" Command="{Binding PrintOrderCommand}"
                                 Style="{StaticResource QuickBooksToolbarButtonStyle}" Tag="{StaticResource IconPrint}"/>
                         <Button Content="EMAIL" Command="{Binding EmailOrderCommand}"
-                                Style="{StaticResource QuickBooksToolbarButtonStyle}" Tag="{StaticResource IconEnvelope}"/>
+                                Style="{StaticResource QuickBooksToolbarButtonStyle}" Tag="{StaticResource IconEnvelope}">
+                            <Button.ToolTip>
+                                <ToolTip Background="Transparent" BorderThickness="0" Padding="0" HasDropShadow="True">
+                                    <Border Background="#1E293B" 
+                                            BorderBrush="{StaticResource GlassBorder}" 
+                                            BorderThickness="1" 
+                                            CornerRadius="8" 
+                                            Padding="14,12" 
+                                            Width="320" 
+                                            SnapsToDevicePixels="True">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="16" Color="#000000" Opacity="0.6" ShadowDepth="4"/>
+                                        </Border.Effect>
+                                        <StackPanel>
+                                            <!-- Header -->
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path Data="{StaticResource IconEnvelope}" 
+                                                      Fill="{StaticResource AccentBlue}" 
+                                                      Width="14" Height="14" 
+                                                      Stretch="Uniform" 
+                                                      VerticalAlignment="Center" 
+                                                      Margin="0,0,8,0"/>
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="RECIPIENT CONTACT INFO" 
+                                                           FontSize="11" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="{StaticResource AccentBlue}" 
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+
+                                            <Separator Background="#33475B" Margin="0,0,0,10"/>
+
+                                            <!-- Supplier Name -->
+                                            <TextBlock Text="{Binding SelectedSupplier.Name, FallbackValue='No Supplier Selected', TargetNullValue='No Supplier Selected'}" 
+                                                       FontSize="13" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="White" 
+                                                       TextWrapping="Wrap" 
+                                                       Margin="0,0,0,6"/>
+
+                                            <!-- Primary Email Row -->
+                                            <Grid Margin="0,2,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="65"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Email:" FontSize="11" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                                
+                                                <!-- When Email Has Value -->
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="{Binding SelectedSupplier.Email}" 
+                                                           FontSize="11.5" 
+                                                           FontWeight="SemiBold" 
+                                                           Foreground="#38BDF8" 
+                                                           TextWrapping="Wrap" 
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding SelectedSupplier.Email, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                                                <!-- When Email is Empty / Null -->
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="[No email on file]" 
+                                                           FontSize="11" 
+                                                           FontStyle="Italic" 
+                                                           Foreground="#F59E0B" 
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding SelectedSupplier.Email, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                            </Grid>
+
+                                            <!-- Contact Person Row -->
+                                            <Grid Margin="0,2,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="65"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Contact:" FontSize="11" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="{Binding SelectedSupplier.ContactPerson, FallbackValue='General', TargetNullValue='General'}" 
+                                                           FontSize="11" 
+                                                           Foreground="#E2E8F0" 
+                                                           TextWrapping="Wrap" 
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+
+                                            <!-- Phone Row -->
+                                            <Grid Margin="0,2,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="65"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Phone:" FontSize="11" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="{Binding SelectedSupplier.Phone, FallbackValue='N/A', TargetNullValue='N/A'}" 
+                                                           FontSize="11" 
+                                                           Foreground="#CBD5E1" 
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+
+                                            <!-- Additional Contacts Section (Visible only when Contacts has items) -->
+                                            <ItemsControl ItemsSource="{Binding SelectedSupplier.Contacts}" Margin="0,4,0,4">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#0F172A" BorderBrush="#33475B" BorderThickness="1" CornerRadius="4" Padding="8,5" Margin="0,2">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel Grid.Column="0">
+                                                                    <TextBlock Text="{Binding ContactName}" FontSize="10.5" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                                                    <TextBlock Text="{Binding Department}" FontSize="9.5" Foreground="{StaticResource TextSub}" 
+                                                                               Visibility="{Binding Department, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                                </StackPanel>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Email}" FontSize="10.5" Foreground="#38BDF8" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <!-- Footer Tip -->
+                                            <Border Background="#0F172A" CornerRadius="4" Padding="8,6" Margin="0,6,0,0">
+                                                <TextBlock Text="💡 Tip: Verify supplier email before sending. Click EMAIL to select recipient or open Outlook." 
+                                                           FontSize="9.5" 
+                                                           Foreground="#94A3B8" 
+                                                           TextWrapping="Wrap" 
+                                                           LineHeight="13"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
