@@ -151,5 +151,53 @@ namespace OCC.WpfClient.Features.ProcurementHub.Views
                 viewModel.IsScopeOfWorkSuggestionsOpen = false;
             }
         }
+
+        private System.Windows.Threading.DispatcherTimer? _emailPopupTimer;
+
+        private void EmailToolbarButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            _emailPopupTimer?.Stop();
+            EmailContactPopup.IsOpen = true;
+        }
+
+        private void EmailToolbarButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            StartEmailPopupTimer();
+        }
+
+        private void EmailCardBorder_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            _emailPopupTimer?.Stop();
+            EmailContactPopup.IsOpen = true;
+        }
+
+        private void EmailCardBorder_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            StartEmailPopupTimer();
+        }
+
+        private void EditContactButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _emailPopupTimer?.Stop();
+            EmailContactPopup.IsOpen = false;
+        }
+
+        private void StartEmailPopupTimer()
+        {
+            _emailPopupTimer?.Stop();
+            _emailPopupTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = System.TimeSpan.FromMilliseconds(300)
+            };
+            _emailPopupTimer.Tick += (s, args) =>
+            {
+                _emailPopupTimer.Stop();
+                if (!EmailToolbarButton.IsMouseOver && !EmailCardBorder.IsMouseOver)
+                {
+                    EmailContactPopup.IsOpen = false;
+                }
+            };
+            _emailPopupTimer.Start();
+        }
     }
 }

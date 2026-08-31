@@ -1452,34 +1452,40 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
                 else
                 {
                     IsBusy = false;
-                    var tcs = new TaskCompletionSource<SupplierContact?>();
-                    var dialog = new AddSupplierContactViewModel(SelectedSupplier?.Name ?? "Supplier");
-                    dialog.Completed += (newContact) =>
+                    var supplierToUpdate = SelectedSupplier ?? emailSupplier ?? new Supplier { Id = supplierId, Name = CurrentOrder?.SupplierName ?? "Supplier" };
+                    var tcs = new TaskCompletionSource<QuickEditSupplierResult?>();
+                    var dialog = new QuickEditSupplierViewModel(supplierToUpdate);
+                    dialog.Completed += (result) =>
                     {
                         CloseOverlay();
-                        tcs.TrySetResult(newContact);
+                        tcs.TrySetResult(result);
                     };
                     OpenOverlay(dialog);
-                    var newContact = await tcs.Task;
-                    if (newContact == null || string.IsNullOrWhiteSpace(newContact.Email)) return;
+                    var result = await tcs.Task;
+                    if (result == null || string.IsNullOrWhiteSpace(result.Email)) return;
 
-                    recipientEmail = newContact.Email.Trim();
+                    recipientEmail = result.Email.Trim();
 
                     if (SelectedSupplier != null)
                     {
-                        newContact.SupplierId = SelectedSupplier.Id;
-                        SelectedSupplier.Contacts ??= new List<SupplierContact>();
-                        SelectedSupplier.Contacts.Add(newContact);
+                        SelectedSupplier.Email = result.Email;
+                        SelectedSupplier.ContactPerson = result.ContactPerson;
+                        SelectedSupplier.Phone = result.Phone;
 
-                        if (string.IsNullOrWhiteSpace(SelectedSupplier.Email))
-                            SelectedSupplier.Email = newContact.Email;
-                        if (string.IsNullOrWhiteSpace(SelectedSupplier.ContactPerson))
-                            SelectedSupplier.ContactPerson = newContact.ContactName;
+                        var existing = Suppliers.FirstOrDefault(s => s != null && s.Id == SelectedSupplier.Id);
+                        if (existing != null)
+                        {
+                            existing.Email = result.Email;
+                            existing.ContactPerson = result.ContactPerson;
+                            existing.Phone = result.Phone;
+                            var idx = Suppliers.IndexOf(existing);
+                            if (idx >= 0) Suppliers[idx] = existing;
+                        }
 
                         try
                         {
                             await _supplierService.UpdateSupplierAsync(SelectedSupplier);
-                            _toastService.ShowSuccess("Supplier Contact Saved", $"Saved '{newContact.ContactName}' ({newContact.Email}) to supplier {SelectedSupplier.Name}.");
+                            _toastService.ShowSuccess("Supplier Details Saved", $"Saved email '{result.Email}' for supplier {SelectedSupplier.Name}.");
                         }
                         catch (Exception ex)
                         {
@@ -1514,6 +1520,76 @@ namespace OCC.WpfClient.Features.ProcurementHub.ViewModels
             {
                 IsBusy = false;
                 BusyText = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Opens a quick edit dialog to capture or update supplier email and contact details directly without leaving the view.
+        /// </summary>
+        [RelayCommand]
+        private async Task QuickEditSupplierAsync()
+        {
+            if (SelectedSupplier == null)
+            {
+                var supplierId = CurrentOrder?.SupplierId ?? Guid.Empty;
+                if (supplierId != Guid.Empty)
+                {
+                    try
+                    {
+                        SelectedSupplier = await _supplierService.GetSupplierAsync(supplierId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not load supplier details for quick edit.");
+                    }
+                }
+            }
+
+            if (SelectedSupplier == null)
+            {
+                _toastService.ShowWarning("No Supplier Selected", "Please select a supplier first to update email details.");
+                return;
+            }
+
+            var tcs = new TaskCompletionSource<QuickEditSupplierResult?>();
+            var dialog = new QuickEditSupplierViewModel(SelectedSupplier);
+
+            dialog.Completed += (result) =>
+            {
+                CloseOverlay();
+                tcs.TrySetResult(result);
+            };
+
+            OpenOverlay(dialog);
+
+            var result = await tcs.Task;
+            if (result == null || string.IsNullOrWhiteSpace(result.Email)) return;
+
+            // Update local SelectedSupplier properties
+            SelectedSupplier.Email = result.Email;
+            SelectedSupplier.ContactPerson = result.ContactPerson;
+            SelectedSupplier.Phone = result.Phone;
+
+            // Update in Suppliers list collection if present
+            var existing = Suppliers.FirstOrDefault(s => s != null && s.Id == SelectedSupplier.Id);
+            if (existing != null)
+            {
+                existing.Email = result.Email;
+                existing.ContactPerson = result.ContactPerson;
+                existing.Phone = result.Phone;
+                var idx = Suppliers.IndexOf(existing);
+                if (idx >= 0) Suppliers[idx] = existing;
+            }
+
+            try
+            {
+                await _supplierService.UpdateSupplierAsync(SelectedSupplier);
+                _toastService.ShowSuccess("Supplier Details Saved", $"Saved email '{result.Email}' for supplier '{SelectedSupplier.Name}'.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not save updated supplier email and contact details");
+                _toastService.ShowError("Save Failed", "Failed to save updated supplier details to the server.");
             }
         }
 
